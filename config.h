@@ -69,12 +69,13 @@
 //   Note from Alex: I only have FFIMUv1 and FFIMUv2 boards
 //                   for other boards, I'm not sure, the info was gathered via rc forums, be cautious
 
-//#define FFIMUv1   //first 9DOF+baro board from Jussi, with HMC5843
-//#define FFIMUv2   //second version of 9DOF+baro board from Jussi, with HMC5883
-//#define FREEIMU   //first version of 9DOF board from Fabio
-//#define PIPO      //6DOF board from erazz
-//#define QUADRINO  //full FC board 9DOF+baro board from witespy
-//#define ALLINONE  //full FC board or standalone 9DOF+baro board from CSG_EU
+//#define FFIMUv1    //first 9DOF+baro board from Jussi, with HMC5843
+//#define FFIMUv2    //second version of 9DOF+baro board from Jussi, with HMC5883
+//#define FREEIMUv01 //first version of 9DOF board from Fabio
+//#define FREEIMU    //later version of 9DOF board from Fabio
+//#define PIPO       //9DOF board from erazz
+//#define QUADRINO   //full FC board 9DOF+baro board from witespy
+//#define ALLINONE   //full FC board or standalone 9DOF+baro board from CSG_EU
 
 //if you use independent sensors
 //leave it commented it you already checked a specific board above
@@ -152,6 +153,11 @@
    Configure display as follows: 115K baud, and TTL levels for RXD and TXD, terminal mode
    NO rx / tx line reconfiguration, use natural pins */
 //#define LCD_TEXTSTAR
+/* keys to navigate the LCD menu (preset to TEXTSTAR key-depress codes)*/
+#define LCD_MENU_PREV 'a'
+#define LCD_MENU_NEXT 'c'
+#define LCD_VALUE_UP 'd'
+#define LCD_VALUE_DOWN 'b'
 
 /* motors will not spin when the throttle command is in low position
    this is an alternative method to stop immediately the motors */
@@ -177,7 +183,8 @@
 /* allows to set alarm value in GUI or via LCD */
 /* Current first implementation method is pure software. */
 /* soft: - (good results +-5% for plush and mystery ESCs @ 2S and 3S, not good with SuperSimple ESC */
-/*      00. relies on your combo of battery type (Voltage, cpacity), ESC, ESC settings, motors, props */
+/*      00. relies on your combo of battery type (Voltage, cpacity), ESC, ESC settings, motors, props and multiwii cycle time */
+/*      01. set POWERMETER soft. Uses PLEVELSCALE = 50, PLEVELDIV = PLEVELDIVSOFT = 10000 */
 /*      0. output is a value that linearily scales to power (mAh) */
 /*      1. get voltage reading right first */
 /*      2. start with freshly charged battery */
@@ -188,12 +195,32 @@
 /*      7. set alarm value in GUI or LCD */
 /*      8. enjoy your new battery alarm - possibly repeat steps 2 .. 7 */
 /*      9. if you want the numbers to represent your mAh value, you must change PLEVELDIV */
-//#define POWERMETER soft
+/* hard: - (uses hardware sensor, after configuration gives reasonable results */
+/*      00. uses analog pin 2 to read voltage output from sensor. */
+/*      01. set POWERMETER hard. Uses PLEVELSCALE = 50 */
+/*      1. compute PLEVELDIV for your sensor (see below for insturctions) */
+/*      2. set PLEVELDIVSOFT to 10000 ( to use LOG_VALUES for individual motor comparison) */
+/*      3. attach, set PSENSORNULL and  PINT2mA */
+/*      4. configure, compile, upload, set alarm value in GUI or LCD */
+/*      3. enjoy true readings of mAh consumed */
+/* set POWERMETER to "soft" (1) or "hard" (2) depending on sensor you want to utilize */
+//#define POWERMETER 1
+//#define POWERMETER 2
 /* the sum of all powermeters ranges from [0:60000 e4] theoretically. */
 /* the alarm level from eeprom is out of [0:255], so we multipy alarm level with PLEVELSCALE and with 1e4 before comparing */
+/* PLEVELSCALE is the step size you can use to set alarm */
 #define PLEVELSCALE 50 // if you change this value for other granularity, you must search for comments in code to change accordingly 
 /* larger PLEVELDIV will get you smaller value for power (mAh equivalent) */
-#define PLEVELDIV 10000 // if you lower PLEVELDIV, beware of overrun in uint32 pMeter
+#define PLEVELDIV 10000 // default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
+#define PLEVELDIVSOFT PLEVELDIV // for soft always equal to PLEVELDIV; for hard set to 10000
+#define PHARDINTDIV 64 //  doNotChange - must divide the sum of analogRead()*cycleTime over cycles to keep small enough for uint32
+//#define PLEVELDIV 271837L // to convert the sum into mAh divide by this value
+/* amploc 25A sensor has 37mV/A */
+/* arduino analog resolution is 4.9mV per unit; units from [0..1023] */
+/* PLEVELDIV = 37 / 4.9  * 10e6 / PHARDINTDIV  * 3600 / 1000  = 424745L */
+/* set to analogRead() value for zero current */
+#define PSENSORNULL 510 // for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt
+#define PINT2mA 132 // one integer step on arduino analog translates to mA (example 4.9 / 37 * 1000
 
 /* to monitor system values (battery level, loop time etc. with LCD enable this */
 /* note: for now you must send single characters 'A', 'B', 'C', 'D' to request 4 different pages */

@@ -60,8 +60,10 @@ static int32_t vel_z;
 static int32_t pos_z;
 
 #ifdef LOG_VALUES
-  static uint16_t cycleTimeMax = 0;          // highest ever cycle timen 
-  static uint16_t cycleTimeMin = 65535;      // lowest ever cycle timen 
+  static uint16_t cycleTimeMax = 0;      // highest ever cycle timen 
+  static uint16_t cycleTimeMin = 65535;  // lowest ever cycle timen 
+  static uint16_t powerMax = 0;          // highest ever current 
+  static uint16_t powerAvg = 0;          // last known current
 #endif
 static uint32_t pMeter[7];         //we use [0:5] for six motors,[6] for sum
 static uint8_t pMeterV;            // dummy to satisfy the paramStruct logic in ConfigurationLoop()
@@ -179,6 +181,11 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   #ifdef LCD_TELEMETRY_AUTO
     static uint32_t telemetryTime = 0;
   #endif
+  #if (POWERMETER == 2)
+    static uint16_t pmeter6Raw, powerValue;         //used for current reading
+    static uint16_t pmeter6Avg = PSENSORNULL * 8;   //used for smoothing current reading
+  #endif
+
   //PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
   if      (rcData[THROTTLE]<1500) prop2 = 100;
   else if (rcData[THROTTLE]<2000) prop2 = 100 - (rcData[THROTTLE]-1500)/5 * dynThrPID/100;
@@ -195,6 +202,19 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   prop1 = 100-min(abs(rcData[YAW]-1500)/5,100)*yawRate/100;
   dynP8[YAW] = P8[YAW]*prop1/100;
   dynD8[YAW] = D8[YAW]*prop1/100;
+
+  #if (POWERMETER == 2)
+     pmeter6Raw =  analogRead(PSENSORPIN);
+     pmeter6Avg = (pmeter6Avg * 3 + pmeter6Raw*8)/4; // average of last 4 values; use value*8 for better accuracy
+     powerValue = abs(PSENSORNULL - pmeter6Avg/8);
+     #ifdef LOG_VALUES
+        if ( powerValue < 256) {  // only accept reasonable values. 256 is empirical
+           if (powerValue > powerMax) powerMax = powerValue;
+           powerAvg = powerValue;
+        }
+     #endif
+     pMeter[6] += (uint32_t) ( powerValue * ( cycleTime/PHARDINTDIV) );
+  #endif
 
   #if defined(VBAT)
     vbatRaw = (vbatRaw*15 + analogRead(V_BATPIN)*16)>>4; // smoothing of vbat readings  
@@ -522,7 +542,7 @@ void loop () {
   mixTable();
   writeServos();
   writeMotors();
-  #if defined(POWERMETER)
+  #if defined(LOG_VALUES) || (POWERMETER == 1)
     logMotorsPower();
   #endif 
 }

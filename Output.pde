@@ -58,7 +58,7 @@ void writeAllMotors(int16_t mc) {   // Sends commands to all motors
   writeMotors();
 }
 
-#if defined(POWERMETER)
+#if defined(LOG_VALUES) || (POWERMETER == 1)
 void logMotorsPower() {
   uint32_t amp;
   /* true cubic function; when divided by vbat_max=126 (12.6V) for 3 cell battery this gives maximum value of ~ 1000 */
@@ -66,12 +66,13 @@ void logMotorsPower() {
 
   if (vbat) { // by all means - must avoid division by zero 
     for (uint8_t i =0;i<NUMBER_MOTOR;i++) {
-
       amp = amperes[(motor[i] - 1000)>>6] / vbat; // range mapped from [1000:2000] => [0:1000]; then break that up into 16 ranges; lookup amp
-     #ifdef LOG_VALUES
-      pMeter[i]+= amp; // sum up over time the mapped ESC input 
-     #endif
-      pMeter[6]+= amp; // total sum over all motors
+      #ifdef LOG_VALUES
+         pMeter[i]+= amp; // sum up over time the mapped ESC input 
+      #endif
+      #if (POWERMETER == 1)
+         pMeter[6]+= amp; // total sum over all motors
+      #endif
     }
   }
 }
@@ -241,9 +242,9 @@ void mixTable() {
     servo[1]  = constrain(1500 + YAW_DIRECTION * (axisPID[YAW] - axisPID[PITCH]), 1020, 2000); //RIGHT
   #endif
   #ifdef TRI
-    motor[0] = PIDMIX(+,0,+,4/3,+0*); //REAR
-    motor[1] = PIDMIX(-,1,-,2/3,+0*); //RIGHT
-    motor[2] = PIDMIX(+,1,-,2/3,+0*); //LEFT
+    motor[0] = PIDMIX(+,0,+,4/6,+0*); //REAR
+    motor[1] = PIDMIX(-,1,-,1/6,+0*); //RIGHT
+    motor[2] = PIDMIX(+,1,-,1/6,+0*); //LEFT
     servo[0] = constrain(TRI_YAW_MIDDLE + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
   #endif
   #ifdef QUADP

@@ -102,32 +102,45 @@ void serialCom() {
         break;
       case 'A': // button A on Textstar LCD -> angles 
         uint16_t unit;
-        strcpy(line1,"DegX  ___._ ");
+        strcpy(line1,"Deg ___._  ___._");
         /*            0123456789.12345*/
-        strcpy(line2,"DegY  ___._ ");
+        strcpy(line2,"__,__A max__,__A"); //uin16_t cycleTimeMax
         if (angle[0] < 0 ) {
           unit = -angle[0];
-          line1[5] = '-';
+          line1[3] = '-';
         } else 
           unit = angle[0];
         //line1[5] = '0' + unit / 10000;
-        line1[6] = '0' + unit / 1000; //- (unit/10000) * 10;
-        line1[7] = '0' + unit / 100  - (unit/1000)  * 10;
-        line1[8] = '0' + unit / 10   - (unit/100)   * 10;
-        line1[10] = '0' + unit       - (unit/10)    * 10;
+        line1[4] = '0' + unit / 1000; //- (unit/10000) * 10;
+        line1[5] = '0' + unit / 100  - (unit/1000)  * 10;
+        line1[6] = '0' + unit / 10   - (unit/100)   * 10;
+        line1[8] = '0' + unit       - (unit/10)    * 10;
         if (angle[1] < 0 ) {
           unit = -angle[1];
-          line2[5] = '-';
+          line1[10] = '-';
         } else 
           unit = angle[1];
         //line2[5] = '0' + unit / 10000;
-        line2[6] = '0' + unit / 1000; //- (unit/10000) * 10;
-        line2[7] = '0' + unit / 100  - (unit/1000)  * 10;
-        line2[8] = '0' + unit / 10   - (unit/100)   * 10;
-        line2[10] = '0' + unit       - (unit/10)    * 10;
+        line1[11] = '0' + unit / 1000; //- (unit/10000) * 10;
+        line1[12] = '0' + unit / 100  - (unit/1000)  * 10;
+        line1[13] = '0' + unit / 10   - (unit/100)   * 10;
+        line1[15] = '0' + unit       - (unit/10)    * 10;
+        #ifdef LOG_VALUES
+          unit = powerAvg * PINT2mA;
+          line2[0] = '0' + unit / 10000;
+          line2[1] = '0' + unit / 1000 - (unit/10000) * 10;
+          line2[3] = '0' + unit / 100  - (unit/1000)  * 10;
+          line2[4] = '0' + unit / 10   - (unit/100)   * 10;
+          unit = powerMax * PINT2mA;
+          line2[10] = '0' + unit / 10000;
+          line2[11] = '0' + unit / 1000 - (unit/10000) * 10;
+          line2[13] = '0' + unit / 100  - (unit/1000)  * 10;
+          line2[14] = '0' + unit / 10   - (unit/100)   * 10;
+          //line2[13] = '0' + unit        - (unit/10)    * 10;
+          LCDprint(0xFE);LCDprint('L');LCDprint(2);LCDprintChar(line2); //refresh line 2 of LCD
+        #endif
         LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar(line1); //refresh line 1 of LCD
-        LCDprint(0xFE);LCDprint('L');LCDprint(2);LCDprintChar(line2); //refresh line 2 of LCD
-        break;      
+        break;    
       case 'D': // button D on Textstar LCD -> sensors
       #define GYROLIMIT 30 // threshold: for larger values replace bar with dots
       #define ACCLIMIT 40 // threshold: for larger values replace bar with dots

@@ -1,5 +1,5 @@
 //please submit any correction to this list.
-#if defined(FFIMUv1) //9DOF + baro
+#if defined(FFIMUv1)
   #if !defined(ITG3200)
     #define ITG3200
   #endif
@@ -19,7 +19,7 @@
   #define ITG3200_ADDRESS 0XD0
 #endif
 
-#if defined(FFIMUv2) //9DOF + baro
+#if defined(FFIMUv2)
   #if !defined(ITG3200)
     #define ITG3200
   #endif
@@ -39,7 +39,24 @@
   #define ITG3200_ADDRESS 0XD0
 #endif
 
-#if defined(FREEIMU) //9DOF
+#if defined(FREEIMUv01)
+  #if !defined(ITG3200)
+    #define ITG3200
+  #endif
+  #if !defined(ADXL345)
+    #define ADXL345
+  #endif
+  #if !defined(HMC5843)
+    #define HMC5843
+  #endif
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  -Y; accADC[PITCH]  = X; accADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
+  #define ADXL345_ADDRESS 0xA6
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+
+#if defined(FREEIMU)
   #if !defined(ITG3200)
     #define ITG3200
   #endif
@@ -51,22 +68,27 @@
   #endif
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
   #define ADXL345_ADDRESS 0xA6
 #endif
 
-#if defined(PIPO) //6DOF
+#if defined(PIPO)
   #if !defined(L3G4200D)
     #define L3G4200D
   #endif
   #if !defined(ADXL345)
     #define ADXL345
   #endif
+  #if !defined(HMC5883)
+    #define HMC5883
+  #endif
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  = X; accADC[YAW]  = Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
   #define ADXL345_ADDRESS 0xA6
 #endif
 
-#if defined(QUADRINO) //9DOF + baro
+#if defined(QUADRINO)
   #if !defined(ITG3200)
     #define ITG3200
   #endif
@@ -86,7 +108,7 @@
   #define ITG3200_ADDRESS 0XD0
 #endif
 
-#if defined(ALLINONE) //9DOF + baro
+#if defined(ALLINONE)
   #if !defined(ITG3200)
     #define ITG3200
   #endif
@@ -176,6 +198,7 @@
   #define CAM2PIN                    7   //unused just for compatibility with MEGA
   #define ISR_UART                   ISR(USART_UDRE_vect)
   #define V_BATPIN                   A3    // Analog PIN 3
+  #define PSENSORPIN                 A2    // Analog PIN 2
 #endif
 #if defined(MEGA)
   #define LEDPIN_PINMODE             pinMode (13, OUTPUT);
@@ -224,5 +247,6 @@
   #define CAM2PIN                    7  //PIN 69 =  PIN A15
   #define ISR_UART                   ISR(USART0_UDRE_vect)
   #define V_BATPIN                   A3    // Analog PIN 3
+  #define PSENSORPIN                 A2    // Analog PIN 2
 #endif
 

@@ -51,6 +51,8 @@ void configurationLoop() {
   static char line1[17],line2[17];
   uint8_t LCD=1;
   uint8_t refreshLCD = 1;
+  uint8_t key = 0;
+
 
   initLCD();
   p = 0;
@@ -60,14 +62,19 @@ void configurationLoop() {
       strcpy(line1,"                ");
       i=0; char* point = param[p].paramText; while (*point) line1[i++] = *point++;
       uint16_t unit = *param[p].var;
-     #if defined(POWERMETER)
-      if (p > PARAMMOTORSTART && p < PARAMMOTOREND)
-        // pmeter values need special treatment, too many digits to fit standard 8 bit scheme
-        unit = pMeter[p-PARAMMOTOROFFSET] / PLEVELDIV; // [0:1000] * 1000/3 samples per second(loop time) * 60 seconds *5 minutes -> [0:10000 e4] per motor
+      #if defined(POWERMETER)
+        if (p > PARAMMOTORSTART && p < PARAMMOTOREND)
+          // pmeter values need special treatment, too many digits to fit standard 8 bit scheme
+          unit = pMeter[p-PARAMMOTOROFFSET] / PLEVELDIVSOFT; // [0:1000] * 1000/3 samples per second(loop time) * 60 seconds *5 minutes -> [0:10000 e4] per motor
                                             // (that is full throttle for 5 minutes sampling with high sampling rate for wmp only)
                                             // times 6 for a maximum of 6 motors equals [0:60000 e4] for the sum
                                             // we are only interested in the big picture, so divide by 10.000
-     #endif
+         #if (POWERMETER == 2)
+         if (p-PARAMMOTOROFFSET == 6)
+           // the sum needs special divisor for hardware sensor, fix here
+           unit = pMeter[p-PARAMMOTOROFFSET] / PLEVELDIV;
+         #endif
+      #endif
       if (p == 12) {unit *=2;} // RC RATE can go up to 500
       char c1 = '0'+unit/100; char c2 = '0'+unit/10-(unit/100)*10; char c3 = '0'+unit-(unit/10)*10;
       if (param[p].decimal == 0) {line2[6] = c1;  line2[7] = c2;   line2[8] = c3;}
@@ -92,25 +99,28 @@ void configurationLoop() {
       #endif
       refreshLCD=0;
     }
+    #if defined(LCD_TEXTSTAR)
+      key = ( Serial.available() ?  Serial.read() : 0 ); 
+    #endif
     for (chan = ROLL; chan < 4; chan++) rcData[chan] = readRawRC(chan);
     //switch config param with pitch
-    if (rcData[PITCH] < MINCHECK && paramActive == 0 && p<= PARAMMAX) {
+     if ((key == LCD_MENU_NEXT || (rcData[PITCH] < MINCHECK && paramActive == 0)) && p<= PARAMMAX) {
       paramActive = 1;refreshLCD=1;blinkLED(10,20,1);
       p++;
       if (p>PARAMMAX) p=0;
     }
-    if (rcData[PITCH] > MAXCHECK && paramActive == 0 && p>=0) {
+    if ((key == LCD_MENU_PREV || (rcData[PITCH] > MAXCHECK && paramActive == 0)) && p>=0) {
       paramActive = 1;refreshLCD=1;blinkLED(10,20,1);
       if (p==0) p=PARAMMAX; else p--;
     }
     if (rcData[PITCH] < MAXCHECK && rcData[PITCH] > MINCHECK)  paramActive = 0;
     //+ or - param with low and high roll
-    if (rcData[ROLL] < MINCHECK && valActive == 0 && *param[p].var>param[p].increment-1) {
+    if ((key == LCD_VALUE_DOWN || (rcData[ROLL] < MINCHECK && valActive == 0)) && *param[p].var>param[p].increment-1) {
       valActive = 1;refreshLCD=1;blinkLED(10,20,1);
       *param[p].var -= param[p].increment;  //set val -
       if (p == 0) *param[4].var = *param[0].var; //PITCH P
     }
-    if (rcData[ROLL] > MAXCHECK && valActive == 0) {
+    if ((key == LCD_VALUE_UP || (rcData[ROLL] > MAXCHECK && valActive == 0))) {
       valActive = 1;refreshLCD=1;blinkLED(10,20,1);
       *param[p].var += param[p].increment;       //set val +
       if (p == 0) *param[4].var = *param[0].var; //PITCH P
@@ -118,7 +128,7 @@ void configurationLoop() {
     if (rcData[ROLL] < MAXCHECK && rcData[ROLL]  > MINCHECK) valActive = 0;
     if (rcData[YAW]  < MINCHECK && rcData[PITCH] > MAXCHECK) LCD = 0; // save and exit
     if (rcData[YAW]  > MAXCHECK && rcData[PITCH] > MAXCHECK) LCD = 2; // exit without save: eeprom has only 100.000 write cycles
-  }
+  } // while (LCD == 1)
   blinkLED(20,30,1);
   #if defined(LCD_TEXTSTAR)
     LCDprint(0x0c); //clear screen
