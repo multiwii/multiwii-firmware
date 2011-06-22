@@ -17,6 +17,9 @@ void computeIMU () {
     timeInterleave=micros();
     WMP_getRawADC();
     getEstimatedAttitude(); // computation time must last less than one interleaving delay
+    #if BARO
+      getEstimatedAltitude();
+    #endif 
     while((micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
     timeInterleave=micros();
     while(WMP_getRawADC() != 1) ; // For this interleaving reading, we must have a gyro update at this point (less delay)
@@ -29,8 +32,11 @@ void computeIMU () {
     }
   } else {
     if (ACC) {
-      getEstimatedAttitude();
       ACC_getADC();
+      getEstimatedAttitude();
+      #if BARO
+        getEstimatedAltitude();
+      #endif 
     }
     if (GYRO) Gyro_getADC(); else WMP_getRawADC();
     for (axis = 0; axis < 3; axis++)
@@ -213,7 +219,7 @@ void getEstimatedAttitude(){
     for (axis = 0; axis < 3; axis++)
       EstG.A[axis] = (EstG.A[axis] * GYR_CMPF_FACTOR + ACC_VALUE) * INV_GYR_CMPF_FACTOR;
   }
-  // Attitude of the estimated vector  
+  // Attitude of the estimated vector
   angle[ROLL]  =  _atan2(EstG.V.X, EstG.V.Z) ;
   angle[PITCH] =  _atan2(EstG.V.Y, EstG.V.Z) ;
   GEstG = EstG;
@@ -224,7 +230,44 @@ void getEstimatedAttitude(){
     // Attitude of the cross product vector GxM
     heading = _atan2(EstG.V.Z * EstM.V.X - EstG.V.X * EstM.V.Z, EstG.V.Y * EstM.V.Z - EstG.V.Z * EstM.V.Y) / 10;
   #endif
-  #if BARO
-    acc_z = (acc_z * 2 +  (accSmooth[YAW] - GEstG.V.Z) + 1) / 3;
-  #endif 
+}
+
+#define UPDATE_INTERVAL 25000 // 40hz update rate (20hz LPF on acc)
+#define INIT_DELAY  2000000   // 2 sec initialization delay
+
+#define Kt  0.025f            // Time constant 
+#define Kp1 0.5f              // PI observer velocity gain 
+#define Kp2 1.0f              // PI observer position gain
+#define Ki  0.00045f          // PI observer integral gain (bias cancellation)
+#define dt  (UPDATE_INTERVAL / 1000000.0f)
+
+void getEstimatedAltitude(){
+  static uint8_t inited = 0;
+  static float AltErrorI = 0.0f;
+  static float AccScale  = 0.0f;
+  static uint32_t DeadLine = INIT_DELAY; 
+  if (currentTime < DeadLine) return;
+  DeadLine = currentTime + UPDATE_INTERVAL; 
+  // Soft start
+  if (!inited && baroNewData) {
+    inited = 1;
+    EstAlt = BaroAlt;
+    EstVelocity = 0.0f;
+    AltErrorI = 0.0f;
+    AccScale = (9.80665f / acc_1G) * 1.155f;
+  }  
+  // Estimation Error
+  float AltError = BaroAlt - EstAlt; 
+  AltErrorI += AltError;
+  // 
+  float InstAcc = (accADC[YAW] - acc_1G) * AccScale + (Ki) * AltErrorI;
+  // Integrators
+  float Delta = InstAcc * dt + (Kp1 * Kt) * AltError;
+  EstAlt += ((EstVelocity + Delta * 0.5f) * dt + (Kp2 * Kt) * AltError);
+  EstVelocity += Delta;
+  // Debug
+//  magADC[0] = BaroAlt*100.0f;
+//  magADC[1] = EstVelocity*1000.0f/3.0f;
+//  magADC[2] = EstAlt*100.0f;
+  altitudeSmooth = BaroAlt*100.f;
 }

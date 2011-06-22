@@ -24,8 +24,9 @@ June  2011     V1.dev
 #define CAMROLL    7
 
 #define PIDALT     3
-#define PIDLEVEL   4
-#define PIDMAG     5
+#define PIDVEL     4
+#define PIDLEVEL   5
+#define PIDMAG     6
 
 #define BOXACC      0
 #define BOXBARO     1
@@ -55,9 +56,12 @@ static uint8_t calibratedACC = 0;
 static uint8_t vbat;               // battery voltage in 0.1V steps
 static uint8_t okToArm = 0;
 static uint8_t rcOptions;
-static int16_t acc_z;
-static int32_t vel_z;
-static int32_t pos_z;
+static uint8_t baroNewData = 0;
+static int32_t pressure = 0;
+
+static float BaroAlt = 0.0f;
+static float EstVelocity = 0.0f;
+static float EstAlt = 0.0f;
 
 #ifdef LOG_VALUES
   static uint16_t cycleTimeMax = 0;      // highest ever cycle timen 
@@ -125,7 +129,7 @@ static int16_t servo[4] = {1500,1500,1500,1500};
 // **********************
 // EEPROM & LCD functions
 // **********************
-static uint8_t P8[6], I8[5], D8[4]; //8 bits is much faster and the code is much shorter
+static uint8_t P8[7], I8[7], D8[7]; //8 bits is much faster and the code is much shorter
 static uint8_t dynP8[3], dynI8[3], dynD8[3];
 static uint8_t rollPitchRate;
 static uint8_t yawRate;
@@ -139,12 +143,14 @@ typedef struct {
   uint8_t  increment;
 } paramStruct;
 
-static paramStruct param[30] = {
+#define PARAM_BLOCK_SIZE 33
+static paramStruct param[PARAM_BLOCK_SIZE] = {
   {"PITCH&ROLL P", &P8[ROLL],1,1},
   {"ROLL   P", &P8[ROLL],1,1},     {"ROLL   I", &I8[ROLL],3,5},  {"ROLL   D", &D8[ROLL],0,1},
   {"PITCH  P", &P8[PITCH],1,1},    {"PITCH  I", &I8[PITCH],3,5}, {"PITCH  D", &D8[PITCH],0,1},
   {"YAW    P", &P8[YAW],1,1},      {"YAW    I", &I8[YAW],3,5},   {"YAW    D", &D8[YAW],0,1},
   {"ALT    P", &P8[PIDALT],1,1},   {"ALT    I", &I8[PIDALT],3,5},{"ALT    D", &D8[PIDALT],0,1},
+  {"VEL    P", &P8[PIDVEL],1,1},   {"VEL    I", &I8[PIDVEL],3,5},{"VEL    D", &D8[PIDVEL],0,1},
   {"LEVEL  P", &P8[PIDLEVEL],1,1}, {"LEVEL  I", &I8[PIDLEVEL],3,5},
   {"MAG    P", &P8[PIDMAG],1,1},
   {"RC RATE", &rcRate8,2,2},       {"RC EXPO", &rcExpo8,2,2},
@@ -208,10 +214,10 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
      pmeter6Avg = (pmeter6Avg * 3 + pmeter6Raw*8)/4; // average of last 4 values; use value*8 for better accuracy
      powerValue = abs(PSENSORNULL - pmeter6Avg/8);
      #ifdef LOG_VALUES
-        if ( powerValue < 256) {  // only accept reasonable values. 256 is empirical
-           if (powerValue > powerMax) powerMax = powerValue;
-           powerAvg = powerValue;
-        }
+       if ( powerValue < 256) {  // only accept reasonable values. 256 is empirical
+         if (powerValue > powerMax) powerMax = powerValue;
+         powerAvg = powerValue;
+       }
      #endif
      pMeter[6] += (uint32_t) ( powerValue * ( cycleTime/PHARDINTDIV) );
   #endif
@@ -323,8 +329,13 @@ void loop () {
   static uint8_t camState = 0;
   static uint32_t camTime = 0;
   static uint32_t rcTime  = 0;
-  static int16_t altitudeHold = 0;
-  static int16_t throttleHold;
+  static int32_t initialThrottleHold;
+  static int16_t errorAltitudeI = 0;
+  static int16_t AltPID = 0;
+  static int32_t VelErrorI = 0;
+  static int16_t lastVelError = 0;
+  static int16_t lastAltError = 0;
+  static float AltHold = 0.0;
 
   if (currentTime > (rcTime + 20000) ) { // 50Hz
     rcTime = currentTime; 
@@ -403,7 +414,14 @@ void loop () {
                +(rcData[AUX2]<1300)*8 + (1300<rcData[AUX2] && rcData[AUX2]<1700)*16 + (rcData[AUX2]>1700)*32;
     
     //note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAVE_DELAY is always false
-    if (((rcOptions & activate[BOXACC]) || (failsafeCnt > 5*FAILSAVE_DELAY) ) && (ACC || nunchuk) ) accMode = 1; else accMode = 0;  // modified by MIS for failsave support
+    if (((rcOptions & activate[BOXACC]) || (failsafeCnt > 5*FAILSAVE_DELAY) ) && (ACC || nunchuk)) { 
+      // bumpless transfer to Level mode
+      if (!accMode) {
+        errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
+        accMode = 1;
+      }  
+    } else accMode = 0;  // modified by MIS for failsave support
+
     if ((rcOptions & activate[BOXARM]) == 0) okToArm = 1;
     if (accMode == 1) STABLEPIN_ON else STABLEPIN_OFF;
 
@@ -411,10 +429,13 @@ void loop () {
       if (rcOptions & activate[BOXBARO]) {
         if (baroMode == 0) {
           baroMode = 1;
-          altitudeHold = altitudeSmooth;
-          throttleHold = rcCommand[THROTTLE];
-          vel_z = 0;
-          pos_z = 0;
+          AltHold = EstAlt;
+          initialThrottleHold = rcCommand[THROTTLE];
+          AltPID = 0;
+          errorAltitudeI = 0;
+          VelErrorI = 0;
+          lastVelError = 0;
+          lastAltError = 0;
         }
       } else baroMode = 0;
     }
@@ -448,43 +469,35 @@ void loop () {
   }
 
   if(BARO) {
- 
     if (baroMode) {
-      static uint32_t t1;
-      static uint8_t stateHold = 0;
- 
-      vel_z += acc_z;
-      vel_z = constrain(vel_z*50/51,-60000,+60000); //WindUp
-      PTerm = vel_z*60/1000;
-      DTerm = int32_t(acc_z) * 2;
- 
-      if (stateHold == 0) {
-         if (millis()-t1>(min(abs(altitudeHold-altitudeSmooth)*10*D8[PIDALT]+300,1500))) {
-           t1=millis();
-           stateHold =1;
-         }
-      }
-      if (stateHold == 1) {
-         if (millis()-t1<300) {           
-           rcCommand[THROTTLE] = constrain(rcCommand[THROTTLE] + (altitudeHold-altitudeSmooth)*P8[PIDALT]/10,max(rcCommand[THROTTLE]-60,MINTHROTTLE),min(rcCommand[THROTTLE]+60,MAXTHROTTLE))
-                               - constrain(PTerm + DTerm,-100,+100);
-         } else {
-           t1=millis();
-           stateHold = 0;
-         }
-      }
+      //**** Alt. Set Point stabilization PID ****
+      error = (AltHold - EstAlt)*10.0f;
+      delta = error - lastAltError;
 
-/*      
-      vel_z += acc_z;
-      vel_z = constrain(vel_z,-60000,+60000); //WindUp
-      pos_z += vel_z / 2;
-      pos_z = constrain(pos_z,-60000,+60000); //WindUp
+      errorAltitudeI += error;
+      errorAltitudeI = constrain(errorAltitudeI,-5000,5000);
+
+      PTerm = error*P8[PIDALT]/10;
+      ITerm = errorAltitudeI*I8[PIDALT]/1000;
+      DTerm = delta * D8[PIDALT]/10;
+
+      lastAltError = error;
+      AltPID = PTerm + ITerm - DTerm;
+     
+      //**** Velocity stabilization PID ****        
+      int32_t VelError = EstVelocity*1000.0f - AltPID;
+      delta = VelError - lastVelError;
+
+      VelErrorI += VelError;
+      VelErrorI = constrain(VelErrorI,-10000,10000);
       
-      PTerm = vel_z*P8[PIDALT]/1000;
-      ITerm = pos_z*I8[PIDALT]/50000 + (altitudeSmooth-altitudeHold)*P8[PIDMAG]/10;
-      DTerm = int32_t(acc_z) * D8[PIDALT]/10;
-      rcCommand[THROTTLE] = constrain(rcCommand[THROTTLE]-(PTerm + ITerm + DTerm),max(rcCommand[THROTTLE]-100,MINTHROTTLE),min(rcCommand[THROTTLE]+200,MAXTHROTTLE));
-*/
+      PTerm = VelError*P8[PIDVEL]/1000;
+      ITerm = VelErrorI*I8[PIDVEL]/50000; 
+      DTerm = delta * D8[PIDVEL]/100;
+
+      lastVelError = VelError;
+
+      rcCommand[THROTTLE] = constrain(rcCommand[THROTTLE]-(PTerm + ITerm - DTerm),max(rcCommand[THROTTLE]-350,MINTHROTTLE),min(rcCommand[THROTTLE]+350,MAXTHROTTLE));
     }
   }
 

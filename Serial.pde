@@ -221,7 +221,7 @@ void serialCom() {
     #elif defined(OCTOFLATX)
       serialize8(11);        //the GUI is the same for all 8 motor configs
     #endif
-      for(i=0;i<4;i++) {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);} //80
+      for(i=0;i<5;i++) {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);} //80
       serialize8(P8[PIDLEVEL]);serialize8(I8[PIDLEVEL]);
       serialize8(P8[PIDMAG]);
       serialize8(rcRate8); serialize8(rcExpo8);
@@ -257,7 +257,7 @@ void serialCom() {
       break;
     case 'W': //GUI write params to eeprom @ arduino
       while (Serial.available()<29) {}
-      for(i=0;i<4;i++) {P8[i]= Serial.read(); I8[i]= Serial.read(); D8[i]= Serial.read();} //9
+      for(i=0;i<5;i++) {P8[i]= Serial.read(); I8[i]= Serial.read(); D8[i]= Serial.read();} //9
       P8[PIDLEVEL] = Serial.read(); I8[PIDLEVEL] = Serial.read(); //11
       P8[PIDMAG] = Serial.read();
       rcRate8 = Serial.read(); rcExpo8 = Serial.read();

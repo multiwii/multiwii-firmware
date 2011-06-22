@@ -124,6 +124,13 @@ void i2c_writeReg(uint8_t add, uint8_t reg, uint8_t val) {
   i2c_write(val);        //     value to write in register
 }
 
+uint8_t i2c_readReg(uint8_t add, uint8_t reg) {
+  i2c_rep_start(add+0);  // I2C write direction
+  i2c_write(reg);        //   register selection
+  i2c_rep_start(add+1);  // I2C read direction
+  return i2c_readNak();
+}
+
 // ****************
 // GYRO common part
 // ****************
@@ -194,69 +201,13 @@ void ACC_Common() {
 //  the following code uses the maximum precision setting (oversampling setting 3)
 
 #if defined(BMP085)
-/**************************************************************
-WinFilter version 0.8
-http://www.winfilter.20m.com
-akundert@hotmail.com
-
-Filter type: Low Pass
-Filter model: Butterworth
-Filter order: 2
-Sampling Frequency: 333 Hz
-Cut Frequency: 12.000000 Hz
-Coefficents Quantization: float
-
-Z domain Zeros
-z = -1.000000 + j 0.000000
-z = -1.000000 + j 0.000000
-
-Z domain Poles
-z = 0.840979 + j -0.136993
-z = 0.840979 + j 0.136993
-***************************************************************/
-#define NCoef 2
-float baro_iir(float NewSample) {
-    float ACoef[NCoef+1] = {
-        0.01097303489321129600,
-        0.02194606978642259200,
-        0.01097303489321129600
-    };
-
-    float BCoef[NCoef+1] = {
-        1.00000000000000000000,
-        -1.68195898127125940000,
-        0.72601363563434096000
-    };
-
-    static float y[NCoef+1]; //output samples
-    static float x[NCoef+1]; //input samples
-    int n;
-
-    //shift the old samples
-    for(n=NCoef; n>0; n--) {
-       x[n] = x[n-1];
-       y[n] = y[n-1];
-    }
-
-    //Calculate the new output
-    x[0] = NewSample;
-    y[0] = ACoef[0] * x[0];
-    for(n=1; n<=NCoef; n++)
-        y[0] += ACoef[n] * x[n] - BCoef[n] * y[n];
-    
-    return y[0];
-}
-
 // sensor registers from the BOSCH BMP085 datasheet
 static int16_t ac1,ac2,ac3,b1,b2,mb,mc,md;
 static uint16_t  ac4,ac5,ac6;
 
 static uint16_t ut; //uncompensated T
 static uint32_t up; //uncompensated P
-static int32_t pressure = 0;
-static int16_t altitude = 0;
-static int16_t altitudeZero;
-static int16_t altitudeHold;
+
 #define OSS 3
 
 void i2c_BMP085_readCalibration(){
@@ -281,7 +232,6 @@ void  Baro_init() {
   i2c_BMP085_UT_Start(); 
   delay(5);
   i2c_BMP085_UT_Read();
-  altitudeZero = 0;
 }
 
 
@@ -376,11 +326,9 @@ void i2c_BMP085_Calculate() {
 void Baro_update() {
   static uint32_t t;
   static uint8_t state = 0;
-  static uint8_t cycle_cnt = 0;
   static uint8_t zeroCount = 0;
   
-  if (micros() < t) return; 
-  t = micros();
+  if (currentTime < t) return; t = currentTime;
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, BMP085 is ok with this speed
   switch (state) {
     case 0: 
@@ -393,20 +341,17 @@ void Baro_update() {
       break;
     case 2: 
       i2c_BMP085_UP_Start(); 
-      state++; t += 30000; 
+      state++; t += 26000; 
       break;
     case 3: 
       i2c_BMP085_UP_Read(); 
       i2c_BMP085_Calculate(); 
-      state = 2; 
-      cycle_cnt++;
-      if (cycle_cnt == 33) {state = 0; cycle_cnt = 0;}
-      //aitude = baro_iir((1.0 - pow(float(up)/101325.0, 0.190295)) * 4433000.0); // altitude in decimeter from starting point
-      altitude = baro_iir(101325.0-pressure) - altitudeZero ;
-      altitudeSmooth = altitude;
-      if (altitudeZero == 0) {zeroCount++; if (zeroCount > 100) altitudeZero = altitudeSmooth; altitudeSmooth=0;}
+      BaroAlt = (1.0 - pow(float(pressure)/101325.0, 0.190295)) * 44330 ;
+      state = 0; 
+      baroNewData = 1;
+      t += 20000; 
       break;
-  }
+  }  
 }
 #endif
 
@@ -443,71 +388,59 @@ void ACC_getADC () {
 
 
 // **************************
-// contribution initially from opie11 (rc-grooups)
+// contribution initially from opie11 (rc-groups)
 // adaptation from C2po (may 2011)
+// contribution from ziss_dm (June 2011)
 // I2C Accelerometer BMA180
 // **************************
 // I2C adress: 0x80 (8bit)    0x40 (7bit) (SDO connection to VCC) 
 // I2C adress: 0x82 (8bit)    0x41 (7bit) (SDO connection to VDDIO)
 #if defined(BMA180)
 void ACC_init () {
-  uint8_t reg;
   delay(10);
   //default range 2G: 1G = 4096 unit.
   i2c_writeReg(BMA180_ADDRESS,0x0D,1<<4); // register: ctrl_reg0  -- value: set bit ee_w to 1 to enable writing
-  i2c_rep_start(BMA180_ADDRESS+0);
-  i2c_write(0x20); // register bw_tcs
-  i2c_rep_start(BMA180_ADDRESS+1);
-  reg = i2c_readNak(); // read bw_tcs (bw bits 7:4)
+  uint8_t control = i2c_readReg(BMA180_ADDRESS, 0x20);
+  control = control & 0x0F; // register: bw_tcs reg: bits 4-7 to set bw -- value: set low pass filter to 10Hz (bits value = 0000xxxx)
   delay(5);
-  i2c_writeReg(BMA180_ADDRESS,0x20,reg & 0x0F); // register: bw_tcs reg: bits 4-7 to set bw -- value: set low pass filter to 10Hz (bits value = 0000xxxx)
-  acc_1G = 205;
+  i2c_writeReg(BMA180_ADDRESS, 0x20, control); 
+  acc_1G = 512;
 }
 
 void ACC_getADC () {
   TWBR = ((16000000L / 400000L) - 16) / 2;  // Optional line.  Sensor is good for it in the spec.
   i2c_getSixRawADC(BMA180_ADDRESS,0x02);
-  
-  //usefull info is on the 14 bits  [2-15] bits  /4 => [0-13] bits  /20 => 4096/20 = 205 for 1G
-  ACC_ORIENTATION(  - ((rawADC[1]<<8) | rawADC[0])/80 ,
-                    - ((rawADC[3]<<8) | rawADC[2])/80 ,
-                      ((rawADC[5]<<8) | rawADC[4])/80 );
+  //usefull info is on the 14 bits  [2-15] bits  /4 => [0-13] bits  /8 => 11 bit resolution
+  ACC_ORIENTATION(  - ((rawADC[1]<<8) | rawADC[0])/32 ,
+                    - ((rawADC[3]<<8) | rawADC[2])/32 ,
+                      ((rawADC[5]<<8) | rawADC[4])/32 );
   ACC_Common();
 }
 #endif
 
 // **************
-// contribution from Point65 and mgros (rc-grooups)
+// contribution from Point65 and mgros (rc-groups)
+// contribution from ziss_dm (June 2011)
 // I2C Accelerometer BMA020
 // **************
 // I2C adress: 0x70 (8bit)
 #if defined(BMA020)
 void ACC_init(){
-  byte control;
   i2c_writeReg(0x70,0x15,0x80); // Write B10000000 at 0x15 init BMA020
-  i2c_writeReg(0x70,0x14,0x71); 
-
-  i2c_rep_start(0x71);
-  control = i2c_readNak();
- 
-  control = control >> 5;  //ensure the value of three fist bits of reg 0x14 see BMA020 documentation page 9
-  control = control << 2;
-  control = control | 0x00; //Range 2G 00
-  control = control << 3;
+  uint8_t control = i2c_readReg(0x70, 0x14);
+  control = control & 0xE0;
+  control = control | (0x00 << 3); //Range 2G 00
   control = control | 0x00; //Bandwidth 25 Hz 000
-
   i2c_writeReg(0x70,0x14,control); 
-
-  acc_1G = 240;
+  acc_1G = 512;
 }
 
 void ACC_getADC(){
   TWBR = ((16000000L / 400000L) - 16) / 2;
   i2c_getSixRawADC(0x70,0x02);
-
-  ACC_ORIENTATION(  (((rawADC[1])<<8) | ((rawADC[0]>>1)<<1))/64 ,
-                    (((rawADC[3])<<8) | ((rawADC[2]>>1)<<1))/64 ,
-                    (((rawADC[5])<<8) | ((rawADC[4]>>1)<<1))/64 );
+  ACC_ORIENTATION(   ((rawADC[1]<<8) | rawADC[0])/32 ,
+                     ((rawADC[3]<<8) | rawADC[2])/32 ,
+                     ((rawADC[5]<<8) | rawADC[4])/32 );
   ACC_Common();
 }
 #endif
@@ -592,7 +525,7 @@ void Gyro_init() {
   delay(100);
   i2c_writeReg(ITG3200_ADDRESS ,0x3E ,0x80 ); //register: Power Management  --  value: reset device
   delay(5);
-  i2c_writeReg(ITG3200_ADDRESS ,0x15 ,0x7 ); //register: Sample Rate Divider  --  value: 7: 8000Hz/(7+1) = 1000Hz . more than twice the need
+  i2c_writeReg(ITG3200_ADDRESS ,0x15, 0x07); //register: Sample Rate Divider  --  value: 7: 8000Hz/(7+1) = 1000Hz . more than twice the need
   delay(5);
   i2c_writeReg(ITG3200_ADDRESS ,0x16 ,0x18 ); //register: DLPF_CFG - low pass filter configuration & sample rate  --  value: 256Hz Low Pass Filter Bandwidth - Internal Sample Rate 8kHz
   delay(5);
@@ -603,11 +536,9 @@ void Gyro_init() {
 void Gyro_getADC () {
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   i2c_getSixRawADC(ITG3200_ADDRESS,0X1D);
-  
-  GYRO_ORIENTATION(  + ( ((rawADC[2]<<8) | rawADC[3])/4 ) , // range: +/- 10922
+  GYRO_ORIENTATION(  + ( ((rawADC[2]<<8) | rawADC[3])/4) , // range: +/- 8192; +/- 2000 deg/sec
                      - ( ((rawADC[0]<<8) | rawADC[1])/4 ) ,
                      - ( ((rawADC[4]<<8) | rawADC[5])/4 ) );
-
   GYRO_Common();
 }
 #endif

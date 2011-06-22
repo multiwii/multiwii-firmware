@@ -111,7 +111,7 @@
 //#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,CAMPITCH,CAMROLL //For Robe/Hitec/Futaba
 //#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,CAMPITCH,CAMROLL //For some Hitec/Sanwa/Others
 
-/* The following lines apply only for Spektrum Satellite Receiver on MEGA boards only */
+/* The following lines apply only for Spektrum Satellite Receiver on MEGA boards only */ //not yet implemented
 //#define SPEKTRUM
 
 /* interleaving delay in micro seconds between 2 readings WMP/NK in a WMP+NK config
