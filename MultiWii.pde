@@ -10,7 +10,6 @@ June  2011     V1.dev
 
 #include "config.h"
 #include "def.h"
-#include <EEPROM.h>
 #define   VERSION  18
 
 /*********** RC alias *****************/
@@ -51,7 +50,6 @@ static uint8_t baroMode = 0;       // if altitude hold is activated
 static int16_t gyroADC[3],accADC[3],magADC[3];
 static int16_t accSmooth[3];       // projection of smoothed and normalized gravitation force vector on x/y/z axis, as measured by accelerometer
 static int16_t heading,magHold;
-static int16_t altitudeSmooth = 0;
 static uint8_t calibratedACC = 0;
 static uint8_t vbat;               // battery voltage in 0.1V steps
 static uint8_t okToArm = 0;
@@ -77,12 +75,6 @@ static uint8_t powerTrigger1 = 0;  // trigger for alarm based on power consumpti
   #ifndef VBAT
 	#error "to use powermeter, you must also define and configure VBAT"
   #endif
-  #define PARAMMAX 29
-  #define PARAMMOTORSTART  20
-  #define PARAMMOTOREND    28
-  #define PARAMMOTOROFFSET 21
-#else
-  #define PARAMMAX 20
 #endif
 
 #ifdef LCD_TELEMETRY
@@ -135,34 +127,6 @@ static uint8_t rollPitchRate;
 static uint8_t yawRate;
 static uint8_t dynThrPID;
 static uint8_t activate[6];
-
-typedef struct {
-  char*    paramText;
-  uint8_t* var;
-  uint8_t  decimal;
-  uint8_t  increment;
-} paramStruct;
-
-#define PARAM_BLOCK_SIZE 33
-static paramStruct param[PARAM_BLOCK_SIZE] = {
-  {"PITCH&ROLL P", &P8[ROLL],1,1},
-  {"ROLL   P", &P8[ROLL],1,1},     {"ROLL   I", &I8[ROLL],3,5},  {"ROLL   D", &D8[ROLL],0,1},
-  {"PITCH  P", &P8[PITCH],1,1},    {"PITCH  I", &I8[PITCH],3,5}, {"PITCH  D", &D8[PITCH],0,1},
-  {"YAW    P", &P8[YAW],1,1},      {"YAW    I", &I8[YAW],3,5},   {"YAW    D", &D8[YAW],0,1},
-  {"ALT    P", &P8[PIDALT],1,1},   {"ALT    I", &I8[PIDALT],3,5},{"ALT    D", &D8[PIDALT],0,1},
-  {"VEL    P", &P8[PIDVEL],1,1},   {"VEL    I", &I8[PIDVEL],3,5},{"VEL    D", &D8[PIDVEL],0,1},
-  {"LEVEL  P", &P8[PIDLEVEL],1,1}, {"LEVEL  I", &I8[PIDLEVEL],3,5},
-  {"MAG    P", &P8[PIDMAG],1,1},
-  {"RC RATE", &rcRate8,2,2},       {"RC EXPO", &rcExpo8,2,2},
-  {"PITCH&ROLL RATE", &rollPitchRate,2,2}, {"YAW RATE", &yawRate,2,2},
-  {"THROTTLE PID", &dynThrPID,2,2},
-
-  {"pMeter Motor 0", &pMeterV,16,0}, {"pMeter Motor 1", &pMeterV,16,0}, {"pMeter Motor 2", &pMeterV,16,0},
-  {"pMeter Motor 3", &pMeterV,16,0}, {"pMeter Motor 4", &pMeterV,16,0}, {"pMeter Motor 5", &pMeterV,16,0},
-  {"pMeter Sum", &pMeterV,16,0},
-  {"pAlarm /50", &powerTrigger1,0,1}, // change text to represent PLEVELSCALE value
-  {"Battery Volt", &vbat,1,0} //29
-};
 
 void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
   uint8_t i,r;
@@ -329,8 +293,8 @@ void loop () {
   static uint8_t camState = 0;
   static uint32_t camTime = 0;
   static uint32_t rcTime  = 0;
-  static int32_t initialThrottleHold;
-  static int16_t errorAltitudeI = 0;
+  static int16_t initialThrottleHold;
+  static int32_t errorAltitudeI = 0;
   static int16_t AltPID = 0;
   static int32_t VelErrorI = 0;
   static int16_t lastVelError = 0;

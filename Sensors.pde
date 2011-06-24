@@ -1,6 +1,6 @@
-// ***************************
+// ************************************************************************************************************
 // board orientation and setup
-// ***************************
+// ************************************************************************************************************
 //default board orientation
 #if !defined(ACC_ORIENTATION) 
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
@@ -31,9 +31,9 @@
 uint8_t rawADC[6];
 static uint32_t neutralizeTime = 0;
   
-// *********************
+// ************************************************************************************************************
 // I2C general functions
-// *********************
+// ************************************************************************************************************
 
 // Mask prescaler bits : only 5 bits of TWSR defines the status of each I2C request
 #define TW_STATUS_MASK	(1<<TWS7) | (1<<TWS6) | (1<<TWS5) | (1<<TWS4) | (1<<TWS3)
@@ -120,15 +120,15 @@ void i2c_getSixRawADC(uint8_t add, uint8_t reg) {
 
 void i2c_writeReg(uint8_t add, uint8_t reg, uint8_t val) {
   i2c_rep_start(add+0);  // I2C write direction
-  i2c_write(reg);        //   register selection
-  i2c_write(val);        //     value to write in register
+  i2c_write(reg);        // register selection
+  i2c_write(val);        // value to write in register
 }
 
 uint8_t i2c_readReg(uint8_t add, uint8_t reg) {
   i2c_rep_start(add+0);  // I2C write direction
-  i2c_write(reg);        //   register selection
+  i2c_write(reg);        // register selection
   i2c_rep_start(add+1);  // I2C read direction
-  return i2c_readNak();
+  return i2c_readNak();  // Read single register and return value
 }
 
 // ****************
@@ -176,9 +176,9 @@ void ACC_Common() {
         accZero[axis]=0;
       }
     } else {
-      accZero[ROLL]  = (a[ROLL]+200)/399;
-      accZero[PITCH] = (a[PITCH]+200)/399;
-      accZero[YAW]   = (a[YAW]+200)/399-acc_1G; // for nunchuk 200=1G
+      accZero[ROLL]  = (a[ROLL])/399;
+      accZero[PITCH] = (a[PITCH])/399;
+      accZero[YAW]   = (a[YAW])/399-acc_1G; // for nunchuk 200=1G
       writeParams(); // write accZero in EEPROM
     }
     calibratingA--;
@@ -189,9 +189,9 @@ void ACC_Common() {
 }
 
 
-// **************************
+// ************************************************************************************************************
 // I2C Barometer BOSCH BMP085
-// **************************
+// ************************************************************************************************************
 // I2C adress: 0xEE (8bit)   0x77 (7bit)
 // principle:
 //  1) read the calibration register (only once at the initialization)
@@ -199,32 +199,34 @@ void ACC_Common() {
 //  3) read uncompensated pressure
 //  4) raw temp + raw pressure => calculation of the adjusted pressure
 //  the following code uses the maximum precision setting (oversampling setting 3)
+// ************************************************************************************************************
 
 #if defined(BMP085)
-// sensor registers from the BOSCH BMP085 datasheet
-static int16_t ac1,ac2,ac3,b1,b2,mb,mc,md;
-static uint16_t  ac4,ac5,ac6;
-
-static uint16_t ut; //uncompensated T
-static uint32_t up; //uncompensated P
-
+static struct {
+  // sensor registers from the BOSCH BMP085 datasheet
+  int16_t  ac1, ac2, ac3, b1, b2, mb, mc, md;
+  uint16_t ac4, ac5, ac6;
+  union {uint16_t val; uint8_t raw[2]; } ut; //uncompensated T
+  union {uint32_t val; uint8_t raw[4]; } up; //uncompensated P
+  uint8_t  state;
+  uint32_t deadline;
+} bmp085_ctx;  
 #define OSS 3
 
 void i2c_BMP085_readCalibration(){
   delay(10);
-  ac1 = i2c_BMP085_readIntRegister(0xAA);
-  ac2 = i2c_BMP085_readIntRegister(0xAC);
-  ac3 = i2c_BMP085_readIntRegister(0xAE);
-  ac4 = i2c_BMP085_readIntRegister(0xB0);
-  ac5 = i2c_BMP085_readIntRegister(0xB2);
-  ac6 = i2c_BMP085_readIntRegister(0xB4);
-  b1  = i2c_BMP085_readIntRegister(0xB6);
-  b2  = i2c_BMP085_readIntRegister(0xB8);
-  mb  = i2c_BMP085_readIntRegister(0xBA);
-  mc  = i2c_BMP085_readIntRegister(0xBC);
-  md  = i2c_BMP085_readIntRegister(0xBE);
+  bmp085_ctx.ac1 = i2c_BMP085_readIntRegister(0xAA);
+  bmp085_ctx.ac2 = i2c_BMP085_readIntRegister(0xAC);
+  bmp085_ctx.ac3 = i2c_BMP085_readIntRegister(0xAE);
+  bmp085_ctx.ac4 = i2c_BMP085_readIntRegister(0xB0);
+  bmp085_ctx.ac5 = i2c_BMP085_readIntRegister(0xB2);
+  bmp085_ctx.ac6 = i2c_BMP085_readIntRegister(0xB4);
+  bmp085_ctx.b1  = i2c_BMP085_readIntRegister(0xB6);
+  bmp085_ctx.b2  = i2c_BMP085_readIntRegister(0xB8);
+  bmp085_ctx.mb  = i2c_BMP085_readIntRegister(0xBA);
+  bmp085_ctx.mc  = i2c_BMP085_readIntRegister(0xBC);
+  bmp085_ctx.md  = i2c_BMP085_readIntRegister(0xBE);
 }
-
 
 void  Baro_init() {
   delay(10);
@@ -234,18 +236,16 @@ void  Baro_init() {
   i2c_BMP085_UT_Read();
 }
 
-
 // read a 16 bit register
-int16_t i2c_BMP085_readIntRegister(unsigned char r) {
-  uint8_t msb, lsb;
-  
+int16_t i2c_BMP085_readIntRegister(uint8_t r) {
+  union {int16_t val; uint8_t raw[2]; } data;
   i2c_rep_start(0xEE + 0);
   i2c_write(r);
   i2c_rep_start(0xEE + 1);//I2C read direction => 1
-  msb=i2c_readAck();
-  lsb=i2c_readNak();
-  i2c_rep_stop();
-  return (((int16_t)msb<<8) | ((int16_t)lsb));
+  data.raw[1] = i2c_readAck();
+  data.raw[0] = i2c_readNak();
+//  i2c_rep_stop();
+  return data.val;
 }
 
 // read uncompensated temperature value: send command first
@@ -253,70 +253,56 @@ void i2c_BMP085_UT_Start() {
   i2c_writeReg(0xEE,0xf4,0x2e);
   i2c_rep_start(0xEE + 0);
   i2c_write(0xF6);
-  i2c_rep_stop();
 }
 
 // read uncompensated pressure value: send command first
 void i2c_BMP085_UP_Start () {
   i2c_writeReg(0xEE,0xf4,0x34+(OSS<<6)); // control register value for oversampling setting 3
   i2c_rep_start(0xEE + 0); //I2C write direction => 0
-  i2c_write(0xf6);
-  i2c_rep_stop();
+  i2c_write(0xF6);
 }
 
 // read uncompensated pressure value: read result bytes
 // the datasheet suggests a delay of 25.5 ms (oversampling settings 3) after the send command
+
 void i2c_BMP085_UP_Read () {
-  uint8_t msb, lsb, xlsb;
   i2c_rep_start(0xEE + 1);//I2C read direction => 1
-  msb = i2c_readAck();
-  lsb = i2c_readAck();
-  xlsb = i2c_readNak();
-  i2c_rep_stop();
-  up = (((uint32_t)msb<<16) | ((uint32_t)lsb<<8) | ((uint32_t)xlsb)) >> (8-OSS);
+  bmp085_ctx.up.raw[2] = i2c_readAck();
+  bmp085_ctx.up.raw[1] = i2c_readAck();
+  bmp085_ctx.up.raw[0] = i2c_readNak();
+//  i2c_rep_stop();
 }
 
 // read uncompensated temperature value: read result bytes
 // the datasheet suggests a delay of 4.5 ms after the send command
 void i2c_BMP085_UT_Read() {
-  uint8_t msb, lsb;
   i2c_rep_start(0xEE + 1);//I2C read direction => 1
-  msb=i2c_readAck();
-  lsb=i2c_readNak();
-  i2c_rep_stop();
-  ut = (((uint16_t)msb<<8) | ((uint16_t)lsb));
+  bmp085_ctx.ut.raw[1] = i2c_readAck();
+  bmp085_ctx.ut.raw[0] = i2c_readNak();
+//  i2c_rep_stop();
 }
 
 void i2c_BMP085_Calculate() {
-  long x1, x2, x3, b3, b5, b6, p;
-  unsigned long b4, b7;
-  int32_t tmp;
-  
-  // See Datasheet page 13 for this formulas
-  // Based also on Jee Labs BMP085 example code. Thanks for share.
+   int32_t  x1, x2, x3, b3, b5, b6, p, tmp;
+   uint32_t b4, b7;
   // Temperature calculations
-  x1 = ((long)ut - ac6) * ac5 >> 15;
-  x2 = ((long) mc << 11) / (x1 + md);
+  x1 = ((int32_t)bmp085_ctx.ut.val - bmp085_ctx.ac6) * bmp085_ctx.ac5 >> 15;
+  x2 = ((int32_t)bmp085_ctx.mc << 11) / (x1 + bmp085_ctx.md);
   b5 = x1 + x2;
-  //Temp = (b5 + 8) >> 4;
-
   // Pressure calculations
   b6 = b5 - 4000;
-  x1 = (b2 * (b6 * b6 >> 12)) >> 11; 
-  x2 = ac2 * b6 >> 11;
+  x1 = (bmp085_ctx.b2 * (b6 * b6 >> 12)) >> 11; 
+  x2 = bmp085_ctx.ac2 * b6 >> 11;
   x3 = x1 + x2;
-  //b3 = (((int32_t) ac1 * 4 + x3)<<oss + 2) >> 2; // BAD
-  //b3 = ((int32_t) ac1 * 4 + x3 + 2) >> 2;  //OK for oss=0
-  tmp = ac1;
+  tmp = bmp085_ctx.ac1;
   tmp = (tmp*4 + x3) << OSS;
   b3 = (tmp+2)/4;
-  x1 = ac3 * b6 >> 13;
-  x2 = (b1 * (b6 * b6 >> 12)) >> 16;
+  x1 = bmp085_ctx.ac3 * b6 >> 13;
+  x2 = (bmp085_ctx.b1 * (b6 * b6 >> 12)) >> 16;
   x3 = ((x1 + x2) + 2) >> 2;
-  b4 = (ac4 * (uint32_t) (x3 + 32768)) >> 15;
-  b7 = ((uint32_t) up - b3) * (50000 >> OSS);
+  b4 = (bmp085_ctx.ac4 * (uint32_t)(x3 + 32768)) >> 15;
+  b7 = ((uint32_t) (bmp085_ctx.up.val >> (8-OSS)) - b3) * (50000 >> OSS);
   p = b7 < 0x80000000 ? (b7 * 2) / b4 : (b7 / b4) * 2;
-  
   x1 = (p >> 8) * (p >> 8);
   x1 = (x1 * 3038) >> 16;
   x2 = (-7357 * p) >> 16;
@@ -324,47 +310,45 @@ void i2c_BMP085_Calculate() {
 }
 
 void Baro_update() {
-  static uint32_t t;
-  static uint8_t state = 0;
-  static uint8_t zeroCount = 0;
-  
-  if (currentTime < t) return; t = currentTime;
+  if (currentTime < bmp085_ctx.deadline) return; 
+  bmp085_ctx.deadline = currentTime;
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, BMP085 is ok with this speed
-  switch (state) {
+  switch (bmp085_ctx.state) {
     case 0: 
       i2c_BMP085_UT_Start(); 
-      state++; t += 4600; 
+      bmp085_ctx.state++; bmp085_ctx.deadline += 4600; 
       break;
     case 1: 
       i2c_BMP085_UT_Read(); 
-      state++; 
+      bmp085_ctx.state++; 
       break;
     case 2: 
       i2c_BMP085_UP_Start(); 
-      state++; t += 26000; 
+      bmp085_ctx.state++; bmp085_ctx.deadline += 26000; 
       break;
     case 3: 
       i2c_BMP085_UP_Read(); 
       i2c_BMP085_Calculate(); 
-      BaroAlt = (1.0 - pow(float(pressure)/101325.0, 0.190295)) * 44330 ;
-      state = 0; 
+      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 44330.0f;
+      bmp085_ctx.state = 0; 
       baroNewData = 1;
-      t += 20000; 
+      bmp085_ctx.deadline += 20000; 
       break;
-  }  
+  } 
 }
 #endif
 
-
-// **************************
+// ************************************************************************************************************
 // I2C Accelerometer ADXL345 
-// **************************
+// ************************************************************************************************************
 // I2C adress: 0x3A (8bit)    0x1D (7bit)
+// Resolution: 10bit (Full range - 14bit, but this is autoscaling 10bit ADC to the range +- 16g)
 // principle:
 //  1) CS PIN must be linked to VCC to select the I2C mode
 //  2) SD0 PIN must be linked to VCC to select the right I2C adress
 //  3) bit  b00000100 must be set on register 0x2D to read data (only once at the initialization)
 //  4) bits b00001011 must be set on register 0x31 to select the data format (only once at the initialization)
+// ************************************************************************************************************
 #if defined(ADXL345)
 void ACC_init () {
   delay(10);
@@ -387,14 +371,24 @@ void ACC_getADC () {
 #endif
 
 
-// **************************
+// ************************************************************************************************************
 // contribution initially from opie11 (rc-groups)
 // adaptation from C2po (may 2011)
 // contribution from ziss_dm (June 2011)
 // I2C Accelerometer BMA180
-// **************************
+// ************************************************************************************************************
 // I2C adress: 0x80 (8bit)    0x40 (7bit) (SDO connection to VCC) 
 // I2C adress: 0x82 (8bit)    0x41 (7bit) (SDO connection to VDDIO)
+// Resolution: 14bit
+//
+// Control registers:
+//
+// 0x0D ctrl_reg0:   | reserved | reset_int       | update_image | ee_w | st1 | st0 | sleep | dis_wake_up |
+//                   |        x |         0       |            0 |    1 |   0 |   0 |     0 |           0 |
+//
+// 0x20 bw_tcs:      | bw<3:0>  |        tcs<3:0> |
+//                   |    10Hz  | !!Calibration!! |
+// ************************************************************************************************************
 #if defined(BMA180)
 void ACC_init () {
   delay(10);
@@ -418,36 +412,47 @@ void ACC_getADC () {
 }
 #endif
 
-// **************
+// ************************************************************************************************************
 // contribution from Point65 and mgros (rc-groups)
 // contribution from ziss_dm (June 2011)
 // I2C Accelerometer BMA020
-// **************
+// ************************************************************************************************************
 // I2C adress: 0x70 (8bit)
+// Resolution: 10bit
+// Control registers:
+//
+// |0x15| SPI4 | enable_adv_INT | new_data_INT | latch_INT | shadow_dis | wake_up_pause | wake_up |
+// |    |    1 |              0 |            0 |         0 |          0 |             0 |       0 |
+// Datasheet: After power on reset or soft reset it is recommended to set the SPI4-bit to the correct value.
+// 0x80 = SPI four-wire = Default setting
+//
+// |0x14|   reserved <2:0> | range <1:0> | bandwith <2:0> |
+// |    | Keep calibration |        +-2g |           25Hz |
+// ************************************************************************************************************
 #if defined(BMA020)
 void ACC_init(){
-  i2c_writeReg(0x70,0x15,0x80); // Write B10000000 at 0x15 init BMA020
+  i2c_writeReg(0x70,0x15,0x80);
   uint8_t control = i2c_readReg(0x70, 0x14);
   control = control & 0xE0;
   control = control | (0x00 << 3); //Range 2G 00
-  control = control | 0x00; //Bandwidth 25 Hz 000
+  control = control | 0x00;        //Bandwidth 25 Hz 000
   i2c_writeReg(0x70,0x14,control); 
-  acc_1G = 512;
+  acc_1G = 255;
 }
 
 void ACC_getADC(){
   TWBR = ((16000000L / 400000L) - 16) / 2;
   i2c_getSixRawADC(0x70,0x02);
-  ACC_ORIENTATION(   ((rawADC[1]<<8) | rawADC[0])/32 ,
-                     ((rawADC[3]<<8) | rawADC[2])/32 ,
-                     ((rawADC[5]<<8) | rawADC[4])/32 );
+  ACC_ORIENTATION(    ((rawADC[1]<<8) | rawADC[0])/64 ,
+                      ((rawADC[3]<<8) | rawADC[2])/64 ,
+                      ((rawADC[5]<<8) | rawADC[4])/64 );
   ACC_Common();
 }
 #endif
 
-// **************************
+// ************************************************************************************************************
 // standalone I2C Nunchuk
-// **************************
+// ************************************************************************************************************
 #if defined(NUNCHACK)
 void ACC_init() {
   i2c_writeReg(0xA4 ,0xF0 ,0x55 );
@@ -467,9 +472,9 @@ void ACC_getADC() {
 }
 #endif
 
-// **************************
+// ************************************************************************************************************
 // ADC ACC
-// **************************
+// ************************************************************************************************************
 #if defined(ADCACC)
 void ACC_init(){
   pinMode(A1,INPUT);
@@ -487,10 +492,10 @@ void ACC_getADC() {
 }
 #endif
 
-// **************************
+// ************************************************************************************************************
 // contribution from Ciskje
 // I2C Gyroscope L3G4200D 
-// **************************
+// ************************************************************************************************************
 #if defined(L3G4200D)
 void Gyro_init() {
   delay(100);
@@ -510,9 +515,9 @@ void Gyro_getADC () {
 }
 #endif
 
-// **************************
+// ************************************************************************************************************
 // I2C Gyroscope ITG3200 
-// **************************
+// ************************************************************************************************************
 // I2C adress: 0xD2 (8bit)   0x69 (7bit)
 // I2C adress: 0xD0 (8bit)   0x68 (7bit)
 // principle:
@@ -520,16 +525,17 @@ void Gyro_getADC () {
 // 2) I2C adress is set to 0x69 (AD0 PIN connected to VDD)
 // or 2) I2C adress is set to 0x68 (AD0 PIN connected to GND)
 // 3) sample rate = 1000Hz ( 1kHz/(div+1) )
+// ************************************************************************************************************
 #if defined(ITG3200)
 void Gyro_init() {
   delay(100);
-  i2c_writeReg(ITG3200_ADDRESS ,0x3E ,0x80 ); //register: Power Management  --  value: reset device
+  i2c_writeReg(ITG3200_ADDRESS, 0x3E, 0x80); //register: Power Management  --  value: reset device
   delay(5);
-  i2c_writeReg(ITG3200_ADDRESS ,0x15, 0x07); //register: Sample Rate Divider  --  value: 7: 8000Hz/(7+1) = 1000Hz . more than twice the need
+  i2c_writeReg(ITG3200_ADDRESS, 0x15, 0x07); //register: Sample Rate Divider  --  value: 7: 8000Hz/(7+1) = 1000Hz . more than twice the need
   delay(5);
-  i2c_writeReg(ITG3200_ADDRESS ,0x16 ,0x18 ); //register: DLPF_CFG - low pass filter configuration & sample rate  --  value: 256Hz Low Pass Filter Bandwidth - Internal Sample Rate 8kHz
+  i2c_writeReg(ITG3200_ADDRESS, 0x16, 0x18); //register: DLPF_CFG - low pass filter configuration & sample rate  --  value: 256Hz Low Pass Filter Bandwidth - Internal Sample Rate 8kHz
   delay(5);
-  i2c_writeReg(ITG3200_ADDRESS ,0x3E ,0x03 ); //register: Power Management  --  value: PLL with Z Gyro reference
+  i2c_writeReg(ITG3200_ADDRESS, 0x3E, 0x03); //register: Power Management  --  value: PLL with Z Gyro reference
   delay(100);
 }
 
@@ -544,10 +550,11 @@ void Gyro_getADC () {
 #endif
 
 
-// **************************
+// ************************************************************************************************************
 // I2C Compass HMC5843 & HMC5883
-// **************************
+// ************************************************************************************************************
 // I2C adress: 0x3C (8bit)   0x1E (7bit)
+// ************************************************************************************************************
 #if MAG
 void Mag_init() { 
   delay(100);
@@ -602,18 +609,19 @@ void Mag_getADC() {
 }
 #endif
 
-// **************************
+#if !GYRO 
+// ************************************************************************************************************
 // I2C Wii Motion Plus + optional Nunchuk
-// **************************
+// ************************************************************************************************************
 // I2C adress 1: 0xA6 (8bit)    0x53 (7bit)
 // I2C adress 2: 0xA4 (8bit)    0x52 (7bit)
-
+// ************************************************************************************************************
 void WMP_init(uint8_t d) {
   if(GYRO) return;
   delay(d);
-  i2c_writeReg(0xA6 ,0xF0 ,0x55 );
+  i2c_writeReg(0xA6, 0xF0, 0x55); // Initialize Extension
   delay(d);
-  i2c_writeReg(0xA6 ,0xFE ,0x05 );
+  i2c_writeReg(0xA6, 0xFE, 0x05); // Activate Nunchuck pass-through mode
   delay(d);
   if (d>0) {
     uint8_t numberAccRead = 0;
@@ -658,6 +666,7 @@ uint8_t WMP_getRawADC() {
   } else
     return 2;
 }
+#endif
 
 void initSensors() {
   delay(200);

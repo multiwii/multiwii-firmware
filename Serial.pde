@@ -185,7 +185,7 @@ void serialCom() {
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
       for(i=0;i<3;i++) serialize16(gyroData[i]/8); //13
       for(i=0;i<3;i++) serialize16(magADC[i]/3); //19
-      serialize16(altitudeSmooth);
+      serialize16(BaroAlt*100.0f);
       serialize16(heading); // compass
       for(i=0;i<4;i++) serialize16(servo[i]); //31
       for(i=0;i<6;i++) serialize16(motor[i]); //43
@@ -235,6 +235,7 @@ void serialCom() {
       serialize16(intPowerMeterSum);  
       serialize16(intPowerTrigger1);
       serialize8(vbat); //99
+      serialize16(EstAlt*100.0f);
       serialize8('M'); //100
       UartSendData(); // Serial.write(s,point);
       break;
@@ -243,7 +244,7 @@ void serialCom() {
       serialize8('O');
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
       for(i=0;i<3;i++) serialize16(gyroData[i]);
-      serialize16(altitudeSmooth);
+      serialize16(EstAlt*10.0f);
       serialize16(heading); // compass - 16 bytes
       for(i=0;i<2;i++) serialize16(angle[i]); //20
       for(i=0;i<6;i++) serialize16(motor[i]); //32

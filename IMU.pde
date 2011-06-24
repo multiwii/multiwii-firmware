@@ -266,8 +266,5 @@ void getEstimatedAltitude(){
   EstAlt += ((EstVelocity + Delta * 0.5f) * dt + (Kp2 * Kt) * AltError);
   EstVelocity += Delta;
   // Debug
-//  magADC[0] = BaroAlt*100.0f;
-//  magADC[1] = EstVelocity*1000.0f/3.0f;
-//  magADC[2] = EstAlt*100.0f;
-  altitudeSmooth = BaroAlt*100.f;
+  //magADC[1] = EstVelocity*1000.0f/3.0f;
 }

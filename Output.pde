@@ -228,8 +228,9 @@ void mixTable() {
   int16_t maxMotor;
   uint8_t i;
 
-  int16_t tmp = 2*max(max(abs(rcCommand[ROLL]),abs(rcCommand[PITCH])),50);
-  #define PIDMIX(X,A,Y,B,Z) rcCommand[THROTTLE] +constrain(X axisPID[ROLL]*A  Y axisPID[PITCH]*B,-tmp,+tmp) Z YAW_DIRECTION * axisPID[YAW];
+//  int16_t tmp = 2*max(max(abs(rcCommand[ROLL]),abs(rcCommand[PITCH])),50);
+//  #define PIDMIX(X,A,Y,B,Z) rcCommand[THROTTLE] +constrain(X axisPID[ROLL]*A  Y axisPID[PITCH]*B,-tmp,+tmp) Z YAW_DIRECTION * axisPID[YAW];
+  #define PIDMIX(X,A,Y,B,Z) rcCommand[THROTTLE] + X axisPID[ROLL]*A  Y axisPID[PITCH]*B Z YAW_DIRECTION * axisPID[YAW];
 
   #if NUMBER_MOTOR > 3
     //prevent "yaw jump" during yaw correction

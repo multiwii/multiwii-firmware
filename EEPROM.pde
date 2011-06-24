@@ -1,37 +1,57 @@
+#include <avr/eeprom.h>
 
-static uint8_t checkNewConf = 141;
+static uint8_t checkNewConf = 142;
+
+typedef struct eep_entry_t{
+  void *  var;
+  uint8_t size;
+};
+
+// ************************************************************************************************************
+// EEPROM Layout definition
+// ************************************************************************************************************
+static eep_entry_t eep_entry[] = {
+  &checkNewConf, sizeof(checkNewConf),
+  &P8, sizeof(P8)
+, &I8, sizeof(I8) 
+, &D8, sizeof(D8) 
+, &rcRate8, sizeof(rcRate8)
+, &rcExpo8, sizeof(rcExpo8)
+, &rollPitchRate, sizeof(rollPitchRate)
+, &yawRate, sizeof(yawRate)
+, &activate, sizeof(activate)
+, &accZero, sizeof(accZero)
+, &magZero, sizeof(magZero)
+#if defined(POWERMETER)
+, &powerTrigger1, sizeof(powerTrigger1)
+#endif
+};  
+#define EEBLOCK_SIZE sizeof(eep_entry)/sizeof(eep_entry_t)
+// ************************************************************************************************************
 
 void readEEPROM() {
-  uint8_t i,p=1;
-  for(i=1;i<24;i++) *param[i].var = EEPROM.read(p++);
-  for(i=0;i<6;i++) activate[i] = EEPROM.read(p++); //22
-  for(i=0;i<3;i++) accZero[i] = (EEPROM.read(p++)&0xff) + (EEPROM.read(p++)<<8); // 28
-  for(i=0;i<3;i++) magZero[i] = (EEPROM.read(p++)&0xff) + (EEPROM.read(p++)<<8); // 34
-
- #if defined(POWERMETER)
-  powerTrigger1 = EEPROM.read(p++);
-  pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
- #endif
- 
+  uint8_t i, _address = eep_entry[0].size;
+  for(i=1; i<EEBLOCK_SIZE; i++) {
+    eeprom_read_block(eep_entry[i].var, (void*)(_address), eep_entry[i].size); _address += eep_entry[i].size;
+  }  
+  #if defined(POWERMETER)
+    pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
+  #endif
   for(i=0;i<7;i++) lookupRX[i] = (2500+rcExpo8*(i*i-25))*i*(int32_t)rcRate8/1250;
 }
 
 void writeParams() {
-  uint8_t i,p=1;
-  EEPROM.write(0, checkNewConf);
-  for(i=1;i<24;i++) EEPROM.write(p++,*param[i].var);
-  for(i=0;i<6;i++) EEPROM.write(p++,activate[i]); //22
-  for(i=0;i<3;i++) {EEPROM.write(p++,accZero[i]);EEPROM.write(p++,accZero[i]>>8&0xff);} // 28
-  for(i=0;i<3;i++) {EEPROM.write(p++,magZero[i]);EEPROM.write(p++,magZero[i]>>8&0xff);} // 34
- #if defined(POWERMETER)
-  EEPROM.write(p++,powerTrigger1);
- #endif
+  uint8_t i, _address = 0;
+  for(i=0; i<EEBLOCK_SIZE; i++) {
+    eeprom_write_block(eep_entry[i].var, (void*)(_address), eep_entry[i].size); _address += eep_entry[i].size;
+  }  
   readEEPROM();
   blinkLED(15,20,1);
 }
 
 void checkFirstTime() {
-  if ( EEPROM.read(0) == checkNewConf ) return;
+  uint8_t test_val; eeprom_read_block((void*)&test_val, (void*)(0), sizeof(test_val));
+  if (test_val == checkNewConf) return;
   P8[ROLL] = 40; I8[ROLL] = 30; D8[ROLL] = 15;
   P8[PITCH] = 40; I8[PITCH] = 30; D8[PITCH] = 15;
   P8[YAW]  = 80; I8[YAW]  = 0;  D8[YAW]  = 0;
@@ -45,9 +65,9 @@ void checkFirstTime() {
   yawRate = 0;
   dynThrPID = 0;
   for(uint8_t i=0;i<6;i++) activate[i] = 0;
- #if defined(POWERMETER)
+#if defined(POWERMETER)
   powerTrigger1 = 0;
- #endif
+#endif
   writeParams();
 }
 

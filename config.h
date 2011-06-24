@@ -11,9 +11,9 @@
 /* The type of multicopter */
 //#define GIMBAL
 //#define BI
-#define TRI
+//#define TRI
 //#define QUADP
-//#define QUADX
+#define QUADX
 //#define Y4
 //#define Y6
 //#define HEX6
@@ -29,11 +29,11 @@
 #define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
 //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
 
-#define PROMINI  //Arduino type
-//#define MEGA
+//#define PROMINI  //Arduino type
+#define MEGA
 
 //enable internal I2C pull ups
-#define INTERNAL_I2C_PULLUPS
+//#define INTERNAL_I2C_PULLUPS
 
 //****** advanced users settings   *************
 
@@ -70,7 +70,7 @@
 //                   for other boards, I'm not sure, the info was gathered via rc forums, be cautious
 
 //#define FFIMUv1    //first 9DOF+baro board from Jussi, with HMC5843
-//#define FFIMUv2    //second version of 9DOF+baro board from Jussi, with HMC5883
+#define FFIMUv2    //second version of 9DOF+baro board from Jussi, with HMC5883
 //#define FREEIMUv01 //first version of 9DOF board from Fabio
 //#define FREEIMU    //later version of 9DOF board from Fabio
 //#define PIPO       //9DOF board from erazz
@@ -244,6 +244,10 @@
 //#define LOG_VALUES
  
 //****** end of advanced users settings *************
+
+//#define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  = -X; accADC[YAW]  = Z;}
+//#define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = Z;}
+//#define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
 
 /**************************************/
 /****END OF CONFIGURABLE PARAMETERS****/
