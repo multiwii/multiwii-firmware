@@ -29,11 +29,11 @@
 #define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
 //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
 
-//#define PROMINI  //Arduino type
-#define MEGA
+#define PROMINI  //Arduino type
+//#define MEGA
 
 //enable internal I2C pull ups
-//#define INTERNAL_I2C_PULLUPS
+#define INTERNAL_I2C_PULLUPS
 
 //****** advanced users settings   *************
 
@@ -70,7 +70,7 @@
 //                   for other boards, I'm not sure, the info was gathered via rc forums, be cautious
 
 //#define FFIMUv1    //first 9DOF+baro board from Jussi, with HMC5843
-#define FFIMUv2    //second version of 9DOF+baro board from Jussi, with HMC5883
+//#define FFIMUv2    //second version of 9DOF+baro board from Jussi, with HMC5883
 //#define FREEIMUv01 //first version of 9DOF board from Fabio
 //#define FREEIMU    //later version of 9DOF board from Fabio
 //#define PIPO       //9DOF board from erazz
@@ -181,8 +181,8 @@
 
 /* enable monitoring of the power consumption from battery (think of mAh) */
 /* allows to set alarm value in GUI or via LCD */
-/* Current first implementation method is pure software. */
-/* soft: - (good results +-5% for plush and mystery ESCs @ 2S and 3S, not good with SuperSimple ESC */
+/* Two options: */
+/* 1 - soft: - (good results +-5% for plush and mystery ESCs @ 2S and 3S, not good with SuperSimple ESC */
 /*      00. relies on your combo of battery type (Voltage, cpacity), ESC, ESC settings, motors, props and multiwii cycle time */
 /*      01. set POWERMETER soft. Uses PLEVELSCALE = 50, PLEVELDIV = PLEVELDIVSOFT = 10000 */
 /*      0. output is a value that linearily scales to power (mAh) */
@@ -195,7 +195,7 @@
 /*      7. set alarm value in GUI or LCD */
 /*      8. enjoy your new battery alarm - possibly repeat steps 2 .. 7 */
 /*      9. if you want the numbers to represent your mAh value, you must change PLEVELDIV */
-/* hard: - (uses hardware sensor, after configuration gives reasonable results */
+/* 2 - hard: - (uses hardware sensor, after configuration gives reasonable results */
 /*      00. uses analog pin 2 to read voltage output from sensor. */
 /*      01. set POWERMETER hard. Uses PLEVELSCALE = 50 */
 /*      1. compute PLEVELDIV for your sensor (see below for insturctions) */
@@ -220,15 +220,16 @@
 /* PLEVELDIV = 37 / 4.9  * 10e6 / PHARDINTDIV  * 3600 / 1000  = 424745L */
 /* set to analogRead() value for zero current */
 #define PSENSORNULL 510 // for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt
-#define PINT2mA 132 // one integer step on arduino analog translates to mA (example 4.9 / 37 * 1000
+#define PINT2mA 13 // for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
+
 
 /* to monitor system values (battery level, loop time etc. with LCD enable this */
 /* note: for now you must send single characters 'A', 'B', 'C', 'D' to request 4 different pages */
-/* New: the info page on the LCD does get updated automatically - for stop press same button again */
-/* easy to use with Textstar LCD - the 4 buttons are preconfigured to send 'A', 'B', 'C', 'D' */
-//#define LCD_TELEMETRY
-// update interval for telemtry data - every n cycles
-#define TELEMETRY_CYCLES 10
+/* Buttons toggle request for page on/off */
+/* The active page on the LCD does get updated automatically */
+/* Easy to use with Terminal application or Textstar LCD - the 4 buttons are preconfigured to send 'A', 'B', 'C', 'D' */
+/* The value represents the refresh interval in cpu time (micro seconds) */
+//#define LCD_TELEMETRY 100000
 /* to enable automatic hopping between 4 telemetry pages uncomment this. */
 /* This may be useful if your LCD has no buttons or the sending is broken */
 /* hopping is activated and deactivated in unarmed mode with throttle=low & roll=left & pitch=forward */
@@ -239,8 +240,8 @@
 /* Example: 12.6V - VBATLEVEL1_3S  (for me = 126 - 102 = 24) */
 #define VBATREF 24 
 
-/* to log values like max loop time and others to come, we need extra variables */
-/* if you do not want the additional computing time or are short on memory, then comment the following */
+/* to log values like max loop time and others to come */
+/* logging values are visible via LCD config */
 //#define LOG_VALUES
  
 //****** end of advanced users settings *************

@@ -54,38 +54,33 @@ static uint8_t calibratedACC = 0;
 static uint8_t vbat;               // battery voltage in 0.1V steps
 static uint8_t okToArm = 0;
 static uint8_t rcOptions;
+
 static uint8_t baroNewData = 0;
 static int32_t pressure = 0;
-
 static float BaroAlt = 0.0f;
 static float EstVelocity = 0.0f;
 static float EstAlt = 0.0f;
 
-#ifdef LOG_VALUES
-  static uint16_t cycleTimeMax = 0;      // highest ever cycle timen 
-  static uint16_t cycleTimeMin = 65535;  // lowest ever cycle timen 
-  static uint16_t powerMax = 0;          // highest ever current 
-  static uint16_t powerAvg = 0;          // last known current
-#endif
-static uint32_t pMeter[7];         //we use [0:5] for six motors,[6] for sum
-static uint8_t pMeterV;            // dummy to satisfy the paramStruct logic in ConfigurationLoop()
-static uint32_t pAlarm;            // we scale the eeprom value from [0:255] to this value we can directly compare to the sum in pMeter[6]
-static uint8_t powerTrigger1 = 0;  // trigger for alarm based on power consumption
-#if defined(POWERMETER)
-  #ifndef VBAT
-	#error "to use powermeter, you must also define and configure VBAT"
-  #endif
-#endif
+//for log
+static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
+static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
+static uint16_t powerMax = 0;           // highest ever current
+static uint16_t powerAvg = 0;           // last known current
 
-#ifdef LCD_TELEMETRY
-  static uint8_t telemetry = 0;
-#endif
-#ifdef LCD_TELEMETRY_AUTO
-  #ifndef LCD_TELEMETRY
-     #error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
-  #endif
-  static uint8_t telemetry_auto = 0;
-#endif
+// **********************
+// power meter
+// **********************
+#define PMOTOR_SUM 8                     // index into pMeter[] for sum
+static uint32_t pMeter[PMOTOR_SUM + 1];  //we use [0:7] for eight motors,one extra for sum
+static uint8_t pMeterV;                  // dummy to satisfy the paramStruct logic in ConfigurationLoop()
+static uint32_t pAlarm;                  // we scale the eeprom value from [0:255] to this value we can directly compare to the sum in pMeter[6]
+static uint8_t powerTrigger1 = 0;        // trigger for alarm based on power consumption
+
+// **********************
+// telemetry
+// **********************
+static uint8_t telemetry = 0;
+static uint8_t telemetry_auto = 0;
 
 // ******************
 // rc functions
@@ -148,13 +143,12 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   static uint8_t buzzerFreq;         //delay between buzzer ring
   uint8_t axis;
   uint8_t prop1,prop2;
-  #ifdef LCD_TELEMETRY_AUTO
-    static uint32_t telemetryTime = 0;
-  #endif
-  #if (POWERMETER == 2)
-    static uint16_t pmeter6Raw, powerValue;         //used for current reading
-    static uint16_t pmeter6Avg = PSENSORNULL * 8;   //used for smoothing current reading
-  #endif
+
+  static uint32_t telemetryTime = 0;
+  static uint32_t telemetryAutoTime = 0;
+  uint16_t pmeter6Raw, powerValue;                //used for current reading
+  static uint16_t pmeter6Avg = PSENSORNULL * 8;   //used for smoothing current reading
+
 
   //PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
   if      (rcData[THROTTLE]<1500) prop2 = 100;
@@ -175,15 +169,15 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
 
   #if (POWERMETER == 2)
      pmeter6Raw =  analogRead(PSENSORPIN);
-     pmeter6Avg = (pmeter6Avg * 3 + pmeter6Raw*8)/4; // average of last 4 values; use value*8 for better accuracy
-     powerValue = abs(PSENSORNULL - pmeter6Avg/8);
+     pmeter6Avg = (pmeter6Avg * 2 + pmeter6Raw*8 +1)/3; // average of last 3 values; use value*8 for better accuracy
+     powerValue = ( PSENSORNULL > pmeter6Avg/8 ? PSENSORNULL - pmeter6Avg/8 : pmeter6Avg/8 - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
      #ifdef LOG_VALUES
        if ( powerValue < 256) {  // only accept reasonable values. 256 is empirical
          if (powerValue > powerMax) powerMax = powerValue;
          powerAvg = powerValue;
        }
      #endif
-     pMeter[6] += (uint32_t) ( powerValue * ( cycleTime/PHARDINTDIV) );
+     pMeter[PMOTOR_SUM] += (uint32_t) ( powerValue * ( cycleTime/PHARDINTDIV) );
   #endif
 
   #if defined(VBAT)
@@ -192,13 +186,13 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
      
     if ( (vbat>VBATLEVEL1_3S) 
     #if defined(POWERMETER)
-                         && ( (pMeter[6] < pAlarm) || (pAlarm == 0) )
+                         && ( (pMeter[PMOTOR_SUM] < pAlarm) || (pAlarm == 0) )
     #endif
                                                                         )
     {                                          //VBAT ok AND powermeter ok, buzzer off
       buzzerFreq = 0; buzzerState = 0; BUZZERPIN_OFF;
     #if defined(POWERMETER)
-    } else if (pMeter[6] > pAlarm) {                             // sound alarm for powermeter
+    } else if (pMeter[PMOTOR_SUM] > pAlarm) {                             // sound alarm for powermeter
       buzzerFreq = 4;
     #endif
     } else if (vbat>VBATLEVEL2_3S)
@@ -236,13 +230,18 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     serialTime = micros();
   }
   #ifdef LCD_TELEMETRY_AUTO
-    if ( (telemetry_auto) && (micros() > telemetryTime + LCD_TELEMETRY_AUTO) ) { // every 2 seconds
+    if ( (telemetry_auto) && (micros() > telemetryAutoTime + LCD_TELEMETRY_AUTO) ) { // every 2 seconds
       telemetry++;
       if ( (telemetry < 'A' ) || (telemetry > 'D' ) ) telemetry = 'A';
-      telemetryTime = micros(); // why use micros() and not the variable currentTime ?
+      telemetryAutoTime = micros(); // why use micros() and not the variable currentTime ?
     }
   #endif  
-
+  #ifdef LCD_TELEMETRY
+    if (micros() > telemetryTime +  LCD_TELEMETRY) { // 10Hz
+      if (telemetry) lcd_telemetry();
+      telemetryTime = micros();  
+    }
+  #endif  
   for(axis=0;axis<2;axis++) {
     uint16_t tmp = abs(rcData[axis]-MIDRC);
     uint16_t tmp2 = tmp/100;
@@ -273,7 +272,7 @@ void setup() {
   #endif
   calibratingG = 400;
   #if defined(POWERMETER)
-    for(uint8_t i=0;i<7;i++) // 6 is the maximum number of possible motors, array is larger by one to append the sum
+    for(uint8_t i=0;i<=PMOTOR_SUM;i++)
       pMeter[i]=0;
   #endif
 }

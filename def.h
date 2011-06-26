@@ -200,3 +200,41 @@
   #define PSENSORPIN                 A2    // Analog PIN 2
 #endif
 
+#if defined(POWERMETER)
+  #ifndef VBAT
+	#error "to use powermeter, you must also define and configure VBAT"
+  #endif
+#endif
+#ifdef LCD_TELEMETRY_AUTO
+  #ifndef LCD_TELEMETRY
+     #error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
+  #endif
+#endif
+
+#if defined(TRI)
+  #define MULTITYPE 1
+#elif defined(QUADP)
+  #define MULTITYPE 2
+#elif defined(QUADX)
+  #define MULTITYPE 3
+#elif defined(BI)
+  #define MULTITYPE 4
+#elif defined(GIMBAL)
+  #define MULTITYPE 5
+#elif defined(Y6)
+  #define MULTITYPE 6
+#elif defined(HEX6)
+  #define MULTITYPE 7
+#elif defined(FLYING_WING)
+  #define MULTITYPE 8
+#elif defined(Y4)
+  #define MULTITYPE 9
+#elif defined(HEX6X)
+  #define MULTITYPE 10
+#elif defined(OCTOX8)
+  #define MULTITYPE 11
+#elif defined(OCTOFLATP)
+  #define MULTITYPE 11      //the GUI is the same for all 8 motor configs
+#elif defined(OCTOFLATX)
+  #define MULTITYPE 11      //the GUI is the same for all 8 motor configs
+#endif

@@ -264,7 +264,6 @@ void i2c_BMP085_UP_Start () {
 
 // read uncompensated pressure value: read result bytes
 // the datasheet suggests a delay of 25.5 ms (oversampling settings 3) after the send command
-
 void i2c_BMP085_UP_Read () {
   i2c_rep_start(0xEE + 1);//I2C read direction => 1
   bmp085_ctx.up.raw[2] = i2c_readAck();
@@ -355,7 +354,6 @@ void ACC_init () {
   i2c_writeReg(ADXL345_ADDRESS,0x2D,1<<3); //  register: Power CTRL  -- value: Set measure bit 3 on
   i2c_writeReg(ADXL345_ADDRESS,0x31,0x0B); //  register: DATA_FORMAT -- value: Set bits 3(full range) and 1 0 on (+/- 16g-range)
   i2c_writeReg(ADXL345_ADDRESS,0x2C,8+2+1); // register: BW_RATE     -- value: 200Hz sampling (see table 5 of the spec)
-
   acc_1G = 250;
 }
 
@@ -369,7 +367,6 @@ void ACC_getADC () {
   ACC_Common();
 }
 #endif
-
 
 // ************************************************************************************************************
 // contribution initially from opie11 (rc-groups)
@@ -480,7 +477,6 @@ void ACC_init(){
   pinMode(A1,INPUT);
   pinMode(A2,INPUT);
   pinMode(A3,INPUT);
-  
   acc_1G = 75;
 }
 

@@ -71,7 +71,7 @@ void logMotorsPower() {
          pMeter[i]+= amp; // sum up over time the mapped ESC input 
       #endif
       #if (POWERMETER == 1)
-         pMeter[6]+= amp; // total sum over all motors
+         pMeter[PMOTOR_SUM]+= amp; // total sum over all motors
       #endif
     }
   }
