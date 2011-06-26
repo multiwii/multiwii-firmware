@@ -33,7 +33,7 @@
 //#define MEGA
 
 //enable internal I2C pull ups
-#define INTERNAL_I2C_PULLUPS
+//#define INTERNAL_I2C_PULLUPS
 
 //****** advanced users settings   *************
 

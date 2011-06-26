@@ -174,7 +174,7 @@ void __upSFmt(void * var, uint8_t mul, uint8_t dec) {
 
 void configurationLoop() {
   uint8_t chan,i;
-  uint8_t p,stickActive;
+  uint8_t p,stickActive = 1;
   uint8_t val;
   uint8_t LCD=1;
   uint8_t refreshLCD = 1;
@@ -200,8 +200,10 @@ void configurationLoop() {
       key = ( Serial.available() ?  Serial.read() : 0 ); 
     #endif
     for (chan = ROLL; chan < 4; chan++) rcData[chan] = readRawRC(chan);
+    if (rcData[YAW]  < MINCHECK && rcData[PITCH] > MAXCHECK && stickActive == 0) LCD = 0; // save and exit
+    if (rcData[YAW]  > MAXCHECK && rcData[PITCH] > MAXCHECK && stickActive == 0) LCD = 2; // exit without save: eeprom has only 100.000 write cycles
     //switch config param with pitch
-     if ((key == LCD_MENU_NEXT || (rcData[PITCH] < MINCHECK && stickActive == 0)) && p<= PARAMMAX) {
+    if ((key == LCD_MENU_NEXT || (rcData[PITCH] < MINCHECK && stickActive == 0)) && p<= PARAMMAX) {
       stickActive = 1;refreshLCD=1;blinkLED(10,20,1);
       p++;
       if (p>PARAMMAX) p=0;
@@ -223,9 +225,6 @@ void configurationLoop() {
     }
     if (rcData[ROLL] < MAXCHECK && rcData[ROLL]  > MINCHECK
         && rcData[PITCH] < MAXCHECK && rcData[PITCH] > MINCHECK) stickActive = 0;
-    if (stickActive) {delay(500); stickActive = 0;}
-    if (rcData[YAW]  < MINCHECK && rcData[PITCH] > MAXCHECK && stickActive == 0) LCD = 0; // save and exit
-    if (rcData[YAW]  > MAXCHECK && rcData[PITCH] > MAXCHECK && stickActive == 0) LCD = 2; // exit without save: eeprom has only 100.000 write cycles
   } // while (LCD == 1)
   blinkLED(20,30,1);
   #if defined(LCD_TEXTSTAR)
