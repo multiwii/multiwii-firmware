@@ -146,9 +146,8 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
 
   static uint32_t telemetryTime = 0;
   static uint32_t telemetryAutoTime = 0;
-  uint16_t pmeter6Raw, powerValue;                //used for current reading
-  static uint16_t pmeter6Avg = PSENSORNULL * 8;   //used for smoothing current reading
-
+  uint16_t pMeterRaw, powerValue;                //used for current reading
+  static uint32_t psensorTime = 0;
 
   //PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
   if      (rcData[THROTTLE]<1500) prop2 = 100;
@@ -168,16 +167,18 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   dynD8[YAW] = D8[YAW]*prop1/100;
 
   #if (POWERMETER == 2)
-     pmeter6Raw =  analogRead(PSENSORPIN);
-     pmeter6Avg = (pmeter6Avg * 2 + pmeter6Raw*8 +1)/3; // average of last 3 values; use value*8 for better accuracy
-     powerValue = ( PSENSORNULL > pmeter6Avg/8 ? PSENSORNULL - pmeter6Avg/8 : pmeter6Avg/8 - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
+  if (micros() > psensorTime + 19977 /*20000*/) { // 50Hz, but avoid bulking of timed tasks
+     pMeterRaw =  analogRead(PSENSORPIN);
+     powerValue = ( PSENSORNULL > pMeterRaw ? PSENSORNULL - pMeterRaw : pMeterRaw - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
      #ifdef LOG_VALUES
        if ( powerValue < 256) {  // only accept reasonable values. 256 is empirical
          if (powerValue > powerMax) powerMax = powerValue;
          powerAvg = powerValue;
        }
      #endif
-     pMeter[PMOTOR_SUM] += (uint32_t) ( powerValue * ( cycleTime/PHARDINTDIV) );
+     pMeter[PMOTOR_SUM] += (uint32_t) powerValue;
+     psensorTime = micros();
+  }
   #endif
 
   #if defined(VBAT)
@@ -259,13 +260,12 @@ void setup() {
   POWERPIN_PINMODE
   BUZZERPIN_PINMODE
   STABLEPIN_PINMODE
-  POWERPIN_OFF
+  POWERPIN_OFF  
   initOutput();
   readEEPROM();
   checkFirstTime();
   configureReceiver();
   initSensors();
- 
   previousTime = micros();
   #if defined(GIMBAL) || defined(FLYING_WING)
    calibratingA = 400;

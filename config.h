@@ -5,8 +5,9 @@
 /* Set the minimum throttle command sent to the ESC (Electronic Speed Controller)
    This is the minimum value that allow motors to run at a idle speed  */
 //#define MINTHROTTLE 1300 // for Turnigy Plush ESCs 10A
-#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
+//#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
 //#define MINTHROTTLE 1220
+#define MINTHROTTLE 1150 
 
 /* The type of multicopter */
 //#define GIMBAL
@@ -33,7 +34,7 @@
 //#define MEGA
 
 //enable internal I2C pull ups
-//#define INTERNAL_I2C_PULLUPS
+#define INTERNAL_I2C_PULLUPS
 
 //****** advanced users settings   *************
 
@@ -198,6 +199,7 @@
 /* 2 - hard: - (uses hardware sensor, after configuration gives reasonable results */
 /*      00. uses analog pin 2 to read voltage output from sensor. */
 /*      01. set POWERMETER hard. Uses PLEVELSCALE = 50 */
+/*      02. install low path filter for 25 Hz to sensor input */
 /*      1. compute PLEVELDIV for your sensor (see below for insturctions) */
 /*      2. set PLEVELDIVSOFT to 10000 ( to use LOG_VALUES for individual motor comparison) */
 /*      3. attach, set PSENSORNULL and  PINT2mA */
@@ -213,11 +215,11 @@
 /* larger PLEVELDIV will get you smaller value for power (mAh equivalent) */
 #define PLEVELDIV 10000 // default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
 #define PLEVELDIVSOFT PLEVELDIV // for soft always equal to PLEVELDIV; for hard set to 10000
-#define PHARDINTDIV 64 //  doNotChange - must divide the sum of analogRead()*cycleTime over cycles to keep small enough for uint32
-//#define PLEVELDIV 271837L // to convert the sum into mAh divide by this value
+//#define PLEVELDIV 1361L // to convert the sum into mAh divide by this value
 /* amploc 25A sensor has 37mV/A */
 /* arduino analog resolution is 4.9mV per unit; units from [0..1023] */
-/* PLEVELDIV = 37 / 4.9  * 10e6 / PHARDINTDIV  * 3600 / 1000  = 424745L */
+/* sampling rate 20ms, approx 19977 micro seconds */
+/* PLEVELDIV = 37 / 4.9  * 10e6 / 19977  * 3600 / 1000  = 1361L */
 /* set to analogRead() value for zero current */
 #define PSENSORNULL 510 // for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt
 #define PINT2mA 13 // for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
@@ -229,12 +231,12 @@
 /* The active page on the LCD does get updated automatically */
 /* Easy to use with Terminal application or Textstar LCD - the 4 buttons are preconfigured to send 'A', 'B', 'C', 'D' */
 /* The value represents the refresh interval in cpu time (micro seconds) */
-//#define LCD_TELEMETRY 100000
+//#define LCD_TELEMETRY 100011
 /* to enable automatic hopping between 4 telemetry pages uncomment this. */
 /* This may be useful if your LCD has no buttons or the sending is broken */
 /* hopping is activated and deactivated in unarmed mode with throttle=low & roll=left & pitch=forward */
 /* The value represents the hopping interval in cpu time (micro seconds) */
-//#define LCD_TELEMETRY_AUTO 2000000
+//#define LCD_TELEMETRY_AUTO 2000123
 /* on telemetry page B it gives a bar graph which shows how much voltage battery has left. Range from 0 to 12 Volt is not very informative */
 /* so we try do define a meaningful part. For a 3S battery we define full=12,6V and calculate how much it is above first warning level */
 /* Example: 12.6V - VBATLEVEL1_3S  (for me = 126 - 102 = 24) */

@@ -320,8 +320,7 @@ void lcd_telemetry() {
         line1[3] = '-';
       } else 
         unit = angle[0];
-      //line1[5] = '0' + unit / 10000;
-      line1[4] = '0' + unit / 1000; //- (unit/10000) * 10;
+      line1[4] = '0' + unit / 1000;
       line1[5] = '0' + unit / 100  - (unit/1000)  * 10;
       line1[6] = '0' + unit / 10   - (unit/100)   * 10;
       line1[8] = '0' + unit       - (unit/10)    * 10;
@@ -330,8 +329,7 @@ void lcd_telemetry() {
         line1[10] = '-';
       } else 
         unit = angle[1];
-      //line1[5] = '0' + unit / 10000;
-      line1[11] = '0' + unit / 1000; //- (unit/10000) * 10;
+      line1[11] = '0' + unit / 1000;
       line1[12] = '0' + unit / 100  - (unit/1000)  * 10;
       line1[13] = '0' + unit / 10   - (unit/100)   * 10;
       line1[15] = '0' + unit       - (unit/10)    * 10;
