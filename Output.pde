@@ -228,97 +228,97 @@ void mixTable() {
   int16_t maxMotor;
   uint8_t i;
 
-//  int16_t tmp = 2*max(max(abs(rcCommand[ROLL]),abs(rcCommand[PITCH])),50);
-//  #define PIDMIX(X,A,Y,B,Z) rcCommand[THROTTLE] +constrain(X axisPID[ROLL]*A  Y axisPID[PITCH]*B,-tmp,+tmp) Z YAW_DIRECTION * axisPID[YAW];
-  #define PIDMIX(X,A,Y,B,Z) rcCommand[THROTTLE] + X axisPID[ROLL]*A  Y axisPID[PITCH]*B Z YAW_DIRECTION * axisPID[YAW];
+//  int16_t tmp = 4*max(max(abs(rcCommand[ROLL]),abs(rcCommand[PITCH])),50);
+//  #define PIDMIX(X,Y,Z) rcCommand[THROTTLE] +constrain(axisPID[ROLL]*X + axisPID[PITCH]*Y,-tmp,+tmp) + YAW_DIRECTION * axisPID[YAW]*Z
+  #define PIDMIX(X,Y,Z) rcCommand[THROTTLE] + axisPID[ROLL]*X + axisPID[PITCH]*Y + YAW_DIRECTION * axisPID[YAW]*Z
 
   #if NUMBER_MOTOR > 3
     //prevent "yaw jump" during yaw correction
     axisPID[YAW] = constrain(axisPID[YAW],-100-abs(rcCommand[YAW]),+100+abs(rcCommand[YAW]));
   #endif
   #ifdef BI
-    motor[0] = PIDMIX(+,1,+,0,+0*); //LEFT
-    motor[1] = PIDMIX(-,1,+,0,+0*); //RIGHT        
+    motor[0] = PIDMIX(+1, 0, 0); //LEFT
+    motor[1] = PIDMIX(-1, 0, 0); //RIGHT        
     servo[0]  = constrain(1500 + YAW_DIRECTION * (axisPID[YAW] + axisPID[PITCH]), 1020, 2000); //LEFT
     servo[1]  = constrain(1500 + YAW_DIRECTION * (axisPID[YAW] - axisPID[PITCH]), 1020, 2000); //RIGHT
   #endif
   #ifdef TRI
-    motor[0] = PIDMIX(+,0,+,4/6,+0*); //REAR
-    motor[1] = PIDMIX(-,1,-,1/6,+0*); //RIGHT
-    motor[2] = PIDMIX(+,1,-,1/6,+0*); //LEFT
+    motor[0] = PIDMIX( 0,+4/6, 0); //REAR
+    motor[1] = PIDMIX(-1,-1/6, 0); //RIGHT
+    motor[2] = PIDMIX(+1,-1/6, 0); //LEFT
     servo[0] = constrain(TRI_YAW_MIDDLE + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
   #endif
   #ifdef QUADP
-    motor[0] = PIDMIX(+,0,+,1,-); //REAR
-    motor[1] = PIDMIX(-,1,+,0,+); //RIGHT
-    motor[2] = PIDMIX(+,1,+,0,+); //LEFT
-    motor[3] = PIDMIX(+,0,-,1,-); //FRONT
+    motor[0] = PIDMIX( 0,+1,-1); //REAR
+    motor[1] = PIDMIX(-1, 0,+1); //RIGHT
+    motor[2] = PIDMIX(+1, 0,+1); //LEFT
+    motor[3] = PIDMIX( 0,-1,-1); //FRONT
   #endif
   #ifdef QUADX
-    motor[0] = PIDMIX(-,1,+,1,-); //REAR_R
-    motor[1] = PIDMIX(-,1,-,1,+); //FRONT_R
-    motor[2] = PIDMIX(+,1,+,1,+); //REAR_L
-    motor[3] = PIDMIX(+,1,-,1,-); //FRONT_L
+    motor[0] = PIDMIX(-1,+1,-1); //REAR_R
+    motor[1] = PIDMIX(-1,-1,+1); //FRONT_R
+    motor[2] = PIDMIX(+1,+1,+1); //REAR_L
+    motor[3] = PIDMIX(+1,-1,-1); //FRONT_L
   #endif
   #ifdef Y4
-    motor[0] = PIDMIX(+,0,+,1,-);   //REAR_1 CW
-    motor[1] = PIDMIX(-,1,-,1,+0*); //FRONT_R CCW
-    motor[2] = PIDMIX(+,0,+,1,+);   //REAR_2 CCW
-    motor[3] = PIDMIX(+,1,-,1,+0*); //FRONT_L CW
+    motor[0] = PIDMIX(+0,+1,-1);   //REAR_1 CW
+    motor[1] = PIDMIX(-1,-1, 0); //FRONT_R CCW
+    motor[2] = PIDMIX(+0,+1,+1);   //REAR_2 CCW
+    motor[3] = PIDMIX(+1,-1, 0); //FRONT_L CW
   #endif
   #ifdef Y6
-    motor[0] = PIDMIX(+,0,+,4/3,+); //REAR
-    motor[1] = PIDMIX(-,1,-,2/3,-); //RIGHT
-    motor[2] = PIDMIX(+,1,-,2/3,-); //LEFT
-    motor[3] = PIDMIX(+,0,+,4/3,-); //UNDER_REAR
-    motor[4] = PIDMIX(-,1,-,2/3,+); //UNDER_RIGHT
-    motor[5] = PIDMIX(+,1,-,2/3,+); //UNDER_LEFT
+    motor[0] = PIDMIX(+0,+4/3,+1); //REAR
+    motor[1] = PIDMIX(-1,-2/3,-1); //RIGHT
+    motor[2] = PIDMIX(+1,-2/3,-1); //LEFT
+    motor[3] = PIDMIX(+0,+4/3,-1); //UNDER_REAR
+    motor[4] = PIDMIX(-1,-2/3,+1); //UNDER_RIGHT
+    motor[5] = PIDMIX(+1,-2/3,+1); //UNDER_LEFT    
   #endif
   #ifdef HEX6
-    motor[0] = PIDMIX(-,1/2,+,1/2,+); //REAR_R
-    motor[1] = PIDMIX(-,1/2,-,1/2,-); //FRONT_R
-    motor[2] = PIDMIX(+,1/2,+,1/2,+); //REAR_L
-    motor[3] = PIDMIX(+,1/2,-,1/2,-); //FRONT_L
-    motor[4] = PIDMIX(+,0  ,-,1  ,+); //FRONT
-    motor[5] = PIDMIX(+,0  ,+,1  ,-); //REAR
+    motor[0] = PIDMIX(-1/2,+1/2,+1); //REAR_R
+    motor[1] = PIDMIX(-1/2,-1/2,-1); //FRONT_R
+    motor[2] = PIDMIX(+1/2,+1/2,+1); //REAR_L
+    motor[3] = PIDMIX(+1/2,-1/2,-1); //FRONT_L
+    motor[4] = PIDMIX(+0  ,-1  ,+1); //FRONT
+    motor[5] = PIDMIX(+0  ,+1  ,-1); //REAR
   #endif
   #ifdef HEX6X
-    motor[0] = PIDMIX(-,1/2,+,1/2,+); //REAR_R
-    motor[1] = PIDMIX(-,1/2,-,1/2,+); //FRONT_R
-    motor[2] = PIDMIX(+,1/2,+,1/2,-); //REAR_L
-    motor[3] = PIDMIX(+,1/2,-,1/2,-); //FRONT_L
-    motor[4] = PIDMIX(-,1  ,+,0  ,-); //RIGHT
-    motor[5] = PIDMIX(+,1  ,+,0  ,+); //LEFT
+    motor[0] = PIDMIX(-1/2,+1/2,+1); //REAR_R
+    motor[1] = PIDMIX(-1/2,-1/2,+1); //FRONT_R
+    motor[2] = PIDMIX(+1/2,+1/2,-1); //REAR_L
+    motor[3] = PIDMIX(+1/2,-1/2,-1); //FRONT_L
+    motor[4] = PIDMIX(-1  ,+0  ,-1); //RIGHT
+    motor[5] = PIDMIX(+1  ,+0  ,+1); //LEFT
   #endif
   #ifdef OCTOX8
-    motor[0] = PIDMIX(-,1,+,1,-); //REAR_R
-    motor[1] = PIDMIX(-,1,-,1,+); //FRONT_R
-    motor[2] = PIDMIX(+,1,+,1,+); //REAR_L
-    motor[3] = PIDMIX(+,1,-,1,-); //FRONT_L
-    motor[4] = PIDMIX(-,1,+,1,+); //UNDER_REAR_R
-    motor[5] = PIDMIX(-,1,-,1,-); //UNDER_FRONT_R
-    motor[6] = PIDMIX(+,1,+,1,-); //UNDER_REAR_L
-    motor[7] = PIDMIX(+,1,-,1,+); //UNDER_FRONT_L
+    motor[0] = PIDMIX(-1,+1,-1); //REAR_R
+    motor[1] = PIDMIX(-1,-1,+1); //FRONT_R
+    motor[2] = PIDMIX(+1,+1,+1); //REAR_L
+    motor[3] = PIDMIX(+1,-1,-1); //FRONT_L
+    motor[4] = PIDMIX(-1,+1,+1); //UNDER_REAR_R
+    motor[5] = PIDMIX(-1,-1,-1); //UNDER_FRONT_R
+    motor[6] = PIDMIX(+1,+1,-1); //UNDER_REAR_L
+    motor[7] = PIDMIX(+1,-1,+1); //UNDER_FRONT_L
   #endif
   #ifdef OCTOFLATP
-    motor[0] = PIDMIX(+,7/10,-,7/10,+); //FRONT_L
-    motor[1] = PIDMIX(-,7/10,-,7/10,+); //FRONT_R
-    motor[2] = PIDMIX(-,7/10,+,7/10,+); //REAR_R
-    motor[3] = PIDMIX(+,7/10,+,7/10,+); //REAR_L
-    motor[4] = PIDMIX(+,0   ,-,1   ,-); //FRONT
-    motor[5] = PIDMIX(-,1   ,+,0   ,-); //RIGHT
-    motor[6] = PIDMIX(+,0   ,+,1   ,-); //REAR
-    motor[7] = PIDMIX(-,1   ,+,0   ,-); //LEFT 
+    motor[0] = PIDMIX(+7/10,-7/10,+1); //FRONT_L
+    motor[1] = PIDMIX(-7/10,-7/10,+1); //FRONT_R
+    motor[2] = PIDMIX(-7/10,+7/10,+1); //REAR_R
+    motor[3] = PIDMIX(+7/10,+7/10,+1); //REAR_L
+    motor[4] = PIDMIX(+0   ,-1   ,-1); //FRONT
+    motor[5] = PIDMIX(-1   ,+0   ,-1); //RIGHT
+    motor[6] = PIDMIX(+0   ,+1   ,-1); //REAR
+    motor[7] = PIDMIX(-1   ,+0   ,-1); //LEFT 
   #endif
   #ifdef OCTOFLATX
-    motor[0] = PIDMIX(+,1  ,-,1/2,+); //MIDFRONT_L
-    motor[1] = PIDMIX(-,1/2,-,1  ,+); //FRONT_R
-    motor[2] = PIDMIX(-,1  ,+,1/2,+); //MIDREAR_R
-    motor[3] = PIDMIX(+,1/2,+,1  ,+); //REAR_L
-    motor[4] = PIDMIX(+,1/2,-,1  ,-); //FRONT_L
-    motor[5] = PIDMIX(-,1  ,-,1/2,-); //MIDFRONT_R
-    motor[6] = PIDMIX(-,1/2,+,1  ,-); //REAR_R
-    motor[7] = PIDMIX(+,1  ,+,1/2,-); //MIDREAR_L 
+    motor[0] = PIDMIX(+1  ,-1/2,+1); //MIDFRONT_L
+    motor[1] = PIDMIX(-1/2,-1  ,+1); //FRONT_R
+    motor[2] = PIDMIX(-1  ,+1/2,+1); //MIDREAR_R
+    motor[3] = PIDMIX(+1/2,+1  ,+1); //REAR_L
+    motor[4] = PIDMIX(+1/2,-1  ,-1); //FRONT_L
+    motor[5] = PIDMIX(-1  ,-1/2,-1); //MIDFRONT_R
+    motor[6] = PIDMIX(-1/2,+1  ,-1); //REAR_R
+    motor[7] = PIDMIX(+1  ,+1/2,-1); //MIDREAR_L 
   #endif
 
   #ifdef SERVO_TILT
