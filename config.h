@@ -89,6 +89,7 @@
 //#define BMA020
 //#define BMA180
 //#define NUNCHACK  // if you want to use the nunckuk as a standalone I2C ACC without WMP
+//#define LIS3LV02
 
 /* I2C barometer */
 //#define BMP085
