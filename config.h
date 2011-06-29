@@ -27,8 +27,8 @@
 #define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
 //#define YAW_DIRECTION -1
 
-//#define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
-#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
+#define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
+//#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
 
 #define PROMINI  //Arduino type
 //#define MEGA

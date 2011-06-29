@@ -469,10 +469,10 @@ void ACC_getADC() {
 }
 #endif
 
-// ****************************
+// ************************************************************************
 // LIS3LV02 I2C Accelerometer
-// ****************************
 //contribution from adver (http://wbb.multiwii.com/viewtopic.php?f=8&t=451)
+// ************************************************************************
 #if defined(LIS3LV02)
 #define LIS3A  0x3A // I2C adress: 0x3A (8bit)
 
@@ -484,13 +484,14 @@ void i2c_ACC_init(){
 
 void i2c_ACC_getADC(){
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
-  i2c_getSixRawADC(0xA4,0x28+0x80);
-
+  i2c_getSixRawADC(LIS3A,0x28+0x80);
   ACC_ORIENTATION(  (rawADC[3]<<8 | rawADC[2])/4 ,
                    -(rawADC[1]<<8 | rawADC[0])/4 ,
                    -(rawADC[5]<<8 | rawADC[4])/4);
+  ACC_Common();
 }
 #endif
+
 
 
 // ************************************************************************************************************
