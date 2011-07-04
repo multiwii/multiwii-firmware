@@ -468,13 +468,13 @@ void loop () {
   for(axis=0;axis<3;axis++) {
     if (accMode == 1 && axis<2 ) { //LEVEL MODE
       errorAngle = rcCommand[axis] - angle[axis];                                 //500+180 = 680: 16 bits is ok here
-      PTerm      = errorAngle*(P8[PIDLEVEL]/10)/10 ;                              //680*20 = 13600: 16 bits is ok here
+      PTerm      = (int32_t)errorAngle*P8[PIDLEVEL]/100 ;                         //680*20 = 13600: 16 bits is ok here
 
       errorAngleI[axis] += errorAngle;                                            //16 bits is ok here
       errorAngleI[axis]  = constrain(errorAngleI[axis],-10000,+10000); //WindUp   //16 bits is ok here
       ITerm              = (int32_t)errorAngleI[axis]*I8[PIDLEVEL]/4000;          //32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
     } else { //ACRO MODE or YAW axis
-      error = (int32_t)rcCommand[axis]*10*8/P8[axis] - gyroData[axis];            //32 bits is needed for calculation: 500*10*8 = 40000   16 bits is ok for result if P>2
+      error = (int32_t)rcCommand[axis]*10*8/P8[axis] - gyroData[axis];            //32 bits is needed for calculation: 500*10*8 = 40000   16 bits is ok for result if P8>2 (P>0.2)
       PTerm = rcCommand[axis];
 
       errorGyroI[axis] += error;                                                  //16 bits is ok here

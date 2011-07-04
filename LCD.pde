@@ -332,7 +332,7 @@ void lcd_telemetry() {
       line1[11] = '0' + unit / 1000;
       line1[12] = '0' + unit / 100  - (unit/1000)  * 10;
       line1[13] = '0' + unit / 10   - (unit/100)   * 10;
-      line1[15] = '0' + unit       - (unit/10)    * 10;
+      line1[15] = '0' + unit        - (unit/10)    * 10;
       #ifdef LOG_VALUES
         unit = powerAvg * PINT2mA;
         line2[0] = '0' + unit / 10000;

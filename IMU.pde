@@ -2,7 +2,7 @@
 void computeIMU () {
   uint8_t axis;
   static int16_t gyroADCprevious[3] = {0,0,0};
-  static int16_t gyroADCp[3] = {0,0,0};
+  int16_t gyroADCp[3];
   int16_t gyroADCinter[3];
   static int16_t lastAccADC[3] = {0,0,0};
   static uint32_t timeInterleave = 0;
@@ -34,9 +34,7 @@ void computeIMU () {
     if (ACC) {
       ACC_getADC();
       getEstimatedAttitude();
-      #if BARO
-        getEstimatedAltitude();
-      #endif 
+      if (BARO) getEstimatedAltitude();
     }
     if (GYRO) Gyro_getADC(); else WMP_getRawADC();
     for (axis = 0; axis < 3; axis++)
@@ -245,7 +243,11 @@ void getEstimatedAltitude(){
   static uint8_t inited = 0;
   static float AltErrorI = 0.0f;
   static float AccScale  = 0.0f;
-  static uint32_t DeadLine = INIT_DELAY; 
+  static uint32_t DeadLine = INIT_DELAY;
+  float AltError;
+  float InstAcc = 0.0f;
+  float Delta;
+  
   if (currentTime < DeadLine) return;
   DeadLine = currentTime + UPDATE_INTERVAL; 
   // Soft start
@@ -257,12 +259,14 @@ void getEstimatedAltitude(){
     AccScale = (9.80665f / acc_1G) * 1.155f;
   }  
   // Estimation Error
-  float AltError = BaroAlt - EstAlt; 
+  AltError = BaroAlt - EstAlt; 
   AltErrorI += AltError;
   // 
-  float InstAcc = (accADC[YAW] - acc_1G) * AccScale + (Ki) * AltErrorI;
+  if (abs(angle[ROLL])<100 && abs(angle[PITCH])<100) //10 deg
+    InstAcc = (accADC[YAW] - acc_1G) * AccScale;
+  InstAcc += (Ki) * AltErrorI;
   // Integrators
-  float Delta = InstAcc * dt + (Kp1 * Kt) * AltError;
+  Delta = InstAcc * dt + (Kp1 * Kt) * AltError;
   EstAlt += ((EstVelocity + Delta * 0.5f) * dt + (Kp2 * Kt) * AltError);
   EstVelocity += Delta;
   // Debug

@@ -202,6 +202,7 @@ void ACC_Common() {
 // ************************************************************************************************************
 
 #if defined(BMP085)
+#define BMP085_ADDRESS 0xEE
 static struct {
   // sensor registers from the BOSCH BMP085 datasheet
   int16_t  ac1, ac2, ac3, b1, b2, mb, mc, md;
@@ -239,46 +240,43 @@ void  Baro_init() {
 // read a 16 bit register
 int16_t i2c_BMP085_readIntRegister(uint8_t r) {
   union {int16_t val; uint8_t raw[2]; } data;
-  i2c_rep_start(0xEE + 0);
+  i2c_rep_start(BMP085_ADDRESS + 0);
   i2c_write(r);
-  i2c_rep_start(0xEE + 1);//I2C read direction => 1
+  i2c_rep_start(BMP085_ADDRESS + 1);//I2C read direction => 1
   data.raw[1] = i2c_readAck();
   data.raw[0] = i2c_readNak();
-//  i2c_rep_stop();
   return data.val;
 }
 
 // read uncompensated temperature value: send command first
 void i2c_BMP085_UT_Start() {
-  i2c_writeReg(0xEE,0xf4,0x2e);
-  i2c_rep_start(0xEE + 0);
+  i2c_writeReg(BMP085_ADDRESS,0xf4,0x2e);
+  i2c_rep_start(BMP085_ADDRESS + 0);
   i2c_write(0xF6);
 }
 
 // read uncompensated pressure value: send command first
 void i2c_BMP085_UP_Start () {
-  i2c_writeReg(0xEE,0xf4,0x34+(OSS<<6)); // control register value for oversampling setting 3
-  i2c_rep_start(0xEE + 0); //I2C write direction => 0
+  i2c_writeReg(BMP085_ADDRESS,0xf4,0x34+(OSS<<6)); // control register value for oversampling setting 3
+  i2c_rep_start(BMP085_ADDRESS + 0); //I2C write direction => 0
   i2c_write(0xF6);
 }
 
 // read uncompensated pressure value: read result bytes
 // the datasheet suggests a delay of 25.5 ms (oversampling settings 3) after the send command
 void i2c_BMP085_UP_Read () {
-  i2c_rep_start(0xEE + 1);//I2C read direction => 1
+  i2c_rep_start(BMP085_ADDRESS + 1);//I2C read direction => 1
   bmp085_ctx.up.raw[2] = i2c_readAck();
   bmp085_ctx.up.raw[1] = i2c_readAck();
   bmp085_ctx.up.raw[0] = i2c_readNak();
-//  i2c_rep_stop();
 }
 
 // read uncompensated temperature value: read result bytes
 // the datasheet suggests a delay of 4.5 ms after the send command
 void i2c_BMP085_UT_Read() {
-  i2c_rep_start(0xEE + 1);//I2C read direction => 1
+  i2c_rep_start(BMP085_ADDRESS + 1);//I2C read direction => 1
   bmp085_ctx.ut.raw[1] = i2c_readAck();
   bmp085_ctx.ut.raw[0] = i2c_readNak();
-//  i2c_rep_stop();
 }
 
 void i2c_BMP085_Calculate() {
@@ -309,6 +307,9 @@ void i2c_BMP085_Calculate() {
 }
 
 void Baro_update() {
+  static int16_t altitudeZero;
+  static uint8_t zeroCount = 0;
+  
   if (currentTime < bmp085_ctx.deadline) return; 
   bmp085_ctx.deadline = currentTime;
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, BMP085 is ok with this speed
@@ -328,7 +329,8 @@ void Baro_update() {
     case 3: 
       i2c_BMP085_UP_Read(); 
       i2c_BMP085_Calculate(); 
-      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 44330.0f;
+      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 44330.0f - altitudeZero;
+      if (altitudeZero == 0) {zeroCount++; if (zeroCount > 60) altitudeZero = BaroAlt; BaroAlt=0;}
       bmp085_ctx.state = 0; 
       baroNewData = 1;
       bmp085_ctx.deadline += 20000; 
@@ -336,6 +338,148 @@ void Baro_update() {
   } 
 }
 #endif
+
+// ************************************************************************************************************
+// I2C Barometer MS561101BA
+// ************************************************************************************************************
+// contribution from fabio
+//
+// not tested
+#if defined(MS561101BA)
+
+// registers of the device
+#define MS561101BA_PRESSURE 0x40
+#define MS561101BA_TEMPERATURE 0x50
+#define MS561101BA_RESET 0x1E
+
+// D1 and D2 result size (bytes)
+#define MS561101BA_D1D2_SIZE 3
+
+// OSR (Over Sampling Ratio) constants
+#define MS561101BA_OSR_256 0x00
+#define MS561101BA_OSR_512 0x02
+#define MS561101BA_OSR_1024 0x04
+#define MS561101BA_OSR_2048 0x06
+#define MS561101BA_OSR_4096 0x08
+
+static struct {
+  // sensor registers from the MS561101BA datasheet
+  uint16_t  c1, c2, c3, c4, c5, c6;
+  union {uint32_t val; uint8_t raw[4]; } ut; //uncompensated T
+  union {uint32_t val; uint8_t raw[4]; } up; //uncompensated P
+  uint8_t  state;
+  uint32_t deadline;
+} ms561101ba_ctx;  
+#define OSR MS561101BA_OSR_4096
+
+void i2c_MS561101BA_reset(){
+  i2c_writeReg(MS561101BA_ADDRESS, MS561101BA_RESET, 0);
+}
+
+void i2c_MS561101BA_readCalibration(){
+  delay(10);
+  ms561101ba_ctx.c1 = i2c_MS561101BA_readIntRegister(0xA2);
+  ms561101ba_ctx.c2 = i2c_MS561101BA_readIntRegister(0xA4);
+  ms561101ba_ctx.c3 = i2c_MS561101BA_readIntRegister(0xA6);
+  ms561101ba_ctx.c4 = i2c_MS561101BA_readIntRegister(0xA8);
+  ms561101ba_ctx.c5 = i2c_MS561101BA_readIntRegister(0xAA);
+  ms561101ba_ctx.c6 = i2c_MS561101BA_readIntRegister(0xAC);
+}
+
+void  Baro_init() {
+  delay(10);
+  i2c_MS561101BA_reset();
+  delay(10);
+  i2c_MS561101BA_readCalibration();
+  i2c_MS561101BA_UT_Start(); 
+  delay(10);
+  i2c_MS561101BA_UT_Read();
+}
+
+// read a 16 bit register
+int16_t i2c_MS561101BA_readIntRegister(uint8_t r) {
+  union {int16_t val; uint8_t raw[2]; } data;
+  i2c_rep_start(MS561101BA_ADDRESS + 0);
+  i2c_write(r);
+  i2c_rep_start(MS561101BA_ADDRESS + 1);//I2C read direction => 1
+  data.raw[1] = i2c_readAck();
+  data.raw[0] = i2c_readNak();
+  return data.val;
+}
+
+// read uncompensated temperature value: send command first
+void i2c_MS561101BA_UT_Start() {
+  i2c_writeReg(MS561101BA_ADDRESS, MS561101BA_TEMPERATURE + OSR, 0);
+  //i2c_rep_start(MS561101BA_ADDRESS + 0);
+  //i2c_write(0xF6);
+}
+
+// read uncompensated pressure value: send command first
+void i2c_MS561101BA_UP_Start () {
+  i2c_writeReg(MS561101BA_ADDRESS,MS561101BA_PRESSURE + OSR, 0); // control register value for oversampling setting 3
+  //i2c_rep_start(MS561101BA_ADDRESS + 0); //I2C write direction => 0
+  //i2c_write(0xF6);
+}
+
+// read uncompensated pressure value: read result bytes
+// the datasheet suggests a delay of 25.5 ms (oversampling settings 3) after the send command
+void i2c_MS561101BA_UP_Read () {
+  i2c_rep_start(MS561101BA_ADDRESS + 1);//I2C read direction => 1
+  ms561101ba_ctx.up.raw[2] = i2c_readAck();
+  ms561101ba_ctx.up.raw[1] = i2c_readAck();
+  ms561101ba_ctx.up.raw[0] = i2c_readNak();
+}
+
+// read uncompensated temperature value: read result bytes
+// the datasheet suggests a delay of 4.5 ms after the send command
+void i2c_MS561101BA_UT_Read() {
+  i2c_rep_start(MS561101BA_ADDRESS + 0);
+  i2c_write(0);
+  i2c_rep_start(MS561101BA_ADDRESS + 1);//I2C read direction => 1
+  ms561101ba_ctx.ut.raw[2] = i2c_readAck();
+  ms561101ba_ctx.ut.raw[1] = i2c_readAck();
+  ms561101ba_ctx.ut.raw[0] = i2c_readNak();
+}
+
+void i2c_MS561101BA_Calculate() {
+  // see datasheet page 7 for formulas
+  int32_t dT = ms561101ba_ctx.ut.val - ms561101ba_ctx.c5 * pow(2, 8);
+  int64_t off = ms561101ba_ctx.c2 * pow(2,16) + (ms561101ba_ctx.c4 * dT) / pow(2, 7);
+  int64_t sens = ms561101ba_ctx.c1 * pow(2,15) + (ms561101ba_ctx.c3 * dT) / pow(2,8);
+  pressure = (ms561101ba_ctx.ut.val * (sens) / pow(2, 21) - off) / pow(2, 15);
+}
+
+void Baro_update() {
+  if (currentTime < ms561101ba_ctx.deadline) return; 
+  ms561101ba_ctx.deadline = currentTime;
+  TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, MS5611 is ok with this speed
+  switch (ms561101ba_ctx.state) {
+    case 0: 
+      i2c_MS561101BA_UT_Start(); 
+      ms561101ba_ctx.state++; ms561101ba_ctx.deadline += 10000; 
+      break;
+    case 1: 
+      i2c_MS561101BA_UT_Read(); 
+      ms561101ba_ctx.state++; 
+      break;
+    case 2: 
+      i2c_MS561101BA_UP_Start(); 
+      ms561101ba_ctx.state++; ms561101ba_ctx.deadline += 10000; 
+      break;
+    case 3: 
+      i2c_MS561101BA_UP_Read(); 
+      i2c_MS561101BA_Calculate(); 
+      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 44330.0f;
+      ms561101ba_ctx.state = 0;
+      baroNewData = 1;
+      //ms561101ba_ctx.deadline += 20000;
+      break;
+  } 
+}
+#endif
+
+
+
 
 // ************************************************************************************************************
 // I2C Accelerometer ADXL345 

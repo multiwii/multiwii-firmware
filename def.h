@@ -23,25 +23,30 @@
   #define ITG3200_ADDRESS 0XD0
 #endif
 
-#if defined(FREEIMUv01)
+#if defined(FREEIMUv1)
   #define ITG3200
   #define ADXL345
   #define HMC5843
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  -Y; accADC[PITCH]  = X; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X;  gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X;  magADC[PITCH]  = Y; magADC[YAW]  = Z;}
   #define ADXL345_ADDRESS 0xA6
   #undef INTERNAL_I2C_PULLUPS
 #endif
 
-#if defined(FREEIMU)
+#if defined(FREEIMUv035) || defined(FREEIMUv035_MS) || defined(FREEIMUv035_BMP)
   #define ITG3200
-  #define ADXL345
+  #define BMA180
   #define HMC5883
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
-  #define ADXL345_ADDRESS 0xA6
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  -Y; accADC[PITCH]  = X; accADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X;  gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X;  magADC[PITCH]  = Y; magADC[YAW]  = Z;}
+  #undef INTERNAL_I2C_PULLUPS
+  #if defined(FREEIMUv035_MS)
+    #define MS561101BA
+  #elif defined(FREEIMUv035_BMP)
+    #define BMP085
+  #endif
 #endif
 
 #if defined(PIPO)
@@ -76,6 +81,16 @@
   #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y; magADC[PITCH]  = X; magADC[YAW]  = Z;}
 #endif
 
+#if defined(AEROQUADSHIELDv2) // to confirm
+  #define ITG3200
+  #define BMA180
+  #define BMP085
+  #define HMC5843
+  #define ACC_ORIENTATION(X, Y, Z) {accADC[ROLL] = -Y; accADC[PITCH] = X; accADC[YAW] = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] = X; gyroADC[YAW] = Z;}
+  #define MAG_ORIENTATION(X, Y, Z) {magADC[ROLL] = -Y; magADC[PITCH] = X; magADC[YAW] = Z;}
+  #define ITG3200_ADDRESS 0XD2
+#endif
 
 #if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(ADCACC)
   #define ACC 1
@@ -95,7 +110,7 @@
   #define GYRO 0
 #endif
 
-#if defined(BMP085)
+#if defined(BMP085) || defined(MS561101BA)
   #define BARO 1
 #else
   #define BARO 0
@@ -172,20 +187,20 @@
   #define DIGITAL_SERVO_TRI_PINMODE  pinMode(2,OUTPUT); //PIN 2 //also right servo for BI COPTER
   #define DIGITAL_SERVO_TRI_HIGH     PORTE |= 1<<4;
   #define DIGITAL_SERVO_TRI_LOW      PORTE &= ~(1<<4);
-  #define DIGITAL_TILT_PITCH_PINMODE pinMode(33,OUTPUT); // 33
-  #define DIGITAL_TILT_PITCH_HIGH    PORTC |= 1<<4;
-  #define DIGITAL_TILT_PITCH_LOW     PORTC &= ~(1<<4);
-  #define DIGITAL_TILT_ROLL_PINMODE  pinMode(34,OUTPUT);pinMode(44,OUTPUT); // 34 + 44
-  #define DIGITAL_TILT_ROLL_HIGH     PORTC |= 1<<3;PORTL |= 1<<5;
-  #define DIGITAL_TILT_ROLL_LOW      PORTC &= ~(1<<3);PORTL |= 1<<5;
+  #define DIGITAL_TILT_PITCH_PINMODE pinMode(34,OUTPUT);pinMode(44,OUTPUT); // 34 + 44
+  #define DIGITAL_TILT_PITCH_HIGH    PORTC |= 1<<3;PORTL |= 1<<5;
+  #define DIGITAL_TILT_PITCH_LOW     PORTC &= ~(1<<3);PORTL |= 1<<5;
+  #define DIGITAL_TILT_ROLL_PINMODE  pinMode(35,OUTPUT);pinMode(45,OUTPUT); // 35 + 45
+  #define DIGITAL_TILT_ROLL_HIGH     PORTC |= 1<<2;PORTL |= 1<<4;
+  #define DIGITAL_TILT_ROLL_LOW      PORTC &= ~(1<<2);PORTL |= 1<<4;
   #define DIGITAL_BI_LEFT_PINMODE    pinMode(6,OUTPUT); 
   #define DIGITAL_BI_LEFT_HIGH       PORTH |= 1<<3;
   #define DIGITAL_BI_LEFT_LOW        PORTH &= ~(1<<3);
   #define PPM_PIN_INTERRUPT          attachInterrupt(4, rxInt, RISING);  //PIN 19, also used for Spektrum satellite option
   #define MOTOR_ORDER                3,5,6,2,7,8,9,10   //for a quad+: rear,right,left,front   //+ for y6: 7:under right  8:under left
-  #define DIGITAL_CAM_PINMODE        pinMode(35,OUTPUT);pinMode(45,OUTPUT); // 35 + 45
-  #define DIGITAL_CAM_HIGH           PORTC |= 1<<2;PORTL |= 1<<4;
-  #define DIGITAL_CAM_LOW            PORTC &= ~(1<<2);PORTL |= 1<<4;
+  #define DIGITAL_CAM_PINMODE        pinMode(33,OUTPUT); // 33
+  #define DIGITAL_CAM_HIGH           PORTC |= 1<<4;
+  #define DIGITAL_CAM_LOW            PORTC &= ~(1<<4);
   //RX PIN assignment inside the port //for PORTK
   #define THROTTLEPIN                0  //PIN 62 =  PIN A8
   #define ROLLPIN                    1  //PIN 63 =  PIN A9

@@ -59,34 +59,37 @@ void serialCom() {
       serialize8('M');
       serialize8(VERSION);  // MultiWii Firmware version
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
-      for(i=0;i<3;i++) serialize16(gyroData[i]/8); //13
-      for(i=0;i<3;i++) serialize16(magADC[i]/3); //19
-      serialize16(BaroAlt*100.0f);
+      for(i=0;i<3;i++) serialize16(gyroData[i]/8);
+      for(i=0;i<3;i++) serialize16(magADC[i]/3);
+      serialize16(EstAlt*100.0f);
       serialize16(heading); // compass
-      for(i=0;i<4;i++) serialize16(servo[i]); //31
-      for(i=0;i<6;i++) serialize16(motor[i]); //43
-      for(i=0;i<8;i++) serialize16(rcData[i]); //49
+      for(i=0;i<4;i++) serialize16(servo[i]);
+      for(i=0;i<8;i++) serialize16(motor[i]);
+      for(i=0;i<8;i++) serialize16(rcData[i]);
       serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3);
       serialize8(accMode|baroMode<<1|magMode<<2);
       serialize16(cycleTime);
-      for(i=0;i<2;i++) serialize16(angle[i]/10); //67
+      for(i=0;i<2;i++) serialize16(angle[i]/10);
       serialize8(MULTITYPE);
-      for(i=0;i<5;i++) {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);} //80
+      for(i=0;i<5;i++) {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);}
       serialize8(P8[PIDLEVEL]);serialize8(I8[PIDLEVEL]);
       serialize8(P8[PIDMAG]);
       serialize8(rcRate8); serialize8(rcExpo8);
       serialize8(rollPitchRate); serialize8(yawRate);
-      serialize8(dynThrPID); //88
-      for(i=0;i<6;i++) serialize8(activate[i]); //94
+      serialize8(dynThrPID);
+      for(i=0;i<6;i++) serialize8(activate[i]);
       #if defined(POWERMETER)
         intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
         intPowerTrigger1 = powerTrigger1 * PLEVELSCALE;
       #endif    
       serialize16(intPowerMeterSum);
       serialize16(intPowerTrigger1);
-      serialize8(vbat); //99
-      serialize16(EstAlt*100.0f);
-      serialize8('M'); //100
+      serialize8(vbat);
+      serialize16(BaroAlt*100.0f); // 4 variables are here for general monitoring purpose
+      serialize16(0);              // debug2
+      serialize16(0);              // debug3
+      serialize16(0);              // debug4
+      serialize8('M');
       UartSendData(); // Serial.write(s,point);
       break;
     case 'O':  // arduino to OSD data - contribution from MIS
