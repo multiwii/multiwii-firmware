@@ -280,8 +280,8 @@ void i2c_BMP085_UT_Read() {
 }
 
 void i2c_BMP085_Calculate() {
-   int32_t  x1, x2, x3, b3, b5, b6, p, tmp;
-   uint32_t b4, b7;
+  int32_t  x1, x2, x3, b3, b5, b6, p, tmp;
+  uint32_t b4, b7;
   // Temperature calculations
   x1 = ((int32_t)bmp085_ctx.ut.val - bmp085_ctx.ac6) * bmp085_ctx.ac5 >> 15;
   x2 = ((int32_t)bmp085_ctx.mc << 11) / (x1 + bmp085_ctx.md);
@@ -307,9 +307,6 @@ void i2c_BMP085_Calculate() {
 }
 
 void Baro_update() {
-  static int16_t altitudeZero;
-  static uint8_t zeroCount = 0;
-  
   if (currentTime < bmp085_ctx.deadline) return; 
   bmp085_ctx.deadline = currentTime;
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, BMP085 is ok with this speed
@@ -329,8 +326,7 @@ void Baro_update() {
     case 3: 
       i2c_BMP085_UP_Read(); 
       i2c_BMP085_Calculate(); 
-      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 44330.0f - altitudeZero;
-      if (altitudeZero == 0) {zeroCount++; if (zeroCount > 60) altitudeZero = BaroAlt; BaroAlt=0;}
+      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 44330.0f;
       bmp085_ctx.state = 0; 
       baroNewData = 1;
       bmp085_ctx.deadline += 20000; 
