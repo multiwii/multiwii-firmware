@@ -28,6 +28,11 @@
   //#define ITG3200_ADDRESS 0XD2
 #endif
 
+#if !defined(MS561101BA_ADDRESS) 
+  #define MS561101BA_ADDRESS 0xEE //CBR=0 0xEE I2C address when pin CSB is connected to LOW (GND)
+  //#define MS561101BA_ADDRESS 0xEF //CBR=1 0xEF I2C address when pin CSB is connected to HIGH (VCC)
+#endif
+
 uint8_t rawADC[6];
 static uint32_t neutralizeTime = 0;
   

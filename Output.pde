@@ -225,13 +225,16 @@ ISR(TIMER0_COMPB_vect) { //the same with digital PIN 6 and OCR0B counter
 
 
 void mixTable() {
-  int16_t maxMotor;
-  uint8_t i;
+  int16_t maxMotor,a;
+  uint8_t i,axis;
 
-//  int16_t tmp = 4*max(max(abs(rcCommand[ROLL]),abs(rcCommand[PITCH])),50);
-//  #define PIDMIX(X,Y,Z) rcCommand[THROTTLE] +constrain(axisPID[ROLL]*X + axisPID[PITCH]*Y,-tmp,+tmp) + YAW_DIRECTION * axisPID[YAW]*Z
   #define PIDMIX(X,Y,Z) rcCommand[THROTTLE] + axisPID[ROLL]*X + axisPID[PITCH]*Y + YAW_DIRECTION * axisPID[YAW]*Z
 
+  //limit big wobble issues
+  for(axis=0;axis<2;axis++) {
+    a = abs(rcCommand[axis]);
+    axisPID[axis] = constrain(axisPID[axis],-MAX_CORRECTION-a,+MAX_CORRECTION+a);
+  }
   #if NUMBER_MOTOR > 3
     //prevent "yaw jump" during yaw correction
     axisPID[YAW] = constrain(axisPID[YAW],-100-abs(rcCommand[YAW]),+100+abs(rcCommand[YAW]));
@@ -243,9 +246,9 @@ void mixTable() {
     servo[1]  = constrain(1500 + YAW_DIRECTION * (axisPID[YAW] - axisPID[PITCH]), 1020, 2000); //RIGHT
   #endif
   #ifdef TRI
-    motor[0] = PIDMIX( 0,+4/6, 0); //REAR
-    motor[1] = PIDMIX(-1,-1/6, 0); //RIGHT
-    motor[2] = PIDMIX(+1,-1/6, 0); //LEFT
+    motor[0] = PIDMIX( 0,+4/3, 0); //REAR
+    motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
+    motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
     servo[0] = constrain(TRI_YAW_MIDDLE + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
   #endif
   #ifdef QUADP
