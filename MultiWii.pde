@@ -1,7 +1,7 @@
 /*
 MultiWiiCopter by Alexandre Dubus
 www.multiwii.com
-June  2011     V1.dev
+Jully  2011     V1.dev
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -41,25 +41,24 @@ static uint16_t cycleTime = 0;     // this is the number in micro second to achi
 static uint16_t calibratingA = 0;  // the calibration is done is the main loop. Calibrating decreases at each cycle down to 0, then we enter in a normal mode.
 static uint8_t  calibratingM = 0;
 static uint16_t calibratingG;
-static uint8_t armed = 0;
-static int16_t acc_1G;             // this is the 1G measured acceleration
-static uint8_t nunchuk = 0;
-static uint8_t accMode = 0;        // if level mode is a activated
-static uint8_t magMode = 0;        // if compass heading hold is a activated
-static uint8_t baroMode = 0;       // if altitude hold is activated
-static int16_t gyroADC[3],accADC[3],magADC[3];
-static int16_t accSmooth[3];       // projection of smoothed and normalized gravitation force vector on x/y/z axis, as measured by accelerometer
-static int16_t heading,magHold;
-static uint8_t calibratedACC = 0;
-static uint8_t vbat;               // battery voltage in 0.1V steps
-static uint8_t okToArm = 0;
-static uint8_t rcOptions;
-
-static uint8_t baroNewData = 0;
-static int32_t pressure = 0;
-static float BaroAlt = 0.0f;
-static float EstVelocity = 0.0f;
-static float EstAlt = 0.0f;
+static uint8_t  armed = 0;
+static int16_t  acc_1G;             // this is the 1G measured acceleration
+static uint8_t  nunchuk = 0;
+static uint8_t  accMode = 0;        // if level mode is a activated
+static uint8_t  magMode = 0;        // if compass heading hold is a activated
+static uint8_t  baroMode = 0;       // if altitude hold is activated
+static int16_t  gyroADC[3],accADC[3],magADC[3];
+static int16_t  accSmooth[3];       // projection of smoothed and normalized gravitation force vector on x/y/z axis, as measured by accelerometer
+static int16_t  heading,magHold;
+static uint8_t  calibratedACC = 0;
+static uint8_t  vbat;               // battery voltage in 0.1V steps
+static uint8_t  okToArm = 0;
+static uint8_t  rcOptions;
+static uint8_t  baroNewData = 0;
+static int32_t  pressure = 0;
+static float    BaroAlt = 0.0f;
+static float    EstVelocity = 0.0f;
+static float    EstAlt = 0.0f;
 
 //for log
 static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
@@ -104,7 +103,7 @@ static int16_t gyroData[3] = {0,0,0};
 static int16_t gyroZero[3] = {0,0,0};
 static int16_t accZero[3]  = {0,0,0};
 static int16_t magZero[3]  = {0,0,0};
-static int16_t angle[2]    = {0,0};  // absolute angle inclination in multiple of 0.1 degree
+static int16_t angle[2]    = {0,0};  // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
 
 // *************************
 // motor and servo functions
@@ -467,25 +466,25 @@ void loop () {
   //**** PITCH & ROLL & YAW PID ****    
   for(axis=0;axis<3;axis++) {
     if (accMode == 1 && axis<2 ) { //LEVEL MODE
-      errorAngle = rcCommand[axis] - angle[axis];                                 //500+180 = 680: 16 bits is ok here
-      PTerm      = (int32_t)errorAngle*P8[PIDLEVEL]/100 ;                         //680*20 = 13600: 16 bits is ok here
+      errorAngle = rcCommand[axis] - angle[axis];                                   //rcCommand can reach 500*5 (rcRate=5)   ;  500*5+1800 = 4300: 16 bits is ok here
+      PTerm      = (int32_t)errorAngle*P8[PIDLEVEL]/100 ;                           //32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
 
-      errorAngleI[axis] += errorAngle;                                            //16 bits is ok here
-      errorAngleI[axis]  = constrain(errorAngleI[axis],-10000,+10000); //WindUp   //16 bits is ok here
-      ITerm              = (int32_t)errorAngleI[axis]*I8[PIDLEVEL]/4000;          //32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
+      errorAngleI[axis] += errorAngle;                                              //16 bits is ok here
+      errorAngleI[axis]  = constrain(errorAngleI[axis],-10000,+10000); //WindUp     //16 bits is ok here
+      ITerm              = (int32_t)errorAngleI[axis]*I8[PIDLEVEL]/4000;            //32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
     } else { //ACRO MODE or YAW axis
-      error = (int32_t)rcCommand[axis]*10*8/P8[axis] - gyroData[axis];            //32 bits is needed for calculation: 500*10*8 = 40000   16 bits is ok for result if P8>2 (P>0.2)
+      error = (int32_t)rcCommand[axis]*10*8/P8[axis] - gyroData[axis];              //32 bits is needed for calculation: 500*5*10*8 = 200000   16 bits is ok for result if P8>2 (P>0.2)
       PTerm = rcCommand[axis];
 
-      errorGyroI[axis] += error;                                                  //16 bits is ok here
-      errorGyroI[axis]  = constrain(errorGyroI[axis],-16000,+16000); //WindUp     //16 bits is ok here
+      errorGyroI[axis] += error;                                                    //16 bits is ok here
+      errorGyroI[axis]  = constrain(errorGyroI[axis],-16000,+16000); //WindUp       //16 bits is ok here
       if (abs(gyroData[axis])>640) errorGyroI[axis] = 0;
-      ITerm = (int32_t)errorGyroI[axis]*I8[axis]/1000/8;                          //32 bits is needed for calculation: 16000*I8  16 bits is ok for result
+      ITerm = (int32_t)errorGyroI[axis]*I8[axis]/1000/8;                            //32 bits is needed for calculation: 16000*I8  16 bits is ok for result
     }
-    PTerm         -= (int32_t)gyroData[axis]*dynP8[axis]/10/8;                    //32 bits is needed for calculation            16 bits is ok for result
+    PTerm         -= (int32_t)gyroData[axis]*dynP8[axis]/10/8;                      //32 bits is needed for calculation            16 bits is ok for result
 
-    delta          = gyroData[axis] - lastGyro[axis];                             //16 bits is ok here, because the dif between 2 consecutive gyro reads is limited
-    DTerm          = (delta1[axis]+delta2[axis]+delta+1)*dynD8[axis]/3/8;         //16 bits is ok here
+    delta          = gyroData[axis] - lastGyro[axis];                               //16 bits is ok here, the dif between 2 consecutive gyro reads is limited to 800
+    DTerm          = (int32_t)(delta1[axis]+delta2[axis]+delta+1)*dynD8[axis]/3/8;  //32 bits is needed for calculation (800+800+800)*50 = 120000           16 bits is ok for result 
     delta2[axis]   = delta1[axis];
     delta1[axis]   = delta;
     lastGyro[axis] = gyroData[axis];

@@ -40,8 +40,7 @@
 
 /* this parameter defines the maximum correction per axis multiwii can output before mixing the output to different motors
  this parameter becomes inactive as soon as the stick are far from the center position in order to keep acro abilities 
- reducing this parameter can avoid big wobbles and allows higher PID settings
-*/
+ reducing this parameter can avoid big wobbles and allows higher PID settings */
 #define MAX_CORRECTION 100
 
 /* Failsave settings - added by MIS
@@ -77,7 +76,7 @@
 //                   for other boards, I'm not sure, the info was gathered via rc forums, be cautious
 
 //#define FFIMUv1         // first 9DOF+baro board from Jussi, with HMC5843
-//#define FFIMUv2           // second version of 9DOF+baro board from Jussi, with HMC5883
+//#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883
 //#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
 //#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS
@@ -86,6 +85,7 @@
 //#define QUADRINO        // full FC board 9DOF+baro board from witespy
 //#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU
 //#define AEROQUADSHIELDv2
+//#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). The board requires 3.3V power.
 
 //if you use independent sensors
 //leave it commented it you already checked a specific board above
@@ -107,6 +107,7 @@
 /* I2C magnetometer */
 //#define HMC5843
 //#define HMC5883
+//#define AK8975
 
 /* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
 //#define ADCACC
@@ -258,10 +259,6 @@
 //#define LOG_VALUES
  
 //****** end of advanced users settings *************
-
-//#define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  = -X; accADC[YAW]  = Z;}
-//#define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = Z;}
-//#define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
 
 /**************************************/
 /****END OF CONFIGURABLE PARAMETERS****/

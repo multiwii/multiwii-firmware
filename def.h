@@ -92,13 +92,24 @@
   #define ITG3200_ADDRESS 0XD2
 #endif
 
+#if defined(ATAVRSBIN1)
+  #define ITG3200
+  #define BMA020        //Actually it's a BMA150, but this is a drop in replacement for the discountinued BMA020
+  #define AK8975
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  = -X; accADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
+#endif
+
+
+
 #if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(ADCACC)
   #define ACC 1
 #else
   #define ACC 0
 #endif
 
-#if defined(HMC5883) || defined(HMC5843)
+#if defined(HMC5883) || defined(HMC5843) || defined(AK8975)
   #define MAG 1
 #else
   #define MAG 0

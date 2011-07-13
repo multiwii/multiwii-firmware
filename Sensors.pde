@@ -158,10 +158,10 @@ void GYRO_Common() {
     }
     calibratingG--;
   }
-  //anti gyro glitch, limit the variation between two consecutive readings
   for (axis = 0; axis < 3; axis++) {
     gyroADC[axis]  -= gyroZero[axis];
-    gyroADC[axis] = constrain(gyroADC[axis],previousGyroADC[axis]-100,previousGyroADC[axis]+100);
+    //anti gyro glitch, limit the variation between two consecutive readings
+    gyroADC[axis] = constrain(gyroADC[axis],previousGyroADC[axis]-800,previousGyroADC[axis]+800);
     previousGyroADC[axis] = gyroADC[axis];
   }
 }
@@ -718,13 +718,23 @@ void Gyro_getADC () {
 
 // ************************************************************************************************************
 // I2C Compass HMC5843 & HMC5883
+// I2C Compass AK8975 (Contribution by EOSBandi)
 // ************************************************************************************************************
-// I2C adress: 0x3C (8bit)   0x1E (7bit)
+// I2C address HMC: 0x3C (8bit)   0x1E (7bit)
+// I2C address AK : 0x18 (8bit)   0x0C (7bit)
 // ************************************************************************************************************
 #if MAG
-void Mag_init() { 
+void Mag_init() {
   delay(100);
-  i2c_writeReg(0X3C ,0x02 ,0x00 ); //register: Mode register  --  value: Continuous-Conversion Mode
+  #if defined(HMC5843) || defined(HMC5883)
+    i2c_writeReg(0X3C ,0x02 ,0x00 ); //register: Mode register  --  value: Continuous-Conversion Mode
+  #endif
+  #if defined(AK8975)
+    // There is no continous mode for AK8975, so we have to initiate conversion after each read.
+    // 100ms read interval is ok since typ. meassurement time is about 7.3ms (as per datasheet)
+    i2c_writeReg(0x18,0x0a,0x01);  //Start the first conversion
+    delay(100);
+  #endif
 }
 
 void Mag_getADC() {
@@ -736,17 +746,33 @@ void Mag_getADC() {
   if ( (micros()-t )  < 100000 ) return; //each read is spaced by 100ms
   t = micros();
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
-  i2c_getSixRawADC(0X3C,0X03);
+
+  #if defined(HMC5843) || defined(HMC5883)
+    i2c_getSixRawADC(0X3C,0X03);
+  #endif
+  
+  #if defined(AK8975)
+    i2c_getSixRawADC(0x18,0x03);
+  #endif
 
   #if defined(HMC5843)
     MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
                      ((rawADC[2]<<8) | rawADC[3]) ,
                     -((rawADC[4]<<8) | rawADC[5]) );
   #endif
+  
   #if defined (HMC5883)
     MAG_ORIENTATION( ((rawADC[4]<<8) | rawADC[5]) ,
                     -((rawADC[0]<<8) | rawADC[1]) ,
                     -((rawADC[2]<<8) | rawADC[3]) );
+  #endif
+  
+  #if defined(AK8975)
+    MAG_ORIENTATION( ((rawADC[3]<<8) | rawADC[2]) ,          
+                     ((rawADC[1]<<8) | rawADC[0]) ,     
+                    -((rawADC[5]<<8) | rawADC[4]) );
+  //Start another meassurement
+  i2c_writeReg(0x18,0x0a,0x01);
   #endif
 
   if (calibratingM == 1) {
