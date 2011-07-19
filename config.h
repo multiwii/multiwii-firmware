@@ -34,14 +34,14 @@
 //#define MEGA
 
 //enable internal I2C pull ups
-#define INTERNAL_I2C_PULLUPS
+//#define INTERNAL_I2C_PULLUPS
 
 //****** advanced users settings   *************
 
 /* this parameter defines the maximum correction per axis multiwii can output before mixing the output to different motors
  this parameter becomes inactive as soon as the stick are far from the center position in order to keep acro abilities 
  reducing this parameter can avoid big wobbles and allows higher PID settings */
-#define MAX_CORRECTION 100
+#define MAX_CORRECTION 500
 
 /* Failsave settings - added by MIS
    Failsafe check pulse on THROTTLE channel. If the pulse is OFF (on only THROTTLE or on all channels) the failsafe procedure is initiated.
@@ -141,6 +141,7 @@
 #define VBATLEVEL1_3S 107 // 10,7V
 #define VBATLEVEL2_3S 103 // 10,3V
 #define VBATLEVEL3_3S 99  // 9.9V
+#define NO_VBAT       16 // Avoid beeping without any battery
 
 /* when there is an error on I2C bus, we neutralize the values during a short time. expressed in microseconds
    it is relevent only for a conf with at least a WMP */
@@ -174,7 +175,7 @@
 
 /* motors will not spin when the throttle command is in low position
    this is an alternative method to stop immediately the motors */
-//#define MOTOR_STOP
+#define MOTOR_STOP
 
 /* some radios have not a neutral point centered on 1500. can be changed here */
 #define MIDRC 1500

@@ -146,13 +146,15 @@ void GYRO_Common() {
   
   if (calibratingG>0) {
     for (axis = 0; axis < 3; axis++) {
-      if (calibratingG>1) {
-        if (calibratingG == 400) g[axis]=0;
-        g[axis] +=gyroADC[axis];
-        gyroADC[axis]=0;
-        gyroZero[axis]=0;
-      } else {
-        gyroZero[axis]=(g[axis]+200)/399;
+      // Reset g[axis] at start of calibration
+      if (calibratingG == 400) g[axis]=0;
+      // Sum up 400 readings
+      g[axis] +=gyroADC[axis];
+      // Clear global variables for next reading
+      gyroADC[axis]=0;
+      gyroZero[axis]=0;
+      if (calibratingG == 1) {
+        gyroZero[axis]=g[axis]/400;
         blinkLED(10,15,1+3*nunchuk);
       }
     }
@@ -173,17 +175,20 @@ void ACC_Common() {
   static int32_t a[3];
   
   if (calibratingA>0) {
-    if (calibratingA>1) {
-      for (uint8_t axis = 0; axis < 3; axis++) {
-        if (calibratingA == 400) a[axis]=0;
-        a[axis] +=accADC[axis];
-        accADC[axis]=0;
-        accZero[axis]=0;
-      }
-    } else {
-      accZero[ROLL]  = (a[ROLL])/399;
-      accZero[PITCH] = (a[PITCH])/399;
-      accZero[YAW]   = (a[YAW])/399-acc_1G; // for nunchuk 200=1G
+    for (uint8_t axis = 0; axis < 3; axis++) {
+      // Reset a[axis] at start of calibration
+      if (calibratingA == 400) a[axis]=0;
+      // Sum up 400 readings
+      a[axis] +=accADC[axis];
+      // Clear global variables for next reading
+      accADC[axis]=0;
+      accZero[axis]=0;
+    }
+    // Calculate average, shift Z down by acc_1G and store values in EEPROM at end of calibration
+    if (calibratingA == 1) {
+      accZero[ROLL]  = a[ROLL]/400;
+      accZero[PITCH] = a[PITCH]/400;
+      accZero[YAW]   = a[YAW]/400-acc_1G; // for nunchuk 200=1G
       writeParams(); // write accZero in EEPROM
     }
     calibratingA--;
@@ -499,7 +504,7 @@ void ACC_init () {
   i2c_writeReg(ADXL345_ADDRESS,0x2D,1<<3); //  register: Power CTRL  -- value: Set measure bit 3 on
   i2c_writeReg(ADXL345_ADDRESS,0x31,0x0B); //  register: DATA_FORMAT -- value: Set bits 3(full range) and 1 0 on (+/- 16g-range)
   i2c_writeReg(ADXL345_ADDRESS,0x2C,8+2+1); // register: BW_RATE     -- value: 200Hz sampling (see table 5 of the spec)
-  acc_1G = 250;
+  acc_1G = 256;
 }
 
 void ACC_getADC () {
@@ -517,6 +522,7 @@ void ACC_getADC () {
 // contribution initially from opie11 (rc-groups)
 // adaptation from C2po (may 2011)
 // contribution from ziss_dm (June 2011)
+// contribution from ToLuSe (Jully 2011)
 // I2C Accelerometer BMA180
 // ************************************************************************************************************
 // I2C adress: 0x80 (8bit)    0x40 (7bit) (SDO connection to VCC) 
@@ -525,21 +531,30 @@ void ACC_getADC () {
 //
 // Control registers:
 //
-// 0x0D ctrl_reg0:   | reserved | reset_int       | update_image | ee_w | st1 | st0 | sleep | dis_wake_up |
-//                   |        x |         0       |            0 |    1 |   0 |   0 |     0 |           0 |
+// 0x20    bw_tcs:   |                                           bw<3:0> |                        tcs<3:0> |
+//                   |                                             150Hz |                 !!Calibration!! |
 //
-// 0x20 bw_tcs:      | bw<3:0>  |        tcs<3:0> |
-//                   |    10Hz  | !!Calibration!! |
+// 0x35 offset_lsb1: |                                     offset_x<3:0> |        range<2:0> |    smp_skip |
+//                   |                                   !!Calibration!! |                2g |     IRQ 1/T |
 // ************************************************************************************************************
 #if defined(BMA180)
 void ACC_init () {
+  uint8_t control;
   delay(10);
-  //default range 2G: 1G = 4096 unit.
-  i2c_writeReg(BMA180_ADDRESS,0x0D,1<<4); // register: ctrl_reg0  -- value: set bit ee_w to 1 to enable writing
-  uint8_t control = i2c_readReg(BMA180_ADDRESS, 0x20);
-  control = control & 0x0F; // register: bw_tcs reg: bits 4-7 to set bw -- value: set low pass filter to 10Hz (bits value = 0000xxxx)
+  // Note: No need to make the EEPROM writeable, we just update the shadows!
+  // Set bandwith
+  // Note: 150Hz is the default bandwidth on startup (If the EEPROM content was not changed)
+  control = i2c_readReg(BMA180_ADDRESS, 0x20);
+  control &= 0x0F; // Mask tcs calibration and clear bandwith (= 10Hz bandwith!)
   delay(5);
-  i2c_writeReg(BMA180_ADDRESS, 0x20, control); 
+  i2c_writeReg(BMA180_ADDRESS, 0x20, control);
+  // Set range
+  // Note: 2g is the default range on startup (If the EEPROM content was not changed)
+  control = i2c_readReg(BMA180_ADDRESS, 0x35);
+  control &= 0xF0; // Mask offset_x calibration bits, clear range and smp_skip
+  control |= 0x04; // Set range to 2g
+  delay(5);
+  i2c_writeReg(BMA180_ADDRESS, 0x35, control);
   acc_1G = 512;
 }
 
@@ -557,29 +572,32 @@ void ACC_getADC () {
 // ************************************************************************************************************
 // contribution from Point65 and mgros (rc-groups)
 // contribution from ziss_dm (June 2011)
+// contribution from ToLuSe (Jully 2011)
 // I2C Accelerometer BMA020
 // ************************************************************************************************************
 // I2C adress: 0x70 (8bit)
 // Resolution: 10bit
 // Control registers:
 //
-// |0x15| SPI4 | enable_adv_INT | new_data_INT | latch_INT | shadow_dis | wake_up_pause | wake_up |
-// |    |    1 |              0 |            0 |         0 |          0 |             0 |       0 |
 // Datasheet: After power on reset or soft reset it is recommended to set the SPI4-bit to the correct value.
-// 0x80 = SPI four-wire = Default setting
+//            0x80 = SPI four-wire = Default setting
+// | 0x15: | SPI4 | enable_adv_INT | new_data_INT | latch_INT | shadow_dis | wake_up_pause<1:0> | wake_up |
+// |       |    1 |              0 |            0 |         0 |          0 |                 00 |       0 |
 //
-// |0x14|   reserved <2:0> | range <1:0> | bandwith <2:0> |
-// |    | Keep calibration |        +-2g |           25Hz |
+// | 0x14: |                       reserved <2:0> |            range <1:0> |               bandwith <2:0> |
+// |       |                      !!Calibration!! |                     2g |                         25Hz |
+//
 // ************************************************************************************************************
 #if defined(BMA020)
 void ACC_init(){
+  // Set 4 wire SPI interface (Necessary? We use I2C)
   i2c_writeReg(0x70,0x15,0x80);
+  // Set range and bandwith
+  // Note: +-2g and 25Hz is the default setting on startup
   uint8_t control = i2c_readReg(0x70, 0x14);
-  control = control & 0xE0;
-  control = control | (0x00 << 3); //Range 2G 00
-  control = control | 0x00;        //Bandwidth 25 Hz 000
+  control &= 0xE0; // Mask calibration and clear range and bandwith (= 2g range and 25Hz bandwidth)
   i2c_writeReg(0x70,0x14,control); 
-  acc_1G = 255;
+  acc_1G = 256;
 }
 
 void ACC_getADC(){
@@ -716,65 +734,19 @@ void Gyro_getADC () {
 #endif
 
 
-// ************************************************************************************************************
-// I2C Compass HMC5843 & HMC5883
-// I2C Compass AK8975 (Contribution by EOSBandi)
-// ************************************************************************************************************
-// I2C address HMC: 0x3C (8bit)   0x1E (7bit)
-// I2C address AK : 0x18 (8bit)   0x0C (7bit)
-// ************************************************************************************************************
-#if MAG
-void Mag_init() {
-  delay(100);
-  #if defined(HMC5843) || defined(HMC5883)
-    i2c_writeReg(0X3C ,0x02 ,0x00 ); //register: Mode register  --  value: Continuous-Conversion Mode
-  #endif
-  #if defined(AK8975)
-    // There is no continous mode for AK8975, so we have to initiate conversion after each read.
-    // 100ms read interval is ok since typ. meassurement time is about 7.3ms (as per datasheet)
-    i2c_writeReg(0x18,0x0a,0x01);  //Start the first conversion
-    delay(100);
-  #endif
-}
 
+// ************************************************************************************************************
+// I2C Compass common function
+// ************************************************************************************************************
 void Mag_getADC() {
   static uint32_t t,tCal = 0;
-  uint8_t axis;
   static int16_t magZeroTempMin[3];
   static int16_t magZeroTempMax[3];
-
+  uint8_t axis;
   if ( (micros()-t )  < 100000 ) return; //each read is spaced by 100ms
   t = micros();
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
-
-  #if defined(HMC5843) || defined(HMC5883)
-    i2c_getSixRawADC(0X3C,0X03);
-  #endif
-  
-  #if defined(AK8975)
-    i2c_getSixRawADC(0x18,0x03);
-  #endif
-
-  #if defined(HMC5843)
-    MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
-                     ((rawADC[2]<<8) | rawADC[3]) ,
-                    -((rawADC[4]<<8) | rawADC[5]) );
-  #endif
-  
-  #if defined (HMC5883)
-    MAG_ORIENTATION( ((rawADC[4]<<8) | rawADC[5]) ,
-                    -((rawADC[0]<<8) | rawADC[1]) ,
-                    -((rawADC[2]<<8) | rawADC[3]) );
-  #endif
-  
-  #if defined(AK8975)
-    MAG_ORIENTATION( ((rawADC[3]<<8) | rawADC[2]) ,          
-                     ((rawADC[1]<<8) | rawADC[0]) ,     
-                    -((rawADC[5]<<8) | rawADC[4]) );
-  //Start another meassurement
-  i2c_writeReg(0x18,0x0a,0x01);
-  #endif
-
+  Device_Mag_getADC();
   if (calibratingM == 1) {
     tCal = t;
     for(axis=0;axis<3;axis++) {magZero[axis] = 0;magZeroTempMin[axis] = 0; magZeroTempMax[axis] = 0;}
@@ -783,7 +755,6 @@ void Mag_getADC() {
   magADC[ROLL]  -= magZero[ROLL];
   magADC[PITCH] -= magZero[PITCH];
   magADC[YAW]   -= magZero[YAW];
-
   if (tCal != 0) {
     if ((t - tCal) < 30000000) { // 30s: you have 30s to turn the multi in all directions
       LEDPIN_SWITCH
@@ -799,7 +770,55 @@ void Mag_getADC() {
     }
   }
 }
+
+// ************************************************************************************************************
+// I2C Compass HMC5843 & HMC5883
+// ************************************************************************************************************
+// I2C adress: 0x3C (8bit)   0x1E (7bit)
+// ************************************************************************************************************
+#if defined(HMC5843) || defined(HMC5883)
+void Mag_init() { 
+  delay(100);
+  i2c_writeReg(0X3C ,0x02 ,0x00 ); //register: Mode register  --  value: Continuous-Conversion Mode
+}
+
+void Device_Mag_getADC() {
+  i2c_getSixRawADC(0X3C,0X03);
+  #if defined(HMC5843)
+    MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
+                     ((rawADC[2]<<8) | rawADC[3]) ,
+                    -((rawADC[4]<<8) | rawADC[5]) );
+  #endif
+  #if defined (HMC5883)
+    MAG_ORIENTATION( ((rawADC[4]<<8) | rawADC[5]) ,
+                    -((rawADC[0]<<8) | rawADC[1]) ,
+                    -((rawADC[2]<<8) | rawADC[3]) );
+  #endif
+}
 #endif
+
+// ************************************************************************************************************
+// I2C Compass AK8975 (Contribution by EOSBandi)
+// ************************************************************************************************************
+// I2C adress: 0x18 (8bit)   0x0C (7bit)
+// ************************************************************************************************************
+#if defined(AK8975)
+void Mag_init() {
+  delay(100);
+  i2c_writeReg(0x18,0x0a,0x01);  //Start the first conversion
+  delay(100);
+}
+
+void Device_Mag_getADC() {
+  i2c_getSixRawADC(0x18,0x03);
+  MAG_ORIENTATION( ((rawADC[3]<<8) | rawADC[2]) ,          
+                   ((rawADC[1]<<8) | rawADC[0]) ,     
+                  -((rawADC[5]<<8) | rawADC[4]) );
+  //Start another meassurement
+  i2c_writeReg(0x18,0x0a,0x01);
+}
+#endif
+
 
 #if !GYRO 
 // ************************************************************************************************************
@@ -809,22 +828,24 @@ void Mag_getADC() {
 // I2C adress 2: 0xA4 (8bit)    0x52 (7bit)
 // ************************************************************************************************************
 void WMP_init(uint8_t d) {
-  if(GYRO) return;
   delay(d);
   i2c_writeReg(0xA6, 0xF0, 0x55); // Initialize Extension
   delay(d);
   i2c_writeReg(0xA6, 0xFE, 0x05); // Activate Nunchuck pass-through mode
   delay(d);
   if (d>0) {
+    // We need to set acc_1G for the Nunchuk beforehand; It's used in WMP_getRawADC() and ACC_Common()
+    // If a different accelerometer is used, it will be overwritten by its ACC_init() later.
+    acc_1G = 204;
     uint8_t numberAccRead = 0;
+    // Read from WMP 100 times, this should return alternating WMP and Nunchuk data
     for(uint8_t i=0;i<100;i++) {
       delay(4);
-      if (WMP_getRawADC() == 0) numberAccRead++; // we detect here is nunchuk extension is available
+      if (WMP_getRawADC() == 0) numberAccRead++; // Count number of times we read from the Nunchuk extension
     }
-    if (numberAccRead>25) {
+    // If we got at least 25 Nunchuck reads, we assume the Nunchuk is present
+    if (numberAccRead>25)
       nunchuk = 1;
-      acc_1G = 200;
-    }
     delay(10);
   }
 }
@@ -840,19 +861,22 @@ uint8_t WMP_getRawADC() {
     return 1;
   } 
 
-  if ( (rawADC[5]&0x02) == 0x02 && (rawADC[5]&0x01) == 0 ) {// motion plus data
-    GYRO_ORIENTATION( - ( ((rawADC[5]>>2)<<8) + rawADC[2] ) , //range: +/- 8192
-                      - ( ((rawADC[4]>>2)<<8) + rawADC[1] ) ,
-                      - ( ((rawADC[3]>>2)<<8) + rawADC[0] ) );
+  // Wii Motion Plus Data
+  if ( (rawADC[5]&0x03) == 0x02 ) {
+    // Assemble 14bit data 
+    GYRO_ORIENTATION( - ( ((rawADC[5]>>2)<<8) | rawADC[2] ) , //range: +/- 8192
+                      - ( ((rawADC[4]>>2)<<8) | rawADC[1] ) ,
+                      - ( ((rawADC[3]>>2)<<8) | rawADC[0] ) );
     GYRO_Common();
+    // Check if slow bit is set and normalize to fast mode range
     GYRO_ORIENTATION(   (rawADC[3]&0x01)     ? gyroADC[ROLL]/5  : gyroADC[ROLL] ,   //the ratio 1/5 is not exactly the IDG600 or ISZ650 specification 
                         (rawADC[4]&0x02)>>1  ? gyroADC[PITCH]/5 : gyroADC[PITCH] ,  //we detect here the slow of fast mode WMP gyros values (see wiibrew for more details)
                         (rawADC[3]&0x02)>>1  ? gyroADC[YAW]/5   : gyroADC[YAW]   ); // this step must be done after zero compensation    
     return 1;
-  } else if ( (rawADC[5]&0x02) == 0 && (rawADC[5]&0x01) == 0) { //nunchuk data
-    ACC_ORIENTATION(  ( (rawADC[3]<<2)        + ((rawADC[5]>>4)&0x2) ) ,
-                    - ( (rawADC[2]<<2)        + ((rawADC[5]>>3)&0x2) ) ,
-                      ( ((rawADC[4]&0xFE)<<2) + ((rawADC[5]>>5)&0x6) ) );
+  } else if ( (rawADC[5]&0x03) == 0x00 ) { // Nunchuk Data
+    ACC_ORIENTATION(  ( (rawADC[3]<<2)      | ((rawADC[5]>>4)&0x02) ) ,
+                    - ( (rawADC[2]<<2)      | ((rawADC[5]>>3)&0x02) ) ,
+                      ( ((rawADC[4]>>1)<<3) | ((rawADC[5]>>5)&0x06) ) );
     ACC_Common();
     return 0;
   } else

@@ -177,13 +177,13 @@
   #define PSENSORPIN                 A2    // Analog PIN 2
 #endif
 #if defined(MEGA)
-  #define LEDPIN_PINMODE             pinMode (13, OUTPUT);
-  #define LEDPIN_SWITCH              PINB |= (1<<7);
-  #define LEDPIN_ON                  PORTB |= (1<<7);
-  #define LEDPIN_OFF                 PORTB &= ~(1<<7);
-  #define BUZZERPIN_PINMODE          pinMode (31, OUTPUT);
-  #define BUZZERPIN_ON               PORTC |= 1<<6;
-  #define BUZZERPIN_OFF              PORTC &= ~1<<6;
+  #define LEDPIN_PINMODE             pinMode (13, OUTPUT);pinMode (30, OUTPUT);
+  #define LEDPIN_SWITCH              PINB  |= (1<<7); PINC  |= (1<<7);
+  #define LEDPIN_ON                  PORTB |= (1<<7); PORTC |= (1<<7);
+  #define LEDPIN_OFF                 PORTB &= ~(1<<7);PORTC &= ~(1<<7);
+  #define BUZZERPIN_PINMODE          pinMode (32, OUTPUT);
+  #define BUZZERPIN_ON               PORTC |= 1<<5;
+  #define BUZZERPIN_OFF              PORTC &= ~1<<5;
   #define POWERPIN_PINMODE           pinMode (37, OUTPUT);
   #define POWERPIN_ON                PORTC |= 1<<0;
   #define POWERPIN_OFF               PORTC &= ~(1<<0);

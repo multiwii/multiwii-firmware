@@ -188,7 +188,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     #if defined(POWERMETER)
                          && ( (pMeter[PMOTOR_SUM] < pAlarm) || (pAlarm == 0) )
     #endif
-                                                                        )
+                         || (NO_VBAT>vbat)                              ) // ToLuSe
     {                                          //VBAT ok AND powermeter ok, buzzer off
       buzzerFreq = 0; buzzerState = 0; BUZZERPIN_OFF;
     #if defined(POWERMETER)
@@ -213,8 +213,8 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   if ( ( (calibratingA>0 && (ACC || nunchuk) ) || (calibratingG>0) ) ) {  // Calibration phasis
     LEDPIN_SWITCH
   } else {
-    if (calibratedACC == 1) LEDPIN_OFF
-    if (armed) LEDPIN_ON
+    if (calibratedACC == 1) {LEDPIN_OFF}
+    if (armed) {LEDPIN_ON}
   }
 
   if ( micros() > calibratedAccTime + 500000 ) {
@@ -354,13 +354,13 @@ void loop () {
         if (rcDelayCommand == 20) calibratingA=400;
         rcDelayCommand++;
       } else if (rcData[PITCH] > MAXCHECK) {
-         accZero[PITCH]++;writeParams();
+         accZero[PITCH]+=acc_1G/100;writeParams();
       } else if (rcData[PITCH] < MINCHECK) {
-         accZero[PITCH]--;writeParams();
+         accZero[PITCH]-=acc_1G/100;writeParams();
       } else if (rcData[ROLL] > MAXCHECK) {
-         accZero[ROLL]++;writeParams();
+         accZero[ROLL]+=acc_1G/100;writeParams();
       } else if (rcData[ROLL] < MINCHECK) {
-         accZero[ROLL]--;writeParams();
+         accZero[ROLL]-=acc_1G/100;writeParams();
       } else {
         rcDelayCommand = 0;
       }
@@ -463,6 +463,7 @@ void loop () {
     }
   }
 
+
   //**** PITCH & ROLL & YAW PID ****    
   for(axis=0;axis<3;axis++) {
     if (accMode == 1 && axis<2 ) { //LEVEL MODE
@@ -484,10 +485,10 @@ void loop () {
     PTerm         -= (int32_t)gyroData[axis]*dynP8[axis]/10/8;                      //32 bits is needed for calculation            16 bits is ok for result
 
     delta          = gyroData[axis] - lastGyro[axis];                               //16 bits is ok here, the dif between 2 consecutive gyro reads is limited to 800
+    lastGyro[axis] = gyroData[axis];
     DTerm          = (int32_t)(delta1[axis]+delta2[axis]+delta+1)*dynD8[axis]/3/8;  //32 bits is needed for calculation (800+800+800)*50 = 120000           16 bits is ok for result 
     delta2[axis]   = delta1[axis];
     delta1[axis]   = delta;
-    lastGyro[axis] = gyroData[axis];
 
     axisPID[axis] =  PTerm + ITerm - DTerm;
   }

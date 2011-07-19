@@ -238,7 +238,7 @@ void getEstimatedAttitude(){
 #define Kp2 1.0f              // PI observer position gain
 #define Ki  0.00045f          // PI observer integral gain (bias cancellation)
 #define dt  (UPDATE_INTERVAL / 1000000.0f)
-
+  
 void getEstimatedAltitude(){
   static uint8_t inited = 0;
   static float AltErrorI = 0.0f;
@@ -262,11 +262,13 @@ void getEstimatedAltitude(){
   AltError = BaroAlt - EstAlt; 
   AltErrorI += AltError;
   // 
-  if (abs(angle[ROLL])<100 && abs(angle[PITCH])<100) //10 deg
-    InstAcc = (accADC[YAW] - acc_1G) * AccScale;
+  InstAcc = (sqrt((int32_t)accADC[YAW]*accADC[YAW]+(int32_t)accADC[ROLL]*accADC[ROLL]+(int32_t)accADC[PITCH]*accADC[PITCH]) - acc_1G) * AccScale;
+  //if (abs(angle[ROLL])<100 && abs(angle[PITCH])<100) //10 deg
+  //  InstAcc = (accADC[YAW] - acc_1G) * AccScale;
   InstAcc += (Ki) * AltErrorI;
   // Integrators
   Delta = InstAcc * dt + (Kp1 * Kt) * AltError;
   EstAlt += ((EstVelocity + Delta * 0.5f) * dt + (Kp2 * Kt) * AltError);
   EstVelocity += Delta;
+  EstVelocity *= 0.99;
 }
