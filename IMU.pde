@@ -152,7 +152,6 @@ int16_t _atan2(float y, float x){
   return z;
 }
 
-
 void getEstimatedAttitude(){
   uint8_t axis;
   int16_t  AccMag = 0;
@@ -230,13 +229,22 @@ void getEstimatedAttitude(){
   #endif
 }
 
-#define UPDATE_INTERVAL 25000 // 40hz update rate (20hz LPF on acc)
-#define INIT_DELAY  2000000   // 2 sec initialization delay
+float InvSqrt (float x){ 
+  union{  
+    int32_t i;  
+    float   f; 
+  } conv; 
+  conv.f = x; 
+  conv.i = 0x5f3759df - (conv.i >> 1); 
+  return 0.5f * conv.f * (3.0f - x * conv.f * conv.f);
+}  
+int32_t isq(int32_t x){return x * x;}
 
-#define Kt  0.025f            // Time constant 
-#define Kp1 0.5f              // PI observer velocity gain 
-#define Kp2 1.0f              // PI observer position gain
-#define Ki  0.00045f          // PI observer integral gain (bias cancellation)
+#define UPDATE_INTERVAL 25000    // 40hz update rate (20hz LPF on acc)
+#define INIT_DELAY      4000000  // 4 sec initialization delay
+#define Kp1 0.55f                // PI observer velocity gain 
+#define Kp2 1.0f                 // PI observer position gain
+#define Ki  0.001f               // PI observer integral gain (bias cancellation)
 #define dt  (UPDATE_INTERVAL / 1000000.0f)
   
 void getEstimatedAltitude(){
@@ -251,24 +259,20 @@ void getEstimatedAltitude(){
   if (currentTime < DeadLine) return;
   DeadLine = currentTime + UPDATE_INTERVAL; 
   // Soft start
-  if (!inited && baroNewData) {
+  if (!inited) {
     inited = 1;
     EstAlt = BaroAlt;
     EstVelocity = 0.0f;
     AltErrorI = 0.0f;
-    AccScale = (9.80665f / acc_1G) * 1.155f;
+    AccScale = (9.80665f / acc_1G);
   }  
   // Estimation Error
   AltError = BaroAlt - EstAlt; 
   AltErrorI += AltError;
-  // 
-  InstAcc = (sqrt((int32_t)accADC[YAW]*accADC[YAW]+(int32_t)accADC[ROLL]*accADC[ROLL]+(int32_t)accADC[PITCH]*accADC[PITCH]) - acc_1G) * AccScale;
-  //if (abs(angle[ROLL])<100 && abs(angle[PITCH])<100) //10 deg
-  //  InstAcc = (accADC[YAW] - acc_1G) * AccScale;
-  InstAcc += (Ki) * AltErrorI;
+  // Gravity vector correction and projection to the local Z
+  InstAcc = (accADC[YAW] * (1 - acc_1G * InvSqrt(isq(accADC[ROLL]) + isq(accADC[PITCH]) + isq(accADC[YAW])))) * AccScale + (Ki) * AltErrorI;
   // Integrators
-  Delta = InstAcc * dt + (Kp1 * Kt) * AltError;
-  EstAlt += ((EstVelocity + Delta * 0.5f) * dt + (Kp2 * Kt) * AltError);
+  Delta = InstAcc * dt + (Kp1 * dt) * AltError;
+  EstAlt += ((EstVelocity + Delta * 0.5f) * dt + (Kp2 * dt) * AltError);
   EstVelocity += Delta;
-  EstVelocity *= 0.99;
 }

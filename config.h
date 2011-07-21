@@ -34,14 +34,16 @@
 //#define MEGA
 
 //enable internal I2C pull ups
-//#define INTERNAL_I2C_PULLUPS
+#define INTERNAL_I2C_PULLUPS
 
 //****** advanced users settings   *************
 
-/* this parameter defines the maximum correction per axis multiwii can output before mixing the output to different motors
- this parameter becomes inactive as soon as the stick are far from the center position in order to keep acro abilities 
- reducing this parameter can avoid big wobbles and allows higher PID settings */
-#define MAX_CORRECTION 500
+/* Pseudo-derivative conrtroller for level mode (experimental)
+   Additional information: http://wbb.multiwii.com/viewtopic.php?f=8&t=503 */
+//#define LEVEL_PDF
+
+/* introduce a deadband around the stick center */
+//#define DEADBAND
 
 /* Failsave settings - added by MIS
    Failsafe check pulse on THROTTLE channel. If the pulse is OFF (on only THROTTLE or on all channels) the failsafe procedure is initiated.
@@ -70,19 +72,18 @@
 #define TILT_ROLL_MIDDLE  1500
 #define TILT_ROLL_PROP    10
 
-//if you use a specific sensor board:
-//please submit any correction to this list.
-//   Note from Alex: I only have FFIMUv1 and FFIMUv2 boards
-//                   for other boards, I'm not sure, the info was gathered via rc forums, be cautious
-
-//#define FFIMUv1         // first 9DOF+baro board from Jussi, with HMC5843
-//#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883
+/* if you use a specific sensor board:
+   please submit any correction to this list.
+     Note from Alex: I only own some boards
+                     for other boards, I'm not sure, the info was gathered via rc forums, be cautious */
+//#define FFIMUv1         // first 9DOF+baro board from Jussi, with HMC5843                   <- confirmed by Alex
+//#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883       <- confirmed by Alex
 //#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
 //#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS
 //#define FREEIMUv035_BMP // FreeIMU v0.3.5_MS
 //#define PIPO            // 9DOF board from erazz
-//#define QUADRINO        // full FC board 9DOF+baro board from witespy
+//#define QUADRINO        // full FC board 9DOF+baro board from witespy                       <- confirmed by Alex
 //#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU
 //#define AEROQUADSHIELDv2
 //#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). The board requires 3.3V power.
@@ -111,11 +112,6 @@
 
 /* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
 //#define ADCACC
-
-//if you want to change to orientation of individual sensor
-//#define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  = -X; accADC[YAW]  = Z;}
-//#define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = Z;}
-//#define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
 
 /* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
    IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
@@ -175,7 +171,7 @@
 
 /* motors will not spin when the throttle command is in low position
    this is an alternative method to stop immediately the motors */
-#define MOTOR_STOP
+//#define MOTOR_STOP
 
 /* some radios have not a neutral point centered on 1500. can be changed here */
 #define MIDRC 1500
@@ -260,6 +256,11 @@
 //#define LOG_VALUES
  
 //****** end of advanced users settings *************
+
+//if you want to change to orientation of individual sensor
+//#define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  = -X; accADC[YAW]  = Z;}
+//#define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = Z;}
+//#define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
 
 /**************************************/
 /****END OF CONFIGURABLE PARAMETERS****/

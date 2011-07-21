@@ -189,6 +189,8 @@ void ACC_Common() {
       accZero[ROLL]  = a[ROLL]/400;
       accZero[PITCH] = a[PITCH]/400;
       accZero[YAW]   = a[YAW]/400-acc_1G; // for nunchuk 200=1G
+      accTrim[ROLL]   = 0;
+      accTrim[PITCH]  = 0;
       writeParams(); // write accZero in EEPROM
     }
     calibratingA--;
@@ -337,8 +339,7 @@ void Baro_update() {
       i2c_BMP085_UP_Read(); 
       i2c_BMP085_Calculate(); 
       BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 44330.0f;
-      bmp085_ctx.state = 0; 
-      baroNewData = 1;
+      bmp085_ctx.state = 0;
       bmp085_ctx.deadline += 20000; 
       break;
   } 
@@ -477,8 +478,7 @@ void Baro_update() {
       i2c_MS561101BA_Calculate(); 
       BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 44330.0f;
       ms561101ba_ctx.state = 0;
-      baroNewData = 1;
-      //ms561101ba_ctx.deadline += 20000;
+      ms561101ba_ctx.deadline += 20000;
       break;
   } 
 }
@@ -539,22 +539,13 @@ void ACC_getADC () {
 // ************************************************************************************************************
 #if defined(BMA180)
 void ACC_init () {
-  uint8_t control;
   delay(10);
-  // Note: No need to make the EEPROM writeable, we just update the shadows!
-  // Set bandwith
-  // Note: 150Hz is the default bandwidth on startup (If the EEPROM content was not changed)
-  control = i2c_readReg(BMA180_ADDRESS, 0x20);
-  control &= 0x0F; // Mask tcs calibration and clear bandwith (= 10Hz bandwith!)
+  //default range 2G: 1G = 4096 unit.
+  i2c_writeReg(BMA180_ADDRESS,0x0D,1<<4); // register: ctrl_reg0  -- value: set bit ee_w to 1 to enable writing
+  uint8_t control = i2c_readReg(BMA180_ADDRESS, 0x20);
+  control = control & 0x0F; // register: bw_tcs reg: bits 4-7 to set bw -- value: set low pass filter to 10Hz (bits value = 0000xxxx)
   delay(5);
-  i2c_writeReg(BMA180_ADDRESS, 0x20, control);
-  // Set range
-  // Note: 2g is the default range on startup (If the EEPROM content was not changed)
-  control = i2c_readReg(BMA180_ADDRESS, 0x35);
-  control &= 0xF0; // Mask offset_x calibration bits, clear range and smp_skip
-  control |= 0x04; // Set range to 2g
-  delay(5);
-  i2c_writeReg(BMA180_ADDRESS, 0x35, control);
+  i2c_writeReg(BMA180_ADDRESS, 0x20, control); 
   acc_1G = 512;
 }
 
@@ -590,14 +581,13 @@ void ACC_getADC () {
 // ************************************************************************************************************
 #if defined(BMA020)
 void ACC_init(){
-  // Set 4 wire SPI interface (Necessary? We use I2C)
   i2c_writeReg(0x70,0x15,0x80);
-  // Set range and bandwith
-  // Note: +-2g and 25Hz is the default setting on startup
   uint8_t control = i2c_readReg(0x70, 0x14);
-  control &= 0xE0; // Mask calibration and clear range and bandwith (= 2g range and 25Hz bandwidth)
+  control = control & 0xE0;
+  control = control | (0x00 << 3); //Range 2G 00
+  control = control | 0x00;        //Bandwidth 25 Hz 000
   i2c_writeReg(0x70,0x14,control); 
-  acc_1G = 256;
+  acc_1G = 255;
 }
 
 void ACC_getADC(){
@@ -738,6 +728,7 @@ void Gyro_getADC () {
 // ************************************************************************************************************
 // I2C Compass common function
 // ************************************************************************************************************
+#if MAG
 void Mag_getADC() {
   static uint32_t t,tCal = 0;
   static int16_t magZeroTempMin[3];
@@ -770,6 +761,7 @@ void Mag_getADC() {
     }
   }
 }
+#endif
 
 // ************************************************************************************************************
 // I2C Compass HMC5843 & HMC5883
@@ -836,7 +828,7 @@ void WMP_init(uint8_t d) {
   if (d>0) {
     // We need to set acc_1G for the Nunchuk beforehand; It's used in WMP_getRawADC() and ACC_Common()
     // If a different accelerometer is used, it will be overwritten by its ACC_init() later.
-    acc_1G = 204;
+    acc_1G = 200;
     uint8_t numberAccRead = 0;
     // Read from WMP 100 times, this should return alternating WMP and Nunchuk data
     for(uint8_t i=0;i<100;i++) {

@@ -172,17 +172,21 @@ void __upSFmt(void * var, uint8_t mul, uint8_t dec) {
   __u16Fmt(&unit, mul, dec);
 }  
 
+static uint8_t lcdStickState[3]; 
+#define IsLow(x)  (lcdStickState[x] & 0x1)
+#define IsHigh(x) (lcdStickState[x] & 0x2)
+#define IsMid(x)  (!lcdStickState[x])
+
 void configurationLoop() {
-  uint8_t chan,i;
-  uint8_t p,stickActive = 1;
-  uint8_t val;
+  uint8_t i, p;
   uint8_t LCD=1;
   uint8_t refreshLCD = 1;
   uint8_t key = 0;
   initLCD();
   p = 0;
   while (LCD == 1) {
-    if (refreshLCD == 1) {
+    if (refreshLCD) {
+      blinkLED(10,20,1);
       strcpy(line2,"                ");
       strcpy(line1,"                ");
       i=0; char* point = lcd_param[p].paramText; while (*point) line1[i++] = *point++;
@@ -194,44 +198,34 @@ void configurationLoop() {
         LCDprint(0xFE);LCDprint(128);LCDprintChar(line1);
         LCDprint(0xFE);LCDprint(192);LCDprintChar(line2);
       #endif
-      refreshLCD=0;
+      refreshLCD = 0;
     }
     #if defined(LCD_TEXTSTAR)
       key = ( Serial.available() ?  Serial.read() : 0 ); 
     #endif
-    for (chan = ROLL; chan < 4; chan++) rcData[chan] = readRawRC(chan);
-    if (rcData[YAW]  < MINCHECK && rcData[PITCH] > MAXCHECK && stickActive == 0) LCD = 0; // save and exit
-    if (rcData[YAW]  > MAXCHECK && rcData[PITCH] > MAXCHECK && stickActive == 0) LCD = 2; // exit without save: eeprom has only 100.000 write cycles
-    //switch config param with pitch
-    if ((key == LCD_MENU_NEXT || (rcData[PITCH] < MINCHECK && stickActive == 0)) && p<= PARAMMAX) {
-      stickActive = 1;refreshLCD=1;blinkLED(10,20,1);
-      p++;
-      if (p>PARAMMAX) p=0;
-    }
-    if ((key == LCD_MENU_PREV || (rcData[PITCH] > MAXCHECK && stickActive == 0)) && p>=0) {
-      stickActive = 1;refreshLCD=1;blinkLED(10,20,1);
-      if (p==0) p=PARAMMAX; else p--;
-    }
-    //+ or - param with low and high roll
-    if ((key == LCD_VALUE_DOWN || (rcData[ROLL] < MINCHECK && stickActive == 0))) {
-      stickActive = 1;refreshLCD=1;blinkLED(10,20,1);
+    for (i = ROLL; i < THROTTLE; i++) {uint16_t Tmp = readRawRC(i); lcdStickState[i] = (Tmp < MINCHECK) | ((Tmp > MAXCHECK) << 1);};
+    if (IsLow(YAW) && IsHigh(PITCH)) LCD = 0;          // save and exit
+    else if (IsHigh(YAW) && IsHigh(PITCH)) LCD = 2;    // exit without save: eeprom has only 100.000 write cycles
+    else if (key == LCD_MENU_NEXT || (IsLow(PITCH))) { //switch config param with pitch
+      refreshLCD = 1; p++; if (p>PARAMMAX) p = 0;
+    } else if (key == LCD_MENU_PREV || (IsHigh(PITCH))) {
+      refreshLCD = 1; p--; if (p == 0xFF) p = PARAMMAX;
+    } else if (key == LCD_VALUE_DOWN || (IsLow(ROLL))) { //+ or - param with low and high roll
+      refreshLCD = 1;
       lcd_param[p].def->type->inc(lcd_param[p].var, -lcd_param[p].def->increment);
       if (p == 0) memcpy(lcd_param[4].var, lcd_param[0].var, 1);
-    }
-    if ((key == LCD_VALUE_UP || (rcData[ROLL] > MAXCHECK && stickActive == 0))) {
-      stickActive = 1;refreshLCD=1;blinkLED(10,20,1);
+    } else if (key == LCD_VALUE_UP || (IsHigh(ROLL))) {
+      refreshLCD = 1; 
       lcd_param[p].def->type->inc(lcd_param[p].var, +lcd_param[p].def->increment);
       if (p == 0) memcpy(lcd_param[4].var, lcd_param[0].var, 1);
     }
-    if (rcData[ROLL] < MAXCHECK && rcData[ROLL]  > MINCHECK
-        && rcData[PITCH] < MAXCHECK && rcData[PITCH] > MINCHECK) stickActive = 0;
   } // while (LCD == 1)
   blinkLED(20,30,1);
   #if defined(LCD_TEXTSTAR)
     LCDprint(0x0c); //clear screen
-    if ( LCD == 0) LCDprintChar("Saving Settings.."); else LCDprintChar("skipping Save.");
+    if (LCD == 0) LCDprintChar("Saving Settings.."); else LCDprintChar("skipping Save.");
   #endif
-  if ( LCD == 0) writeParams();
+  if (LCD == 0) writeParams();
   #if defined(LCD_TEXTSTAR)
     LCDprintChar("..done! Exit.");
   #else

@@ -49,12 +49,12 @@ static uint8_t  magMode = 0;        // if compass heading hold is a activated
 static uint8_t  baroMode = 0;       // if altitude hold is activated
 static int16_t  gyroADC[3],accADC[3],magADC[3];
 static int16_t  accSmooth[3];       // projection of smoothed and normalized gravitation force vector on x/y/z axis, as measured by accelerometer
+static int16_t  accTrim[2] = {0, 0};
 static int16_t  heading,magHold;
 static uint8_t  calibratedACC = 0;
 static uint8_t  vbat;               // battery voltage in 0.1V steps
 static uint8_t  okToArm = 0;
 static uint8_t  rcOptions;
-static uint8_t  baroNewData = 0;
 static int32_t  pressure = 0;
 static float    BaroAlt = 0.0f;
 static float    EstVelocity = 0.0f;
@@ -250,6 +250,11 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   }
   rcCommand[THROTTLE] = MINTHROTTLE + (int32_t)(MAXTHROTTLE-MINTHROTTLE)* (rcData[THROTTLE]-MINCHECK)/(2000-MINCHECK);
   rcCommand[YAW]      = rcData[YAW]-MIDRC;
+  #if defined(DEADBAND)
+    if (abs(rcCommand[PITCH])< 5) rcCommand[PITCH] = 0;
+    if (abs(rcCommand[ROLL]) < 5) rcCommand[ROLL] = 0;
+    if (abs(rcCommand[YAW])  < 10) rcCommand[YAW] = 0;
+  #endif
 }
 
 
@@ -294,7 +299,6 @@ void loop () {
   static int16_t initialThrottleHold;
   static int32_t errorAltitudeI = 0;
   static int16_t AltPID = 0;
-  static int32_t VelErrorI = 0;
   static int16_t lastVelError = 0;
   static int16_t lastAltError = 0;
   static float AltHold = 0.0;
@@ -354,13 +358,13 @@ void loop () {
         if (rcDelayCommand == 20) calibratingA=400;
         rcDelayCommand++;
       } else if (rcData[PITCH] > MAXCHECK) {
-         accZero[PITCH]+=acc_1G/100;writeParams();
+         accTrim[PITCH]++;writeParams();
       } else if (rcData[PITCH] < MINCHECK) {
-         accZero[PITCH]-=acc_1G/100;writeParams();
+         accTrim[PITCH]--;writeParams();
       } else if (rcData[ROLL] > MAXCHECK) {
-         accZero[ROLL]+=acc_1G/100;writeParams();
+         accTrim[ROLL]++;writeParams();
       } else if (rcData[ROLL] < MINCHECK) {
-         accZero[ROLL]-=acc_1G/100;writeParams();
+         accTrim[ROLL]--;writeParams();
       } else {
         rcDelayCommand = 0;
       }
@@ -395,9 +399,9 @@ void loop () {
           initialThrottleHold = rcCommand[THROTTLE];
           AltPID = 0;
           errorAltitudeI = 0;
-          VelErrorI = 0;
           lastVelError = 0;
           lastAltError = 0;
+          EstVelocity = 0;
         }
       } else baroMode = 0;
     }
@@ -433,33 +437,29 @@ void loop () {
   if(BARO) {
     if (baroMode) {
       //**** Alt. Set Point stabilization PID ****
-      error = (AltHold - EstAlt)*10.0f;
+      error = constrain((AltHold - EstAlt)*100.0f, -1000.0f, 1000.0f);
       delta = error - lastAltError;
 
       errorAltitudeI += error;
       errorAltitudeI = constrain(errorAltitudeI,-5000,5000);
 
-      PTerm = error*P8[PIDALT]/10;
-      ITerm = errorAltitudeI*I8[PIDALT]/1000;
-      DTerm = delta * D8[PIDALT]/10;
+      PTerm = (int32_t)error*P8[PIDALT]/10/4;
+      ITerm = (int32_t)errorAltitudeI*I8[PIDALT]/1000/4;
+      DTerm = delta * D8[PIDALT]/10/4;
 
       lastAltError = error;
       AltPID = PTerm + ITerm - DTerm;
      
-      //**** Velocity stabilization PID ****        
-      int32_t VelError = EstVelocity*1000.0f - AltPID;
-      delta = VelError - lastVelError;
 
-      VelErrorI += VelError;
-      VelErrorI = constrain(VelErrorI,-10000,10000);
+      //**** Velocity stabilization PD ****        
+      error = constrain(EstVelocity*2000.0f, -30000.0f, 30000.0f);
+      delta = error - lastVelError;
+      lastVelError = error;
+
+      PTerm = (int32_t)error*P8[PIDVEL]/800;
+      DTerm = delta * D8[PIDVEL]/16;
       
-      PTerm = VelError*P8[PIDVEL]/1000;
-      ITerm = VelErrorI*I8[PIDVEL]/50000; 
-      DTerm = delta * D8[PIDVEL]/100;
-
-      lastVelError = VelError;
-
-      rcCommand[THROTTLE] = constrain(rcCommand[THROTTLE]-(PTerm + ITerm - DTerm),max(rcCommand[THROTTLE]-350,MINTHROTTLE),min(rcCommand[THROTTLE]+350,MAXTHROTTLE));
+      rcCommand[THROTTLE] = constrain(rcCommand[THROTTLE] - (PTerm - DTerm) + AltPID,max(rcCommand[THROTTLE]-350,MINTHROTTLE),min(rcCommand[THROTTLE]+350,MAXTHROTTLE));
     }
   }
 
@@ -467,8 +467,12 @@ void loop () {
   //**** PITCH & ROLL & YAW PID ****    
   for(axis=0;axis<3;axis++) {
     if (accMode == 1 && axis<2 ) { //LEVEL MODE
-      errorAngle = rcCommand[axis] - angle[axis];                                   //rcCommand can reach 500*5 (rcRate=5)   ;  500*5+1800 = 4300: 16 bits is ok here
-      PTerm      = (int32_t)errorAngle*P8[PIDLEVEL]/100 ;                           //32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
+      errorAngle = rcCommand[axis] - angle[axis] + accTrim[axis];                   //rcCommand can reach 500*5 (rcRate=5)   ;  500*5+1800 = 4300: 16 bits is ok here
+      #ifdef LEVEL_PDF
+        PTerm      = -(int32_t)angle[axis]*P8[PIDLEVEL]/100 ;
+      #else  
+        PTerm      = (int32_t)errorAngle*P8[PIDLEVEL]/100 ;                         //32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
+      #endif
 
       errorAngleI[axis] += errorAngle;                                              //16 bits is ok here
       errorAngleI[axis]  = constrain(errorAngleI[axis],-10000,+10000); //WindUp     //16 bits is ok here

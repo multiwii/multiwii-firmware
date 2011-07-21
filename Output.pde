@@ -230,11 +230,6 @@ void mixTable() {
 
   #define PIDMIX(X,Y,Z) rcCommand[THROTTLE] + axisPID[ROLL]*X + axisPID[PITCH]*Y + YAW_DIRECTION * axisPID[YAW]*Z
 
-  //limit big wobble issues
-  for(axis=0;axis<2;axis++) {
-    a = abs(rcCommand[axis]);
-    axisPID[axis] = constrain(axisPID[axis],-MAX_CORRECTION-a,+MAX_CORRECTION+a);
-  }
   #if NUMBER_MOTOR > 3
     //prevent "yaw jump" during yaw correction
     axisPID[YAW] = constrain(axisPID[YAW],-100-abs(rcCommand[YAW]),+100+abs(rcCommand[YAW]));
