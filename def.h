@@ -222,7 +222,7 @@
   #define CAM1PIN                    6  //PIN 68 =  PIN A14
   #define CAM2PIN                    7  //PIN 69 =  PIN A15
   #define ISR_UART                   ISR(USART0_UDRE_vect)
-  #define V_BATPIN                   A3    // Analog PIN 3
+  #define V_BATPIN                   A0    // Analog PIN 3
   #define PSENSORPIN                 A2    // Analog PIN 2
 #endif
 

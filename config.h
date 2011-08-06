@@ -12,9 +12,9 @@
 /* The type of multicopter */
 //#define GIMBAL
 //#define BI
-//#define TRI
+#define TRI
 //#define QUADP
-#define QUADX
+//#define QUADX
 //#define Y4
 //#define Y6
 //#define HEX6
@@ -112,6 +112,18 @@
 
 /* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
 //#define ADCACC
+
+/* ITG3200 & ITG3205 Low pass filter setting. In case you cannot eliminate all vibrations to the Gyro, you can try
+   to decrease the LPF frequency, only one step per try. As soon as twitching gone, stick with that setting.
+   It will not help on feedback wobbles, so change only when copter is randomly twiching and all dampening and
+   balancing options ran out. Uncomment only one option!
+   IMPORTANT! Change low pass filter setting changes PID behaviour, so retune your PID's after changing LPF.*/
+//#define ITG3200_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
+//#define ITG3200_LPF_188HZ
+//#define ITG3200_LPF_98HZ
+//#define ITG3200_LPF_42HZ
+//#define ITG3200_LPF_20HZ
+//#define ITG3200_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
 
 /* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
    IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
@@ -232,7 +244,6 @@
 /* set to analogRead() value for zero current */
 #define PSENSORNULL 510 // for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt
 #define PINT2mA 13 // for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
-
 
 /* to monitor system values (battery level, loop time etc. with LCD enable this */
 /* note: for now you must send single characters 'A', 'B', 'C', 'D' to request 4 different pages */

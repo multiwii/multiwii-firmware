@@ -33,6 +33,38 @@
   //#define MS561101BA_ADDRESS 0xEF //CBR=1 0xEF I2C address when pin CSB is connected to HIGH (VCC)
 #endif
 
+//ITG3200 and ITG3205 Gyro LPF setting
+#if defined(ITG3200_LPF_256HZ) || defined(ITG3200_LPF_188HZ) || defined(ITG3200_LPF_98HZ) || defined(ITG3200_LPF_42HZ) || defined(ITG3200_LPF_20HZ) || defined(ITG3200_LPF_10HZ)
+  #if defined(ITG3200_LPF_256HZ)
+    #define ITG3200_SMPLRT_DIV 0  //8000Hz
+    #define ITG3200_DLPF_CFG   0
+  #endif
+  #if defined(ITG3200_LPF_188HZ)
+    #define ITG3200_SMPLRT_DIV 0  //1000Hz
+    #define ITG3200_DLPF_CFG   1
+  #endif
+  #if defined(ITG3200_LPF_98HZ)
+    #define ITG3200_SMPLRT_DIV 0
+    #define ITG3200_DLPF_CFG   2
+  #endif
+  #if defined(ITG3200_LPF_42HZ)
+    #define ITG3200_SMPLRT_DIV 0
+    #define ITG3200_DLPF_CFG   3
+  #endif
+  #if defined(ITG3200_LPF_20HZ)
+    #define ITG3200_SMPLRT_DIV 0
+    #define ITG3200_DLPF_CFG   4
+  #endif
+  #if defined(ITG3200_LPF_10HZ)
+    #define ITG3200_SMPLRT_DIV 0
+    #define ITG3200_DLPF_CFG   5
+  #endif
+#else
+    //Default settings LPF 256Hz/8000Hz sample
+    #define ITG3200_SMPLRT_DIV 0  //8000Hz
+    #define ITG3200_DLPF_CFG   0
+#endif
+
 uint8_t rawADC[6];
 static uint32_t neutralizeTime = 0;
   
@@ -704,10 +736,10 @@ void Gyro_getADC () {
 void Gyro_init() {
   delay(100);
   i2c_writeReg(ITG3200_ADDRESS, 0x3E, 0x80); //register: Power Management  --  value: reset device
+//  delay(5);
+//  i2c_writeReg(ITG3200_ADDRESS, 0x15, ITG3200_SMPLRT_DIV); //register: Sample Rate Divider  -- default value = 0: OK
   delay(5);
-  i2c_writeReg(ITG3200_ADDRESS, 0x15, 0x07); //register: Sample Rate Divider  --  value: 7: 8000Hz/(7+1) = 1000Hz . more than twice the need
-  delay(5);
-  i2c_writeReg(ITG3200_ADDRESS, 0x16, 0x18); //register: DLPF_CFG - low pass filter configuration & sample rate  --  value: 256Hz Low Pass Filter Bandwidth - Internal Sample Rate 8kHz
+  i2c_writeReg(ITG3200_ADDRESS, 0x16, 0x18 + ITG3200_DLPF_CFG); //register: DLPF_CFG - low pass filter configuration
   delay(5);
   i2c_writeReg(ITG3200_ADDRESS, 0x3E, 0x03); //register: Power Management  --  value: PLL with Z Gyro reference
   delay(100);
@@ -856,14 +888,14 @@ uint8_t WMP_getRawADC() {
   // Wii Motion Plus Data
   if ( (rawADC[5]&0x03) == 0x02 ) {
     // Assemble 14bit data 
-    GYRO_ORIENTATION( - ( ((rawADC[5]>>2)<<8) | rawADC[2] ) , //range: +/- 8192
-                      - ( ((rawADC[4]>>2)<<8) | rawADC[1] ) ,
-                      - ( ((rawADC[3]>>2)<<8) | rawADC[0] ) );
+    gyroADC[ROLL]  = - ( ((rawADC[5]>>2)<<8) | rawADC[2] ); //range: +/- 8192
+    gyroADC[PITCH] = - ( ((rawADC[4]>>2)<<8) | rawADC[1] );
+    gyroADC[YAW]  =  - ( ((rawADC[3]>>2)<<8) | rawADC[0] );
     GYRO_Common();
     // Check if slow bit is set and normalize to fast mode range
-    GYRO_ORIENTATION(   (rawADC[3]&0x01)     ? gyroADC[ROLL]/5  : gyroADC[ROLL] ,   //the ratio 1/5 is not exactly the IDG600 or ISZ650 specification 
-                        (rawADC[4]&0x02)>>1  ? gyroADC[PITCH]/5 : gyroADC[PITCH] ,  //we detect here the slow of fast mode WMP gyros values (see wiibrew for more details)
-                        (rawADC[3]&0x02)>>1  ? gyroADC[YAW]/5   : gyroADC[YAW]   ); // this step must be done after zero compensation    
+    gyroADC[ROLL]  = (rawADC[3]&0x01)     ? gyroADC[ROLL]/5  : gyroADC[ROLL];  //the ratio 1/5 is not exactly the IDG600 or ISZ650 specification 
+    gyroADC[PITCH] = (rawADC[4]&0x02)>>1  ? gyroADC[PITCH]/5 : gyroADC[PITCH]; //we detect here the slow of fast mode WMP gyros values (see wiibrew for more details)
+    gyroADC[YAW]   = (rawADC[3]&0x02)>>1  ? gyroADC[YAW]/5   : gyroADC[YAW];   // this step must be done after zero compensation    
     return 1;
   } else if ( (rawADC[5]&0x03) == 0x00 ) { // Nunchuk Data
     ACC_ORIENTATION(  ( (rawADC[3]<<2)      | ((rawADC[5]>>4)&0x02) ) ,

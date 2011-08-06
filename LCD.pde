@@ -343,16 +343,15 @@ void lcd_telemetry() {
       LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar(line1); //refresh line 1 of LCD
       break;    
     case 'D': // button D on Textstar LCD -> sensors
-    #define GYROLIMIT 30 // threshold: for larger values replace bar with dots
-    #define ACCLIMIT 40 // threshold: for larger values replace bar with dots
-      LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar("G "); //refresh line 1 of LCD
-      if (abs(gyroData[0]) < GYROLIMIT) { LCD_BAR(4,(abs(gyroData[0])*100/GYROLIMIT)) } else LCDprintChar("...."); LCDprint(' ');
-      if (abs(gyroData[1]) < GYROLIMIT) { LCD_BAR(4,(abs(gyroData[1])*100/GYROLIMIT)) } else LCDprintChar("...."); LCDprint(' ');
-      if (abs(gyroData[2]) < GYROLIMIT) { LCD_BAR(4,(abs(gyroData[2])*100/GYROLIMIT)) } else LCDprintChar("....");
+    #define GYROLIMIT 20 // threshold: for larger values replace bar with dots
+    #define ACCLIMIT 30 // threshold: for larger values replace bar with dots      LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar("G "); //refresh line 1 of LCD
+      if (abs(gyroData[0]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[0])*50/GYROLIMIT) } else LCDprintChar("...."); LCDprint(' ');
+      if (abs(gyroData[1]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[1])*50/GYROLIMIT) } else LCDprintChar("...."); LCDprint(' ');
+      if (abs(gyroData[2]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[2])*50/GYROLIMIT) } else LCDprintChar("....");
       LCDprint(0xFE);LCDprint('L');LCDprint(2);LCDprintChar("A "); //refresh line 2 of LCD
-      if (abs(accSmooth[0]) < ACCLIMIT) { LCD_BAR(4,(abs(accSmooth[0])*100/ACCLIMIT)) } else LCDprintChar("...."); LCDprint(' ');
-      if (abs(accSmooth[1]) < ACCLIMIT) { LCD_BAR(4,(abs(accSmooth[1])*100/ACCLIMIT)) } else LCDprintChar("...."); LCDprint(' ');
-      if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCD_BAR(4,(abs(accSmooth[2]-acc_1G)*100/ACCLIMIT)) } else LCDprintChar("....");
+      if (abs(accSmooth[0]) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[0])*50/ACCLIMIT) } else LCDprintChar("...."); LCDprint(' ');
+      if (abs(accSmooth[1]) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT) } else LCDprintChar("...."); LCDprint(' ');
+      if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT) } else LCDprintChar("....");
       break;
   } // end switch (telemetry) 
 } // end function

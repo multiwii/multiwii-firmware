@@ -111,11 +111,13 @@ void rxInt() {
   last = now;
   if(diff>3000) chan = 0;
   else {
-    if(900<diff && diff<2200 && chan<8) rcValue[chan] = diff;
+    if(900<diff && diff<2200 && chan<8 ) {   //Only if the signal is between these values it is valid, otherwise the failsafe counter should move up
+      rcValue[chan] = diff;
+      #if defined(FAILSAFE)
+        if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // clear FailSafe counter - added by MIS  //incompatible to quadroppm
+      #endif
+    }
     chan++;
-    #if defined(FAILSAFE)
-      if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // clear FailSafe counter - added by MIS
-    #endif
   }
 }
 #endif
