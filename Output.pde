@@ -306,7 +306,7 @@ void mixTable() {
     motor[4] = PIDMIX(+0   ,-1   ,-1); //FRONT
     motor[5] = PIDMIX(-1   ,+0   ,-1); //RIGHT
     motor[6] = PIDMIX(+0   ,+1   ,-1); //REAR
-    motor[7] = PIDMIX(-1   ,+0   ,-1); //LEFT 
+    motor[7] = PIDMIX(+1   ,+0   ,-1); //LEFT 
   #endif
   #ifdef OCTOFLATX
     motor[0] = PIDMIX(+1  ,-1/2,+1); //MIDFRONT_L

@@ -310,7 +310,10 @@ void loop () {
       if ( failsafeCnt > (5*FAILSAVE_DELAY) && armed==1) {                  // Stabilize, and set Throttle to specified level
         for(i=0; i<3; i++) rcData[i] = MIDRC;                               // after specified guard time after RC signal is lost (in 0.1sec)
         rcData[THROTTLE] = FAILSAVE_THR0TTLE;
-        if (failsafeCnt > 5*(FAILSAVE_DELAY+FAILSAVE_OFF_DELAY)) armed = 0; // Turn OFF motors after specified Time (in 0.1sec)
+        if (failsafeCnt > 5*(FAILSAVE_DELAY+FAILSAVE_OFF_DELAY)) {          // Turn OFF motors after specified Time (in 0.1sec)
+          armed = 0;   //This will prevent the copter to automatically rearm if failsafe shuts it down and prevents
+          okToArm = 0; //to restart accidentely by just reconnect to the tx - you will have to switch off first to rearm
+        }
       }
       failsafeCnt++;
     #endif
@@ -331,7 +334,7 @@ void loop () {
           previousTime = micros();
         }
       } else if (activate[BOXARM] > 0) {
-        if ((rcOptions & activate[BOXARM]) && okToArm) armed = 1;
+        if ((rcOptions & activate[BOXARM]) && okToArm ) armed = 1;
         else if (armed) armed = 0;
         rcDelayCommand = 0;
       } else if ( (rcData[YAW] < MINCHECK || rcData[ROLL] < MINCHECK)  && armed == 1) {
