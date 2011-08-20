@@ -220,9 +220,9 @@
   #define DIGITAL_BI_LEFT_LOW        PORTH &= ~(1<<3);
   #define PPM_PIN_INTERRUPT          attachInterrupt(4, rxInt, RISING);  //PIN 19, also used for Spektrum satellite option
   #define MOTOR_ORDER                3,5,6,2,7,8,9,10   //for a quad+: rear,right,left,front   //+ for y6: 7:under right  8:under left
-  #define DIGITAL_CAM_PINMODE        pinMode(33,OUTPUT); // 33
-  #define DIGITAL_CAM_HIGH           PORTC |= 1<<4;
-  #define DIGITAL_CAM_LOW            PORTC &= ~(1<<4);
+  #define DIGITAL_CAM_PINMODE        pinMode(33,OUTPUT); pinMode(46,OUTPUT); // 33 + 46
+  #define DIGITAL_CAM_HIGH           PORTC |= 1<<4;PORTL |= 1<<3;
+  #define DIGITAL_CAM_LOW            PORTC &= ~(1<<4);PORTL &= ~(1<<3);
   //RX PIN assignment inside the port //for PORTK
   #define THROTTLEPIN                0  //PIN 62 =  PIN A8
   #define ROLLPIN                    1  //PIN 63 =  PIN A9
