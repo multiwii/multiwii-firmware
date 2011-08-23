@@ -42,8 +42,9 @@
    Additional information: http://wbb.multiwii.com/viewtopic.php?f=8&t=503 */
 //#define LEVEL_PDF
 
-/* introduce a deadband around the stick center */
-//#define DEADBAND
+/* introduce a deadband around the stick center
+   Must be greater than zero, comment if you dont want a deadband on roll, pitch and yaw */
+//#define DEADBAND 6
 
 /* Failsave settings - added by MIS
    Failsafe check pulse on THROTTLE channel. If the pulse is OFF (on only THROTTLE or on all channels) the failsafe procedure is initiated.

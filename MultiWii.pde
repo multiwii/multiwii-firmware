@@ -241,20 +241,22 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
       if (telemetry) lcd_telemetry();
       telemetryTime = micros();  
     }
-  #endif  
-  for(axis=0;axis<2;axis++) {
+  #endif
+  for(axis=0;axis<3;axis++) {
     uint16_t tmp = abs(rcData[axis]-MIDRC);
-    uint16_t tmp2 = tmp/100;
-    rcCommand[axis] = lookupRX[tmp2] + (tmp-tmp2*100) * (lookupRX[tmp2+1]-lookupRX[tmp2]) / 100;
+    #if defined(DEADBAND)
+      if (tmp>DEADBAND) { tmp -= DEADBAND; }
+      else { tmp=0; }
+    #endif
+    if(axis!=2) {
+      uint16_t tmp2 = tmp/100;
+      rcCommand[axis] = lookupRX[tmp2] + (tmp-tmp2*100) * (lookupRX[tmp2+1]-lookupRX[tmp2]) / 100;
+    } else {
+      rcCommand[axis] = tmp;
+    }
     if (rcData[axis]<MIDRC) rcCommand[axis] = -rcCommand[axis];
   }
   rcCommand[THROTTLE] = MINTHROTTLE + (int32_t)(MAXTHROTTLE-MINTHROTTLE)* (rcData[THROTTLE]-MINCHECK)/(2000-MINCHECK);
-  rcCommand[YAW]      = rcData[YAW]-MIDRC;
-  #if defined(DEADBAND)
-    if (abs(rcCommand[PITCH])< 5) rcCommand[PITCH] = 0;
-    if (abs(rcCommand[ROLL]) < 5) rcCommand[ROLL] = 0;
-    if (abs(rcCommand[YAW])  < 10) rcCommand[YAW] = 0;
-  #endif
 }
 
 
