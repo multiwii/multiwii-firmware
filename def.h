@@ -138,6 +138,12 @@
   #define BARO 0
 #endif
 
+#if defined(GPS)
+  #define GPSPRESENT 1
+#else
+  #define GPSPRESENT 0
+#endif
+
 #if defined(PROMINI)
   #define LEDPIN_PINMODE             pinMode (13, OUTPUT);
   #define LEDPIN_SWITCH              PINB |= 1<<5;     //switch LEDPIN state (digital PIN 13)

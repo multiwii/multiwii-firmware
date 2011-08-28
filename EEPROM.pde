@@ -1,6 +1,6 @@
 #include <avr/eeprom.h>
 
-static uint8_t checkNewConf = 144;
+static uint8_t checkNewConf = 145;
 
 typedef struct eep_entry_t{
   void *  var;
@@ -66,7 +66,7 @@ void checkFirstTime() {
   rollPitchRate = 0;
   yawRate = 0;
   dynThrPID = 0;
-  for(uint8_t i=0;i<6;i++) activate[i] = 0;
+  for(uint8_t i=0;i<7;i++) activate[i] = 0;
   accTrim[0] = 0; accTrim[1] = 0;
 #if defined(POWERMETER)
   powerTrigger1 = 0;

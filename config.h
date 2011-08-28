@@ -30,13 +30,23 @@
 #define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
 //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
 
-#define PROMINI  //Arduino type
-//#define MEGA
+//#define PROMINI  //Arduino type
+#define MEGA
 
 //enable internal I2C pull ups
-#define INTERNAL_I2C_PULLUPS
+//#define INTERNAL_I2C_PULLUPS
 
 //****** advanced users settings   *************
+
+/* GPS
+   only available on MEGA boards (this might be possible on 328 based boards in the future)
+   if enabled, define here the Arduino Serial port number and the UART speed
+   note: only the RX PIN is used, the GPS is not configured by multiwii
+   the GPS must be configured to output NMEA sentences (which is generally the default conf for most GPS devices)
+*/
+#define GPS
+#define GPS_SERIAL Serial3 // should be Serial2 for flyduino v2
+#define GPS_BAUD   4800
 
 /* Pseudo-derivative conrtroller for level mode (experimental)
    Additional information: http://wbb.multiwii.com/viewtopic.php?f=8&t=503 */
@@ -78,12 +88,12 @@
      Note from Alex: I only own some boards
                      for other boards, I'm not sure, the info was gathered via rc forums, be cautious */
 //#define FFIMUv1         // first 9DOF+baro board from Jussi, with HMC5843                   <- confirmed by Alex
-//#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883       <- confirmed by Alex
+#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883       <- confirmed by Alex
 //#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
 //#define FREEIMUv03      // FreeIMU v0.3 and v0.3.1
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
-//#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS
-//#define FREEIMUv035_BMP // FreeIMU v0.3.5_MS
+//#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
+//#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
 //#define PIPO            // 9DOF board from erazz
 //#define QUADRINO        // full FC board 9DOF+baro board from witespy                       <- confirmed by Alex
 //#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU

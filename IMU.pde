@@ -223,7 +223,7 @@ void getEstimatedAttitude(){
   #if MAG
     // Apply complimentary filter (Gyro drift correction)
     for (axis = 0; axis < 3; axis++)
-      EstM.A[axis] = (EstM.A[axis] * GYR_CMPFM_FACTOR + MAG_VALUE) * INV_GYR_CMPFM_FACTOR;
+      EstM.A[axis] = (EstM.A[axis] * GYR_CMPFM_FACTOR - MAG_VALUE) * INV_GYR_CMPFM_FACTOR;
     // Attitude of the cross product vector GxM
     heading = _atan2(EstG.V.Z * EstM.V.X - EstG.V.X * EstM.V.Z, EstG.V.Y * EstM.V.Z - EstG.V.Z * EstM.V.Y) / 10;
   #endif
