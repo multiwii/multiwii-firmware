@@ -292,7 +292,9 @@ void setup() {
     for(uint8_t i=0;i<=PMOTOR_SUM;i++)
       pMeter[i]=0;
   #endif
-//  if (GPSPRESENT) GPS_SERIAL.begin(GPS_BAUD); 
+  #if defined(GPS)
+    GPS_SERIAL.begin(GPS_BAUD);
+  #endif
 }
 
 // ******** Main Loop *********
