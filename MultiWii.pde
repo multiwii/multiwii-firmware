@@ -292,7 +292,7 @@ void setup() {
     for(uint8_t i=0;i<=PMOTOR_SUM;i++)
       pMeter[i]=0;
   #endif
-  if (GPSPRESENT) GPS_SERIAL.begin(GPS_BAUD); 
+//  if (GPSPRESENT) GPS_SERIAL.begin(GPS_BAUD); 
 }
 
 // ******** Main Loop *********
@@ -425,10 +425,10 @@ void loop () {
         }
       } else magMode = 0;
     }
-    if(GPSPRESENT) {
+    #if defined(GPS)
       if (rcOptions & activate[BOXGPS]) {GPSMode = 1;}
       else GPSMode = 0;
-    }
+    #endif
   }
   if (MAG)  Mag_getADC();
   if (BARO) Baro_update();
@@ -541,7 +541,7 @@ void loop () {
   #endif
   
   //GPS
-  if(GPSPRESENT) {
+  #if defined(GPS)
     while (GPS_SERIAL.available())
       if (GPS_newFrame(GPS_SERIAL.read())) {
         if (GPS_fix == 1) {
@@ -553,5 +553,5 @@ void loop () {
           GPS_distance(GPS_latitude_home,GPS_longitude_home,GPS_latitude,GPS_longitude, &distanceToHome, &directionToHome);
         }
       }
-  }
+  #endif
 }
