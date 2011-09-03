@@ -61,7 +61,7 @@ void serialCom() {
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
       for(i=0;i<3;i++) serialize16(gyroData[i]/8);
       for(i=0;i<3;i++) serialize16(magADC[i]/3);
-      serialize16(EstAlt*100.0f);
+      serialize16(EstAlt*10.0f);
       serialize16(heading); // compass
       for(i=0;i<4;i++) serialize16(servo[i]);
       for(i=0;i<8;i++) serialize16(motor[i]);
@@ -72,10 +72,13 @@ void serialCom() {
       for(i=0;i<2;i++) serialize16(angle[i]/10);
       serialize8(MULTITYPE);
       for(i=0;i<5;i++) {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);}
-      serialize8(P8[PIDLEVEL]);serialize8(I8[PIDLEVEL]);
+      serialize8(P8[PIDLEVEL]);
+      serialize8(I8[PIDLEVEL]);
       serialize8(P8[PIDMAG]);
-      serialize8(rcRate8); serialize8(rcExpo8);
-      serialize8(rollPitchRate); serialize8(yawRate);
+      serialize8(rcRate8);
+      serialize8(rcExpo8);
+      serialize8(rollPitchRate);
+      serialize8(yawRate);
       serialize8(dynThrPID);
       for(i=0;i<7;i++) serialize8(activate[i]);
       serialize16(distanceToHome);
@@ -89,7 +92,7 @@ void serialCom() {
       serialize16(intPowerMeterSum);
       serialize16(intPowerTrigger1);
       serialize8(vbat);
-      serialize16(BaroAlt*100.0f); // 4 variables are here for general monitoring purpose
+      serialize16(BaroAlt*10.0f); // 4 variables are here for general monitoring purpose
       serialize16(0);              // debug2
       serialize16(0);              // debug3
       serialize16(0);              // debug4

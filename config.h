@@ -38,6 +38,10 @@
 
 //****** advanced users settings   *************
 
+/* This option is here if you want to use the old level code from the verison 1.7
+   It's just to have some feedback. This will be removed in the future */
+//#define STAB_OLD_17
+
 /* GPS
    only available on MEGA boards (this might be possible on 328 based boards in the future)
    if enabled, define here the Arduino Serial port number and the UART speed
@@ -98,8 +102,8 @@
 //#define QUADRINO        // full FC board 9DOF+baro board from witespy                       <- confirmed by Alex
 //#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU
 //#define AEROQUADSHIELDv2
-//#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). The board requires 3.3V power.
-
+//#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). requires 3.3V power.
+//#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
 
 //if you use independent sensors
 //leave it commented it you already checked a specific board above

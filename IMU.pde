@@ -57,6 +57,82 @@ void computeIMU () {
   #endif
 }
 
+#if defined(STAB_OLD_17)
+/// OLD CODE from 1.7 ////
+// ************************************
+// simplified IMU based on Kalman Filter
+// inspired from http://starlino.com/imu_guide.html
+// and http://www.starlino.com/imu_kalman_arduino.html
+// for angles under 25deg, we use an approximation to speed up the angle calculation
+// magnetometer addition for small angles
+// ************************************
+void getEstimatedAttitude(){
+  uint8_t axis;  
+  float R, RGyro[3];                 //R obtained from last estimated value and gyro movement;
+  static float REst[3] = {0,0,1} ;   // init acc in stable mode
+  static float A[2];                 //angles between projection of R on XZ/YZ plane and Z axis (in Radian)
+  float wGyro = 300;               // gyro weight/smooting factor
+  float invW = 1.0/(1 + 300);
+  float gyroFactor;
+  static uint8_t small_angle=1;
+  static uint16_t tPrevious;
+  uint16_t tCurrent,deltaTime;
+  float a[2], mag[2], cos_[2];
+
+  int16_t acc_25deg = acc_1G * 0.423;
+
+  tCurrent = micros();
+  deltaTime = tCurrent-tPrevious;
+  tPrevious = tCurrent;
+
+  #if GYRO
+    gyroFactor = deltaTime/300e6; //empirical
+  #else
+    gyroFactor = deltaTime/200e6; //empirical, depends on WMP on IDG datasheet, tied of deg/ms sensibility
+  #endif
+  
+  for (axis=0;axis<2;axis++) a[axis] = gyroADC[axis]  * gyroFactor;
+  for (axis=0;axis<3;axis++) accSmooth[axis] =(accSmooth[axis]*7+accADC[axis]+4)/8;
+  
+  if(accSmooth[YAW] > 0 ){ //we want to be sure we are not flying inverted  
+    // a very nice trigonometric approximation: under 25deg, the error of this approximation is less than 1 deg:
+    //   sin(x) =~= x =~= arcsin(x)
+    //   angle_axis = arcsin(ACC_axis/ACC_1G) =~= ACC_axis/ACC_1G
+    // the angle calculation is much more faster in this case
+    if (accSmooth[ROLL]<acc_25deg && accSmooth[ROLL]>-acc_25deg && accSmooth[PITCH]<acc_25deg && accSmooth[PITCH]>-acc_25deg) {
+      for (axis=0;axis<2;axis++) {
+        A[axis] +=a[axis];
+        A[axis] = ((float)accSmooth[axis]/acc_1G + A[axis]*wGyro)*invW; // =~= sin axis
+        #if MAG
+          cos_[axis] = 1-A[axis]*A[axis]/2; // cos(x) =~= 1-x^2/2
+        #endif
+      } 
+      small_angle=1;
+    } else {
+      //magnitude vector size
+      R = sqrt(square(accSmooth[ROLL]) + square(accSmooth[PITCH]) + square(accSmooth[YAW]));
+      for (axis=0;axis<2;axis++) {
+        if ( acc_1G*3/5 < R && R < acc_1G*7/5 && small_angle == 0 ) //if accel magnitude >1.4G or <0.6G => we neutralize the effect of accelerometers in the angle estimation
+          A[axis] = atan2(REst[axis],REst[YAW]);
+        A[axis] +=a[axis];
+        cos_[axis] = cos(A[axis]);
+        RGyro[axis]  = sin(A[axis])  / sqrt( 1.0 + square(cos_[axis])  * square(tan(A[1-axis]))); //reverse calculation of RwGyro from Awz angles
+      }
+      RGyro[YAW] = sqrt(abs(1.0 - square(RGyro[ROLL]) - square(RGyro[PITCH])));
+      for (axis=0;axis<3;axis++)
+        REst[axis] = (accADC[axis]/R + wGyro* RGyro[axis])  * invW; //combine Accelerometer and gyro readings
+      small_angle=0;
+    }
+    #if defined(HMC5843) || defined(HMC5883)
+      mag[PITCH] = -magADC[PITCH]*cos_[PITCH]+magADC[ROLL]*A[ROLL]*A[PITCH]+magADC[YAW]*cos_[ROLL]*A[PITCH];
+      mag[ROLL] = magADC[ROLL]*cos_[ROLL]-magADC[YAW]*A[ROLL];
+      heading = -degrees(atan2(mag[PITCH],mag[ROLL]));
+    #endif
+  }
+  for (axis=0;axis<2;axis++) angle[axis] = A[axis]*572.9577951; //angle in multiple of 0.1 degree
+}
+
+#else
 
 // **************************************************
 // Simplified IMU based on "Complementary Filter"
@@ -228,6 +304,9 @@ void getEstimatedAttitude(){
     heading = _atan2(EstG.V.Z * EstM.V.X - EstG.V.X * EstM.V.Z, EstG.V.Y * EstM.V.Z - EstG.V.Z * EstM.V.Y) / 10;
   #endif
 }
+
+#endif
+
 
 float InvSqrt (float x){ 
   union{  
