@@ -225,7 +225,7 @@ ISR(TIMER0_COMPB_vect) { //the same with digital PIN 6 and OCR0B counter
 
 
 void mixTable() {
-  int16_t maxMotor,a;
+  int16_t maxMotor;
   uint8_t i,axis;
 
   #define PIDMIX(X,Y,Z) rcCommand[THROTTLE] + axisPID[ROLL]*X + axisPID[PITCH]*Y + YAW_DIRECTION * axisPID[YAW]*Z

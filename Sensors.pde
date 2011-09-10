@@ -150,8 +150,8 @@ void i2c_getSixRawADC(uint8_t add, uint8_t reg) {
   i2c_rep_start(add);
   i2c_write(reg);         // Start multiple read at the reg register
   i2c_rep_start(add +1);  // I2C read direction => I2C address + 1
-  for(uint8_t i = 0; i < 5; i++) {
-    rawADC[i]=i2c_readAck();}
+  for(uint8_t i = 0; i < 5; i++)
+    rawADC[i]=i2c_readAck();
   rawADC[5]= i2c_readNak();
 }
 
@@ -468,9 +468,9 @@ void i2c_MS561101BA_UT_Read() {
 }
 
 void i2c_MS561101BA_Calculate() {
-  int32_t dT   = ms561101ba_ctx.ut.val - ((uint32_t)ms561101ba_ctx.c[5] << 8);
-  int64_t off  = ((uint32_t)ms561101ba_ctx.c[2] <<16) + ((ms561101ba_ctx.c[4] * dT) >> 7);
-  int64_t sens = ((uint32_t)ms561101ba_ctx.c[1] <<15) + ((ms561101ba_ctx.c[3] * dT)  >> 8);
+  int64_t dT   = ms561101ba_ctx.ut.val - ((uint32_t)ms561101ba_ctx.c[5] << 8);  //int32_t according to the spec, but int64_t here to avoid cast after
+  int64_t off  = ((uint32_t)ms561101ba_ctx.c[2] <<16) + ((dT * ms561101ba_ctx.c[4]) >> 7);
+  int64_t sens = ((uint32_t)ms561101ba_ctx.c[1] <<15) + ((dT * ms561101ba_ctx.c[3]) >> 8);
   pressure     = (( (ms561101ba_ctx.up.val * sens ) >> 21) - off) >> 15;
 }
 
@@ -481,7 +481,7 @@ void Baro_update() {
   switch (ms561101ba_ctx.state) {
     case 0: 
       i2c_MS561101BA_UT_Start(); 
-      ms561101ba_ctx.state++; ms561101ba_ctx.deadline += 10000; //according to the specs, the pause should be at least 8.22ms
+      ms561101ba_ctx.state++; ms561101ba_ctx.deadline += 15000; //according to the specs, the pause should be at least 8.22ms
       break;
     case 1: 
       i2c_MS561101BA_UT_Read(); 
@@ -489,13 +489,13 @@ void Baro_update() {
       break;
     case 2: 
       i2c_MS561101BA_UP_Start(); 
-      ms561101ba_ctx.state++; ms561101ba_ctx.deadline += 10000; //according to the specs, the pause should be at least 8.22ms
+      ms561101ba_ctx.state++; ms561101ba_ctx.deadline += 15000; //according to the specs, the pause should be at least 8.22ms
       break;
     case 3: 
       i2c_MS561101BA_UP_Read();
       i2c_MS561101BA_Calculate();
-      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 44330.0f; 
-      ms561101ba_ctx.state = 0; ms561101ba_ctx.deadline += 10000;
+      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 44330.0f;
+      ms561101ba_ctx.state = 0; ms561101ba_ctx.deadline += 30000;
       break;
   } 
 }
@@ -749,8 +749,8 @@ void Mag_getADC() {
   static int16_t magZeroTempMin[3];
   static int16_t magZeroTempMax[3];
   uint8_t axis;
-  if ( (micros()-t )  < 100000 ) return; //each read is spaced by 100ms
-  t = micros();
+  if ( currentTime < t ) return; //each read is spaced by 100ms
+  t = currentTime + 100000;
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   Device_Mag_getADC();
   if (calibratingM == 1) {
