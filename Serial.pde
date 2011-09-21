@@ -61,7 +61,7 @@ void serialCom() {
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
       for(i=0;i<3;i++) serialize16(gyroData[i]/8);
       for(i=0;i<3;i++) serialize16(magADC[i]/3);
-      serialize16(EstAlt*10.0f);
+      serialize16(EstAlt/10);
       serialize16(heading); // compass
       for(i=0;i<4;i++) serialize16(servo[i]);
       for(i=0;i<8;i++) serialize16(motor[i]);
@@ -92,7 +92,7 @@ void serialCom() {
       serialize16(intPowerMeterSum);
       serialize16(intPowerTrigger1);
       serialize8(vbat);
-      serialize16(BaroAlt*10.0f); // 4 variables are here for general monitoring purpose
+      serialize16(BaroAlt/10); // 4 variables are here for general monitoring purpose
       serialize16(0);              // debug2
       serialize16(0);              // debug3
       serialize16(0);              // debug4

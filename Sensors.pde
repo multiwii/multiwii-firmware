@@ -370,9 +370,8 @@ void Baro_update() {
     case 3: 
       i2c_BMP085_UP_Read(); 
       i2c_BMP085_Calculate(); 
-      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 44330.0f;
-      bmp085_ctx.state = 0;
-      bmp085_ctx.deadline += 20000; 
+      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 4433000.0f;
+      bmp085_ctx.state = 0; bmp085_ctx.deadline += 20000; 
       break;
   } 
 }
@@ -494,7 +493,7 @@ void Baro_update() {
     case 3: 
       i2c_MS561101BA_UP_Read();
       i2c_MS561101BA_Calculate();
-      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 44330.0f;
+      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 4433000.0f;
       ms561101ba_ctx.state = 0; ms561101ba_ctx.deadline += 30000;
       break;
   } 
