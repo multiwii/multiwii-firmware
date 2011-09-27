@@ -60,12 +60,15 @@ static int32_t  pressure;
 static int32_t  BaroAlt;
 static int32_t  EstVelocity;
 static int32_t  EstAlt;             // in cm
-
+static uint8_t  buzzerState = 0;
+  
 //for log
 static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
 static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
 static uint16_t powerMax = 0;           // highest ever current
 static uint16_t powerAvg = 0;           // last known current
+static uint8_t i2c_errors_count = 0;    // count of wmp/nk resets
+static uint8_t failsafes_count = 0;     // count of failsafe occurrences
 
 // **********************
 // power meter
@@ -152,13 +155,13 @@ static int32_t  GPS_latitude,GPS_longitude;
 static int32_t  GPS_latitude_home,GPS_longitude_home;
 static uint8_t  GPS_fix , GPS_fix_home = 0;
 static uint8_t  GPS_numSat;
-static uint16_t distanceToHome;
-static int16_t  directionToHome = 0;
+static uint16_t GPS_distanceToHome;
+static int16_t  GPS_directionToHome = 0;
+static uint8_t  GPS_update = 0;
 
 void annexCode() { //this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
   static uint32_t serialTime;
   static uint32_t buzzerTime,calibratedAccTime,telemetryTime,telemetryAutoTime,psensorTime;
-  static uint8_t  buzzerState = 0;
   static uint8_t  buzzerFreq;         //delay between buzzer ring
   uint8_t axis,prop1,prop2;
   uint16_t pMeterRaw, powerValue;                //used for current reading
@@ -194,7 +197,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
      pMeterRaw =  analogRead(PSENSORPIN);
      powerValue = ( PSENSORNULL > pMeterRaw ? PSENSORNULL - pMeterRaw : pMeterRaw - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
      #ifdef LOG_VALUES
-       if ( powerValue < 256) {  // only accept reasonable values. 256 is empirical
+       if ( powerValue < 333) {  // only accept reasonable values. 333 is empirical
          if (powerValue > powerMax) powerMax = powerValue;
          powerAvg = powerValue;
        }
@@ -328,6 +331,9 @@ void loop () {
     // Failsafe routine - added by MIS
     #if defined(FAILSAFE)
       if ( failsafeCnt > (5*FAILSAVE_DELAY) && armed==1) {                  // Stabilize, and set Throttle to specified level
+        #ifdef LOG_VALUES
+         failsafes_count = 1; //only toggle on, no actual count                                               // keep log of # of failsafe conditions
+        #endif
         for(i=0; i<3; i++) rcData[i] = MIDRC;                               // after specified guard time after RC signal is lost (in 0.1sec)
         rcData[THROTTLE] = FAILSAVE_THR0TTLE;
         if (failsafeCnt > 5*(FAILSAVE_DELAY+FAILSAVE_OFF_DELAY)) {          // Turn OFF motors after specified Time (in 0.1sec)
@@ -524,16 +530,18 @@ void loop () {
 
   //GPS
   #if defined(GPS)
-    while (GPS_SERIAL.available())
+    while (GPS_SERIAL.available()) {
       if (GPS_newFrame(GPS_SERIAL.read())) {
+        if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;
         if (GPS_fix == 1) {
           if (GPS_fix_home == 0) {
             GPS_fix_home = 1;
             GPS_latitude_home = GPS_latitude;
             GPS_longitude_home = GPS_longitude;
           }
-          GPS_distance(GPS_latitude_home,GPS_longitude_home,GPS_latitude,GPS_longitude, &distanceToHome, &directionToHome);
+          GPS_distance(GPS_latitude_home,GPS_longitude_home,GPS_latitude,GPS_longitude, &GPS_distanceToHome, &GPS_directionToHome);
         }
       }
+    }
   #endif
 }

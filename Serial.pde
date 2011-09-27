@@ -81,10 +81,11 @@ void serialCom() {
       serialize8(yawRate);
       serialize8(dynThrPID);
       for(i=0;i<7;i++) serialize8(activate[i]);
-      serialize16(distanceToHome);
-      serialize16(directionToHome);
+      serialize16(GPS_distanceToHome);
+      serialize16(GPS_directionToHome);
       serialize8(GPS_numSat);
       serialize8(GPS_fix);
+      serialize8(GPS_update);
       #if defined(POWERMETER)
         intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
         intPowerTrigger1 = powerTrigger1 * PLEVELSCALE;

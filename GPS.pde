@@ -63,12 +63,12 @@ bool GPS_newFrame(char c) {
       if (string[0] == 'G' && string[1] == 'P' && string[2] == 'G' && string[3] == 'G' && string[4] == 'A') GPGGA_frame = 1;
       else GPGGA_frame = 0;
     } else if (GPGGA_frame == 1) {
-      if      (param == 2)                     GPS_latitude = GPS_coord_to_degrees(string);
+      if      (param == 2)                     {GPS_latitude = GPS_coord_to_degrees(string);}
       else if (param == 3 && string[0] == 'S') GPS_latitude = -GPS_latitude;
-      else if (param == 4)                     GPS_longitude = GPS_coord_to_degrees(string);
+      else if (param == 4)                     {GPS_longitude = GPS_coord_to_degrees(string);}
       else if (param == 5 && string[0] == 'W') GPS_longitude = -GPS_longitude;
-      else if (param == 6)                     GPS_fix = string[0]  > '0' ;
-      else if (param == 7)                     GPS_numSat = (string[0]-'0') * 10 + string[1]-'0';
+      else if (param == 6)                     {GPS_fix = string[0]  > '0' ;}
+      else if (param == 7)                     {if (offset>1) GPS_numSat = (string[0]-'0') * 10 + string[1]-'0'; else GPS_numSat = string[0]-'0';}
     }
     param++; offset = 0;
     if (c == '*') checksum_param=1;

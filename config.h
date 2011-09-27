@@ -55,11 +55,12 @@
    the GPS must be configured to output NMEA sentences (which is generally the default conf for most GPS devices)
 */
 //#define GPS
-#define GPS_SERIAL Serial3 // should be Serial2 for flyduino v2
-#define GPS_BAUD   4800
+//#define GPS_SERIAL Serial3 // should be Serial2 for flyduino v2
+//#define GPS_BAUD   4800
+//#define GPS_BAUD   9600
 
 /* Pseudo-derivative conrtroller for level mode (experimental)
-   Additional information: http://wbb.multiwii.com/viewtopic.php?f=8&t=503 */
+   Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
 //#define LEVEL_PDF
 
 /* introduce a deadband around the stick center

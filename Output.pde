@@ -62,11 +62,13 @@ void writeAllMotors(int16_t mc) {   // Sends commands to all motors
 void logMotorsPower() {
   uint32_t amp;
   /* true cubic function; when divided by vbat_max=126 (12.6V) for 3 cell battery this gives maximum value of ~ 1000 */
-  const uint32_t amperes[16] =   {31, 246, 831, 1969, 3845, 6645, 10551, 15750, 22425, 30762, 40944, 53156, 67583, 84410, 103821, 126000 };
-
+  const uint32_t amperes[64] =   {0,4,13,31,60,104,165,246,350,481,640,831,1056,1319,1622,1969,2361,2803,3297,3845,4451,5118,5848,6645,
+	                             7510,8448,9461,10551,11723,12978,14319,15750,17273,18892,20608,22425,24346,26374,28512,30762,33127,35611,
+	                             38215,40944,43799,46785,49903,53156,56548,60081,63759,67583,71558,75685,79968,84410,89013,93781,98716,103821,
+	                             109099,114553,120186,126000 };
   if (vbat) { // by all means - must avoid division by zero 
     for (uint8_t i =0;i<NUMBER_MOTOR;i++) {
-      amp = amperes[(motor[i] - 1000)>>6] / vbat; // range mapped from [1000:2000] => [0:1000]; then break that up into 16 ranges; lookup amp
+      amp = amperes[(motor[i] - 1000)>>4] / vbat; // range mapped from [1000:2000] => [0:1000]; then break that up into 64 ranges; lookup amp
       #ifdef LOG_VALUES
          pMeter[i]+= amp; // sum up over time the mapped ESC input 
       #endif

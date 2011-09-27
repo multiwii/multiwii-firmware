@@ -134,6 +134,9 @@ void waitTransmissionI2C() {
 void checkStatusI2C() {
   if ( TW_STATUS  == 0xF8) { //TW_NO_INFO : this I2C error status indicates a wrong I2C communication.
     // WMP does not respond anymore => we do a hard reset. I did not find another way to solve it. It takes only 13ms to reset and init to WMP or WMP+NK
+    #ifdef LOG_VALUES
+      i2c_errors_count++;
+    #endif
     TWCR = 0;
     if (!GYRO) {
       POWERPIN_OFF //switch OFF WMP

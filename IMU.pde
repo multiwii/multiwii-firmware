@@ -5,7 +5,7 @@ void computeIMU () {
   int16_t gyroADCp[3];
   int16_t gyroADCinter[3];
   static int16_t lastAccADC[3] = {0,0,0};
-  static uint32_t timeInterleave = 0;
+  uint32_t timeInterleave = 0;
   static int16_t gyroYawSmooth = 0;
 
   //we separate the 2 situations because reading gyro values with a gyro only setup can be acchieved at a higher rate
@@ -304,9 +304,9 @@ void getEstimatedAttitude(){
   #if MAG
     // Apply complimentary filter (Gyro drift correction)
     for (axis = 0; axis < 3; axis++)
-      EstM.A[axis] = (EstM.A[axis] * GYR_CMPFM_FACTOR - MAG_VALUE) * INV_GYR_CMPFM_FACTOR;
+      EstM.A[axis] = (EstM.A[axis] * GYR_CMPFM_FACTOR + MAG_VALUE) * INV_GYR_CMPFM_FACTOR;
     // Attitude of the cross product vector GxM
-    heading = _atan2(EstG.V.Z * EstM.V.X - EstG.V.X * EstM.V.Z, EstG.V.Y * EstM.V.Z - EstG.V.Z * EstM.V.Y) / 10;
+    heading = _atan2( EstG.V.X * EstM.V.Z - EstG.V.Z * EstM.V.X , EstG.V.Z * EstM.V.Y - EstG.V.Y * EstM.V.Z  ) / 10;
   #endif
 }
 #endif

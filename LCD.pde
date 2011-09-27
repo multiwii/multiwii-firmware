@@ -42,6 +42,7 @@ static lcd_param_def_t __PM  = {&LPMM,  1, 1, 0};
 static lcd_param_def_t __PS  = {&LPMS,  1, 1, 0};
 static lcd_param_def_t __PT  = {&LTU8,  0, 1, 1};
 static lcd_param_def_t __VB  = {&LTU8,  1, 1, 0};
+static lcd_param_def_t __L   = {&LTU8,  0, 1, 0};
 // Parameters
 static lcd_param_t lcd_param[] = {
   {"PITCH&ROLL P",    &P8[ROLL],      &__P}
@@ -77,6 +78,10 @@ static lcd_param_t lcd_param[] = {
 #endif
 #ifdef VBAT
 , {"Battery Volt",    &vbat,          &__VB} 
+#endif
+#ifdef LOG_VALUES
+, {"i2c errors",       &i2c_errors_count,          &__L} 
+, {"failsafe errors",  &failsafes_count,           &__L} 
 #endif
 };
 #define PARAMMAX (sizeof(lcd_param)/sizeof(lcd_param_t) - 1)
@@ -291,24 +296,32 @@ void lcd_telemetry() {
       line1[12] = '0' + intPowerMeterSum        - (intPowerMeterSum/10)    * 10;
       //line2[13] = '0'+powerTrigger1/100; line2[14] = '0'+powerTrigger1/10-(powerTrigger1/100)*10; line2[15] = '0'+powerTrigger1-(powerTrigger1/10)*10;
     #endif
+      if (buzzerState) { // buzzer on? then add some blink for attention
+        //LCDprint(0x0c); //clear screen
+        line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
+      }
+    #ifdef LOG_VALUES
+      // set mark, if we had i2c errors
+      if (i2c_errors_count || failsafes_count) line1[6] = 'I';
+    #endif
       LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar(line1); //refresh line 1 of LCD
       LCDprint(0xFE);LCDprint('L');LCDprint(2); //position on line 2 of LCD
     #ifdef VBAT
       LCD_BAR(7, (((vbat-VBATLEVEL1_3S)*100)/VBATREF) );
-      LCDprintChar("  ");
+      LCDprint(' ');
     #endif
     #ifdef POWERMETER  
       //     intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
       //   pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
       if (powerTrigger1)
-        LCD_BAR(7, (intPowerMeterSum/powerTrigger1 *2) ); // bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
+        LCD_BAR(8, (intPowerMeterSum/powerTrigger1 *2) ); // bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
     #endif
       break;
     case 'A': // button A on Textstar LCD -> angles 
       uint16_t unit;
       strcpy(line1,"Deg ___._  ___._");
       /*            0123456789.12345*/
-      strcpy(line2,"___,_A max___,_A"); //uin16_t cycleTimeMax
+      strcpy(line2,"___,_A max___,_A");
       if (angle[0] < 0 ) {
         unit = -angle[0];
         line1[3] = '-';
@@ -343,8 +356,9 @@ void lcd_telemetry() {
       LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar(line1); //refresh line 1 of LCD
       break;    
     case 'D': // button D on Textstar LCD -> sensors
-    #define GYROLIMIT 20 // threshold: for larger values replace bar with dots
-    #define ACCLIMIT 30 // threshold: for larger values replace bar with dots      LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar("G "); //refresh line 1 of LCD
+    #define GYROLIMIT 30 // threshold: for larger values replace bar with dots
+    #define ACCLIMIT 30 // threshold: for larger values replace bar with dots     
+      LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar("G "); //refresh line 1 of LCD
       if (abs(gyroData[0]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[0])*50/GYROLIMIT) } else LCDprintChar("...."); LCDprint(' ');
       if (abs(gyroData[1]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[1])*50/GYROLIMIT) } else LCDprintChar("...."); LCDprint(' ');
       if (abs(gyroData[2]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[2])*50/GYROLIMIT) } else LCDprintChar("....");
