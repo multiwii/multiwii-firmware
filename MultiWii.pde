@@ -505,8 +505,8 @@ void loop () {
       if (abs(rcCommand[axis])<350) error =          rcCommand[axis]*10*8/P8[axis] - gyroData[axis]; //16 bits is needed for calculation: 350*10*8 = 28000      16 bits is ok for result if P8>2 (P>0.2)
                                else error = (int32_t)rcCommand[axis]*10*8/P8[axis] - gyroData[axis]; //32 bits is needed for calculation: 500*5*10*8 = 200000   16 bits is ok for result if P8>2 (P>0.2)
       PTerm = rcCommand[axis];
-
-      if (abs(errorGyroI[axis]) <16000) errorGyroI[axis] += error; //WindUp         //16 bits is ok here
+      
+      errorGyroI[axis]  = constrain(errorGyroI[axis]+error,-16000,+16000); //WindUp       //16 bits is ok here
       if (abs(gyroData[axis])>640) errorGyroI[axis] = 0;
       ITerm = (int32_t)errorGyroI[axis]*I8[axis]/1000/8;                            //32 bits is needed for calculation: 16000*I8  16 bits is ok for result
     }
