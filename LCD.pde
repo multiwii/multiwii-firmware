@@ -43,6 +43,7 @@ static lcd_param_def_t __PS  = {&LPMS,  1, 1, 0};
 static lcd_param_def_t __PT  = {&LTU8,  0, 1, 1};
 static lcd_param_def_t __VB  = {&LTU8,  1, 1, 0};
 static lcd_param_def_t __L   = {&LTU8,  0, 1, 0};
+static lcd_param_def_t __FS  = {&LTU8,  1, 1, 0};
 // Parameters
 static lcd_param_t lcd_param[] = {
   {"PITCH&ROLL P",    &P8[ROLL],      &__P}
@@ -80,8 +81,8 @@ static lcd_param_t lcd_param[] = {
 , {"Battery Volt",    &vbat,          &__VB} 
 #endif
 #ifdef LOG_VALUES
+, {"Failsafe    ",    &failsafeEvents,&__FS} 
 , {"i2c errors",       &i2c_errors_count,          &__L} 
-, {"failsafe errors",  &failsafes_count,           &__L} 
 #endif
 };
 #define PARAMMAX (sizeof(lcd_param)/sizeof(lcd_param_t) - 1)
@@ -93,6 +94,9 @@ static lcd_param_t lcd_param[] = {
 void LCDprint(uint8_t i) {
   #if defined(LCD_TEXTSTAR)
     Serial.print( i , BYTE);
+  #endif
+  #if defined(LCD_ETPP) 
+   i2c_ETPP_send_char(i);
   #else
     LCDPIN_OFF
     delayMicroseconds(BITDELAY);
@@ -116,17 +120,20 @@ void initLCD() {
     // http://cats-whisker.com/resources/documents/cw-lcd-02_datasheet.pdf
     // Modified by Luca Brizzi aka gtrick90 @ RCG
     LCDprint(0xFE);LCDprint(0x43);LCDprint(0x02); //cursor blink mode
-    LCDprint(0x0c); //clear screen
-    LCDprintChar("MultiWii Config");
-    LCDprint(0x0d); // carriage return
-    LCDprintChar("for all params");
-    delay(2500);
-    LCDprint(0x0c); //clear screen
+  #elif defined(LCD_ETPP)
+    // Eagle Tree Power Panel - I2C & Daylight Readable LCD
+    // Contributed by Danal
+    i2c_ETPP_init();
   #else
     Serial.end();
     //init LCD
     PINMODE_LCD //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
   #endif
+  LCDclear();
+  LCDprintChar("MultiWii Config");
+  LCDsetLine(2);LCDprintChar("for all params");
+  delay(2500);
+  LCDclear();
 }
 
 static char line1[17],line2[17];
@@ -182,6 +189,12 @@ static uint8_t lcdStickState[3];
 #define IsHigh(x) (lcdStickState[x] & 0x2)
 #define IsMid(x)  (!lcdStickState[x])
 
+/* keys to navigate the LCD menu (preset to TEXTSTAR key-depress codes)*/
+#define LCD_MENU_PREV 'a'
+#define LCD_MENU_NEXT 'c'
+#define LCD_VALUE_UP 'd'
+#define LCD_VALUE_DOWN 'b'
+
 void configurationLoop() {
   uint8_t i, p;
   uint8_t LCD=1;
@@ -196,17 +209,13 @@ void configurationLoop() {
       strcpy(line1,"                ");
       i=0; char* point = lcd_param[p].paramText; while (*point) line1[i++] = *point++;
       lcd_param[p].def->type->fmt(lcd_param[p].var, lcd_param[p].def->multiplier, lcd_param[p].def->decimal);
-      #if defined(LCD_TEXTSTAR)
-        LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar(line1); //refresh line 1 of LCD
-        LCDprint(0xFE);LCDprint('L');LCDprint(2);LCDprintChar(line2); //refresh line 2 of LCD
-      #else
-        LCDprint(0xFE);LCDprint(128);LCDprintChar(line1);
-        LCDprint(0xFE);LCDprint(192);LCDprintChar(line2);
-      #endif
+      LCDsetLine(1);LCDprintChar(line1); //refresh line 1 of LCD
+      LCDsetLine(2);LCDprintChar(line2); //refresh line 2 of LCD
       refreshLCD = 0;
     }
+
     #if defined(LCD_TEXTSTAR)
-      key = ( Serial.available() ?  Serial.read() : 0 ); 
+      key = ( Serial.available() ?  Serial.read() : 0 );
     #endif
     for (i = ROLL; i < THROTTLE; i++) {uint16_t Tmp = readRawRC(i); lcdStickState[i] = (Tmp < MINCHECK) | ((Tmp > MAXCHECK) << 1);};
     if (IsLow(YAW) && IsHigh(PITCH)) LCD = 0;          // save and exit
@@ -226,14 +235,12 @@ void configurationLoop() {
     }
   } // while (LCD == 1)
   blinkLED(20,30,1);
-  #if defined(LCD_TEXTSTAR)
-    LCDprint(0x0c); //clear screen
-    if (LCD == 0) LCDprintChar("Saving Settings.."); else LCDprintChar("skipping Save.");
-  #endif
+  
+  LCDclear();
+  if (LCD == 0) LCDprintChar("Saving Settings.."); else LCDprintChar("skipping Save.");
   if (LCD == 0) writeParams();
-  #if defined(LCD_TEXTSTAR)
-    LCDprintChar("..done! Exit.");
-  #else
+  LCDsetLine(2);LCDprintChar("..done! Exit.");
+  #if !defined(LCD_TEXTSTAR) && !defined(LCD_ETPP)
     Serial.begin(SERIAL_COM_SPEED);
   #endif
   #ifdef LCD_TELEMETRY
@@ -248,11 +255,14 @@ void configurationLoop() {
 #ifdef LCD_TELEMETRY
 void lcd_telemetry() {
   // LCD_BAR(n,v) : draw a bar graph - n number of chars for width, v value in % to display
+  #define LCD_BAR(n,v) {} // add your own implementation here
   #ifdef LCD_TEXTSTAR
     #define LCD_BAR(n,v) { LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v); }
-  #else 
-    #define LCD_BAR(n,v) {} // add your own implementation here
   #endif
+  #ifdef LCD_ETPP
+    #define LCD_BAR(n,v) LCDbarGraph(n,v);
+  #endif
+  
   uint16_t intPowerMeterSum;   
 
   switch (telemetry) { // output telemetry data, if one of four modes is set
@@ -276,9 +286,9 @@ void lcd_telemetry() {
       line2[10] = '0' + cycleTimeMax / 100  - (cycleTimeMax/1000)  * 10;
       line2[11] = '0' + cycleTimeMax / 10   - (cycleTimeMax/100)   * 10;
       line2[12] = '0' + cycleTimeMax        - (cycleTimeMax/10)    * 10;
-      LCDprint(0xFE);LCDprint('L');LCDprint(2);LCDprintChar(line2); //refresh line 2 of LCD
+      LCDsetLine(2);LCDprintChar(line2);
     #endif
-      LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar(line1); //refresh line 1 of LCD
+      LCDsetLine(1);LCDprintChar(line1);
       break;
     case 'B': // button B on Textstar LCD -> Voltage, PowerSum and power alarm trigger value
       strcpy(line1,"__._V   _____mAh"); //uint8_t vbat, intPowerMeterSum
@@ -296,16 +306,16 @@ void lcd_telemetry() {
       line1[12] = '0' + intPowerMeterSum        - (intPowerMeterSum/10)    * 10;
       //line2[13] = '0'+powerTrigger1/100; line2[14] = '0'+powerTrigger1/10-(powerTrigger1/100)*10; line2[15] = '0'+powerTrigger1-(powerTrigger1/10)*10;
     #endif
-      if (buzzerState) { // buzzer on? then add some blink for attention
-        //LCDprint(0x0c); //clear screen
-        line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
-      }
+    if (buzzerState) { // buzzer on? then add some blink for attention
+      //LCDprint(0x0c); //clear screen
+      line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
+    }
     #ifdef LOG_VALUES
       // set mark, if we had i2c errors
-      if (i2c_errors_count || failsafes_count) line1[6] = 'I';
+      if (i2c_errors_count || failsafesEvents) line1[6] = 'I';
     #endif
-      LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar(line1); //refresh line 1 of LCD
-      LCDprint(0xFE);LCDprint('L');LCDprint(2); //position on line 2 of LCD
+    LCDsetLine(1);LCDprintChar(line1);
+    LCDsetLine(2); //position on line 2 of LCD
     #ifdef VBAT
       LCD_BAR(7, (((vbat-VBATLEVEL1_3S)*100)/VBATREF) );
       LCDprint(' ');
@@ -340,6 +350,7 @@ void lcd_telemetry() {
       line1[12] = '0' + unit / 100  - (unit/1000)  * 10;
       line1[13] = '0' + unit / 10   - (unit/100)   * 10;
       line1[15] = '0' + unit        - (unit/10)    * 10;
+      LCDsetLine(1);LCDprintChar(line1);
       #ifdef LOG_VALUES
         unit = powerAvg * PINT2mA;
         line2[0] = '0' + unit / 10000;
@@ -351,22 +362,133 @@ void lcd_telemetry() {
         line2[11] = '0' + unit / 1000 - (unit/10000) * 10;
         line2[12] = '0' + unit / 100  - (unit/1000)  * 10;
         line2[14] = '0' + unit / 10   - (unit/100)   * 10;
-        LCDprint(0xFE);LCDprint('L');LCDprint(2);LCDprintChar(line2); //refresh line 2 of LCD
       #endif
-      LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar(line1); //refresh line 1 of LCD
+      LCDsetLine(2);LCDprintChar(line2); //refresh line 2 of LCD
       break;    
     case 'D': // button D on Textstar LCD -> sensors
     #define GYROLIMIT 30 // threshold: for larger values replace bar with dots
     #define ACCLIMIT 30 // threshold: for larger values replace bar with dots     
-      LCDprint(0xFE);LCDprint('L');LCDprint(1);LCDprintChar("G "); //refresh line 1 of LCD
+      LCDsetLine(1);LCDprintChar("G "); //refresh line 1 of LCD
       if (abs(gyroData[0]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[0])*50/GYROLIMIT) } else LCDprintChar("...."); LCDprint(' ');
       if (abs(gyroData[1]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[1])*50/GYROLIMIT) } else LCDprintChar("...."); LCDprint(' ');
       if (abs(gyroData[2]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[2])*50/GYROLIMIT) } else LCDprintChar("....");
-      LCDprint(0xFE);LCDprint('L');LCDprint(2);LCDprintChar("A "); //refresh line 2 of LCD
+      LCDsetLine(2);LCDprintChar("A "); //refresh line 2 of LCD
       if (abs(accSmooth[0]) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[0])*50/ACCLIMIT) } else LCDprintChar("...."); LCDprint(' ');
       if (abs(accSmooth[1]) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT) } else LCDprintChar("...."); LCDprint(' ');
       if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT) } else LCDprintChar("....");
       break;
+    case 'Z': // No Z button.  Displays with auto telemetry only
+      strcpy(line1,"Failsafe -----  ");  
+      /*            0123456789012345   */
+      strcpy(line2,"                ");
+      line1[9] = '0' + failsafeEvents / 10000;
+      line1[10] = '0' + failsafeEvents / 1000 - (failsafeEvents/10000) * 10;
+      line1[11] = '0' + failsafeEvents / 100  - (failsafeEvents/1000)  * 10;
+      line1[12] = '0' + failsafeEvents / 10   - (failsafeEvents/100)   * 10;
+      line1[13] = '0' + failsafeEvents        - (failsafeEvents/10)    * 10;
+      LCDsetLine(1);LCDprintChar(line1);
+      LCDsetLine(2);LCDprintChar(line2);
+      break;
   } // end switch (telemetry) 
 } // end function
 #endif //  LCD_TELEMETRY
+
+#if defined(LCD_ETPP)
+  // *********************
+  // i2c Eagle Tree Power Panel primitives
+  // *********************
+    void i2c_ETPP_init () {
+      i2c_rep_start(0x76+0);      // ETPP i2c address: 0x3B in 7 bit form. Shift left one bit and concatenate i2c write command bit of zero = 0x76 in 8 bit form.
+      i2c_write(0x00);            // ETPP command register
+      i2c_write(0x24);            // Function Set 001D0MSL D : data length for parallel interface only; M: 0 = 1x32 , 1 = 2x16; S: 0 = 1:18 multiplex drive mode, 1Ã—32 or 2Ã—16 character display, 1 = 1:9 multiplex drive mode, 1Ã—16 character display; H: 0 = basic instruction set plus standard instruction set, 1 = basic instruction set plus extended instruction set
+      i2c_write(0x0C);            // Display on   00001DCB D : 0 = Display Off, 1 = Display On; C : 0 = Underline Cursor Off, 1 = Underline Cursor On; B : 0 = Blinking Cursor Off, 1 = Blinking Cursor On
+      i2c_write(0x06);            // Cursor Move  000001IS I : 0 = DDRAM or CGRAM address decrements by 1, cursor moves to the left, 1 = DDRAM or CGRAM address increments by 1, cursor moves to the right; S : 0 = display does not shift,  1 = display does shifts
+      LCDclear();         
+    }
+    void i2c_ETPP_send_cmd (byte c) {
+      i2c_rep_start(0x76+0);      // I2C write direction
+      i2c_write(0x00);            // ETPP command register
+      i2c_write(c);
+    }
+    void i2c_ETPP_send_char (char c) {
+      if (c > 0x0f) c |=  0x80;   // ETPP uses character set "R", which has A->z mapped same as ascii + high bit; don't mess with custom chars. 
+      i2c_rep_start(0x76+0);      // I2C write direction
+      i2c_write(0x40);            // ETPP data register
+      i2c_write(c);
+    }
+
+    void i2c_ETPP_set_cursor (byte addr) {  
+      i2c_ETPP_send_cmd(0x80 | addr);    // High bit is "Set DDRAM" command, remaing bits are addr.  
+    }
+    void i2c_ETPP_set_cursor (byte col, byte row) {  
+      row = min(row,1);
+      col = min(col,15);  
+      byte addr = col + row * 0x40;      // Why 0x40? RAM in this controller has many more bytes than are displayed.  In particular, the start of the second line (line 1 char 0) is 0x40 in DDRAM. The bytes between 0x0F (last char of line 1) and 0x40 are not displayable (unless the display is placed in marquee scroll mode)
+      i2c_ETPP_set_cursor(addr);          
+    }
+    void i2c_ETPP_create_char (byte idx, uint8_t* array) {
+      i2c_ETPP_send_cmd(0x80);                   // CGRAM and DDRAM share an address register, but you can't set certain bits with the CGRAM address command.   Use DDRAM address command to be sure high order address bits are zero. 
+      i2c_ETPP_send_cmd(0x40 | byte(idx * 8));   // Set CGRAM address 
+      i2c_rep_start(0x76+0);                     // I2C write direction
+      i2c_write(0x40);                           // ETPP data register
+      for (byte i = 0 ; i<8 ; i++) {i2c_write(*array); array++;}
+    }
+  //*******************************************************************************************************************************************************************
+#endif //LCD_ETPP
+
+void LCDclear() {
+  #if defined(LCD_ETPP)
+    i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
+    for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
+  #endif
+  #if defined(LCD_TEXTSTAR)
+    LCDprint(0x0c); //clear screen
+  #endif
+}
+
+void LCDsetLine(byte line) {  // Line = 1 or 2
+  #if defined(LCD_TEXTSTAR)
+    LCDprint(0xFE);LCDprint('L');LCDprint(line);
+  #endif
+  #if defined(LCD_ETPP)
+    i2c_ETPP_set_cursor(0,line-1);
+  #else
+    if (line=1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
+  #endif
+}
+
+#if defined(LCD_ETPP)
+  static boolean charsInitialized;    // chars for servo signals are initialized
+  void LCDbarGraph(byte num, int val) { // num chars in graph; percent as 1 to 100
+    if (!charsInitialized) {
+      charsInitialized = true;
+    
+      static byte bars[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15, };
+      static byte less[8] = { 0x00, 0x04, 0x0C, 0x1C, 0x0C, 0x04, 0x00, 0x15, };
+      static byte grt [8] = { 0x00, 0x04, 0x06, 0x07, 0x06, 0x04, 0x00, 0x15, };
+  
+      byte pattern = 0x10;
+      for (int8_t i = 0; i <= 5; i++) {
+        for (int8_t j = 0; j < 7; j++) {
+          bars[j] = pattern;
+        }
+        i2c_ETPP_create_char(i, bars);
+        pattern >>= 1;
+      }
+      i2c_ETPP_create_char(6, less);
+      i2c_ETPP_create_char(7, grt);
+    }  
+    
+    static char bar[16];
+    for (int8_t i = 0; i < num; i++)    { bar[i] = 5; }
+    
+    if      (val < -100 || val > 100) { bar[0] = 6; bar[num] = 7; }    // invalid
+    else if (val <    0)              { bar[0] = 6; }                // <...
+    else if (val >= 100)              { bar[3] = 7; }                // ...>
+    else                              { bar[val/(100/num)] = (val%(100/num))/5; }  // ..|.
+  
+    for (int8_t i = 0; i < num; i++) {
+      i2c_ETPP_send_char(bar[i]); 
+    }
+  }
+#endif

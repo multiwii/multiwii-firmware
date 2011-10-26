@@ -89,6 +89,10 @@ void initOutput() {
     initializeServo();
   #elif (NUMBER_MOTOR == 6) && defined(PROMINI)
     initializeSoftPWM();
+    #if defined(A0_A1_PIN_HEX)
+      pinMode(5,INPUT);pinMode(6,INPUT);     // we reactivate the INPUT affectation for these two PINs
+      pinMode(A0,OUTPUT);pinMode(A1,OUTPUT);
+    #endif
   #endif
 }
 

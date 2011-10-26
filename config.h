@@ -19,9 +19,9 @@
 //#define Y6
 //#define HEX6
 //#define HEX6X
-//#define OCTOX8 //beta
-//#define OCTOFLATP //beta
-//#define OCTOFLATX //beta
+//#define OCTOX8
+//#define OCTOFLATP
+//#define OCTOFLATX
 //#define FLYING_WING //experimental
 
 #define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
@@ -34,9 +34,12 @@
 //#define MEGA
 
 //enable internal I2C pull ups
-//#define INTERNAL_I2C_PULLUPS
+#define INTERNAL_I2C_PULLUPS
 
 //****** advanced users settings   *************
+
+/* This option should be uncommented if ACC Z is accurate enough when motors are running*/
+//#define TRUSTED_ACCZ
 
 /* PIN A0 and A1 instead of PIN D5 & D6 for 6 motors config and promini config
    This mod allow the use of a standard receiver on a pro mini
@@ -44,9 +47,11 @@
 */
 //#define A0_A1_PIN_HEX
 
-/* This option is here if you want to use the old level code from the verison 1.7
-   It's just to have some feedback. This will be removed in the future */
-//#define STAB_OLD_17
+/* possibility to use PIN8 or PIN12 as the AUX2 RC input
+   it deactivates in this case the POWER PIN (pin 12) or the BUZZER PIN (pin 8)
+*/
+//#define RCAUXPIN8
+//#define RCAUXPIN12
 
 /* GPS
    only available on MEGA boards (this might be possible on 328 based boards in the future)
@@ -66,6 +71,92 @@
 /* introduce a deadband around the stick center
    Must be greater than zero, comment if you dont want a deadband on roll, pitch and yaw */
 //#define DEADBAND 6
+
+/* if you use a specific sensor board:
+   please submit any correction to this list.
+     Note from Alex: I only own some boards
+                     for other boards, I'm not sure, the info was gathered via rc forums, be cautious */
+//#define FFIMUv1         // first 9DOF+baro board from Jussi, with HMC5843                   <- confirmed by Alex
+//#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883       <- confirmed by Alex
+//#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
+//#define FREEIMUv03      // FreeIMU v0.3 and v0.3.1
+//#define FREEIMUv035     // FreeIMU v0.3.5 no baro
+//#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
+//#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
+//#define PIPO            // 9DOF board from erazz
+//#define QUADRINO        // full FC board 9DOF+baro board from witespy                       <- confirmed by Alex
+//#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU
+//#define AEROQUADSHIELDv2
+//#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). requires 3.3V power.
+//#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
+//#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
+//#define CITRUSv1_0      // CITRUSv1 from qcrc.ca
+
+//if you use independent sensors
+//leave it commented it you already checked a specific board above
+/* I2C gyroscope */
+//#define ITG3200
+//#define L3G4200D
+
+/* I2C accelerometer */
+//#define ADXL345
+//#define BMA020
+//#define BMA180
+//#define NUNCHACK  // if you want to use the nunckuk as a standalone I2C ACC without WMP
+//#define LIS3LV02
+
+/* I2C barometer */
+//#define BMP085
+//#define MS561101BA
+
+/* I2C magnetometer */
+//#define HMC5843
+//#define HMC5883
+//#define AK8975
+
+/* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
+//#define ADCACC
+
+/* ITG3200 & ITG3205 Low pass filter setting. In case you cannot eliminate all vibrations to the Gyro, you can try
+   to decrease the LPF frequency, only one step per try. As soon as twitching gone, stick with that setting.
+   It will not help on feedback wobbles, so change only when copter is randomly twiching and all dampening and
+   balancing options ran out. Uncomment only one option!
+   IMPORTANT! Change low pass filter setting changes PID behaviour, so retune your PID's after changing LPF.*/
+//#define ITG3200_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
+//#define ITG3200_LPF_188HZ
+//#define ITG3200_LPF_98HZ
+//#define ITG3200_LPF_42HZ
+//#define ITG3200_LPF_20HZ
+//#define ITG3200_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
+
+/* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
+   IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
+   Select the right line depending on your radio brand. Feel free to modify the order in your PPM order is different */
+#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,CAMPITCH,CAMROLL //For Graupner/Spektrum
+//#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,CAMPITCH,CAMROLL //For Robe/Hitec/Futaba
+//#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,CAMPITCH,CAMROLL //For some Hitec/Sanwa/Others
+
+/* The following lines apply only for Spektrum Satellite Receiver
+   Spektrum Satellites are 3V devices.  DO NOT connect to 5V!
+   For MEGA boards, attach sat grey wire to RX1, pin 19. Sat black wire to ground. Sat orange wire to Mega board's 3.3V (or any other 3V to 3.3V source).
+   For PROMINI, attach sat grey to RX0.  Attach sat black to ground.  
+     There is no 3.3V source on a pro mini; you can either use a different 3V source, or attach orange to 5V with a 3V regulator in-line (such as http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail&name=MCP1700-3002E/TO-ND)
+     If you use an inline-regulator, a standard 3-pin servo connector can connect to ground, +5V, and RX0; solder the correct wires (and the 3V regulator!) to a Spektrum baseRX-to-Sat cable that has been cut in half. 
+     NOTE: Because there is only one serial port on the Pro Mini, using a Spektrum Satellite implies you CANNOT use the PC based configuration tool. Further, you cannot use on-aircraft serial LCD as the baud rates are incompatible. You can configure by one of two methods:
+       1) Coming soon: Use an on-aircraft Eagle Tree LCD for setting gains, reading sensors, etc. 
+       2) Available now: Comment out the Spektrum definition, upload, plug in PC, configure; uncomment the Spektrum definition, upload, plug in RX, and fly.  Repeat as required to configure. 
+   (Contribution by Danal)
+*/
+//#define SPEKTRUM 1024
+//#define SPEKTRUM 2048
+
+
+/* EXPERIMENTAL !!
+   contribution from Captain IxI and Zaggo
+   cf http://www.multiwii.com/forum/viewtopic.php?f=7&t=289
+   The following line apply only for Futaba S-Bus Receiver on MEGA boards at RX1 only (Serial 1).
+   You have to invert the S-Bus-Serial Signal e.g. with a Hex-Inverter like IC SN74 LS 04 */
+//#define SBUS
 
 /* Failsave settings - added by MIS
    Failsafe check pulse on THROTTLE channel. If the pulse is OFF (on only THROTTLE or on all channels) the failsafe procedure is initiated.
@@ -93,87 +184,6 @@
 #define TILT_ROLL_MAX     2000
 #define TILT_ROLL_MIDDLE  1500
 #define TILT_ROLL_PROP    10
-
-/* if you use a specific sensor board:
-   please submit any correction to this list.
-     Note from Alex: I only own some boards
-                     for other boards, I'm not sure, the info was gathered via rc forums, be cautious */
-//#define FFIMUv1         // first 9DOF+baro board from Jussi, with HMC5843                   <- confirmed by Alex
-//#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883       <- confirmed by Alex
-//#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
-//#define FREEIMUv03      // FreeIMU v0.3 and v0.3.1
-//#define FREEIMUv035     // FreeIMU v0.3.5 no baro
-//#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
-//#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
-//#define PIPO            // 9DOF board from erazz
-//#define QUADRINO        // full FC board 9DOF+baro board from witespy                       <- confirmed by Alex
-//#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU
-//#define AEROQUADSHIELDv2
-//#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). requires 3.3V power.
-//#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
-
-//if you use independent sensors
-//leave it commented it you already checked a specific board above
-/* I2C gyroscope */
-//#define ITG3200
-//#define L3G4200D
-
-/* I2C accelerometer */
-//#define ADXL345
-//#define BMA020
-//#define BMA180
-//#define NUNCHACK  // if you want to use the nunckuk as a standalone I2C ACC without WMP
-//#define LIS3LV02
-
-/* I2C barometer */
-//#define BMP085
-//#define MS561101BA  //non tested
-
-/* I2C magnetometer */
-//#define HMC5843
-//#define HMC5883
-//#define AK8975
-
-/* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
-//#define ADCACC
-
-/* ITG3200 & ITG3205 Low pass filter setting. In case you cannot eliminate all vibrations to the Gyro, you can try
-   to decrease the LPF frequency, only one step per try. As soon as twitching gone, stick with that setting.
-   It will not help on feedback wobbles, so change only when copter is randomly twiching and all dampening and
-   balancing options ran out. Uncomment only one option!
-   IMPORTANT! Change low pass filter setting changes PID behaviour, so retune your PID's after changing LPF.*/
-//#define ITG3200_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
-//#define ITG3200_LPF_188HZ
-//#define ITG3200_LPF_98HZ
-//#define ITG3200_LPF_42HZ
-//#define ITG3200_LPF_20HZ
-//#define ITG3200_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
-
-/* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
-   IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
-   Select the right line depending on your radio brand. Feel free to modify the order in your PPM order is different */
-//#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,CAMPITCH,CAMROLL //For Graupner/Spektrum
-//#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,CAMPITCH,CAMROLL //For Robe/Hitec/Futaba
-//#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,CAMPITCH,CAMROLL //For some Hitec/Sanwa/Others
-
-/* EXPERIMENTAL !!
-   The following lines apply only for Spektrum Satellite Receiver
-   Spektrum Satellites are 3V devices.  DO NOT connect to 5V!
-   For MEGA boards, attach sat grey wire to RX1, pin 19. Sat black wire to ground. Sat orange wire to Mega board's 3.3V (or any other 3V to 3.3V source).
-   For PROMINI, attach sat grey to RX0.  Attach sat black to ground.
-   There is no 3.3V source on a pro mini; you can either use a different 3V source, or attach orange to 5V with a 3V regulator in-line (such as http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail&name=MCP1700-3002E/TO-ND)
-   If you use an inline-regulator, a standard 3-pin servo connector can connect to ground, +5V, and RX0; solder the correct wires (and the 3V regulator!) to a Spektrum baseRX-to-Sat cable that has been cut in half.
-   NOTE: Because there is only one serial port on the Pro Mini, using a Spektrum Satellite implies you CANNOT use the PC based configuration tool. Further, you cannot use on-aircraft serial LCD as the baud rates are incompatible. You can use an on-aircraft Eagle Tree LCD for setting gains, reading sensors, etc.
-   (Contribution by Danal) */
-//#define SPEKTRUM
-
-/* EXPERIMENTAL !!
-   contribution from Captain IxI and Zaggo
-   cf http://www.multiwii.com/forum/viewtopic.php?f=7&t=289
-   The following line apply only for Futaba S-Bus Receiver on MEGA boards at RX1 only (Serial 1).
-   You have to invert the S-Bus-Serial Signal e.g. with a Hex-Inverter like IC SN74 LS 04 */
-//#define SBUS   PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,CAMPITCH,CAMROLL // Order of channels in the SBUS
-
 
 /* interleaving delay in micro seconds between 2 readings WMP/NK in a WMP+NK config
    if the ACC calibration time is very long (20 or 30s), try to increase this delay up to 4000
@@ -210,16 +220,19 @@
    comment this line only if you don't plan to used a LCD */
 #define LCD_CONF
 
+/* To use an Eagle Tree Power Panel LCD for configuration, uncomment this line
+ White wire  to Ground
+ Red wire    to +5V VCC (or to the WMP power pin, if you prefer to reset everything on the bus when WMP resets)
+ Yellow wire to SDA - Pin A4 Mini Pro - Pin 20 Mega
+ Brown wire  to SCL - Pin A5 Mini Pro - Pin 21 Mega 
+ (Contribution by Danal) */
+//#define LCD_ETPP
+
 /* to use Cat's whisker TEXTSTAR LCD, uncomment following line.
    Pleae note this display needs a full 4 wire connection to (+5V, Gnd, RXD, TXD )
    Configure display as follows: 115K baud, and TTL levels for RXD and TXD, terminal mode
    NO rx / tx line reconfiguration, use natural pins */
 //#define LCD_TEXTSTAR
-/* keys to navigate the LCD menu (preset to TEXTSTAR key-depress codes)*/
-#define LCD_MENU_PREV 'a'
-#define LCD_MENU_NEXT 'c'
-#define LCD_VALUE_UP 'd'
-#define LCD_VALUE_DOWN 'b'
 
 /* motors will not spin when the throttle command is in low position
    this is an alternative method to stop immediately the motors */

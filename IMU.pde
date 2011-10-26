@@ -57,82 +57,6 @@ void computeIMU () {
   #endif
 }
 
-#if defined(STAB_OLD_17)
-/// OLD CODE from 1.7 ////
-// ************************************
-// simplified IMU based on Kalman Filter
-// inspired from http://starlino.com/imu_guide.html
-// and http://www.starlino.com/imu_kalman_arduino.html
-// for angles under 25deg, we use an approximation to speed up the angle calculation
-// magnetometer addition for small angles
-// ************************************
-void getEstimatedAttitude(){
-  uint8_t axis;  
-  float R, RGyro[3];                 //R obtained from last estimated value and gyro movement;
-  static float REst[3] = {0,0,1} ;   // init acc in stable mode
-  static float A[2];                 //angles between projection of R on XZ/YZ plane and Z axis (in Radian)
-  float wGyro = 300;               // gyro weight/smooting factor
-  float invW = 1.0/(1 + 300);
-  float gyroFactor;
-  static uint8_t small_angle=1;
-  static uint16_t tPrevious;
-  uint16_t tCurrent,deltaTime;
-  float a[2], mag[2], cos_[2];
-
-  int16_t acc_25deg = acc_1G * 0.423;
-
-  tCurrent = micros();
-  deltaTime = tCurrent-tPrevious;
-  tPrevious = tCurrent;
-
-  #if GYRO
-    gyroFactor = deltaTime/300e6; //empirical
-  #else
-    gyroFactor = deltaTime/200e6; //empirical, depends on WMP on IDG datasheet, tied of deg/ms sensibility
-  #endif
-  
-  for (axis=0;axis<2;axis++) a[axis] = gyroADC[axis]  * gyroFactor;
-  for (axis=0;axis<3;axis++) accSmooth[axis] =(accSmooth[axis]*7+accADC[axis]+4)/8;
-  
-  if(accSmooth[YAW] > 0 ){ //we want to be sure we are not flying inverted  
-    // a very nice trigonometric approximation: under 25deg, the error of this approximation is less than 1 deg:
-    //   sin(x) =~= x =~= arcsin(x)
-    //   angle_axis = arcsin(ACC_axis/ACC_1G) =~= ACC_axis/ACC_1G
-    // the angle calculation is much more faster in this case
-    if (accSmooth[ROLL]<acc_25deg && accSmooth[ROLL]>-acc_25deg && accSmooth[PITCH]<acc_25deg && accSmooth[PITCH]>-acc_25deg) {
-      for (axis=0;axis<2;axis++) {
-        A[axis] +=a[axis];
-        A[axis] = ((float)accSmooth[axis]/acc_1G + A[axis]*wGyro)*invW; // =~= sin axis
-        #if MAG
-          cos_[axis] = 1-A[axis]*A[axis]/2; // cos(x) =~= 1-x^2/2
-        #endif
-      } 
-      small_angle=1;
-    } else {
-      //magnitude vector size
-      R = sqrt(square(accSmooth[ROLL]) + square(accSmooth[PITCH]) + square(accSmooth[YAW]));
-      for (axis=0;axis<2;axis++) {
-        if ( acc_1G*3/5 < R && R < acc_1G*7/5 && small_angle == 0 ) //if accel magnitude >1.4G or <0.6G => we neutralize the effect of accelerometers in the angle estimation
-          A[axis] = atan2(REst[axis],REst[YAW]);
-        A[axis] +=a[axis];
-        cos_[axis] = cos(A[axis]);
-        RGyro[axis]  = sin(A[axis])  / sqrt( 1.0 + square(cos_[axis])  * square(tan(A[1-axis]))); //reverse calculation of RwGyro from Awz angles
-      }
-      RGyro[YAW] = sqrt(abs(1.0 - square(RGyro[ROLL]) - square(RGyro[PITCH])));
-      for (axis=0;axis<3;axis++)
-        REst[axis] = (accADC[axis]/R + wGyro* RGyro[axis])  * invW; //combine Accelerometer and gyro readings
-      small_angle=0;
-    }
-    #if defined(HMC5843) || defined(HMC5883)
-      mag[PITCH] = -magADC[PITCH]*cos_[PITCH]+magADC[ROLL]*A[ROLL]*A[PITCH]+magADC[YAW]*cos_[ROLL]*A[PITCH];
-      mag[ROLL] = magADC[ROLL]*cos_[ROLL]-magADC[YAW]*A[ROLL];
-      heading = -degrees(atan2(mag[PITCH],mag[ROLL]));
-    #endif
-  }
-  for (axis=0;axis<2;axis++) angle[axis] = A[axis]*572.9577951; //angle in multiple of 0.1 degree
-}
-
-#else
 
 // **************************************************
 // Simplified IMU based on "Complementary Filter"
@@ -149,8 +73,10 @@ void getEstimatedAttitude(){
 // Currently Magnetometer uses separate CF which is used only
 // for heading approximation.
 //
-// Last Modified: 19/04/2011
-// Version: V1.1   
+// Modified: 19/04/2011  by ziss_dm
+// Version: V1.1
+//
+// code size deduction and tmp vector intermediate step for vector rotation computation: October 2011 by Alex
 // **************************************************
 
 //******  advanced users settings *******************
@@ -181,7 +107,7 @@ void getEstimatedAttitude(){
 #define INV_GYR_CMPF_FACTOR   (1.0f / (GYR_CMPF_FACTOR  + 1.0f))
 #define INV_GYR_CMPFM_FACTOR  (1.0f / (GYR_CMPFM_FACTOR + 1.0f))
 #if GYRO
-  #define GYRO_SCALE ((2000.0f * PI)/((32767.0f / 4.0f ) * 180.0f * 1000000.0f) * 1.155f)  
+  #define GYRO_SCALE ((2380 * PI)/((32767.0f / 4.0f ) * 180.0f * 1000000.0f)) //should be 2279.44 but 2380 gives better result
   // +-2000/sec deg scale
   //#define GYRO_SCALE ((200.0f * PI)/((32768.0f / 5.0f / 4.0f ) * 180.0f * 1000000.0f) * 1.5f)     
   // +- 200/sec deg scale
@@ -196,7 +122,7 @@ void getEstimatedAttitude(){
 #define ssin(val) (val)
 #define scos(val) 1.0f
 
-typedef struct {
+typedef struct fp_vector {
   float X;
   float Y;
   float Z;
@@ -229,31 +155,42 @@ int16_t _atan2(float y, float x){
   return z;
 }
 
+// Rotate Estimated vector(s) with small angle approximation, according to the gyro data
+void rotateV(struct fp_vector *v,float* delta) {
+  fp_vector v_tmp = *v;
+  v->Z -= delta[ROLL]  * v_tmp.X + delta[PITCH] * v_tmp.Y;
+  v->X += delta[ROLL]  * v_tmp.Z - delta[YAW]   * v_tmp.Y;
+  v->Y += delta[PITCH] * v_tmp.Z + delta[YAW]   * v_tmp.X; 
+}
+
 void getEstimatedAttitude(){
   uint8_t axis;
-  uint16_t accLim, accMag = 0;
-  static t_fp_vector EstG = {0,0,300};
-  static t_fp_vector EstM = {0,0,300};
-  float scale, deltaGyroAngle;
-  static int16_t mgSmooth[3];  //projection of smoothed and normalized magnetic vector on x/y/z axis, as measured by magnetometer
+  int16_t accMag = 0;
+  static t_fp_vector EstG,EstM;
+  static int16_t mgSmooth[3],accTemp[3];  //projection of smoothed and normalized magnetic vector on x/y/z axis, as measured by magnetometer
   static uint16_t previousT;
-  uint16_t currentT;
-  
-  currentT  = micros();
+  uint16_t currentT = micros();
+  float scale, deltaGyroAngle[3];
+  uint8_t smallAngle25;
+
+
   scale = (currentT - previousT) * GYRO_SCALE;
   previousT = currentT;
-  
+
+  for (axis = 0; axis < 3; axis++)
+    deltaGyroAngle[axis] = gyroADC[axis]  * scale;
+
   // Initialization
   for (axis = 0; axis < 3; axis++) {
     #if defined(ACC_LPF_FACTOR)
-//      accSmooth[axis] = (accSmooth[axis] * (ACC_LPF_FACTOR - 1) + accADC[axis]) / ACC_LPF_FACTOR; // LPF for ACC values
-        accSmooth[axis] =(accSmooth[axis]*7+accADC[axis]+4)>>3;
+      accTemp[axis] = (accTemp[axis] - (accTemp[axis] >>4)) + accADC[axis];
+      accSmooth[axis] = accTemp[axis]>>4;
       #define ACC_VALUE accSmooth[axis]
     #else  
       accSmooth[axis] = accADC[axis];
       #define ACC_VALUE accADC[axis]
     #endif
-    accMag += (ACC_VALUE * 10 / acc_1G) * (ACC_VALUE * 10 / acc_1G); //788
+    accMag += (ACC_VALUE * 10 / (int16_t)acc_1G) * (ACC_VALUE * 10 / (int16_t)acc_1G);
     #if MAG
       #if defined(MG_LPF_FACTOR)
         mgSmooth[axis] = (mgSmooth[axis] * (MG_LPF_FACTOR - 1) + magADC[axis]) / MG_LPF_FACTOR; // LPF for Magnetometer values
@@ -264,52 +201,42 @@ void getEstimatedAttitude(){
     #endif
   }
 
-  // Rotate Estimated vector(s), ROLL
-  deltaGyroAngle  = gyroADC[ROLL] * scale;
-  EstG.V.Z =  scos(deltaGyroAngle) * EstG.V.Z - ssin(deltaGyroAngle) * EstG.V.X;
-  EstG.V.X =  ssin(deltaGyroAngle) * EstG.V.Z + scos(deltaGyroAngle) * EstG.V.X;
+  rotateV(&EstG.V,deltaGyroAngle);
   #if MAG
-    EstM.V.Z =  scos(deltaGyroAngle) * EstM.V.Z - ssin(deltaGyroAngle) * EstM.V.X;
-    EstM.V.X =  ssin(deltaGyroAngle) * EstM.V.Z + scos(deltaGyroAngle) * EstM.V.X;
+    rotateV(&EstM.V,deltaGyroAngle);
   #endif 
-  // Rotate Estimated vector(s), PITCH
-  deltaGyroAngle  = gyroADC[PITCH] * scale;
-  EstG.V.Y =  scos(deltaGyroAngle) * EstG.V.Y + ssin(deltaGyroAngle) * EstG.V.Z;
-  EstG.V.Z = -ssin(deltaGyroAngle) * EstG.V.Y + scos(deltaGyroAngle) * EstG.V.Z;
-  #if MAG
-    EstM.V.Y =  scos(deltaGyroAngle) * EstM.V.Y + ssin(deltaGyroAngle) * EstM.V.Z;
-    EstM.V.Z = -ssin(deltaGyroAngle) * EstM.V.Y + scos(deltaGyroAngle) * EstM.V.Z;
-  #endif 
-  // Rotate Estimated vector(s), YAW
-  deltaGyroAngle  = gyroADC[YAW] * scale;
-  EstG.V.X =  scos(deltaGyroAngle) * EstG.V.X - ssin(deltaGyroAngle) * EstG.V.Y;
-  EstG.V.Y =  ssin(deltaGyroAngle) * EstG.V.X + scos(deltaGyroAngle) * EstG.V.Y;
-  #if MAG
-    EstM.V.X =  scos(deltaGyroAngle) * EstM.V.X - ssin(deltaGyroAngle) * EstM.V.Y;
-    EstM.V.Y =  ssin(deltaGyroAngle) * EstM.V.X + scos(deltaGyroAngle) * EstM.V.Y;
-  #endif
- 
+
+  if ( abs(accSmooth[ROLL])<acc_25deg && abs(accSmooth[PITCH])<acc_25deg && accSmooth[YAW]>0)
+    smallAngle25 = 1;
+  else
+    smallAngle25 = 0;
+
   // Apply complimentary filter (Gyro drift correction)
   // If accel magnitude >1.4G or <0.6G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
   // To do that, we just skip filter, as EstV already rotated by Gyro
-  accLim = acc_1G*4/10;
-  if ( ( 36 < accMag && accMag < 196 ) || (  abs(accSmooth[ROLL])<accLim  && abs(accSmooth[PITCH])<accLim ) ) {
+  if ( ( 36 < accMag && accMag < 196 ) || smallAngle25 )
     for (axis = 0; axis < 3; axis++)
-      EstG.A[axis] = (EstG.A[axis] * GYR_CMPF_FACTOR + ACC_VALUE) * INV_GYR_CMPF_FACTOR;
-  }
-
-  // Attitude of the estimated vector
-  angle[ROLL]  =  _atan2(EstG.V.X, EstG.V.Z) ;
-  angle[PITCH] =  _atan2(EstG.V.Y, EstG.V.Z) ;
+      #if not defined(TRUSTED_ACCZ)
+      if (smallAngle25 && axis == YAW)
+        //We consider ACCZ = acc_1G when the acc on other axis is small.
+        //It's a tweak to deal with some configs where ACC_Z tends to a value < acc_1G when high throttle is applied.
+        //This tweak applies only when the multi is not in inverted position
+        EstG.A[axis] = (EstG.A[axis] * GYR_CMPF_FACTOR + acc_1G) * INV_GYR_CMPF_FACTOR;
+      else
+      #endif
+        EstG.A[axis] = (EstG.A[axis] * GYR_CMPF_FACTOR + ACC_VALUE) * INV_GYR_CMPF_FACTOR;
   #if MAG
-    // Apply complimentary filter (Gyro drift correction)
     for (axis = 0; axis < 3; axis++)
-      EstM.A[axis] = (EstM.A[axis] * GYR_CMPFM_FACTOR + MAG_VALUE) * INV_GYR_CMPFM_FACTOR;
+      EstM.A[axis] = (EstM.A[axis] * GYR_CMPFM_FACTOR  + MAG_VALUE) * INV_GYR_CMPFM_FACTOR;
+  #endif
+  // Attitude of the estimated vector
+  angle[ROLL]  =  _atan2(EstG.V.X , EstG.V.Z) ;
+  angle[PITCH] =  _atan2(EstG.V.Y , EstG.V.Z) ;
+  #if MAG
     // Attitude of the cross product vector GxM
     heading = _atan2( EstG.V.X * EstM.V.Z - EstG.V.Z * EstM.V.X , EstG.V.Z * EstM.V.Y - EstG.V.Y * EstM.V.Z  ) / 10;
   #endif
 }
-#endif
 
 float InvSqrt (float x){ 
   union{  
@@ -341,6 +268,7 @@ void getEstimatedAltitude(){
   if (currentTime < deadLine) return;
   deadLine = currentTime + UPDATE_INTERVAL; 
   // Soft start
+
   if (!inited) {
     inited = 1;
     EstAlt = BaroAlt;
@@ -354,7 +282,12 @@ void getEstimatedAltitude(){
   AltErrorI=constrain(AltErrorI,-25000,+25000);
   // Gravity vector correction and projection to the local Z
   //InstAcc = (accADC[YAW] * (1 - acc_1G * InvSqrt(isq(accADC[ROLL]) + isq(accADC[PITCH]) + isq(accADC[YAW])))) * AccScale + (Ki) * AltErrorI;
-  InstAcc = (accADC[YAW] * (1 - acc_1G * InvSqrt(isq(accADC[ROLL]) + isq(accADC[PITCH]) + isq(accADC[YAW])))) * AccScale +  AltErrorI / 1000;
+  #if defined(TRUSTED_ACCZ)
+    InstAcc = (accADC[YAW] * (1 - acc_1G * InvSqrt(isq(accADC[ROLL]) + isq(accADC[PITCH]) + isq(accADC[YAW])))) * AccScale +  AltErrorI / 1000;
+  #else
+    InstAcc = AltErrorI / 1000;
+  #endif
+  
   // Integrators
   Delta = InstAcc * dt + (Kp1 * dt) * AltError;
   EstAlt += (EstVelocity/5 + Delta) * (dt / 2) + (Kp2 * dt) * AltError;

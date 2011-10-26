@@ -124,6 +124,27 @@
   #define ITG3200_ADDRESS 0XD0
 #endif
 
+#if defined(SIRIUS600)
+  #define BMA180
+  #define BMP085
+  #define HMC5883
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y;  magADC[PITCH] = X; magADC[YAW]  = Z;}
+  #define BMA180_ADDRESS 0x80
+#endif
+
+#if defined(CITRUSv1_0)
+  #define ITG3200
+  #define ADXL345
+  #define BMP085
+  #define HMC5883
+  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  =  -X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
+  #define MAG_ORIENTATION(Y, X, Z)  {magADC[ROLL]  = Y;  magADC[PITCH] = X; magADC[YAW]  = Z;}
+  #define ADXL345_ADDRESS  0xA6
+  #define ITG3200_ADDRESS 0XD0
+#endif
+
 
 #if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(ADCACC)
   #define ACC 1
@@ -201,9 +222,9 @@
   #define PITCHPIN                   5
   #define YAWPIN                     6
   #define AUX1PIN                    7
-  #define AUX2PIN                    7   //unused just for compatibility with MEGA
-  #define CAM1PIN                    7   //unused just for compatibility with MEGA
-  #define CAM2PIN                    7   //unused just for compatibility with MEGA
+  #define AUX2PIN                    0 // optional PIN 8 or PIN 12
+  #define CAM1PIN                    1 // unused 
+  #define CAM2PIN                    3 // unused 
   #define ISR_UART                   ISR(USART_UDRE_vect)
   #define V_BATPIN                   A3    // Analog PIN 3
   #define PSENSORPIN                 A2    // Analog PIN 2
@@ -261,6 +282,20 @@
   #define V_BATPIN                   A0    // Analog PIN 3
   #define PSENSORPIN                 A2    // Analog PIN 2
 #endif
+
+#if defined(RCAUXPIN8)
+  #define BUZZERPIN_PINMODE          ;
+  #define BUZZERPIN_ON               ;
+  #define BUZZERPIN_OFF              ;
+  #define RCAUXPIN
+#endif
+#if defined(RCAUXPIN12)
+  #define POWERPIN_PINMODE           ;
+  #define POWERPIN_ON                ;
+  #define POWERPIN_OFF               ;
+  #define RCAUXPIN
+#endif
+
 
 #if defined(POWERMETER)
   #ifndef VBAT

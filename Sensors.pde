@@ -550,19 +550,23 @@ void ACC_getADC () {
 //
 // 0x20    bw_tcs:   |                                           bw<3:0> |                        tcs<3:0> |
 //                   |                                             150Hz |                 !!Calibration!! |
-//
-// 0x35 offset_lsb1: |                                     offset_x<3:0> |        range<2:0> |    smp_skip |
-//                   |                                   !!Calibration!! |                2g |     IRQ 1/T |
 // ************************************************************************************************************
 #if defined(BMA180)
 void ACC_init () {
   delay(10);
   //default range 2G: 1G = 4096 unit.
-  i2c_writeReg(BMA180_ADDRESS,0x0D,1<<4); // register: ctrl_reg0  -- value: set bit ee_w to 1 to enable writing
+//  i2c_writeReg(BMA180_ADDRESS,0x0D,1<<4); // register: ctrl_reg0  -- value: set bit ee_w to 1 to enable writing
+//  delay(5);
   uint8_t control = i2c_readReg(BMA180_ADDRESS, 0x20);
   control = control & 0x0F; // register: bw_tcs reg: bits 4-7 to set bw -- value: set low pass filter to 10Hz (bits value = 0000xxxx)
-  delay(5);
-  i2c_writeReg(BMA180_ADDRESS, 0x20, control); 
+  control = control | 0x00; 
+  i2c_writeReg(BMA180_ADDRESS, 0x20, control);
+  delay(5); 
+  control = i2c_readReg(BMA180_ADDRESS, 0x30);
+  control = control & 0xFC; 
+  control = control | 0x02; 
+  i2c_writeReg(BMA180_ADDRESS, 0x30, control);
+  delay(5); 
   acc_1G = 512;
 }
 
@@ -902,6 +906,6 @@ void initSensors() {
   if (GYRO) Gyro_init();
   else WMP_init(250);
   if (BARO) Baro_init();
-  if (ACC) ACC_init();
+  if (ACC) {ACC_init();acc_25deg = acc_1G * 0.423;}
   if (MAG) Mag_init();
 }
