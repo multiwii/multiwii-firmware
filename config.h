@@ -151,15 +151,6 @@
 //#define SPEKTRUM 2048
 
 /* EXPERIMENTAL !!
-
-	you must enable this if you plan to use SPEKTRUM or BTSERIAL.
-	this disables the RCcompute function on main program loop
-	*/
-	
-#define NOCOMPUTERC
-
-
-/* EXPERIMENTAL !!
    contribution from Captain IxI and Zaggo
    cf http://www.multiwii.com/forum/viewtopic.php?f=7&t=289
    The following line apply only for Futaba S-Bus Receiver on MEGA boards at RX1 only (Serial 1).
@@ -189,6 +180,10 @@
       
    */
 #define BTSERIAL
+
+#if defined(BTSERIAL) || defined(SPEKTRUM)
+	#define NOCOMPUTERC
+#endif	
 
 /* The following lines apply only for a pitch/roll tilt stabilization system
    On promini board, it is not compatible with config with 6 motors or more
