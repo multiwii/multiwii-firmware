@@ -246,7 +246,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     } else
       calibratedACC = 1;
   }
-  if (currentTime > serialTime) { // 50Hz
+  if (micros() > serialTime + 20000) { // 50Hz
     serialCom();
     serialTime = currentTime + 20000;
   }
@@ -315,15 +315,28 @@ void loop () {
   static int16_t errorAltitudeI = 0;
   int16_t AltPID = 0;
   static int16_t lastVelError = 0;
-  static int32_t AltHold;
- 
+  static int32_t AltHold = 0.0;
+  
+  #if defined(ESC_CALIBRATE)
+    blinkLED(20,30,1);
+    while (true) {  
+      if (currentTime > (rcTime + 20000) ) { // 50Hz
+        rcTime = currentTime; 
+        computeRC();
+        rcData[THROTTLE] = constrain(rcData[THROTTLE],900,MAXTHROTTLE);
+        for (uint8_t i =0;i<NUMBER_MOTOR;i++) motor[i]=rcData[THROTTLE];
+        writeMotors();
+      }
+      currentTime = micros();
+    }
+  #endif
   #if defined(SPEKTRUM)
     if (rcFrameComplete) computeRC();
   #endif
   
   if (currentTime > rcTime ) { // 50Hz
     rcTime = currentTime + 20000;
-    #if !defined(NOCOMPUTERC)
+    #if !(defined(SPEKTRUM) || (BTSERIAL))
       computeRC();
     #endif
     // Failsafe routine - added by MIS

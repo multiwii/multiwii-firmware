@@ -147,7 +147,7 @@
        2) Available now: Comment out the Spektrum definition, upload, plug in PC, configure; uncomment the Spektrum definition, upload, plug in RX, and fly.  Repeat as required to configure. 
    (Contribution by Danal)
 */
-//#define SPEKTRUM 1024
+#define SPEKTRUM 1024
 //#define SPEKTRUM 2048
 
 /* EXPERIMENTAL !!
@@ -179,11 +179,7 @@
    As with the SPEKTRUM option, is not possible to use the configuration tool on a mini or promini.
       
    */
-#define BTSERIAL
-
-#if defined(BTSERIAL) || defined(SPEKTRUM)
-	#define NOCOMPUTERC
-#endif	
+//#define BTSERIAL
 
 /* The following lines apply only for a pitch/roll tilt stabilization system
    On promini board, it is not compatible with config with 6 motors or more
