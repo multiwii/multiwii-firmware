@@ -3,8 +3,10 @@
   #define SERVO
 #endif
 
-#if defined(GIMBAL) || defined(FLYING_WING)
+#if defined(GIMBAL)
   #define NUMBER_MOTOR 0
+#elif defined(FLYING_WING)
+  #define NUMBER_MOTOR 1
 #elif defined(BI)
   #define NUMBER_MOTOR 2
 #elif defined(TRI)
@@ -360,8 +362,17 @@ void mixTable() {
     servo[2] = constrain(TILT_ROLL_MIDDLE + TILT_ROLL_PROP   * angle[ROLL]  /16 + rcCommand[ROLL], TILT_ROLL_MIN, TILT_ROLL_MAX);
   #endif
   #ifdef FLYING_WING
-    servo[1]  = constrain(1500 + axisPID[PITCH] - axisPID[ROLL], 1020, 2000); //LEFT the direction of the 2 servo can be changed here: invert the sign before axisPID
-    servo[2]  = constrain(1500 + axisPID[PITCH] + axisPID[ROLL], 1020, 2000); //RIGHT
+   motor[0] = rcCommand[THROTTLE];
+    //if (passthroughMode) {// use raw stick values to drive output 
+    // follow aux1 as being three way switch **NOTE: better to implement via check boxes in GUI 
+    if (rcData[AUX1]<1300) { // passthrough
+
+       servo[1]  = constrain(WING_LEFT_MID  + PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC), WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
+       servo[2]  = constrain(WING_RIGHT_MID + PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC), WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+    } else { // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration
+       servo[1]  = constrain(WING_LEFT_MID  + PITCH_DIRECTION_L * axisPID[PITCH]        + ROLL_DIRECTION_L * axisPID[ROLL], WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
+       servo[2]  = constrain(WING_RIGHT_MID + PITCH_DIRECTION_R * axisPID[PITCH]        + ROLL_DIRECTION_R * axisPID[ROLL], WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+    }
   #endif
 
   #if defined(CAMTRIG)

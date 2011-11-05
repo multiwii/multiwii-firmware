@@ -14,7 +14,7 @@
 //#define BI
 //#define TRI
 //#define QUADP
-#define QUADX
+//#define QUADX
 //#define Y4
 //#define Y6
 //#define HEX6
@@ -22,7 +22,7 @@
 //#define OCTOX8
 //#define OCTOFLATP
 //#define OCTOFLATX
-//#define FLYING_WING //experimental
+#define FLYING_WING //experimental
 
 #define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
 //#define YAW_DIRECTION -1
@@ -132,7 +132,7 @@
 /* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
    IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
    Select the right line depending on your radio brand. Feel free to modify the order in your PPM order is different */
-#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,CAMPITCH,CAMROLL //For Graupner/Spektrum
+//#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,CAMPITCH,CAMROLL //For Graupner/Spektrum
 //#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,CAMPITCH,CAMROLL //For Robe/Hitec/Futaba
 //#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,CAMPITCH,CAMROLL //For some Hitec/Sanwa/Others
 
@@ -147,7 +147,7 @@
        2) Available now: Comment out the Spektrum definition, upload, plug in PC, configure; uncomment the Spektrum definition, upload, plug in RX, and fly.  Repeat as required to configure. 
    (Contribution by Danal)
 */
-#define SPEKTRUM 1024
+//#define SPEKTRUM 1024
 //#define SPEKTRUM 2048
 
 /* EXPERIMENTAL !!
@@ -203,7 +203,7 @@
    after the resistor divisor we should get [0V;5V]->[0;1023] on analog V_BATPIN
    with R1=33k and R2=51k
    vbat = [0;1023]*16/VBATSCALE */
-#define VBAT              // comment this line to suppress the vbat code
+//#define VBAT              // comment this line to suppress the vbat code
 #define VBATSCALE     131 // change this value if readed Battery voltage is different than real voltage
 #define VBATLEVEL1_3S 107 // 10,7V
 #define VBATLEVEL2_3S 103 // 10,3V
@@ -241,11 +241,11 @@
    Pleae note this display needs a full 4 wire connection to (+5V, Gnd, RXD, TXD )
    Configure display as follows: 115K baud, and TTL levels for RXD and TXD, terminal mode
    NO rx / tx line reconfiguration, use natural pins */
-//#define LCD_TEXTSTAR
+#define LCD_TEXTSTAR
 
 /* motors will not spin when the throttle command is in low position
    this is an alternative method to stop immediately the motors */
-//#define MOTOR_STOP
+#define MOTOR_STOP
 
 /* some radios have not a neutral point centered on 1500. can be changed here */
 #define MIDRC 1500
@@ -262,6 +262,22 @@
 #define TRI_YAW_CONSTRAINT_MIN 1020
 #define TRI_YAW_CONSTRAINT_MAX 2000
 #define TRI_YAW_MIDDLE 1500
+
+
+/* Flying Wing: you can change change servo orientation and servo min/max values here */
+/* valid for all flight modes, even passThrough mode */
+/* need to setup servo directions here; no need to swap servos amongst channels at rx */ 
+#define PITCH_DIRECTION_L 1 // left servo - pitch orientation
+#define PITCH_DIRECTION_R -1  // right servo - pitch orientation (opposite sign to PITCH_DIRECTION_L, if servos are mounted in mirrored orientation)
+#define ROLL_DIRECTION_L 1 // left servo - roll orientation
+#define ROLL_DIRECTION_R 1  // right servo - roll orientation  (same sign as ROLL_DIRECTION_L, if servos are mounted in mirrored orientation)
+#define WING_LEFT_MID  1500 // left servo center pos. - use this for trim
+#define WING_RIGHT_MID 1500 // right servo center pos. - use this for trim
+#define WING_LEFT_MIN  1020 // limit servo travel range
+#define WING_LEFT_MAX  1700 // limit servo travel range (2000-300)
+#define WING_RIGHT_MIN 1320 // limit servo travel range (1020+300)
+#define WING_RIGHT_MAX 2000 // limit servo travel range
+
 
 /* enable monitoring of the power consumption from battery (think of mAh) */
 /* allows to set alarm value in GUI or via LCD */
@@ -313,7 +329,7 @@
 /* The active page on the LCD does get updated automatically */
 /* Easy to use with Terminal application or Textstar LCD - the 4 buttons are preconfigured to send 'A', 'B', 'C', 'D' */
 /* The value represents the refresh interval in cpu time (micro seconds) */
-//#define LCD_TELEMETRY 100011
+#define LCD_TELEMETRY 100011
 /* to enable automatic hopping between 4 telemetry pages uncomment this. */
 /* This may be useful if your LCD has no buttons or the sending is broken */
 /* hopping is activated and deactivated in unarmed mode with throttle=low & roll=left & pitch=forward */
@@ -326,7 +342,7 @@
 
 /* to log values like max loop time and others to come */
 /* logging values are visible via LCD config */
-//#define LOG_VALUES
+#define LOG_VALUES
  
 //****** end of advanced users settings *************
 

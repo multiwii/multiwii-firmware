@@ -280,7 +280,7 @@ void setup() {
   configureReceiver();
   initSensors();
   previousTime = micros();
-  #if defined(GIMBAL) || defined(FLYING_WING)
+  #if defined(GIMBAL)
    calibratingA = 400;
   #endif
   calibratingG = 400;

@@ -312,7 +312,7 @@ void lcd_telemetry() {
     }
     #ifdef LOG_VALUES
       // set mark, if we had i2c errors
-      if (i2c_errors_count || failsafesEvents) line1[6] = 'I';
+      if (i2c_errors_count || failsafeEvents) line1[6] = 'I';
     #endif
     LCDsetLine(1);LCDprintChar(line1);
     LCDsetLine(2); //position on line 2 of LCD
