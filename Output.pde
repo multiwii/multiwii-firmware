@@ -3,8 +3,10 @@
   #define SERVO
 #endif
 
-#if defined(GIMBAL) || defined(FLYING_WING)
+#if defined(GIMBAL)
   #define NUMBER_MOTOR 0
+#elif defined(FLYING_WING)
+  #define NUMBER_MOTOR 1
 #elif defined(BI)
   #define NUMBER_MOTOR 2
 #elif defined(TRI)
@@ -99,18 +101,18 @@ void initOutput() {
 #if defined(SERVO)
 void initializeServo() {
   #if defined(TRI)
-    DIGITAL_SERVO_TRI_PINMODE
+    DIGITAL_SERVO_TRI_PINMODE;
   #endif
   #if defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING)
-    DIGITAL_TILT_ROLL_PINMODE
-    DIGITAL_TILT_PITCH_PINMODE
+    DIGITAL_TILT_ROLL_PINMODE;
+    DIGITAL_TILT_PITCH_PINMODE;
   #endif
   #if defined(CAMTRIG)
-    DIGITAL_CAM_PINMODE
+    DIGITAL_CAM_PINMODE;
   #endif
   #if defined(BI)
-    DIGITAL_SERVO_TRI_PINMODE
-    DIGITAL_BI_LEFT_PINMODE
+    DIGITAL_SERVO_TRI_PINMODE;
+    DIGITAL_BI_LEFT_PINMODE;
   #endif
   TCCR0A = 0; // normal counting mode
   TIMSK0 |= (1<<OCIE0A); // Enable CTC interrupt
@@ -132,7 +134,7 @@ ISR(TIMER0_COMPA_vect) {
   if (state == 0) {
     //http://billgrundmann.wordpress.com/2009/03/03/to-use-or-not-use-writedigital/
     #if defined(TRI) || defined (BI)
-      DIGITAL_SERVO_TRI_HIGH
+      DIGITAL_SERVO_TRI_HIGH;
     #endif
     OCR0A+= 250; // 1000 us
     state++ ;
@@ -141,13 +143,13 @@ ISR(TIMER0_COMPA_vect) {
     state++;
   } else if (state == 2) {
     #if defined(TRI) || defined (BI)
-      DIGITAL_SERVO_TRI_LOW
+      DIGITAL_SERVO_TRI_LOW;
     #endif
     #if defined(BI)
-      DIGITAL_BI_LEFT_HIGH
+      DIGITAL_BI_LEFT_HIGH;
     #endif
     #if defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING)
-      DIGITAL_TILT_PITCH_HIGH
+      DIGITAL_TILT_PITCH_HIGH;
     #endif
     OCR0A+= 250; // 1000 us
     state++;
@@ -156,11 +158,11 @@ ISR(TIMER0_COMPA_vect) {
     state++;
   } else if (state == 4) {
     #if defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING)
-      DIGITAL_TILT_PITCH_LOW
-      DIGITAL_TILT_ROLL_HIGH
+      DIGITAL_TILT_PITCH_LOW;
+      DIGITAL_TILT_ROLL_HIGH;
     #endif
     #if defined(BI)
-      DIGITAL_BI_LEFT_LOW
+      DIGITAL_BI_LEFT_LOW;
     #endif
     state++;
     OCR0A+= 250; // 1000 us
@@ -169,10 +171,10 @@ ISR(TIMER0_COMPA_vect) {
     state++;
   } else if (state == 6) {
     #if defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING)
-      DIGITAL_TILT_ROLL_LOW
+      DIGITAL_TILT_ROLL_LOW;
     #endif
     #if defined(CAMTRIG)
-      DIGITAL_CAM_HIGH
+      DIGITAL_CAM_HIGH;
     #endif
     state++;
     OCR0A+= 250; // 1000 us
@@ -181,7 +183,7 @@ ISR(TIMER0_COMPA_vect) {
     state++;
   } else if (state == 8) {
     #if defined(CAMTRIG)
-      DIGITAL_CAM_LOW
+      DIGITAL_CAM_LOW;
     #endif
     count = 10; // 12 x 1000 us
     state++;
@@ -360,10 +362,17 @@ void mixTable() {
     servo[2] = constrain(TILT_ROLL_MIDDLE + TILT_ROLL_PROP   * angle[ROLL]  /16 + rcCommand[ROLL], TILT_ROLL_MIN, TILT_ROLL_MAX);
   #endif
   #ifdef FLYING_WING
-    servo[1]  = constrain(1500 + axisPID[PITCH] - axisPID[ROLL], 1020, 2000); //LEFT the direction of the 2 servo can be changed here: invert the sign before axisPID
-    servo[2]  = constrain(1500 + axisPID[PITCH] + axisPID[ROLL], 1020, 2000); //RIGHT
+   motor[0] = rcCommand[THROTTLE];
+    //if (passthroughMode) {// use raw stick values to drive output 
+    // follow aux1 as being three way switch **NOTE: better to implement via check boxes in GUI 
+    if (rcData[AUX1]<1300) { // passthrough
+       servo[1]  = constrain(WING_LEFT_MID  + PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC), WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
+       servo[2]  = constrain(WING_RIGHT_MID + PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC), WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+    } else { // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration
+       servo[1]  = constrain(WING_LEFT_MID  + PITCH_DIRECTION_L * axisPID[PITCH]        + ROLL_DIRECTION_L * axisPID[ROLL], WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
+       servo[2]  = constrain(WING_RIGHT_MID + PITCH_DIRECTION_R * axisPID[PITCH]        + ROLL_DIRECTION_R * axisPID[ROLL], WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+    }
   #endif
-
   #if defined(CAMTRIG)
     if (camCycle==1) {
       if (camState == 0) {

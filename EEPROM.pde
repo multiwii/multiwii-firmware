@@ -24,9 +24,7 @@ static eep_entry_t eep_entry[] = {
 , &magZero, sizeof(magZero)
 , &accTrim, sizeof(accTrim)
 , &activate, sizeof(activate)
-#if defined(POWERMETER)
 , &powerTrigger1, sizeof(powerTrigger1)
-#endif
 };  
 #define EEBLOCK_SIZE sizeof(eep_entry)/sizeof(eep_entry_t)
 // ************************************************************************************************************
@@ -68,9 +66,7 @@ void checkFirstTime() {
   dynThrPID = 0;
   for(uint8_t i=0;i<8;i++) activate[i] = 0;
   accTrim[0] = 0; accTrim[1] = 0;
-#if defined(POWERMETER)
   powerTrigger1 = 0;
-#endif
   writeParams();
 }
 

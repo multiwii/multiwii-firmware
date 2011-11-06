@@ -98,10 +98,10 @@ void LCDprint(uint8_t i) {
   #if defined(LCD_ETPP) 
    i2c_ETPP_send_char(i);
   #else
-    LCDPIN_OFF
+    LCDPIN_OFF;
     delayMicroseconds(BITDELAY);
     for (uint8_t mask = 0x01; mask; mask <<= 1) {
-      if (i & mask) LCDPIN_ON else LCDPIN_OFF // choose bit
+      if (i & mask) {LCDPIN_ON;} else {LCDPIN_OFF;} // choose bit
       delayMicroseconds(BITDELAY);
     }
     LCDPIN_ON //switch ON digital PIN 0
@@ -127,7 +127,7 @@ void initLCD() {
   #else
     Serial.end();
     //init LCD
-    PINMODE_LCD //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
+    PINMODE_LCD; //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
   #endif
   LCDclear();
   LCDsetLine(1);
@@ -267,9 +267,9 @@ void lcd_telemetry() {
 
   switch (telemetry) { // output telemetry data, if one of four modes is set
     case 'C': // button C on Textstar LCD -> cycle time
-      strcpy(line1,"Cycle    _____us"); //uin16_t cycleTime
+      strcpy(line1,"Cycle    -----us"); //uin16_t cycleTime
       /*            0123456789.12345*/
-      strcpy(line2,"[_____, _____]us"); //uin16_t cycleTimeMax
+      strcpy(line2,"(-----, -----)us"); //uin16_t cycleTimeMax
       line1[9] = '0' + cycleTime / 10000;
       line1[10] = '0' + cycleTime / 1000 - (cycleTime/10000) * 10;
       line1[11] = '0' + cycleTime / 100  - (cycleTime/1000)  * 10;
@@ -291,7 +291,7 @@ void lcd_telemetry() {
       LCDsetLine(1);LCDprintChar(line1);
       break;
     case 'B': // button B on Textstar LCD -> Voltage, PowerSum and power alarm trigger value
-      strcpy(line1,"__._V   _____mAh"); //uint8_t vbat, intPowerMeterSum
+      strcpy(line1,"--.-V   -----mAh"); //uint8_t vbat, intPowerMeterSum
       /*            0123456789.12345*/
       //    (line2,".......  ......."); // intPowerMeterSum, intPowerTrigger1
     #ifdef VBAT
@@ -312,7 +312,7 @@ void lcd_telemetry() {
     }
     #ifdef LOG_VALUES
       // set mark, if we had i2c errors
-      if (i2c_errors_count || failsafesEvents) line1[6] = 'I';
+      if (i2c_errors_count || failsafeEvents) line1[6] = 'I';
     #endif
     LCDsetLine(1);LCDprintChar(line1);
     LCDsetLine(2); //position on line 2 of LCD
@@ -325,13 +325,15 @@ void lcd_telemetry() {
       //   pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
       if (powerTrigger1)
         LCD_BAR(8, (intPowerMeterSum/powerTrigger1 *2) ); // bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
+    #else
+      LCDprintChar("        ");
     #endif
       break;
     case 'A': // button A on Textstar LCD -> angles 
       uint16_t unit;
-      strcpy(line1,"Deg ___._  ___._");
+      strcpy(line1,"Deg ---.-  ---.-");
       /*            0123456789.12345*/
-      strcpy(line2,"___,_A max___,_A");
+      strcpy(line2,"---,-A max---,-A");
       if (angle[0] < 0 ) {
         unit = -angle[0];
         line1[3] = '-';
@@ -400,7 +402,7 @@ void lcd_telemetry() {
     void i2c_ETPP_init () {
       i2c_rep_start(0x76+0);      // ETPP i2c address: 0x3B in 7 bit form. Shift left one bit and concatenate i2c write command bit of zero = 0x76 in 8 bit form.
       i2c_write(0x00);            // ETPP command register
-      i2c_write(0x24);            // Function Set 001D0MSL D : data length for parallel interface only; M: 0 = 1x32 , 1 = 2x16; S: 0 = 1:18 multiplex drive mode, 1Ã—32 or 2Ã—16 character display, 1 = 1:9 multiplex drive mode, 1Ã—16 character display; H: 0 = basic instruction set plus standard instruction set, 1 = basic instruction set plus extended instruction set
+      i2c_write(0x24);            // Function Set 001D0MSL D : data length for parallel interface only; M: 0 = 1x32 , 1 = 2x16; S: 0 = 1:18 multiplex drive mode, 1x32 or 2x16 character display, 1 = 1:9 multiplex drive mode, 1x16 character display; H: 0 = basic instruction set plus standard instruction set, 1 = basic instruction set plus extended instruction set
       i2c_write(0x0C);            // Display on   00001DCB D : 0 = Display Off, 1 = Display On; C : 0 = Underline Cursor Off, 1 = Underline Cursor On; B : 0 = Blinking Cursor Off, 1 = Blinking Cursor On
       i2c_write(0x06);            // Cursor Move  000001IS I : 0 = DDRAM or CGRAM address decrements by 1, cursor moves to the left, 1 = DDRAM or CGRAM address increments by 1, cursor moves to the right; S : 0 = display does not shift,  1 = display does shifts
       LCDclear();         

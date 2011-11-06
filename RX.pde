@@ -20,12 +20,12 @@ volatile uint16_t rcValue[8] = {1502,1502,1502,1502,1502,1502,1502,1502}; // int
     #define SPEK_CHAN_SHIFT  3       // Assumes 11 bit frames, that is 2048 mode.
     #define SPEK_CHAN_MASK   0x07    // Assumes 11 bit frames, that is 2048 mode.
   #endif
-  volatile byte spekFrame[SPEK_FRAME_SIZE];
+  volatile uint8_t spekFrame[SPEK_FRAME_SIZE];
 #endif
 
 // Configure each rc pin for PCINT
 void configureReceiver() {
-  #if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS)
+  #if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(BTSERIAL)
     #if defined(PROMINI)
       // PCINT activated only for specific pin inside [D0-D7]  , [D2 D4 D5 D6 D7] for this multicopter
       PORTD   = (1<<2) | (1<<4) | (1<<5) | (1<<6) | (1<<7); //enable internal pull ups on the PINs of PORTD (no high impedence PINs)
@@ -50,18 +50,18 @@ void configureReceiver() {
     #endif
   #endif
   #if defined(SERIAL_SUM_PPM)
-    PPM_PIN_INTERRUPT
+    PPM_PIN_INTERRUPT;
   #endif
   #if defined (SPEKTRUM)
-    SPEK_BAUD_SET
-    SPEK_SERIAL_INTERRUPT
+    SPEK_BAUD_SET;
+    SPEK_SERIAL_INTERRUPT;
   #endif
   #if defined(SBUS)
     Serial1.begin(100000);
   #endif
 }
 
-#if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS)
+#if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(BTSERIAL)
   ISR(PCINT2_vect) { //this ISR is common to every receiver channel, it is call everytime a change state occurs on a digital pin [D2-D7]
     uint8_t mask;
     uint8_t pin;
@@ -243,8 +243,8 @@ uint16_t readRawRC(uint8_t chan) {
   #if defined(SPEKTRUM)
     static uint32_t spekChannelData[SPEK_MAX_CHANNEL];
     if (rcFrameComplete) {
-      for (byte b = 3; b < SPEK_FRAME_SIZE; b += 2) {
-        byte spekChannel = 0x0F & (spekFrame[b - 1] >> SPEK_CHAN_SHIFT);
+      for (uint8_t b = 3; b < SPEK_FRAME_SIZE; b += 2) {
+        uint8_t spekChannel = 0x0F & (spekFrame[b - 1] >> SPEK_CHAN_SHIFT);
         if (spekChannel < SPEK_MAX_CHANNEL) spekChannelData[spekChannel] = (long(spekFrame[b - 1] & SPEK_CHAN_MASK) << 8) + spekFrame[b];
       }
       rcFrameComplete = 0;
@@ -252,7 +252,7 @@ uint16_t readRawRC(uint8_t chan) {
   #endif
   SREG = oldSREG; sei();// Let's enable the interrupts
   #if defined(SPEKTRUM)
-    static byte spekRcChannelMap[SPEK_MAX_CHANNEL] = {1,2,3,0,4,5,6};
+    static uint8_t spekRcChannelMap[SPEK_MAX_CHANNEL] = {1,2,3,0,4,5,6};
     if (chan >= SPEK_MAX_CHANNEL) {
       data = 1500;
     } else {

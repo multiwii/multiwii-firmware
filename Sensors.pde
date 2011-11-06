@@ -97,7 +97,7 @@ void i2c_rep_start(uint8_t address) {
   checkStatusI2C(); // check value of TWI Status Register
 }
 
-void i2c_rep_stop(void) {
+void i2c_stop(void) {
   TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
   waitTransmissionI2C();
   checkStatusI2C();
@@ -123,11 +123,13 @@ uint8_t i2c_readNak(void) {
 }
 
 void waitTransmissionI2C() {
-  uint8_t count = 255;
-  while (count-->0 && !(TWCR & (1<<TWINT)) );
-  if (count<2) { //we are in a blocking state => we don't insist
-    TWCR = 0;  //and we force a reset on TWINT register
-    neutralizeTime = micros(); //we take a timestamp here to neutralize the value during a short delay after the hard reset
+  uint16_t count = 10000;
+  while (!(TWCR & (1<<TWINT))) {
+    count--;
+    if (count==0) { //we are in a blocking state => we don't insist
+      TWCR = 0;  //and we force a reset on TWINT register
+      neutralizeTime = micros(); //we take a timestamp here to neutralize the value during a short delay after the hard reset
+    }
   }
 }
 
@@ -645,7 +647,7 @@ void ACC_getADC() {
 
 // ************************************************************************
 // LIS3LV02 I2C Accelerometer
-//contribution from adver (http://wbb.multiwii.com/viewtopic.php?f=8&t=451)
+//contribution from adver (http://multiwii.com/forum/viewtopic.php?f=8&t=451)
 // ************************************************************************
 #if defined(LIS3LV02)
 #define LIS3A  0x3A // I2C adress: 0x3A (8bit)
@@ -666,7 +668,36 @@ void i2c_ACC_getADC(){
 }
 #endif
 
+// ************************************************************************************************************
+// I2C Accelerometer LSM303DLx
+// contribution from wektorx (http://www.multiwii.com/forum/viewtopic.php?f=8&t=863)
+// ************************************************************************************************************
+#if defined(LSM303DLx_ACC)
+void ACC_init () {
+  delay(10);
+  i2c_rep_start(0x30+0);      
+  i2c_write(0x20);            
+  i2c_write(0x27);            
+  i2c_rep_start(0x30+0);     
+  i2c_write(0x23);            
+  i2c_write(0x30);            
+  i2c_rep_start(0x30+0);      
+  i2c_write(0x21);            
+  i2c_write(0x00);            
 
+  acc_1G = 256;
+}
+
+  void ACC_getADC () {
+  TWBR = ((16000000L / 400000L) - 16) / 2;
+  i2c_getSixRawADC(0x30,0xA8);
+
+  ACC_ORIENTATION( - ((rawADC[3]<<8) | rawADC[2])/16 ,
+                     ((rawADC[1]<<8) | rawADC[0])/16 ,
+                     ((rawADC[5]<<8) | rawADC[4])/16 );
+  ACC_Common();
+}
+#endif
 
 // ************************************************************************************************************
 // ADC ACC
@@ -769,7 +800,7 @@ void Mag_getADC() {
   magADC[YAW]   -= magZero[YAW];
   if (tCal != 0) {
     if ((t - tCal) < 30000000) { // 30s: you have 30s to turn the multi in all directions
-      LEDPIN_SWITCH
+      LEDPIN_TOGGLE;
       for(axis=0;axis<3;axis++) {
         if (magADC[axis] < magZeroTempMin[axis]) magZeroTempMin[axis] = magADC[axis];
         if (magADC[axis] > magZeroTempMax[axis]) magZeroTempMax[axis] = magADC[axis];
@@ -831,7 +862,6 @@ void Device_Mag_getADC() {
   i2c_writeReg(0x18,0x0a,0x01);
 }
 #endif
-
 
 #if !GYRO 
 // ************************************************************************************************************
