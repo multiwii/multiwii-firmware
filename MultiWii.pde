@@ -1,7 +1,7 @@
 /*
 MultiWiiCopter by Alexandre Dubus
 www.multiwii.com
-November  2011     V1.9
+November  2011     V1.dev
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -110,7 +110,7 @@ static int16_t gyroZero[3] = {0,0,0};
 static int16_t accZero[3]  = {0,0,0};
 static int16_t magZero[3]  = {0,0,0};
 static int16_t angle[2]    = {0,0};  // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
-static int8_t  smallAngle25;
+static int8_t  smallAngle25 = 1;
 
 // *************************
 // motor and servo functions

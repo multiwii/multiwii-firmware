@@ -123,12 +123,13 @@ uint8_t i2c_readNak(void) {
 }
 
 void waitTransmissionI2C() {
-  uint16_t count = 10000;
+  uint16_t count = 255;
   while (!(TWCR & (1<<TWINT))) {
     count--;
     if (count==0) { //we are in a blocking state => we don't insist
       TWCR = 0;  //and we force a reset on TWINT register
       neutralizeTime = micros(); //we take a timestamp here to neutralize the value during a short delay after the hard reset
+      break;
     }
   }
 }
