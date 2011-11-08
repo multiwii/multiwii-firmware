@@ -881,6 +881,7 @@ void WMP_init(uint8_t d) {
     // We need to set acc_1G for the Nunchuk beforehand; It's used in WMP_getRawADC() and ACC_Common()
     // If a different accelerometer is used, it will be overwritten by its ACC_init() later.
     acc_1G = 200;
+    acc_25deg = acc_1G * 0.423;
     uint8_t numberAccRead = 0;
     // Read from WMP 100 times, this should return alternating WMP and Nunchuk data
     for(uint8_t i=0;i<100;i++) {

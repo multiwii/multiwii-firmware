@@ -5,7 +5,7 @@ void computeIMU () {
   int16_t gyroADCp[3];
   int16_t gyroADCinter[3];
   static int16_t lastAccADC[3] = {0,0,0};
-  uint32_t timeInterleave = 0;
+  static uint32_t timeInterleave = 0;
   static int16_t gyroYawSmooth = 0;
 
   //we separate the 2 situations because reading gyro values with a gyro only setup can be acchieved at a higher rate
