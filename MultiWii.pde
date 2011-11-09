@@ -1,7 +1,7 @@
 /*
 MultiWiiCopter by Alexandre Dubus
 www.multiwii.com
-October  2011     V1.dev
+November  2011     V1.dev
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -110,7 +110,7 @@ static int16_t gyroZero[3] = {0,0,0};
 static int16_t accZero[3]  = {0,0,0};
 static int16_t magZero[3]  = {0,0,0};
 static int16_t angle[2]    = {0,0};  // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
-static int8_t  smallAngle18;
+static int8_t  smallAngle25 = 1;
 
 // *************************
 // motor and servo functions
@@ -133,8 +133,10 @@ void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
   uint8_t i,r;
   for (r=0;r<repeat;r++) {
     for(i=0;i<num;i++) {
-      LEDPIN_SWITCH //switch LEDPIN state
-      BUZZERPIN_ON delay(wait); BUZZERPIN_OFF
+      LEDPIN_TOGGLE; //switch LEDPIN state
+      BUZZERPIN_ON;
+      delay(wait);
+      BUZZERPIN_OFF;
     }
     delay(60);
   }
@@ -223,30 +225,34 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     else                           buzzerFreq = 4;
     if (buzzerFreq) {
       if (buzzerState && (currentTime > buzzerTime + 250000) ) {
-        buzzerState = 0;BUZZERPIN_OFF;buzzerTime = currentTime;
+        buzzerState = 0;
+        BUZZERPIN_OFF;
+        buzzerTime = currentTime;
       } else if ( !buzzerState && (currentTime > (buzzerTime + (2000000>>buzzerFreq))) ) {
-        buzzerState = 1;BUZZERPIN_ON;buzzerTime = currentTime;
+        buzzerState = 1;
+        BUZZERPIN_ON;
+        buzzerTime = currentTime;
       }
     }
   #endif
 
   if ( (calibratingA>0 && (ACC || nunchuk) ) || (calibratingG>0) ) {  // Calibration phasis
-    LEDPIN_SWITCH
+    LEDPIN_TOGGLE;
   } else {
-    if (calibratedACC == 1) {LEDPIN_OFF}
-    if (armed) {LEDPIN_ON}
+    if (calibratedACC == 1) {LEDPIN_OFF;}
+    if (armed) {LEDPIN_ON;}
   }
 
-  if (abs(angle[ROLL])>180 || abs(angle[PITCH])>180) smallAngle18 = 0; else smallAngle18 = 1; //more than 18 deg detection
+
   if ( currentTime > calibratedAccTime ) {
-    if (smallAngle18 == 0) {
+    if (smallAngle25 == 0) {
       calibratedACC = 0; //the multi uses ACC and is not calibrated or is too much inclinated
-      LEDPIN_SWITCH
+      LEDPIN_TOGGLE;
       calibratedAccTime = currentTime + 500000;
     } else
       calibratedACC = 1;
   }
-  if (micros() > serialTime + 20000) { // 50Hz
+  if (currentTime > serialTime) { // 50Hz
     serialCom();
     serialTime = currentTime + 20000;
   }
@@ -269,11 +275,11 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
 
 void setup() {
   Serial.begin(SERIAL_COM_SPEED);
-  LEDPIN_PINMODE
-  POWERPIN_PINMODE
-  BUZZERPIN_PINMODE
-  STABLEPIN_PINMODE
-  POWERPIN_OFF  
+  LEDPIN_PINMODE;
+  POWERPIN_PINMODE;
+  BUZZERPIN_PINMODE;
+  STABLEPIN_PINMODE;
+  POWERPIN_OFF;
   initOutput();
   readEEPROM();
   checkFirstTime();
@@ -315,28 +321,15 @@ void loop () {
   static int16_t errorAltitudeI = 0;
   int16_t AltPID = 0;
   static int16_t lastVelError = 0;
-  static int32_t AltHold = 0.0;
-  
-  #if defined(ESC_CALIBRATE)
-    blinkLED(20,30,1);
-    while (true) {  
-      if (currentTime > (rcTime + 20000) ) { // 50Hz
-        rcTime = currentTime; 
-        computeRC();
-        rcData[THROTTLE] = constrain(rcData[THROTTLE],900,MAXTHROTTLE);
-        for (uint8_t i =0;i<NUMBER_MOTOR;i++) motor[i]=rcData[THROTTLE];
-        writeMotors();
-      }
-      currentTime = micros();
-    }
-  #endif
+  static int32_t AltHold;
+ 
   #if defined(SPEKTRUM)
     if (rcFrameComplete) computeRC();
   #endif
   
   if (currentTime > rcTime ) { // 50Hz
     rcTime = currentTime + 20000;
-    #if !(defined(SPEKTRUM) || (BTSERIAL))
+    #if !(defined(SPEKTRUM) || defined(BTSERIAL))
       computeRC();
     #endif
     // Failsafe routine - added by MIS
@@ -467,7 +460,7 @@ void loop () {
       int16_t dif = heading - magHold;
       if (dif <= - 180) dif += 360;
       if (dif >= + 180) dif -= 360;
-      if ( smallAngle18 ) rcCommand[YAW] -= dif*P8[PIDMAG]/30;  //18 deg
+      if ( smallAngle25 ) rcCommand[YAW] -= dif*P8[PIDMAG]/30;  //18 deg
     } else magHold = heading;
   }
 

@@ -98,10 +98,10 @@ void LCDprint(uint8_t i) {
   #if defined(LCD_ETPP) 
    i2c_ETPP_send_char(i);
   #else
-    LCDPIN_OFF
+    LCDPIN_OFF;
     delayMicroseconds(BITDELAY);
     for (uint8_t mask = 0x01; mask; mask <<= 1) {
-      if (i & mask) LCDPIN_ON else LCDPIN_OFF // choose bit
+      if (i & mask) {LCDPIN_ON;} else {LCDPIN_OFF;} // choose bit
       delayMicroseconds(BITDELAY);
     }
     LCDPIN_ON //switch ON digital PIN 0
@@ -127,11 +127,11 @@ void initLCD() {
   #else
     Serial.end();
     //init LCD
-    PINMODE_LCD //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
+    PINMODE_LCD; //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
   #endif
   LCDclear();
+  LCDsetLine(1);
   LCDprintChar("MultiWii Config");
-  LCDsetLine(2);LCDprintChar("for all params");
   delay(2500);
   LCDclear();
 }
@@ -205,8 +205,8 @@ void configurationLoop() {
   while (LCD == 1) {
     if (refreshLCD) {
       blinkLED(10,20,1);
-      strcpy(line2,"                ");
       strcpy(line1,"                ");
+      strcpy(line2,"                ");
       i=0; char* point = lcd_param[p].paramText; while (*point) line1[i++] = *point++;
       lcd_param[p].def->type->fmt(lcd_param[p].var, lcd_param[p].def->multiplier, lcd_param[p].def->decimal);
       LCDsetLine(1);LCDprintChar(line1); //refresh line 1 of LCD
@@ -237,9 +237,9 @@ void configurationLoop() {
   blinkLED(20,30,1);
   
   LCDclear();
-  if (LCD == 0) LCDprintChar("Saving Settings.."); else LCDprintChar("skipping Save.");
+  if (LCD == 0) LCDprintChar("Saving Settings"); else LCDprintChar("skipping Save");
   if (LCD == 0) writeParams();
-  LCDsetLine(2);LCDprintChar("..done! Exit.");
+  LCDsetLine(2);LCDprintChar("exit config");
   #if !defined(LCD_TEXTSTAR) && !defined(LCD_ETPP)
     Serial.begin(SERIAL_COM_SPEED);
   #endif
@@ -333,7 +333,7 @@ void lcd_telemetry() {
       uint16_t unit;
       strcpy(line1,"Deg ---.-  ---.-");
       /*            0123456789.12345*/
-      strcpy(line2,"---,-A max---,-A"); //uin16_t cycleTimeMax
+      strcpy(line2,"---,-A max---,-A");
       if (angle[0] < 0 ) {
         unit = -angle[0];
         line1[3] = '-';
@@ -455,7 +455,7 @@ void LCDsetLine(byte line) {  // Line = 1 or 2
   #if defined(LCD_ETPP)
     i2c_ETPP_set_cursor(0,line-1);
   #else
-    if (line=1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
+    if (line==1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
   #endif
 }
 

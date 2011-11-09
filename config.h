@@ -14,7 +14,7 @@
 //#define BI
 //#define TRI
 //#define QUADP
-//#define QUADX
+#define QUADX
 //#define Y4
 //#define Y6
 //#define HEX6
@@ -22,7 +22,7 @@
 //#define OCTOX8
 //#define OCTOFLATP
 //#define OCTOFLATX
-#define FLYING_WING //experimental
+//#define FLYING_WING //experimental
 
 #define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
 //#define YAW_DIRECTION -1
@@ -30,11 +30,9 @@
 #define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
 //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
 
-#define PROMINI  //Arduino type
-//#define MEGA
-
 //enable internal I2C pull ups
 #define INTERNAL_I2C_PULLUPS
+
 
 //****** advanced users settings   *************
 
@@ -52,6 +50,10 @@
 */
 //#define RCAUXPIN8
 //#define RCAUXPIN12
+
+/* This option is here if you want to use the old level code from the verison 1.7
+   It's just to have some feedback. This will be removed in the future */
+//#define STAB_OLD_17
 
 /* GPS
    only available on MEGA boards (this might be possible on 328 based boards in the future)
@@ -84,13 +86,17 @@
 //#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
 //#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
 //#define PIPO            // 9DOF board from erazz
-//#define QUADRINO        // full FC board 9DOF+baro board from witespy                       <- confirmed by Alex
+//#define QUADRINO        // full FC board 9DOF+baro board from witespy  with BMP085 baro     <- confirmed by Alex
+//#define QUADRINO_ZOOM   // full FC board 9DOF+baro board from witespy  second edition       <- confirmed by Alex
 //#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU
 //#define AEROQUADSHIELDv2
 //#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). requires 3.3V power.
 //#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
 //#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
+//#define MINIWII         // Jussi's MiniWii Flight Controller
 //#define CITRUSv1_0      // CITRUSv1 from qcrc.ca
+//#define DROTEK_IMU10DOF
+
 
 //if you use independent sensors
 //leave it commented it you already checked a specific board above
@@ -104,6 +110,7 @@
 //#define BMA180
 //#define NUNCHACK  // if you want to use the nunckuk as a standalone I2C ACC without WMP
 //#define LIS3LV02
+//#define LSM303DLx_ACC
 
 /* I2C barometer */
 //#define BMP085
@@ -145,10 +152,10 @@
      NOTE: Because there is only one serial port on the Pro Mini, using a Spektrum Satellite implies you CANNOT use the PC based configuration tool. Further, you cannot use on-aircraft serial LCD as the baud rates are incompatible. You can configure by one of two methods:
        1) Coming soon: Use an on-aircraft Eagle Tree LCD for setting gains, reading sensors, etc. 
        2) Available now: Comment out the Spektrum definition, upload, plug in PC, configure; uncomment the Spektrum definition, upload, plug in RX, and fly.  Repeat as required to configure. 
-   (Contribution by Danal)
-*/
+   (Contribution by Danal) */
 //#define SPEKTRUM 1024
 //#define SPEKTRUM 2048
+
 
 /* EXPERIMENTAL !!
    contribution from Captain IxI and Zaggo
@@ -171,14 +178,10 @@
 #define FAILSAVE_THR0TTLE  (MINTHROTTLE + 200)    // Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
 
 /* EXPERIMENTAL !!
-   contribution from Luis Correia
-   see http://www.multiwii.com/forum/viewtopic.php?f=18&t=828 and
-   http://arduinopt.info/w/
-   
-   It uses a Bluetooth Serial module as the input for controlling the device via an Android application
-   As with the SPEKTRUM option, is not possible to use the configuration tool on a mini or promini.
-      
-   */
+  contribution from Luis Correia
+  see http://www.multiwii.com/forum/viewtopic.php?f=18&t=828
+  It uses a Bluetooth Serial module as the input for controlling the device via an Android application
+  As with the SPEKTRUM option, is not possible to use the configuration tool on a mini or promini. */
 //#define BTSERIAL
 
 /* The following lines apply only for a pitch/roll tilt stabilization system
@@ -203,7 +206,7 @@
    after the resistor divisor we should get [0V;5V]->[0;1023] on analog V_BATPIN
    with R1=33k and R2=51k
    vbat = [0;1023]*16/VBATSCALE */
-//#define VBAT              // comment this line to suppress the vbat code
+#define VBAT              // comment this line to suppress the vbat code
 #define VBATSCALE     131 // change this value if readed Battery voltage is different than real voltage
 #define VBATLEVEL1_3S 107 // 10,7V
 #define VBATLEVEL2_3S 103 // 10,3V
@@ -241,11 +244,11 @@
    Pleae note this display needs a full 4 wire connection to (+5V, Gnd, RXD, TXD )
    Configure display as follows: 115K baud, and TTL levels for RXD and TXD, terminal mode
    NO rx / tx line reconfiguration, use natural pins */
-#define LCD_TEXTSTAR
+//#define LCD_TEXTSTAR
 
 /* motors will not spin when the throttle command is in low position
    this is an alternative method to stop immediately the motors */
-#define MOTOR_STOP
+//#define MOTOR_STOP
 
 /* some radios have not a neutral point centered on 1500. can be changed here */
 #define MIDRC 1500
@@ -263,7 +266,6 @@
 #define TRI_YAW_CONSTRAINT_MAX 2000
 #define TRI_YAW_MIDDLE 1500
 
-
 /* Flying Wing: you can change change servo orientation and servo min/max values here */
 /* valid for all flight modes, even passThrough mode */
 /* need to setup servo directions here; no need to swap servos amongst channels at rx */ 
@@ -273,11 +275,10 @@
 #define ROLL_DIRECTION_R 1  // right servo - roll orientation  (same sign as ROLL_DIRECTION_L, if servos are mounted in mirrored orientation)
 #define WING_LEFT_MID  1500 // left servo center pos. - use this for trim
 #define WING_RIGHT_MID 1500 // right servo center pos. - use this for trim
-#define WING_LEFT_MIN  1020 // limit servo travel range
-#define WING_LEFT_MAX  1700 // limit servo travel range (2000-300)
-#define WING_RIGHT_MIN 1320 // limit servo travel range (1020+300)
-#define WING_RIGHT_MAX 2000 // limit servo travel range
-
+#define WING_LEFT_MIN  1020 // limit servo travel range must be inside [1020;2000]
+#define WING_LEFT_MAX  2000 // limit servo travel range must be inside [1020;2000]
+#define WING_RIGHT_MIN 1020 // limit servo travel range must be inside [1020;2000]
+#define WING_RIGHT_MAX 2000 // limit servo travel range must be inside [1020;2000]
 
 /* enable monitoring of the power consumption from battery (think of mAh) */
 /* allows to set alarm value in GUI or via LCD */
@@ -329,7 +330,7 @@
 /* The active page on the LCD does get updated automatically */
 /* Easy to use with Terminal application or Textstar LCD - the 4 buttons are preconfigured to send 'A', 'B', 'C', 'D' */
 /* The value represents the refresh interval in cpu time (micro seconds) */
-#define LCD_TELEMETRY 100011
+//#define LCD_TELEMETRY 100011
 /* to enable automatic hopping between 4 telemetry pages uncomment this. */
 /* This may be useful if your LCD has no buttons or the sending is broken */
 /* hopping is activated and deactivated in unarmed mode with throttle=low & roll=left & pitch=forward */
@@ -342,7 +343,7 @@
 
 /* to log values like max loop time and others to come */
 /* logging values are visible via LCD config */
-#define LOG_VALUES
+//#define LOG_VALUES
  
 //****** end of advanced users settings *************
 
