@@ -254,7 +254,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   }
   if (currentTime > serialTime) { // 50Hz
     serialCom();
-    serialTime = currentTime + 20000;
+    serialTime = currentTime + 15000;
   }
   #ifdef LCD_TELEMETRY_AUTO
     if ( (telemetry_auto) && (micros() > telemetryAutoTime + LCD_TELEMETRY_AUTO) ) { // every 2 seconds

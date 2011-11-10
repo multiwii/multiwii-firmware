@@ -35,15 +35,23 @@ void serialCom() {
 
   if ((!tx_busy) && Serial.available()) {
     switch (Serial.read()) {
-    #ifdef BTSERIAL
+#ifdef BTSERIAL
     case 'K': //receive RC data from Bluetooth Serial adapter as a remote
       rcData[THROTTLE] = (Serial.read() * 4) + 1000;
-      rcData[ROLL]     = (Serial.read() * 4) + 1000;
-      rcData[PITCH]    = (Serial.read() * 4) + 1000;
-      rcData[YAW]      = (Serial.read() * 4) + 1000;
-      rcData[AUX1]     = (Serial.read() * 4) + 1000;
       break;
-    #endif
+    case 'J': //receive RC data from Bluetooth Serial adapter as a remote
+      rcData[ROLL] = (Serial.read() * 4) + 1000;
+      break;
+    case 'H': //receive RC data from Bluetooth Serial adapter as a remote
+      rcData[PITCH] = (Serial.read() * 4) + 1000;
+      break;
+    case 'G': //receive RC data from Bluetooth Serial adapter as a remote
+      rcData[YAW] = (Serial.read() * 4) + 1000;
+      break;
+    case 'F': //receive RC data from Bluetooth Serial adapter as a remote
+      rcData[AUX1] = (Serial.read() * 4) + 1000;
+      break;
+#endif
     #ifdef LCD_TELEMETRY
     case 'A': // button A press
       if (telemetry=='A') telemetry = 0; else { telemetry = 'A'; LCDprint(12); /* clear screen */ }

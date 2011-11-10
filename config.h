@@ -11,10 +11,10 @@
 
 /* The type of multicopter */
 //#define GIMBAL
-//#define BI
+#define BI
 //#define TRI
 //#define QUADP
-#define QUADX
+//#define QUADX
 //#define Y4
 //#define Y6
 //#define HEX6
@@ -182,7 +182,7 @@
   see http://www.multiwii.com/forum/viewtopic.php?f=18&t=828
   It uses a Bluetooth Serial module as the input for controlling the device via an Android application
   As with the SPEKTRUM option, is not possible to use the configuration tool on a mini or promini. */
-//#define BTSERIAL
+#define BTSERIAL
 
 /* The following lines apply only for a pitch/roll tilt stabilization system
    On promini board, it is not compatible with config with 6 motors or more
