@@ -35,23 +35,15 @@ void serialCom() {
 
   if ((!tx_busy) && Serial.available()) {
     switch (Serial.read()) {
-#ifdef BTSERIAL
+    #ifdef BTSERIAL
     case 'K': //receive RC data from Bluetooth Serial adapter as a remote
       rcData[THROTTLE] = (Serial.read() * 4) + 1000;
+      rcData[ROLL]     = (Serial.read() * 4) + 1000;
+      rcData[PITCH]    = (Serial.read() * 4) + 1000;
+      rcData[YAW]      = (Serial.read() * 4) + 1000;
+      rcData[AUX1]     = (Serial.read() * 4) + 1000;
       break;
-    case 'J': //receive RC data from Bluetooth Serial adapter as a remote
-      rcData[ROLL] = (Serial.read() * 4) + 1000;
-      break;
-    case 'H': //receive RC data from Bluetooth Serial adapter as a remote
-      rcData[PITCH] = (Serial.read() * 4) + 1000;
-      break;
-    case 'G': //receive RC data from Bluetooth Serial adapter as a remote
-      rcData[YAW] = (Serial.read() * 4) + 1000;
-      break;
-    case 'F': //receive RC data from Bluetooth Serial adapter as a remote
-      rcData[AUX1] = (Serial.read() * 4) + 1000;
-      break;
-#endif
+    #endif
     #ifdef LCD_TELEMETRY
     case 'A': // button A press
       if (telemetry=='A') telemetry = 0; else { telemetry = 'A'; LCDprint(12); /* clear screen */ }
@@ -112,10 +104,10 @@ void serialCom() {
         serialize16(0);serialize16(0);
       #endif
       serialize8(vbat);
-      serialize16(BaroAlt/10); // 4 variables are here for general monitoring purpose
-      serialize16(0);              // debug2
-      serialize16(0);              // debug3
-      serialize16(0);              // debug4
+      serialize16(BaroAlt/10);        // 4 variables are here for general monitoring purpose
+      serialize16(i2c_errors_count);  // debug2
+      serialize16(0);                 // debug3
+      serialize16(0);                 // debug4
       serialize8('M');
       UartSendData(); // Serial.write(s,point);
       break;

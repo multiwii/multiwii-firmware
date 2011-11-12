@@ -70,7 +70,7 @@ static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
 static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
 static uint16_t powerMax = 0;           // highest ever current
 static uint16_t powerAvg = 0;           // last known current
-static uint8_t i2c_errors_count = 0;    // count of wmp/nk resets
+static int16_t  i2c_errors_count = 0;
 
 // **********************
 // power meter
@@ -154,11 +154,10 @@ static int16_t  GPS_directionToHome = 0;
 static uint8_t  GPS_update = 0;
 
 void annexCode() { //this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
-  static uint32_t serialTime;
   static uint32_t buzzerTime,calibratedAccTime,telemetryTime,telemetryAutoTime,psensorTime;
   static uint8_t  buzzerFreq;         //delay between buzzer ring
   uint8_t axis,prop1,prop2;
-  uint16_t pMeterRaw, powerValue;                //used for current reading
+  uint16_t pMeterRaw, powerValue;     //used for current reading
 
   //PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
   if      (rcData[THROTTLE]<1500) prop2 = 100;
@@ -252,10 +251,9 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     } else
       calibratedACC = 1;
   }
-  if (currentTime > serialTime) { // 50Hz
-    serialCom();
-    serialTime = currentTime + 15000;
-  }
+
+  serialCom();
+
   #ifdef LCD_TELEMETRY_AUTO
     if ( (telemetry_auto) && (micros() > telemetryAutoTime + LCD_TELEMETRY_AUTO) ) { // every 2 seconds
       telemetry++;
