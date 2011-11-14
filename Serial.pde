@@ -104,10 +104,10 @@ void serialCom() {
         serialize16(0);serialize16(0);
       #endif
       serialize8(vbat);
-      serialize16(BaroAlt/10); // 4 variables are here for general monitoring purpose
-      serialize16(0);              // debug2
-      serialize16(0);              // debug3
-      serialize16(0);              // debug4
+      serialize16(BaroAlt/10);        // 4 variables are here for general monitoring purpose
+      serialize16(i2c_errors_count);  // debug2
+      serialize16(0);                 // debug3
+      serialize16(0);                 // debug4
       serialize8('M');
       UartSendData(); // Serial.write(s,point);
       break;
