@@ -89,7 +89,7 @@ void serialCom() {
       serialize8(rollPitchRate);
       serialize8(yawRate);
       serialize8(dynThrPID);
-      for(i=0;i<8;i++) serialize8(activate[i]);
+      for(i=0;i<CHECKBOXITEMS;i++) serialize8(activate[i]);
       serialize16(GPS_distanceToHome);
       serialize16(GPS_directionToHome);
       serialize8(GPS_numSat);
@@ -106,8 +106,8 @@ void serialCom() {
       serialize8(vbat);
       serialize16(BaroAlt/10);        // 4 variables are here for general monitoring purpose
       serialize16(i2c_errors_count);  // debug2
-      serialize16(0);                 // debug3
-      serialize16(armed);                 // debug4
+      serialize16(0);      // debug3
+      serialize16(armed);             // debug4
       serialize8('M');
       UartSendData(); // Serial.write(s,point);
       break;
@@ -136,7 +136,7 @@ void serialCom() {
       rcRate8 = Serial.read(); rcExpo8 = Serial.read(); //20
       rollPitchRate = Serial.read(); yawRate = Serial.read(); //22
       dynThrPID = Serial.read(); //23
-      for(i=0;i<8;i++) activate[i] = Serial.read(); //31
+      for(i=0;i<CHECKBOXITEMS;i++) activate[i] = Serial.read(); 
      #if defined(POWERMETER)
       powerTrigger1 = (Serial.read() + 256* Serial.read() ) / PLEVELSCALE; // we rely on writeParams() to compute corresponding pAlarm value
      #else

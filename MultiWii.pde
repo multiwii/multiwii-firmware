@@ -35,6 +35,8 @@ November  2011     V1.dev
 #define BOXARM      5
 #define BOXGPSHOME  6
 #define BOXGPSHOLD  7
+#define BOXPASSTHRU 8
+#define CHECKBOXITEMS 9
 
 static uint32_t currentTime = 0;
 static uint16_t previousTime = 0;
@@ -51,6 +53,7 @@ static uint8_t  magMode = 0;        // if compass heading hold is a activated
 static uint8_t  baroMode = 0;       // if altitude hold is activated
 static uint8_t  GPSModeHome = 0;    // if GPS RTH is activated
 static uint8_t  GPSModeHold = 0;    // if GPS PH is activated
+static uint8_t  passThruMode = 0;   // if passthrough mode is activated
 static int16_t  gyroADC[3],accADC[3],magADC[3];
 static int16_t  accSmooth[3];       // projection of smoothed and normalized gravitation force vector on x/y/z axis, as measured by accelerometer
 static int16_t  accTrim[2] = {0, 0};
@@ -127,7 +130,7 @@ static uint8_t dynP8[3], dynI8[3], dynD8[3];
 static uint8_t rollPitchRate;
 static uint8_t yawRate;
 static uint8_t dynThrPID;
-static uint8_t activate[8];
+static uint8_t activate[CHECKBOXITEMS];
 
 void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
   uint8_t i,r;
@@ -443,6 +446,8 @@ void loop () {
       if (rcOptions & activate[BOXGPSHOLD]) {GPSModeHold = 1;}
       else GPSModeHold = 0;
     #endif
+    if (rcOptions & activate[BOXPASSTHRU]) {passThruMode = 1;}
+    else passThruMode = 0;
   }
   if (MAG)  Mag_getADC();
   if (BARO) Baro_update();

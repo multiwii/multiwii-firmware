@@ -363,9 +363,7 @@ void mixTable() {
   #endif
   #ifdef FLYING_WING
    motor[0] = rcCommand[THROTTLE];
-    //if (passthroughMode) {// use raw stick values to drive output 
-    // follow aux1 as being three way switch **NOTE: better to implement via check boxes in GUI 
-    if (rcData[AUX1]<1300) { // passthrough
+    if (passThruMode) {// use raw stick values to drive output 
        servo[1]  = constrain(WING_LEFT_MID  + PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC), WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
        servo[2]  = constrain(WING_RIGHT_MID + PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC), WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
     } else { // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration

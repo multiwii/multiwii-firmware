@@ -64,7 +64,7 @@ void checkFirstTime() {
   rollPitchRate = 0;
   yawRate = 0;
   dynThrPID = 0;
-  for(uint8_t i=0;i<8;i++) activate[i] = 0;
+  for(uint8_t i=0;i<CHECKBOXITEMS;i++) activate[i] = 0;
   accTrim[0] = 0; accTrim[1] = 0;
   powerTrigger1 = 0;
   writeParams();
