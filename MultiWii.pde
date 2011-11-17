@@ -121,6 +121,8 @@ static int8_t  smallAngle25 = 1;
 static int16_t axisPID[3];
 static int16_t motor[8];
 static int16_t servo[4] = {1500,1500,1500,1500};
+static uint16_t wing_left_mid  = WING_LEFT_MID; 
+static uint16_t wing_right_mid = WING_RIGHT_MID; 
 
 // **********************
 // EEPROM & LCD functions

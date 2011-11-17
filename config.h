@@ -273,8 +273,8 @@
 #define PITCH_DIRECTION_R -1  // right servo - pitch orientation (opposite sign to PITCH_DIRECTION_L, if servos are mounted in mirrored orientation)
 #define ROLL_DIRECTION_L 1 // left servo - roll orientation
 #define ROLL_DIRECTION_R 1  // right servo - roll orientation  (same sign as ROLL_DIRECTION_L, if servos are mounted in mirrored orientation)
-#define WING_LEFT_MID  1500 // left servo center pos. - use this for trim
-#define WING_RIGHT_MID 1500 // right servo center pos. - use this for trim
+#define WING_LEFT_MID  1500 // left servo center pos. - use this for initial trim; later trim midpoint via LCD
+#define WING_RIGHT_MID 1500 // right servo center pos. - use this for initial trim; later trim midpoint via LCD
 #define WING_LEFT_MIN  1020 // limit servo travel range must be inside [1020;2000]
 #define WING_LEFT_MAX  2000 // limit servo travel range must be inside [1020;2000]
 #define WING_RIGHT_MIN 1020 // limit servo travel range must be inside [1020;2000]

@@ -25,6 +25,10 @@ static eep_entry_t eep_entry[] = {
 , &accTrim, sizeof(accTrim)
 , &activate, sizeof(activate)
 , &powerTrigger1, sizeof(powerTrigger1)
+#ifdef FLYING_WING
+, &wing_left_mid,  sizeof(wing_left_mid)
+, &wing_right_mid, sizeof(wing_right_mid)
+#endif
 };  
 #define EEBLOCK_SIZE sizeof(eep_entry)/sizeof(eep_entry_t)
 // ************************************************************************************************************
@@ -67,6 +71,10 @@ void checkFirstTime() {
   for(uint8_t i=0;i<CHECKBOXITEMS;i++) activate[i] = 0;
   accTrim[0] = 0; accTrim[1] = 0;
   powerTrigger1 = 0;
+#ifdef FLYING_WING
+  wing_left_mid  = WING_LEFT_MID; 
+  wing_right_mid = WING_RIGHT_MID; 
+#endif
   writeParams();
 }
 

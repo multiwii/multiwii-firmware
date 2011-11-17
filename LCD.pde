@@ -44,6 +44,7 @@ static lcd_param_def_t __PT  = {&LTU8,  0, 1, 1};
 static lcd_param_def_t __VB  = {&LTU8,  1, 1, 0};
 static lcd_param_def_t __L   = {&LTU8,  0, 1, 0};
 static lcd_param_def_t __FS  = {&LTU8,  1, 1, 0};
+static lcd_param_def_t __SE  = {&LTU16,  0, 1, 10};
 // Parameters
 static lcd_param_t lcd_param[] = {
   {"PITCH&ROLL P",    &P8[ROLL],      &__P}
@@ -79,6 +80,10 @@ static lcd_param_t lcd_param[] = {
 #endif
 #ifdef VBAT
 , {"Battery Volt",    &vbat,          &__VB} 
+#endif
+#ifdef FLYING_WING
+, {"Trim Servo1 Mid",    &wing_left_mid, &__SE} 
+, {"Trim Servo2 Mid",    &wing_right_mid,&__SE} 
 #endif
 #ifdef LOG_VALUES
 , {"Failsafe    ",    &failsafeEvents,&__FS} 
