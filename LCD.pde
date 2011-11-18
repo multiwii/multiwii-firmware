@@ -260,12 +260,12 @@ void configurationLoop() {
 #ifdef LCD_TELEMETRY
 void lcd_telemetry() {
   // LCD_BAR(n,v) : draw a bar graph - n number of chars for width, v value in % to display
-  #define LCD_BAR(n,v) {} // add your own implementation here
-  #ifdef LCD_TEXTSTAR
+  #if defined(LCD_TEXTSTAR)
     #define LCD_BAR(n,v) { LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v); }
-  #endif
-  #ifdef LCD_ETPP
-    #define LCD_BAR(n,v) LCDbarGraph(n,v);
+  #elif defined(LCD_ETPP)
+    #define LCD_BAR(n,v) {LCDbarGraph(n,v); }
+  #else
+    #define LCD_BAR(n,v) {} // add your own implementation here  
   #endif
   
   uint16_t intPowerMeterSum;   
