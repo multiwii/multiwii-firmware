@@ -24,7 +24,7 @@ typedef struct lcd_param_def_t{
 };
 
 typedef struct lcd_param_t{
-  char*  paramText;
+  char * paramText;
   void * var; 
   lcd_param_def_t * def;
 };
@@ -143,9 +143,9 @@ void initLCD() {
 
 static char line1[17],line2[17];
 
-void __u8Inc(void * var, int8_t inc) {*(uint8_t*)var += inc;};
-void __u16Inc(void * var, int8_t inc) {*(uint16_t*)var += inc;};
-void __nullInc(void * var, int8_t inc) {};
+void __u8Inc(void * var, int8_t inc) {*(uint8_t*)var += inc;}
+void __u16Inc(void * var, int8_t inc) {*(uint16_t*)var += inc;}
+void __nullInc(void * var, int8_t inc) {}
 
 void __u8Fmt(void * var, uint8_t mul, uint8_t dec) {
   uint16_t unit = *(uint8_t*)var;
@@ -271,7 +271,7 @@ void lcd_telemetry() {
   uint16_t intPowerMeterSum;   
 
   switch (telemetry) { // output telemetry data, if one of four modes is set
-    case 'C': // button C on Textstar LCD -> cycle time
+    case 3: // button C on Textstar LCD -> cycle time
       strcpy(line1,"Cycle    -----us"); //uin16_t cycleTime
       /*            0123456789.12345*/
       strcpy(line2,"(-----, -----)us"); //uin16_t cycleTimeMax
@@ -295,7 +295,7 @@ void lcd_telemetry() {
     #endif
       LCDsetLine(1);LCDprintChar(line1);
       break;
-    case 'B': // button B on Textstar LCD -> Voltage, PowerSum and power alarm trigger value
+    case 2: // button B on Textstar LCD -> Voltage, PowerSum and power alarm trigger value
       strcpy(line1,"--.-V   -----mAh"); //uint8_t vbat, intPowerMeterSum
       /*            0123456789.12345*/
       //    (line2,".......  ......."); // intPowerMeterSum, intPowerTrigger1
@@ -334,7 +334,7 @@ void lcd_telemetry() {
       LCDprintChar("        ");
     #endif
       break;
-    case 'A': // button A on Textstar LCD -> angles 
+    case 1: // button A on Textstar LCD -> angles 
       uint16_t unit;
       strcpy(line1,"Deg ---.-  ---.-");
       /*            0123456789.12345*/
@@ -372,7 +372,7 @@ void lcd_telemetry() {
       #endif
       LCDsetLine(2);LCDprintChar(line2); //refresh line 2 of LCD
       break;    
-    case 'D': // button D on Textstar LCD -> sensors
+    case 4: // button D on Textstar LCD -> sensors
     #define GYROLIMIT 30 // threshold: for larger values replace bar with dots
     #define ACCLIMIT 30 // threshold: for larger values replace bar with dots     
       LCDsetLine(1);LCDprintChar("G "); //refresh line 1 of LCD
@@ -384,15 +384,22 @@ void lcd_telemetry() {
       if (abs(accSmooth[1]) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT) } else LCDprintChar("...."); LCDprint(' ');
       if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT) } else LCDprintChar("....");
       break;
-    case 'Z': // No Z button.  Displays with auto telemetry only
-      strcpy(line1,"Failsafe -----  ");  
+    case 5: // No Z button.  Displays with auto telemetry only
+      strcpy(line1,"Failsafe   -----");  
       /*            0123456789012345   */
-      strcpy(line2,"                ");
-      line1[9] = '0' + failsafeEvents / 10000;
-      line1[10] = '0' + failsafeEvents / 1000 - (failsafeEvents/10000) * 10;
-      line1[11] = '0' + failsafeEvents / 100  - (failsafeEvents/1000)  * 10;
-      line1[12] = '0' + failsafeEvents / 10   - (failsafeEvents/100)   * 10;
-      line1[13] = '0' + failsafeEvents        - (failsafeEvents/10)    * 10;
+      strcpy(line2,"i2c errors _____");
+     #ifdef LOG_VALUES
+      line1[11] = '0' + failsafeEvents / 10000;
+      line1[12] = '0' + failsafeEvents / 1000 - (failsafeEvents/10000) * 10;
+      line1[13] = '0' + failsafeEvents / 100  - (failsafeEvents/1000)  * 10;
+      line1[14] = '0' + failsafeEvents / 10   - (failsafeEvents/100)   * 10;
+      line1[15] = '0' + failsafeEvents        - (failsafeEvents/10)    * 10;
+      line2[11] = '0' + i2c_errors_count / 10000;
+      line2[12] = '0' + i2c_errors_count / 1000 - (i2c_errors_count/10000) * 10;
+      line2[13] = '0' + i2c_errors_count / 100  - (i2c_errors_count/1000)  * 10;
+      line2[14] = '0' + i2c_errors_count / 10   - (i2c_errors_count/100)   * 10;
+      line2[15] = '0' + i2c_errors_count        - (i2c_errors_count/10)    * 10;
+     #endif
       LCDsetLine(1);LCDprintChar(line1);
       LCDsetLine(2);LCDprintChar(line2);
       break;
@@ -447,8 +454,7 @@ void LCDclear() {
   #if defined(LCD_ETPP)
     i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
     for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
-  #endif
-  #if defined(LCD_TEXTSTAR)
+  #eliff defined(LCD_TEXTSTAR)
     LCDprint(0x0c); //clear screen
   #endif
 }

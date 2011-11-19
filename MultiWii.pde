@@ -213,11 +213,11 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
     vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
 
-    if ( (vbat>VBATLEVEL1_3S) 
+    if ( ( (vbat>VBATLEVEL1_3S) 
     #if defined(POWERMETER)
                          && ( (pMeter[PMOTOR_SUM] < pAlarm) || (pAlarm == 0) )
     #endif
-                         || (NO_VBAT>vbat)                              ) // ToLuSe
+                         ) || (NO_VBAT>vbat)                              ) // ToLuSe
     {                                          //VBAT ok AND powermeter ok, buzzer off
       buzzerFreq = 0; buzzerState = 0; BUZZERPIN_OFF;
     #if defined(POWERMETER)
@@ -262,8 +262,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   #ifdef LCD_TELEMETRY_AUTO
     if ( (telemetry_auto) && (micros() > telemetryAutoTime + LCD_TELEMETRY_AUTO) ) { // every 2 seconds
       telemetry++;
-      if (telemetry == 'E') telemetry = 'Z';
-      else if ( (telemetry < 'A' ) || (telemetry > 'D' ) ) telemetry = 'A';
+      if ( (telemetry < 1 ) || (telemetry > 5 ) ) telemetry = 1;
       telemetryAutoTime = micros(); // why use micros() and not the variable currentTime ?
     }
   #endif  
@@ -401,7 +400,7 @@ void loop () {
       }
     }
    #ifdef LOG_VALUES
-    else if (armed) { // update min and max values here, so do not get cycle time of the motor arming (which is way higher than normal)
+    if (armed) { // update min and max values here, so do not get cycle time of the motor arming (which is way higher than normal)
       if (cycleTime > cycleTimeMax) cycleTimeMax = cycleTime; // remember highscore
       if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
     }

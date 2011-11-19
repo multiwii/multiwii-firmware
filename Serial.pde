@@ -46,17 +46,24 @@ void serialCom() {
     #endif
     #ifdef LCD_TELEMETRY
     case 'A': // button A press
-      if (telemetry=='A') telemetry = 0; else { telemetry = 'A'; LCDprint(12); /* clear screen */ }
+    case '1':
+      if (telemetry==1) telemetry = 0; else { telemetry = 1; LCDclear(); }
       break;    
     case 'B': // button B press
-      if (telemetry=='B') telemetry = 0; else { telemetry = 'B'; LCDprint(12); /* clear screen */ }
+    case '2':
+      if (telemetry==2) telemetry = 0; else { telemetry = 2; LCDclear(); }
       break;    
     case 'C': // button C press
-      if (telemetry=='C') telemetry = 0; else { telemetry = 'C'; LCDprint(12); /* clear screen */ }
+    case '3':
+           if (telemetry==3) telemetry = 0; else { telemetry = 3; LCDclear(); }
       break;    
     case 'D': // button D press
-      if (telemetry=='D') telemetry = 0; else { telemetry = 'D'; LCDprint(12); /* clear screen */ }
+    case '4':
+      if (telemetry==4) telemetry = 0; else { telemetry = 4; LCDclear(); }
       break;
+    case '5':
+      if (telemetry==5) telemetry = 0; else { telemetry = 5; LCDclear(); }
+      break;      
     case 'a': // button A release
     case 'b': // button B release
     case 'c': // button C release

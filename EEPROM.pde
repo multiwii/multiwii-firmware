@@ -12,7 +12,7 @@ typedef struct eep_entry_t{
 // ************************************************************************************************************
 static eep_entry_t eep_entry[] = {
   &checkNewConf, sizeof(checkNewConf)
-, &P8, sizeof(P8)
+, &P8, sizeof(P8) 
 , &I8, sizeof(I8) 
 , &D8, sizeof(D8) 
 , &rcRate8, sizeof(rcRate8)
