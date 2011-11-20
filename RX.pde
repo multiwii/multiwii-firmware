@@ -1,4 +1,4 @@
-volatile uint16_t rcValue[8] = {1502,1502,1502,1502,1502,1502,1502,1502}; // interval [1000;2000]
+volatile uint16_t rcValue[18] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
 
 #if defined(SERIAL_SUM_PPM)
   static uint8_t rcChannel[8] = {SERIAL_SUM_PPM};

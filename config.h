@@ -31,10 +31,12 @@
 //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
 
 //enable internal I2C pull ups
-#define INTERNAL_I2C_PULLUPS
+//#define INTERNAL_I2C_PULLUPS
 
 
 //****** advanced users settings   *************
+/* I2C DERobot LED RING communication */
+//#define LED_RING
 
 /* This option should be uncommented if ACC Z is accurate enough when motors are running*/
 //#define TRUSTED_ACCZ
@@ -91,7 +93,7 @@
 //#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU
 //#define AEROQUADSHIELDv2
 //#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). requires 3.3V power.
-//#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
+#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
 //#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
 //#define MINIWII         // Jussi's MiniWii Flight Controller
 //#define CITRUSv1_0      // CITRUSv1 from qcrc.ca

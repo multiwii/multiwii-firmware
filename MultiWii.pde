@@ -242,6 +242,13 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     if (armed) {LEDPIN_ON;}
   }
 
+  #if defined(LED_RING)
+    static uint32_t LEDTime;
+    if ( currentTime > LEDTime ) {
+      LEDTime = currentTime + 50000;
+      i2CLedRingState();
+    }
+  #endif
 
   if ( currentTime > calibratedAccTime ) {
     if (smallAngle25 == 0) {
@@ -385,12 +392,24 @@ void loop () {
         rcDelayCommand++;
       } else if (rcData[PITCH] > MAXCHECK) {
          accTrim[PITCH]+=2;writeParams();
+         #if defined(LED_RING)
+           blinkLedRing();
+         #endif
       } else if (rcData[PITCH] < MINCHECK) {
          accTrim[PITCH]-=2;writeParams();
+         #if defined(LED_RING)
+           blinkLedRing();
+         #endif
       } else if (rcData[ROLL] > MAXCHECK) {
          accTrim[ROLL]+=2;writeParams();
+         #if defined(LED_RING)
+           blinkLedRing();
+         #endif
       } else if (rcData[ROLL] < MINCHECK) {
          accTrim[ROLL]-=2;writeParams();
+         #if defined(LED_RING)
+           blinkLedRing();
+         #endif
       } else {
         rcDelayCommand = 0;
       }
