@@ -12,6 +12,7 @@ November  2011     V1.dev
 #include "def.h"
 #define   VERSION  19
 
+
 /*********** RC alias *****************/
 #define ROLL       0
 #define PITCH      1
@@ -36,7 +37,8 @@ November  2011     V1.dev
 #define BOXGPSHOME  6
 #define BOXGPSHOLD  7
 #define BOXPASSTHRU 8
-#define CHECKBOXITEMS 9
+#define BOXALARMON  9
+#define CHECKBOXITEMS 10
 
 static uint32_t currentTime = 0;
 static uint16_t previousTime = 0;
@@ -213,7 +215,9 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
     vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
 
-    if ( ( (vbat>VBATLEVEL1_3S) 
+    if (rcOptions & activate[BOXALARMON]) { // unconditional buzzer on via AUXn switch 
+       buzzerFreq = 7;
+    } else  if ( ( (vbat>VBATLEVEL1_3S) 
     #if defined(POWERMETER)
                          && ( (pMeter[PMOTOR_SUM] < pAlarm) || (pAlarm == 0) )
     #endif
@@ -384,8 +388,11 @@ void loop () {
       } else
         rcDelayCommand = 0;
     } else if (rcData[THROTTLE] > MAXCHECK && armed == 0) {
-      if (rcData[YAW] < MINCHECK && rcData[PITCH] < MINCHECK) {
+      if (rcData[YAW] < MINCHECK && rcData[PITCH] < MINCHECK) {  //throttle=max, yaw=left, pitch=min
         if (rcDelayCommand == 20) calibratingA=400;
+        rcDelayCommand++;
+      } else if (rcData[YAW] > MAXCHECK && rcData[PITCH] < MINCHECK) { //throttle=max, yaw=right, pitch=min  
+        if (rcDelayCommand == 20) calibratingM=1; // MAG calibration request
         rcDelayCommand++;
       } else if (rcData[PITCH] > MAXCHECK) {
          accTrim[PITCH]+=2;writeParams();

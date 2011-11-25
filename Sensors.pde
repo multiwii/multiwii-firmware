@@ -116,6 +116,7 @@ uint8_t i2c_readNak(void) {
   return r;
 }
 
+#ifdef WEG-damit
 void waitTransmissionI2C() {
   uint16_t count = 255;
   while (!(TWCR & (1<<TWINT))) {
@@ -128,7 +129,38 @@ void waitTransmissionI2C() {
     }
   }
 }
-
+#endif
+    // START OF RC-CAM DEBUG CODE.
+    // I2C Test Code: Used to help identify I2C xfr problems.
+    // If TWINT flag is not detected the buzzer will chirp and the
+    // global error counter will increment (max 1000 hits).
+    // Hint: The GUI's debug window can be used to show the error count.
+    #define I2C_WAIT_TIME 2000            // Timeout count is long enough to hear the buzzer chirp.
+    //static int16_t i2c_wait_error = -1;   // I2C error counter. Init to -1 for GUI confirmation.
+    void waitTransmissionI2C() {
+      uint16_t count = I2C_WAIT_TIME;
+      while (!(TWCR & (1<<TWINT))) {
+        count--;
+        if (count==(I2C_WAIT_TIME-200)){ // TWINT flag not detected, I2C problem!
+            BUZZERPIN_ON;                // Chirp the user.
+            if(i2c_errors_count == -1) {
+                i2c_errors_count = 1;
+            }
+            else {
+                if(i2c_errors_count<1000) i2c_errors_count++;  // Limit error count to 1000 max.
+            }
+        }
+        else if (count==0) {            // We are in a blocking state => we don't insist
+          TWCR = 0;                     // Force a reset on TWINT register
+          neutralizeTime = micros();    // We take a timestamp here to neutralize the value during a short delay after the hard reset
+          BUZZERPIN_OFF;                // Chirp is done.
+          break;                        // Abort, this xfr is bad and needs to be killed.
+        }
+      }
+    }
+    // END OF DEBUG CODE
+    
+    
 void i2c_getSixRawADC(uint8_t add, uint8_t reg) {
   i2c_rep_start(add);
   i2c_write(reg);         // Start multiple read at the reg register
