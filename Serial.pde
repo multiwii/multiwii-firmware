@@ -1,5 +1,5 @@
 static uint8_t point;
-static uint8_t s[130];
+static uint8_t s[128];
 void serialize16(int16_t a) {s[point++]  = a; s[point++]  = a>>8&0xff;}
 void serialize8(uint8_t a)  {s[point++]  = a;}
 
@@ -136,7 +136,7 @@ void serialCom() {
       UartSendData();
       break;
     case 'W': //GUI write params to eeprom @ arduino
-      while (Serial.available()<(24+CHECKBOXITEMS)) {}
+      while (Serial.available()<(26+CHECKBOXITEMS)) {}
       for(i=0;i<5;i++) {P8[i]= Serial.read(); I8[i]= Serial.read(); D8[i]= Serial.read();} //15
       P8[PIDLEVEL] = Serial.read(); I8[PIDLEVEL] = Serial.read(); //17
       P8[PIDMAG] = Serial.read(); //18
@@ -149,7 +149,10 @@ void serialCom() {
      #else
       Serial.read();Serial.read(); // so we unload the two bytes
      #endif
-      writeParams();
+      if (Serial.read() == 'w')   
+         writeParams();
+      else
+         blinkLED(20,60,10); // transmission error
       break;
     case 'S': //GUI to arduino ACC calibration request
       calibratingA=400;
