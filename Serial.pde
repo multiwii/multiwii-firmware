@@ -1,5 +1,5 @@
 static uint8_t point;
-static uint8_t s[128];
+static uint8_t s[200];
 void serialize16(int16_t a) {s[point++]  = a; s[point++]  = a>>8&0xff;}
 void serialize8(uint8_t a)  {s[point++]  = a;}
 
@@ -89,7 +89,7 @@ void serialCom() {
       serialize8(rollPitchRate);
       serialize8(yawRate);
       serialize8(dynThrPID);
-      for(i=0;i<8;i++) serialize8(activate[i]);
+      for(i=0;i<CHECKBOXITEMS;i++) {serialize8(activate1[i]);serialize8(activate2[i]);}
       serialize16(GPS_distanceToHome);
       serialize16(GPS_directionToHome);
       serialize8(GPS_numSat);
@@ -129,14 +129,14 @@ void serialCom() {
       UartSendData();
       break;
     case 'W': //GUI write params to eeprom @ arduino
-      while (Serial.available()<33) {}
+      while (Serial.available()<(25+2*CHECKBOXITEMS)) {}
       for(i=0;i<5;i++) {P8[i]= Serial.read(); I8[i]= Serial.read(); D8[i]= Serial.read();} //15
       P8[PIDLEVEL] = Serial.read(); I8[PIDLEVEL] = Serial.read(); //17
       P8[PIDMAG] = Serial.read(); //18
       rcRate8 = Serial.read(); rcExpo8 = Serial.read(); //20
       rollPitchRate = Serial.read(); yawRate = Serial.read(); //22
       dynThrPID = Serial.read(); //23
-      for(i=0;i<8;i++) activate[i] = Serial.read(); //31
+      for(i=0;i<CHECKBOXITEMS;i++) {activate1[i] = Serial.read();activate2[i] = Serial.read();}
      #if defined(POWERMETER)
       powerTrigger1 = (Serial.read() + 256* Serial.read() ) / PLEVELSCALE; // we rely on writeParams() to compute corresponding pAlarm value
      #else

@@ -35,7 +35,7 @@
 
 
 //****** advanced users settings   *************
-/* I2C DERobot LED RING communication */
+/* I2C DFRobot LED RING communication */
 //#define LED_RING
 
 /* This option should be uncommented if ACC Z is accurate enough when motors are running*/
@@ -63,9 +63,9 @@
    note: only the RX PIN is used, the GPS is not configured by multiwii
    the GPS must be configured to output NMEA sentences (which is generally the default conf for most GPS devices)
 */
-//#define GPS
-//#define GPS_SERIAL Serial3 // should be Serial2 for flyduino v2
-//#define GPS_BAUD   4800
+#define GPS
+#define GPS_SERIAL Serial2 // should be Serial2 for flyduino v2
+#define GPS_BAUD   115200
 //#define GPS_BAUD   9600
 
 /* Pseudo-derivative conrtroller for level mode (experimental)
@@ -85,7 +85,7 @@
 //#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
 //#define FREEIMUv03      // FreeIMU v0.3 and v0.3.1
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
-//#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
+#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
 //#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
 //#define PIPO            // 9DOF board from erazz
 //#define QUADRINO        // full FC board 9DOF+baro board from witespy  with BMP085 baro     <- confirmed by Alex
@@ -93,7 +93,7 @@
 //#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU
 //#define AEROQUADSHIELDv2
 //#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). requires 3.3V power.
-#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
+//#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
 //#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
 //#define MINIWII         // Jussi's MiniWii Flight Controller
 //#define CITRUSv1_0      // CITRUSv1 from qcrc.ca
@@ -141,9 +141,9 @@
 /* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
    IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
    Select the right line depending on your radio brand. Feel free to modify the order in your PPM order is different */
-//#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,CAMPITCH,CAMROLL //For Graupner/Spektrum
-//#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,CAMPITCH,CAMROLL //For Robe/Hitec/Futaba
-//#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,CAMPITCH,CAMROLL //For some Hitec/Sanwa/Others
+#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4 //For Graupner/Spektrum
+//#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For Robe/Hitec/Futaba
+//#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For some Hitec/Sanwa/Others
 
 /* The following lines apply only for Spektrum Satellite Receiver
    Spektrum Satellites are 3V devices.  DO NOT connect to 5V!

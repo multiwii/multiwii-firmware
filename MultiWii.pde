@@ -19,8 +19,8 @@ November  2011     V1.dev
 #define THROTTLE   3
 #define AUX1       4
 #define AUX2       5
-#define CAMPITCH   6
-#define CAMROLL    7
+#define AUX3       6
+#define AUX4       7
 
 #define PIDALT     3
 #define PIDVEL     4
@@ -35,6 +35,10 @@ November  2011     V1.dev
 #define BOXARM      5
 #define BOXGPSHOME  6
 #define BOXGPSHOLD  7
+#define PASSTHRU    8
+#define BOXHEADFREE 9
+
+#define CHECKBOXITEMS 10
 
 static uint32_t currentTime = 0;
 static uint16_t previousTime = 0;
@@ -51,6 +55,8 @@ static uint8_t  magMode = 0;        // if compass heading hold is a activated
 static uint8_t  baroMode = 0;       // if altitude hold is activated
 static uint8_t  GPSModeHome = 0;    // if GPS RTH is activated
 static uint8_t  GPSModeHold = 0;    // if GPS PH is activated
+static uint8_t  headFreeMode = 0;   // if head free mode is a activated
+static int16_t  headFreeModeHold;
 static int16_t  gyroADC[3],accADC[3],magADC[3];
 static int16_t  accSmooth[3];       // projection of smoothed and normalized gravitation force vector on x/y/z axis, as measured by accelerometer
 static int16_t  accTrim[2] = {0, 0};
@@ -58,7 +64,7 @@ static int16_t  heading,magHold;
 static uint8_t  calibratedACC = 0;
 static uint8_t  vbat;               // battery voltage in 0.1V steps
 static uint8_t  okToArm = 0;
-static uint8_t  rcOptions;
+static uint8_t  rcOptions1,rcOptions2;
 static int32_t  pressure;
 static int32_t  BaroAlt;
 static int32_t  EstVelocity;
@@ -127,7 +133,8 @@ static uint8_t dynP8[3], dynI8[3], dynD8[3];
 static uint8_t rollPitchRate;
 static uint8_t yawRate;
 static uint8_t dynThrPID;
-static uint8_t activate[8];
+static uint8_t activate1[CHECKBOXITEMS];
+static uint8_t activate2[CHECKBOXITEMS];
 
 void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
   uint8_t i,r;
@@ -184,6 +191,15 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     if (rcData[axis]<MIDRC) rcCommand[axis] = -rcCommand[axis];
   }
   rcCommand[THROTTLE] = MINTHROTTLE + (int32_t)(MAXTHROTTLE-MINTHROTTLE)* (rcData[THROTTLE]-MINCHECK)/(2000-MINCHECK);
+
+  if(headFreeMode) {
+    float radDiff = (heading - headFreeModeHold) * 0.0174533f; // where PI/180 ~= 0.0174533
+    float cosDiff = cos(radDiff);
+    float sinDiff = sin(radDiff);
+    int16_t rcCommand_PITCH = rcCommand[PITCH]*cosDiff + rcCommand[ROLL]*sinDiff;
+    rcCommand[ROLL] =  rcCommand[ROLL]*cosDiff - rcCommand[PITCH]*sinDiff; 
+    rcCommand[PITCH] = rcCommand_PITCH;
+  }
 
   #if (POWERMETER == 2)
   if (micros() > psensorTime + 19977 /*20000*/) { // 50Hz, but avoid bulking of timed tasks
@@ -300,7 +316,8 @@ void setup() {
       pMeter[i]=0;
   #endif
   #if defined(GPS)
-    GPS_SERIAL.begin(GPS_BAUD);
+    GPS_SERIAL.begin(GPS_BAUD);delay(2000);
+    Serial2.println("$PSRF104,0,0,0,96000,86400,1311,12,2*27");
   #endif
   #if defined(LCD_ETPP)
     i2c_ETPP_init();
@@ -366,14 +383,19 @@ void loop () {
           #endif
           previousTime = micros();
         }
-      } else if (activate[BOXARM] > 0) {
-        if ((rcOptions & activate[BOXARM]) && okToArm ) armed = 1;
-        else if (armed) armed = 0;
+      } else if ((activate1[BOXARM] > 0) || (activate2[BOXARM] > 0)) {
+        if ( ((rcOptions1 & activate1[BOXARM]) || (rcOptions2 & activate2[BOXARM])) && okToArm ) {
+          armed = 1;
+          headFreeModeHold = heading;
+        } else if (armed) armed = 0;
         rcDelayCommand = 0;
       } else if ( (rcData[YAW] < MINCHECK || rcData[ROLL] < MINCHECK)  && armed == 1) {
         if (rcDelayCommand == 20) armed = 0; // rcDelayCommand = 20 => 20x20ms = 0.4s = time to wait for a specific RC command to be acknowledged
       } else if ( (rcData[YAW] > MAXCHECK || rcData[ROLL] > MAXCHECK) && rcData[PITCH] < MAXCHECK && armed == 0 && calibratingG == 0 && calibratedACC == 1) {
-        if (rcDelayCommand == 20) armed = 1;
+        if (rcDelayCommand == 20) {
+          armed = 1;
+          headFreeModeHold = heading;
+        }
      #ifdef LCD_TELEMETRY_AUTO
       } else if (rcData[ROLL] < MINCHECK && rcData[PITCH] > MAXCHECK && armed == 0) {
         if (rcDelayCommand == 20) {
@@ -421,11 +443,13 @@ void loop () {
     }
    #endif
 
-    rcOptions = (rcData[AUX1]<1300)   + (1300<rcData[AUX1] && rcData[AUX1]<1700)*2  + (rcData[AUX1]>1700)*4
+    rcOptions1 = (rcData[AUX1]<1300)   + (1300<rcData[AUX1] && rcData[AUX1]<1700)*2  + (rcData[AUX1]>1700)*4
                +(rcData[AUX2]<1300)*8 + (1300<rcData[AUX2] && rcData[AUX2]<1700)*16 + (rcData[AUX2]>1700)*32;
+    rcOptions2 = (rcData[AUX3]<1300)   + (1300<rcData[AUX3] && rcData[AUX3]<1700)*2  + (rcData[AUX3]>1700)*4
+               +(rcData[AUX4]<1300)*8 + (1300<rcData[AUX4] && rcData[AUX4]<1700)*16 + (rcData[AUX4]>1700)*32;
     
     //note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAVE_DELAY is always false
-    if (((rcOptions & activate[BOXACC]) || (failsafeCnt > 5*FAILSAVE_DELAY) ) && (ACC || nunchuk)) { 
+    if (( (rcOptions1 & activate1[BOXACC]) || (rcOptions2 & activate2[BOXACC]) || (failsafeCnt > 5*FAILSAVE_DELAY) ) && (ACC || nunchuk)) { 
       // bumpless transfer to Level mode
       if (!accMode) {
         errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
@@ -433,11 +457,11 @@ void loop () {
       }  
     } else accMode = 0;  // modified by MIS for failsave support
 
-    if ((rcOptions & activate[BOXARM]) == 0) okToArm = 1;
+    if ((rcOptions1 & activate1[BOXARM]) == 0 || (rcOptions2 & activate2[BOXARM]) == 0) okToArm = 1;
     if (accMode == 1) STABLEPIN_ON else STABLEPIN_OFF;
 
     if(BARO) {
-      if (rcOptions & activate[BOXBARO]) {
+      if ((rcOptions1 & activate1[BOXBARO]) || (rcOptions2 & activate2[BOXBARO])) {
         if (baroMode == 0) {
           baroMode = 1;
           AltHold = EstAlt;
@@ -449,17 +473,22 @@ void loop () {
       } else baroMode = 0;
     }
     if(MAG) {
-      if (rcOptions & activate[BOXMAG]) {
+      if ((rcOptions1 & activate1[BOXMAG]) || (rcOptions2 & activate2[BOXMAG])) {
         if (magMode == 0) {
           magMode = 1;
           magHold = heading;
         }
       } else magMode = 0;
+      if ((rcOptions1 & activate1[BOXHEADFREE]) || (rcOptions2 & activate2[BOXHEADFREE])) {
+        if (headFreeMode == 0) {
+          headFreeMode = 1;
+        }
+      } else headFreeMode = 0;
     }
     #if defined(GPS)
-      if (rcOptions & activate[BOXGPSHOME]) {GPSModeHome = 1;}
+      if ((rcOptions1 & activate1[BOXGPSHOME]) || (rcOptions2 & activate2[BOXGPSHOME])) {GPSModeHome = 1;}
       else GPSModeHome = 0;
-      if (rcOptions & activate[BOXGPSHOLD]) {GPSModeHold = 1;}
+      if ((rcOptions1 & activate1[BOXGPSHOLD]) || (rcOptions2 & activate2[BOXGPSHOLD])) {GPSModeHold = 1;}
       else GPSModeHold = 0;
     #endif
   }

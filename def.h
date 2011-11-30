@@ -52,8 +52,8 @@
   #define YAWPIN                     6
   #define AUX1PIN                    7
   #define AUX2PIN                    0 // optional PIN 8 or PIN 12
-  #define CAM1PIN                    1 // unused 
-  #define CAM2PIN                    3 // unused 
+  #define AUX3PIN                    1 // unused 
+  #define AUX4PIN                    3 // unused 
   #define ISR_UART                   ISR(USART_UDRE_vect)
   #define V_BATPIN                   A3    // Analog PIN 3
   #define PSENSORPIN                 A2    // Analog PIN 2
@@ -105,8 +105,8 @@
   #define YAWPIN                     3  //PIN 65 =  PIN A11
   #define AUX1PIN                    4  //PIN 66 =  PIN A12
   #define AUX2PIN                    5  //PIN 67 =  PIN A13
-  #define CAM1PIN                    6  //PIN 68 =  PIN A14
-  #define CAM2PIN                    7  //PIN 69 =  PIN A15
+  #define AUX3PIN                    6  //PIN 68 =  PIN A14
+  #define AUX4PIN                    7  //PIN 69 =  PIN A15
   #define ISR_UART                   ISR(USART0_UDRE_vect)
   #define V_BATPIN                   A0    // Analog PIN 3
   #define PSENSORPIN                 A2    // Analog PIN 2
