@@ -63,7 +63,7 @@
    note: only the RX PIN is used, the GPS is not configured by multiwii
    the GPS must be configured to output NMEA sentences (which is generally the default conf for most GPS devices)
 */
-#define GPS
+//#define GPS
 #define GPS_SERIAL Serial2 // should be Serial2 for flyduino v2
 #define GPS_BAUD   115200
 //#define GPS_BAUD   9600
