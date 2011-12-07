@@ -93,7 +93,7 @@ static lcd_param_t lcd_param[] = {
 #define BITDELAY 102
 void LCDprint(uint8_t i) {
   #if defined(LCD_TEXTSTAR)
-    Serial.print( i , BYTE);
+    SerialWrite(0, i );
   #endif
   #if defined(LCD_ETPP) 
    i2c_ETPP_send_char(i);
@@ -125,7 +125,7 @@ void initLCD() {
     // Contributed by Danal
     i2c_ETPP_init();
   #else
-    Serial.end();
+    SerialEnd(0);
     //init LCD
     PINMODE_LCD; //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
   #endif
@@ -215,7 +215,7 @@ void configurationLoop() {
     }
 
     #if defined(LCD_TEXTSTAR)
-      key = ( Serial.available() ?  Serial.read() : 0 );
+      key = ( SerialAvailable(0) ?  SerialRead(0) : 0 );
     #endif
     for (i = ROLL; i < THROTTLE; i++) {uint16_t Tmp = readRawRC(i); lcdStickState[i] = (Tmp < MINCHECK) | ((Tmp > MAXCHECK) << 1);};
     if (IsLow(YAW) && IsHigh(PITCH)) LCD = 0;          // save and exit
@@ -241,7 +241,7 @@ void configurationLoop() {
   if (LCD == 0) writeParams();
   LCDsetLine(2);LCDprintChar("exit config");
   #if !defined(LCD_TEXTSTAR) && !defined(LCD_ETPP)
-    Serial.begin(SERIAL_COM_SPEED);
+    SerialOpen(0,115200);
   #endif
   #ifdef LCD_TELEMETRY
     delay(1000); // keep exit message visible for one second even if (auto)telemetry continues writing in main loop

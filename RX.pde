@@ -53,11 +53,10 @@ void configureReceiver() {
     PPM_PIN_INTERRUPT;
   #endif
   #if defined (SPEKTRUM)
-    SPEK_BAUD_SET;
-    SPEK_SERIAL_INTERRUPT;
+    SerialOpen(1,115200);
   #endif
   #if defined(SBUS)
-    Serial1.begin(100000);
+    SerialOpen(1,100000);
   #endif
 }
 
@@ -197,8 +196,8 @@ void rxInt() {
 void  readSBus(){
   #define SBUS_SYNCBYTE 0x0F // Not 100% sure: at the beginning of coding it was 0xF0 !!!
   static uint16_t sbus[25]={0};
-  while(Serial1.available()){
-    int val = Serial1.read();
+  while(SerialAvailable(1)){
+    int val = SerialRead(1);
     if(sbusIndex==0 && val != SBUS_SYNCBYTE)
       continue;
     sbus[sbusIndex++] = val;

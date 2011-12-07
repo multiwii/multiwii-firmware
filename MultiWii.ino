@@ -1,7 +1,7 @@
 /*
 MultiWiiCopter by Alexandre Dubus
 www.multiwii.com
-November  2011     V1.dev
+December  2011     V1.dev
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -295,7 +295,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
 
 
 void setup() {
-  Serial.begin(SERIAL_COM_SPEED);
+  SerialOpen(0,115200);
   LEDPIN_PINMODE;
   POWERPIN_PINMODE;
   BUZZERPIN_PINMODE;
@@ -316,8 +316,7 @@ void setup() {
       pMeter[i]=0;
   #endif
   #if defined(GPS)
-    GPS_SERIAL.begin(GPS_BAUD);delay(2000);
-    Serial2.println("$PSRF104,0,0,0,96000,86400,1311,12,2*27");
+    SerialOpen(GPS_SERIAL,GPS_BAUD);
   #endif
   #if defined(LCD_ETPP)
     i2c_ETPP_init();
@@ -583,8 +582,8 @@ void loop () {
 
   //GPS
   #if defined(GPS)
-    while (GPS_SERIAL.available()) {
-      if (GPS_newFrame(GPS_SERIAL.read())) {
+    while (SerialAvailable(2)) {
+     if (GPS_newFrame(SerialRead(2))) {
         if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;
         if (GPS_fix == 1) {
           if (GPS_fix_home == 0) {
