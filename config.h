@@ -31,10 +31,12 @@
 //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
 
 //enable internal I2C pull ups
-#define INTERNAL_I2C_PULLUPS
+//#define INTERNAL_I2C_PULLUPS
 
 
 //****** advanced users settings   *************
+/* I2C DFRobot LED RING communication */
+//#define LED_RING
 
 /* This option should be uncommented if ACC Z is accurate enough when motors are running*/
 //#define TRUSTED_ACCZ
@@ -62,8 +64,8 @@
    the GPS must be configured to output NMEA sentences (which is generally the default conf for most GPS devices)
 */
 //#define GPS
-//#define GPS_SERIAL Serial3 // should be Serial2 for flyduino v2
-//#define GPS_BAUD   4800
+#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
+#define GPS_BAUD   115200
 //#define GPS_BAUD   9600
 
 /* Pseudo-derivative conrtroller for level mode (experimental)
@@ -83,7 +85,7 @@
 //#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
 //#define FREEIMUv03      // FreeIMU v0.3 and v0.3.1
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
-//#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
+#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
 //#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
 //#define PIPO            // 9DOF board from erazz
 //#define QUADRINO        // full FC board 9DOF+baro board from witespy  with BMP085 baro     <- confirmed by Alex
@@ -139,9 +141,9 @@
 /* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
    IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
    Select the right line depending on your radio brand. Feel free to modify the order in your PPM order is different */
-//#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,CAMPITCH,CAMROLL //For Graupner/Spektrum
-//#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,CAMPITCH,CAMROLL //For Robe/Hitec/Futaba
-//#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,CAMPITCH,CAMROLL //For some Hitec/Sanwa/Others
+#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4 //For Graupner/Spektrum
+//#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For Robe/Hitec/Futaba
+//#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For some Hitec/Sanwa/Others
 
 /* The following lines apply only for Spektrum Satellite Receiver
    Spektrum Satellites are 3V devices.  DO NOT connect to 5V!
@@ -264,7 +266,7 @@
 /* you can change the tricopter servo travel here */
 #define TRI_YAW_CONSTRAINT_MIN 1020
 #define TRI_YAW_CONSTRAINT_MAX 2000
-#define TRI_YAW_MIDDLE 1500
+#define TRI_YAW_MIDDLE 1500 // can be configured via LCD
 
 /* Flying Wing: you can change change servo orientation and servo min/max values here */
 /* valid for all flight modes, even passThrough mode */
@@ -285,7 +287,7 @@
 /* Two options: */
 /* 1 - soft: - (good results +-5% for plush and mystery ESCs @ 2S and 3S, not good with SuperSimple ESC */
 /*      00. relies on your combo of battery type (Voltage, cpacity), ESC, ESC settings, motors, props and multiwii cycle time */
-/*      01. set POWERMETER soft. Uses PLEVELSCALE = 50, PLEVELDIV = PLEVELDIVSOFT = 10000 */
+/*      01. set POWERMETER soft. Uses PLEVELSCALE = 50, PLEVELDIV = PLEVELDIVSOFT = 5000 */
 /*      0. output is a value that linearily scales to power (mAh) */
 /*      1. get voltage reading right first */
 /*      2. start with freshly charged battery */
@@ -313,7 +315,7 @@
 /* PLEVELSCALE is the step size you can use to set alarm */
 #define PLEVELSCALE 50 // if you change this value for other granularity, you must search for comments in code to change accordingly 
 /* larger PLEVELDIV will get you smaller value for power (mAh equivalent) */
-#define PLEVELDIV 10000 // default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
+#define PLEVELDIV 5000 // default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
 #define PLEVELDIVSOFT PLEVELDIV // for soft always equal to PLEVELDIV; for hard set to 10000
 //#define PLEVELDIV 1361L // to convert the sum into mAh divide by this value
 /* amploc 25A sensor has 37mV/A */

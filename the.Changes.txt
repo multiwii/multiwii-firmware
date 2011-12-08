@@ -1,0 +1,12 @@
+against Alex' latest code r411
+
+reduce memory footprint
+    shorter strings in LCD.ino
+    smaller array for soft powermeter 
+re-port of features already in _shared
+    cleanup internal misleading use of characters to address telemetry pages.
+    add checkboxes option to gui and multiwii to unconditionally turn on the buzzer via aux1/aux2 as a model-lost-and-found
+    preset the debug variables for GUI with more helpful info
+    build multiwii with full cpp and compiler warnings and cleanup code (partially done only)
+    have stick combo for magneto calibration (throttle=up yaw=left pitch=down)
+    have servo midpoints (default 1500) user configurable via LCD (like subtrim on computer TX) for Flying Wing and TRI

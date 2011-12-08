@@ -1,13 +1,13 @@
-volatile uint16_t rcValue[8] = {1502,1502,1502,1502,1502,1502,1502,1502}; // interval [1000;2000]
+volatile uint16_t rcValue[18] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
 
 #if defined(SERIAL_SUM_PPM)
   static uint8_t rcChannel[8] = {SERIAL_SUM_PPM};
 #elif defined(SBUS)
   // for 16 + 2 Channels SBUS. The 10 extra channels 8->17 are not used by MultiWii, but it should be easy to integrate them.
-  static uint8_t rcChannel[18] = {PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,CAMPITCH,CAMROLL,8,9,10,11,12,13,14,15,16,17};
+  static uint8_t rcChannel[18] = {PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4,8,9,10,11,12,13,14,15,16,17};
   static uint16_t sbusIndex=0;
 #else
-  static uint8_t rcChannel[8]  = {ROLLPIN, PITCHPIN, YAWPIN, THROTTLEPIN, AUX1PIN,AUX2PIN,CAM1PIN,CAM2PIN};
+  static uint8_t rcChannel[8]  = {ROLLPIN, PITCHPIN, YAWPIN, THROTTLEPIN, AUX1PIN,AUX2PIN,AUX3PIN,AUX4PIN};
 #endif
 #if defined(SPEKTRUM)
   #define SPEK_MAX_CHANNEL 7
@@ -53,11 +53,10 @@ void configureReceiver() {
     PPM_PIN_INTERRUPT;
   #endif
   #if defined (SPEKTRUM)
-    SPEK_BAUD_SET;
-    SPEK_SERIAL_INTERRUPT;
+    SerialOpen(1,115200);
   #endif
   #if defined(SBUS)
-    Serial1.begin(100000);
+    SerialOpen(1,100000);
   #endif
 }
 
@@ -197,8 +196,8 @@ void rxInt() {
 void  readSBus(){
   #define SBUS_SYNCBYTE 0x0F // Not 100% sure: at the beginning of coding it was 0xF0 !!!
   static uint16_t sbus[25]={0};
-  while(Serial1.available()){
-    int val = Serial1.read();
+  while(SerialAvailable(1)){
+    int val = SerialRead(1);
     if(sbusIndex==0 && val != SBUS_SYNCBYTE)
       continue;
     sbus[sbusIndex++] = val;

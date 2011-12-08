@@ -116,7 +116,6 @@ uint8_t i2c_readNak(void) {
   return r;
 }
 
-
 void waitTransmissionI2C() {
   uint16_t count = 255;
   while (!(TWCR & (1<<TWINT))) {
@@ -129,8 +128,7 @@ void waitTransmissionI2C() {
     }
   }
 }
-  
-    
+
 void i2c_getSixRawADC(uint8_t add, uint8_t reg) {
   i2c_rep_start(add);
   i2c_write(reg);         // Start multiple read at the reg register

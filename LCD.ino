@@ -24,7 +24,7 @@ typedef struct lcd_param_def_t{
 };
 
 typedef struct lcd_param_t{
-  char * paramText;
+  char*  paramText;
   void * var; 
   lcd_param_def_t * def;
 };
@@ -45,6 +45,7 @@ static lcd_param_def_t __VB  = {&LTU8,  1, 1, 0};
 static lcd_param_def_t __L   = {&LTU8,  0, 1, 0};
 static lcd_param_def_t __FS  = {&LTU8,  1, 1, 0};
 static lcd_param_def_t __SE  = {&LTU16,  0, 1, 10};
+
 // Parameters
 static lcd_param_t lcd_param[] = {
   {"PITCH&ROLL P",    &P8[ROLL],      &__P}
@@ -65,29 +66,33 @@ static lcd_param_t lcd_param[] = {
 , {"YAW RATE",        &yawRate,       &__RC}
 , {"THROTTLE PID",    &dynThrPID,     &__RC}
 #ifdef POWERMETER
-, {"pMeter Motor 0",  &pMeter[0],     &__PM}, {"pMeter Motor 1", &pMeter[1], &__PM}, {"pMeter Motor 2", &pMeter[2], &__PM}
+, {"pMeter M0",  &pMeter[0],     &__PM}, {"pMeter M1", &pMeter[1], &__PM}, {"pMeter M2", &pMeter[2], &__PM}
    #if (NUMBER_MOTOR > 3)
-   , {"pMeter Motor 3",  &pMeter[3],     &__PM}
+   , {"pMeter M3",  &pMeter[3],     &__PM}
    #endif
    #if (NUMBER_MOTOR > 4)
-   , {"pMeter Motor 4", &pMeter[4], &__PM}, {"pMeter Motor 5", &pMeter[5], &__PM}
+   , {"pMeter M4", &pMeter[4], &__PM}, {"pMeter M5", &pMeter[5], &__PM}
    #endif
    #if (NUMBER_MOTOR > 6)
-   , {"pMeter Motor 6", &pMeter[6], &__PM}, {"pMeter Motor 7", &pMeter[7], &__PM}
+   , {"pMeter M6", &pMeter[6], &__PM}, {"pMeter M7", &pMeter[7], &__PM}
    #endif
 , {"pMeter Sum",      &pMeter[PMOTOR_SUM],     &__PS}
 , {"pAlarm /50",      &powerTrigger1, &__PT} // change text to represent PLEVELSCALE value
 #endif
 #ifdef VBAT
-, {"Battery Volt",    &vbat,          &__VB} 
+, {"Batt Volt",    &vbat,          &__VB} 
 #endif
 #ifdef FLYING_WING
-, {"Trim Servo1 Mid",    &wing_left_mid, &__SE} 
-, {"Trim Servo2 Mid",    &wing_right_mid,&__SE} 
+, {"Trim Servo1",    &wing_left_mid, &__SE} 
+, {"Trim Servo2",    &wing_right_mid,&__SE} 
 #endif
+#ifdef TRI
+, {"Trim Servo",    &tail_servo_mid, &__SE} 
+#endif
+
 #ifdef LOG_VALUES
-, {"Failsafe    ",    &failsafeEvents,&__FS} 
-, {"i2c errors",       &i2c_errors_count,          &__L} 
+, {"#Failsafes",    &failsafeEvents,&__FS} 
+, {"#i2c errs",     &i2c_errors_count,          &__L} 
 #endif
 };
 #define PARAMMAX (sizeof(lcd_param)/sizeof(lcd_param_t) - 1)
@@ -98,7 +103,7 @@ static lcd_param_t lcd_param[] = {
 #define BITDELAY 102
 void LCDprint(uint8_t i) {
   #if defined(LCD_TEXTSTAR)
-    Serial.print( i , BYTE);
+    SerialWrite(0, i );
   #endif
   #if defined(LCD_ETPP) 
    i2c_ETPP_send_char(i);
@@ -130,22 +135,22 @@ void initLCD() {
     // Contributed by Danal
     i2c_ETPP_init();
   #else
-    Serial.end();
+    SerialEnd(0);
     //init LCD
     PINMODE_LCD; //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
   #endif
   LCDclear();
   LCDsetLine(1);
-  LCDprintChar("MultiWii Config");
+  LCDprintChar("MWii Config");
   delay(2500);
   LCDclear();
 }
 
 static char line1[17],line2[17];
 
-void __u8Inc(void * var, int8_t inc) {*(uint8_t*)var += inc;}
-void __u16Inc(void * var, int8_t inc) {*(uint16_t*)var += inc;}
-void __nullInc(void * var, int8_t inc) {}
+void __u8Inc(void * var, int8_t inc) {*(uint8_t*)var += inc;};
+void __u16Inc(void * var, int8_t inc) {*(uint16_t*)var += inc;};
+void __nullInc(void * var, int8_t inc) {};
 
 void __u8Fmt(void * var, uint8_t mul, uint8_t dec) {
   uint16_t unit = *(uint8_t*)var;
@@ -220,7 +225,7 @@ void configurationLoop() {
     }
 
     #if defined(LCD_TEXTSTAR)
-      key = ( Serial.available() ?  Serial.read() : 0 );
+      key = ( SerialAvailable(0) ?  SerialRead(0) : 0 );
     #endif
     for (i = ROLL; i < THROTTLE; i++) {uint16_t Tmp = readRawRC(i); lcdStickState[i] = (Tmp < MINCHECK) | ((Tmp > MAXCHECK) << 1);};
     if (IsLow(YAW) && IsHigh(PITCH)) LCD = 0;          // save and exit
@@ -242,11 +247,11 @@ void configurationLoop() {
   blinkLED(20,30,1);
   
   LCDclear();
-  if (LCD == 0) LCDprintChar("Saving Settings"); else LCDprintChar("skipping Save");
+  if (LCD == 0) LCDprintChar("Saving"); else LCDprintChar("Aborting");
   if (LCD == 0) writeParams();
-  LCDsetLine(2);LCDprintChar("exit config");
+  LCDsetLine(2);LCDprintChar("exit.");
   #if !defined(LCD_TEXTSTAR) && !defined(LCD_ETPP)
-    Serial.begin(SERIAL_COM_SPEED);
+    SerialOpen(0,115200);
   #endif
   #ifdef LCD_TELEMETRY
     delay(1000); // keep exit message visible for one second even if (auto)telemetry continues writing in main loop
@@ -260,6 +265,7 @@ void configurationLoop() {
 #ifdef LCD_TELEMETRY
 void lcd_telemetry() {
   // LCD_BAR(n,v) : draw a bar graph - n number of chars for width, v value in % to display
+  #define LCD_BAR(n,v) {} // add your own implementation here
   #if defined(LCD_TEXTSTAR)
     #define LCD_BAR(n,v) { LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v); }
   #elif defined(LCD_ETPP)
@@ -315,10 +321,8 @@ void lcd_telemetry() {
       //LCDprint(0x0c); //clear screen
       line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
     }
-    #ifdef LOG_VALUES
-      // set mark, if we had i2c errors
-      if (i2c_errors_count || failsafeEvents) line1[6] = 'I';
-    #endif
+    // set mark, if we had i2c errors
+    if (i2c_errors_count || failsafeEvents) line1[6] = 'I';
     LCDsetLine(1);LCDprintChar(line1);
     LCDsetLine(2); //position on line 2 of LCD
     #ifdef VBAT
@@ -388,7 +392,6 @@ void lcd_telemetry() {
       strcpy(line1,"Failsafe   -----");  
       /*            0123456789012345   */
       strcpy(line2,"i2c errors _____");
-     #ifdef LOG_VALUES
       line1[11] = '0' + failsafeEvents / 10000;
       line1[12] = '0' + failsafeEvents / 1000 - (failsafeEvents/10000) * 10;
       line1[13] = '0' + failsafeEvents / 100  - (failsafeEvents/1000)  * 10;
@@ -399,7 +402,6 @@ void lcd_telemetry() {
       line2[13] = '0' + i2c_errors_count / 100  - (i2c_errors_count/1000)  * 10;
       line2[14] = '0' + i2c_errors_count / 10   - (i2c_errors_count/100)   * 10;
       line2[15] = '0' + i2c_errors_count        - (i2c_errors_count/10)    * 10;
-     #endif
       LCDsetLine(1);LCDprintChar(line1);
       LCDsetLine(2);LCDprintChar(line2);
       break;
@@ -454,7 +456,7 @@ void LCDclear() {
   #if defined(LCD_ETPP)
     i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
     for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
-  #eliff defined(LCD_TEXTSTAR)
+  #elif defined(LCD_TEXTSTAR)
     LCDprint(0x0c); //clear screen
   #endif
 }
