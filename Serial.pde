@@ -1,10 +1,35 @@
+static uint8_t point;
+static uint8_t s[200];
+void serialize16(int16_t a) {s[point++]  = a; s[point++]  = a>>8&0xff;}
+void serialize8(uint8_t a)  {s[point++]  = a;}
+
+// ***********************************
+// Interrupt driven UART transmitter for MIS_OSD
+// ***********************************
+static uint8_t tx_ptr;
+static uint8_t tx_busy = 0;
+
+ISR_UART {
+  UDR0 = s[tx_ptr++];           // Transmit next byte
+  if ( tx_ptr == point ) {      // Check if all data is transmitted
+    UCSR0B &= ~(1<<UDRIE0);     // Disable transmitter UDRE interrupt
+    tx_busy = 0;
+  }
+}
+
+void UartSendData() {              // start of the data block transmission
+  tx_ptr = 0;
+  UCSR0A |= (1<<UDRE0);            // Clear UDRE interrupt flag
+  UCSR0B |= (1<<UDRIE0);           // Enable transmitter UDRE interrupt
+  cli();UDR0 = s[tx_ptr++];sei();  // Start transmission
+  tx_busy = 1;
+}
+
 void serialCom() {
   int16_t a;
   uint8_t i;
-
-  uint16_t intPowerMeterSum, intPowerTrigger1;   
-
-  if (SerialAvailable(0)) {
+  
+  if ((!tx_busy) && SerialAvailable(0)) {
     switch (SerialRead(0)) {
     #ifdef BTSERIAL
     case 'K': //receive RC data from Bluetooth Serial adapter as a remote
@@ -17,16 +42,16 @@ void serialCom() {
     #endif
     #ifdef LCD_TELEMETRY
     case 'A': // button A press
-      if (telemetry=='A') telemetry = 0; else { telemetry = 'A'; LCDprint(12); /* clear screen */ }
+      if (telemetry=='A') telemetry = 0; else { telemetry = 'A'; LCDprint(12); }
       break;    
     case 'B': // button B press
-      if (telemetry=='B') telemetry = 0; else { telemetry = 'B'; LCDprint(12); /* clear screen */ }
+      if (telemetry=='B') telemetry = 0; else { telemetry = 'B'; LCDprint(12);  }
       break;    
     case 'C': // button C press
-      if (telemetry=='C') telemetry = 0; else { telemetry = 'C'; LCDprint(12); /* clear screen */ }
+      if (telemetry=='C') telemetry = 0; else { telemetry = 'C'; LCDprint(12);  }
       break;    
     case 'D': // button D press
-      if (telemetry=='D') telemetry = 0; else { telemetry = 'D'; LCDprint(12); /* clear screen */ }
+      if (telemetry=='D') telemetry = 0; else { telemetry = 'D'; LCDprint(12);  }
       break;
     case 'a': // button A release
     case 'b': // button B release
@@ -35,11 +60,12 @@ void serialCom() {
       break;      
     #endif
     case 'M': // Multiwii @ arduino to GUI all data
+      point=0;
       serialize8('M');
       serialize8(VERSION);  // MultiWii Firmware version
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
-      for(i=0;i<3;i++) serialize16(gyroData[i]/8);
-      for(i=0;i<3;i++) serialize16(magADC[i]/3);
+      for(i=0;i<3;i++) serialize16(gyroData[i]);
+      for(i=0;i<3;i++) serialize16(magADC[i]);
       serialize16(EstAlt/10);
       serialize16(heading); // compass
       for(i=0;i<4;i++) serialize16(servo[i]);
@@ -48,7 +74,7 @@ void serialCom() {
       serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3|GPSPRESENT<<4);
       serialize8(accMode|baroMode<<1|magMode<<2|(GPSModeHome|GPSModeHold)<<3);
       serialize16(cycleTime);
-      for(i=0;i<2;i++) serialize16(angle[i]/10);
+      for(i=0;i<2;i++) serialize16(angle[i]);
       serialize8(MULTITYPE);
       for(i=0;i<5;i++) {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);}
       serialize8(P8[PIDLEVEL]);
@@ -79,6 +105,7 @@ void serialCom() {
       serialize16(0);                 // debug3
       serialize16(0);                 // debug4
       serialize8('M');
+      UartSendData();
       break;
     case 'O':  // arduino to OSD data - contribution from MIS
       serialize8('O');
@@ -121,21 +148,15 @@ void serialCom() {
   }
 }
 
-
 #define SERIAL_RX_BUFFER_SIZE 64
-#define SERIAL_TX_BUFFER_SIZE 128
 
 #if defined(PROMINI)
 uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][1];
-uint8_t serialBufferTX[SERIAL_TX_BUFFER_SIZE][1];
-volatile uint8_t serialHeadRX[1],serialHeadTX[1];
-volatile uint8_t serialTailRX[1],serialTailTX[1];
+volatile uint8_t serialHeadRX[1],serialTailRX[1];
 #endif
 #if defined(MEGA)
 uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][4];
-uint8_t serialBufferTX[SERIAL_TX_BUFFER_SIZE][4];
-volatile uint8_t serialHeadRX[4],serialHeadTX[4];
-volatile uint8_t serialTailRX[4],serialTailTX[4];
+volatile uint8_t serialHeadRX[4],serialTailRX[4];
 #endif
 
 void SerialOpen(uint8_t port, uint32_t baud) {
@@ -167,13 +188,6 @@ SIGNAL(USART_RX_vect){
   uint8_t i = (serialHeadRX[0] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = UDR0; serialHeadRX[0] = i;}
 }
-ISR(USART_UDRE_vect) {
-  if (serialHeadTX[0] == serialTailTX[0]) UCSR0B &= ~(1<<UDRIE0);     /* Disable transmitter UDRE interrupt */
-  else {
-    uint8_t c = serialBufferTX[serialTailTX[0]][0];
-    serialTailTX[0] = (serialTailTX[0] + 1) % SERIAL_TX_BUFFER_SIZE; UDR0 = c;
-  }
-}
 #endif
 #if defined(MEGA)
 SIGNAL(USART0_RX_vect){
@@ -194,35 +208,6 @@ SIGNAL(USART3_RX_vect){
   uint8_t i = (serialHeadRX[3] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[3]) {serialBufferRX[serialHeadRX[3]][3] = UDR3; serialHeadRX[3] = i;}
 }
-
-ISR(USART0_UDRE_vect) {
-  if (serialHeadTX[0] == serialTailTX[0]) UCSR0B &= ~(1<<UDRIE0);     /* Disable transmitter UDRE interrupt */
-  else {
-    UDR0 = serialBufferTX[serialTailTX[0]][0];
-    serialTailTX[0] = (serialTailTX[0] + 1) % SERIAL_TX_BUFFER_SIZE;
-  }
-}
-ISR(USART1_UDRE_vect) {
-  if (serialHeadTX[1] == serialTailTX[1]) UCSR1B &= ~(1<<UDRIE1);     /* Disable transmitter UDRE interrupt */
-  else {
-    UDR1 = serialBufferTX[serialTailTX[1]][1];
-    serialTailTX[1] = (serialTailTX[1] + 1) % SERIAL_TX_BUFFER_SIZE;
-  }
-}
-ISR(USART2_UDRE_vect) {
-  if (serialHeadTX[2] == serialTailTX[2]) UCSR2B &= ~(1<<UDRIE2);     /* Disable transmitter UDRE interrupt */
-  else {
-    UDR2 = serialBufferTX[serialTailTX[2]][2];
-    serialTailTX[2] = (serialTailTX[2] + 1) % SERIAL_TX_BUFFER_SIZE;
-  }
-}
-ISR(USART3_UDRE_vect) {
-  if (serialHeadTX[3] == serialTailTX[3]) UCSR3B &= ~(1<<UDRIE3);     /* Disable transmitter UDRE interrupt */
-  else {
-    UDR3 = serialBufferTX[serialTailTX[3]][3];
-    serialTailTX[3] = (serialTailTX[3] + 1) % SERIAL_TX_BUFFER_SIZE;
-  }
-}
 #endif
 
 uint8_t SerialRead(uint8_t port) {
@@ -236,19 +221,12 @@ uint8_t SerialAvailable(uint8_t port) {
 }
 
 void SerialWrite(uint8_t port,uint8_t c){
-  uint8_t i = (serialHeadTX[port] + 1) % SERIAL_TX_BUFFER_SIZE;
-  while (i == serialTailTX[port]) ;
-  serialBufferTX[serialHeadTX[port]][port] = c;
-  serialHeadTX[port] = i;
   switch (port) {
-    case 0: UCSR0B |= (1<<UDRIE0); break;      /* Enable transmitter UDRE interrupt */
+    case 0: while (!(UCSR0A & (1 << UDRIE0))) ; UDR0 = c; break;
     #if defined(MEGA)
-    case 1: UCSR1B |= (1<<UDRIE1); break;
-    case 2: UCSR2B |= (1<<UDRIE2); break;
-    case 3: UCSR3B |= (1<<UDRIE3); break;
+    case 1: while (!(UCSR1A & (1 << UDRIE1))) ; UDR1 = c; break;
+    case 2: while (!(UCSR2A & (1 << UDRIE2))) ; UDR2 = c; break;
+    case 3: while (!(UCSR3A & (1 << UDRIE3))) ; UDR3 = c; break;
     #endif
   }
 }
-
-void serialize16(int16_t a) {SerialWrite(0,a); SerialWrite(0,a>>8&0xff);}
-void serialize8(uint8_t a)  {SerialWrite(0,a);}

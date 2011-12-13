@@ -86,6 +86,7 @@ static uint32_t pMeter[PMOTOR_SUM + 1];  //we use [0:7] for eight motors,one ext
 static uint8_t pMeterV;                  // dummy to satisfy the paramStruct logic in ConfigurationLoop()
 static uint32_t pAlarm;                  // we scale the eeprom value from [0:255] to this value we can directly compare to the sum in pMeter[6]
 static uint8_t powerTrigger1 = 0;       // trigger for alarm based on power consumption
+static uint16_t intPowerMeterSum, intPowerTrigger1;
 
 // **********************
 // telemetry
@@ -289,6 +290,14 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     if (micros() > telemetryTime +  LCD_TELEMETRY) { // 10Hz
       if (telemetry) lcd_telemetry();
       telemetryTime = micros();  
+    }
+  #endif
+  
+  #if defined(GPS)
+    static uint32_t GPSLEDTime;
+    if ( currentTime > GPSLEDTime && (GPS_fix_home == 1)) {
+      GPSLEDTime = currentTime + 150000;
+      LEDPIN_TOGGLE;
     }
   #endif
 }
