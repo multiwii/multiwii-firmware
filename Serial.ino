@@ -103,7 +103,7 @@ void serialCom() {
       serialize8('O'); //49
       break;
     case 'W': //GUI write params to eeprom @ arduino
-      while (SerialAvailable(0)<(25+2*CHECKBOXITEMS)) {}//sss
+      while (SerialAvailable(0)<(25+2*CHECKBOXITEMS)) {delay(1);}//sss
       for(i=0;i<5;i++) {P8[i]= SerialRead(0); I8[i]= SerialRead(0); D8[i]= SerialRead(0);} //15
       P8[PIDLEVEL] = SerialRead(0); I8[PIDLEVEL] = SerialRead(0); //17
       P8[PIDMAG] = SerialRead(0); //18
