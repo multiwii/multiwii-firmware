@@ -46,6 +46,7 @@ static lcd_param_def_t __L   = {&LTU8,  0, 1, 0};
 static lcd_param_def_t __FS  = {&LTU8,  1, 1, 0};
 static lcd_param_def_t __SE  = {&LTU16,  0, 1, 10};
 
+
 // Parameters
 static lcd_param_t lcd_param[] = {
   {"PITCH&ROLL P",    &P8[ROLL],      &__P}
@@ -65,7 +66,7 @@ static lcd_param_t lcd_param[] = {
 , {"PITCH&ROLL RATE", &rollPitchRate, &__RC}
 , {"YAW RATE",        &yawRate,       &__RC}
 , {"THROTTLE PID",    &dynThrPID,     &__RC}
-#ifdef POWERMETER
+#if (LOG_VALUES == 2) || (POWERMETER == 1)
 , {"pMeter M0",  &pMeter[0],     &__PM}, {"pMeter M1", &pMeter[1], &__PM}, {"pMeter M2", &pMeter[2], &__PM}
    #if (NUMBER_MOTOR > 3)
    , {"pMeter M3",  &pMeter[3],     &__PM}
@@ -76,6 +77,8 @@ static lcd_param_t lcd_param[] = {
    #if (NUMBER_MOTOR > 6)
    , {"pMeter M6", &pMeter[6], &__PM}, {"pMeter M7", &pMeter[7], &__PM}
    #endif
+#endif
+#ifdef POWERMETER
 , {"pMeter Sum",      &pMeter[PMOTOR_SUM],     &__PS}
 , {"pAlarm /50",      &powerTrigger1, &__PT} // change text to represent PLEVELSCALE value
 #endif
@@ -120,7 +123,13 @@ void LCDprint(uint8_t i) {
 }
 
 void LCDprintChar(const char *s) {
-  while (*s) LCDprint(*s++);
+  while (*s) {
+     #if defined(FIX_TIMING) && defined(LCD_TEXTSTAR)
+        SerialWrite(0, *s++);
+     #else
+        LCDprint(*s++);
+     #endif
+  }
 }
 
 void initLCD() {
@@ -249,7 +258,7 @@ void configurationLoop() {
   LCDclear();
   if (LCD == 0) LCDprintChar("Saving"); else LCDprintChar("Aborting");
   if (LCD == 0) writeParams();
-  LCDsetLine(2);LCDprintChar("exit.");
+  LCDsetLine(2);LCDprintChar("exit");
   #if !defined(LCD_TEXTSTAR) && !defined(LCD_ETPP)
     SerialOpen(0,115200);
   #endif
@@ -321,8 +330,8 @@ void lcd_telemetry() {
       //LCDprint(0x0c); //clear screen
       line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
     }
-    // set mark, if we had i2c errors
-    if (i2c_errors_count || failsafeEvents) line1[6] = 'I';
+    // set mark, if we had i2c errors, failsafes or annex650 overruns
+    if (i2c_errors_count || failsafeEvents || annex650_overrun_count) line1[6] = 'I';
     LCDsetLine(1);LCDprintChar(line1);
     LCDsetLine(2); //position on line 2 of LCD
     #ifdef VBAT
@@ -378,7 +387,7 @@ void lcd_telemetry() {
       break;    
     case 4: // button D on Textstar LCD -> sensors
     #define GYROLIMIT 30 // threshold: for larger values replace bar with dots
-    #define ACCLIMIT 30 // threshold: for larger values replace bar with dots     
+    #define ACCLIMIT 40 // threshold: for larger values replace bar with dots     
       LCDsetLine(1);LCDprintChar("G "); //refresh line 1 of LCD
       if (abs(gyroData[0]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[0])*50/GYROLIMIT) } else LCDprintChar("...."); LCDprint(' ');
       if (abs(gyroData[1]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[1])*50/GYROLIMIT) } else LCDprintChar("...."); LCDprint(' ');
@@ -389,19 +398,21 @@ void lcd_telemetry() {
       if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT) } else LCDprintChar("....");
       break;
     case 5: // No Z button.  Displays with auto telemetry only
-      strcpy(line1,"Failsafe   -----");  
+      strcpy(line1,"Fails i2c t-errs");  
       /*            0123456789012345   */
-      strcpy(line2,"i2c errors _____");
-      line1[11] = '0' + failsafeEvents / 10000;
-      line1[12] = '0' + failsafeEvents / 1000 - (failsafeEvents/10000) * 10;
-      line1[13] = '0' + failsafeEvents / 100  - (failsafeEvents/1000)  * 10;
-      line1[14] = '0' + failsafeEvents / 10   - (failsafeEvents/100)   * 10;
-      line1[15] = '0' + failsafeEvents        - (failsafeEvents/10)    * 10;
-      line2[11] = '0' + i2c_errors_count / 10000;
-      line2[12] = '0' + i2c_errors_count / 1000 - (i2c_errors_count/10000) * 10;
-      line2[13] = '0' + i2c_errors_count / 100  - (i2c_errors_count/1000)  * 10;
-      line2[14] = '0' + i2c_errors_count / 10   - (i2c_errors_count/100)   * 10;
-      line2[15] = '0' + i2c_errors_count        - (i2c_errors_count/10)    * 10;
+      strcpy(line2,"----  ----  ---- ");
+      line2[0] = '0' + failsafeEvents / 1000 - (failsafeEvents/10000) * 10;
+      line2[1] = '0' + failsafeEvents / 100  - (failsafeEvents/1000)  * 10;
+      line2[2] = '0' + failsafeEvents / 10   - (failsafeEvents/100)   * 10;
+      line2[3] = '0' + failsafeEvents        - (failsafeEvents/10)    * 10;
+      line2[6] = '0' + i2c_errors_count / 1000 - (i2c_errors_count/10000) * 10;
+      line2[7] = '0' + i2c_errors_count / 100  - (i2c_errors_count/1000)  * 10;
+      line2[8] = '0' + i2c_errors_count / 10   - (i2c_errors_count/100)   * 10;
+      line2[9] = '0' + i2c_errors_count        - (i2c_errors_count/10)    * 10;
+      line2[12] = '0' + annex650_overrun_count / 1000 - (annex650_overrun_count/10000) * 10;
+      line2[13] = '0' + annex650_overrun_count / 100  - (annex650_overrun_count/1000)  * 10;
+      line2[14] = '0' + annex650_overrun_count / 10   - (annex650_overrun_count/100)   * 10;
+      line2[15] = '0' + annex650_overrun_count        - (annex650_overrun_count/10)    * 10;
       LCDsetLine(1);LCDprintChar(line1);
       LCDsetLine(2);LCDprintChar(line2);
       break;

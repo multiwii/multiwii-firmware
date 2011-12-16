@@ -41,7 +41,11 @@ void computeIMU () {
       gyroADCp[axis] =  gyroADC[axis];
     timeInterleave=micros();
     annexCode();
-    while((micros()-timeInterleave)<650) ; //empirical, interleaving delay between 2 consecutive reads
+    if ((micros()-timeInterleave)>650) {
+       annex650_overrun_count++;
+    } else {
+       while((micros()-timeInterleave)<650) ; //empirical, interleaving delay between 2 consecutive reads
+    }
     if (GYRO) Gyro_getADC(); else WMP_getRawADC();
     for (axis = 0; axis < 3; axis++) {
       gyroADCinter[axis] =  gyroADC[axis]+gyroADCp[axis];

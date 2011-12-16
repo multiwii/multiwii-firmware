@@ -85,7 +85,7 @@
 //#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
 //#define FREEIMUv03      // FreeIMU v0.3 and v0.3.1
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
-#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
+//#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
 //#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
 //#define PIPO            // 9DOF board from erazz
 //#define QUADRINO        // full FC board 9DOF+baro board from witespy  with BMP085 baro     <- confirmed by Alex
@@ -325,6 +325,11 @@
 /* set to analogRead() value for zero current */
 #define PSENSORNULL 510 // for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt
 #define PINT2mA 13 // for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
+/* frequency for reading the powermeter sensor in the main loop, depends on cycle time! */
+/* time base is main loop cycle time - a value of 6 means every 6th run through the main loop do the sensor read */
+/* example: with cycle time of approx 3ms, do sensor read every 6*3ms=18ms */
+#define PSENSORFREQ 6 
+
 
 /* to monitor system values (battery level, loop time etc. with LCD enable this */
 /* note: for now you must send single characters 'A', 'B', 'C', 'D' to request 4 different pages */
@@ -345,8 +350,14 @@
 
 /* to log values like max loop time and others to come */
 /* logging values are visible via LCD config */
-//#define LOG_VALUES
+/* set to 2, if you want powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> 1)
+//#define LOG_VALUES 1
  
+
+/* temproary fix to some timing issues */
+//#define FIX_TIMING
+
+
 //****** end of advanced users settings *************
 
 //if you want to change to orientation of individual sensor
@@ -354,6 +365,12 @@
 //#define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = Z;}
 //#define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
 
+ 
+/* frequenies for rare cyclic actions in the main loop, depend on cycle time! */
+/* time base is main loop cycle time - a value of 6 means to trigger the action every 6th run through the main loop */
+/* example: with cycle time of approx 3ms, do action every 6*3ms=18ms */
+#define LCD_TELEMETRY_FREQ 41       // to send telemetry data over serial 41 <=> 120ms <=> 8Hz
+#define LCD_TELEMETRY_AUTO_FREQ 665 // to step to next telemetry page 666 <=> 2s
 /**************************************/
 /****END OF CONFIGURABLE PARAMETERS****/
 /**************************************/

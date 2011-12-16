@@ -64,7 +64,7 @@ void writeAllMotors(int16_t mc) {   // Sends commands to all motors
   writeMotors();
 }
 
-#if defined(LOG_VALUES) || (POWERMETER == 1)
+#if (LOG_VALUES == 2) || (POWERMETER == 1)
 void logMotorsPower() {
   uint32_t amp;
   /* true cubic function; when divided by vbat_max=126 (12.6V) for 3 cell battery this gives maximum value of ~ 500 */
@@ -419,7 +419,7 @@ void mixTable() {
       motor[i] = MINCOMMAND;
   }
 
-  #if defined(LOG_VALUES) || (POWERMETER == 1)
+  #if (LOG_VALUES == 2) || (POWERMETER == 1)
     logMotorsPower();
   #endif
 }

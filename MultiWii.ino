@@ -79,6 +79,7 @@ static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
 static uint16_t powerMax = 0;           // highest ever current
 static uint16_t powerAvg = 0;           // last known current
 static int16_t  i2c_errors_count = 0;
+static int16_t  annex650_overrun_count = 0;
 
 // **********************
 // power meter
@@ -88,6 +89,7 @@ static uint32_t pMeter[PMOTOR_SUM + 1];  //we use [0:7] for eight motors,one ext
 static uint8_t pMeterV;                  // dummy to satisfy the paramStruct logic in ConfigurationLoop()
 static uint32_t pAlarm;                  // we scale the eeprom value from [0:255] to this value we can directly compare to the sum in pMeter[6]
 static uint8_t powerTrigger1 = 0;       // trigger for alarm based on power consumption
+static uint16_t intPowerMeterSum, intPowerTrigger1;
 
 // **********************
 // telemetry
@@ -166,8 +168,10 @@ static int16_t  GPS_directionToHome = 0;
 static uint8_t  GPS_update = 0;
 
 void annexCode() { //this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
-  static uint32_t buzzerTime,calibratedAccTime,telemetryTime,telemetryAutoTime,psensorTime;
+  static uint32_t buzzerTime,calibratedAccTime;
   static uint8_t  buzzerFreq;         //delay between buzzer ring
+  static uint32_t psensorTime = 0;  
+  static uint16_t telemetryTimer = 0, telemetryAutoTimer = 0;
   uint8_t axis,prop1,prop2;
   uint16_t pMeterRaw, powerValue;     //used for current reading
 
@@ -207,7 +211,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   }
 
   #if (POWERMETER == 2)
-  if (micros() > psensorTime + 19977 /*20000*/) { // 50Hz, but avoid bulking of timed tasks
+  if (micros() > psensorTime + 20000) { // 50Hz, but avoid bulking of timed tasks
      pMeterRaw =  analogRead(PSENSORPIN);
      powerValue = ( PSENSORNULL > pMeterRaw ? PSENSORNULL - pMeterRaw : pMeterRaw - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
      #ifdef LOG_VALUES
@@ -285,16 +289,22 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   serialCom();
 
   #ifdef LCD_TELEMETRY_AUTO
-    if ( (telemetry_auto) && (micros() > telemetryAutoTime + LCD_TELEMETRY_AUTO) ) { // every 2 seconds
+    if ( (telemetry_auto) && (! (++telemetryAutoTimer % LCD_TELEMETRY_AUTO_FREQ) )  ){
       telemetry++;
       if ( (telemetry < 1 ) || (telemetry > 5 ) ) telemetry = 1;
-      telemetryAutoTime = micros(); // why use micros() and not the variable currentTime ?
     }
   #endif  
   #ifdef LCD_TELEMETRY
-    if (micros() > telemetryTime +  LCD_TELEMETRY) { // 10Hz
+    if (! (++telemetryTimer % LCD_TELEMETRY_FREQ)) {
       if (telemetry) lcd_telemetry();
-      telemetryTime = micros();  
+    }
+  #endif
+  
+  #if defined(GPS)
+    static uint32_t GPSLEDTime;
+    if ( currentTime > GPSLEDTime && (GPS_fix_home == 1)) {
+      GPSLEDTime = currentTime + 150000;
+      LEDPIN_TOGGLE;
     }
   #endif
 }
@@ -445,10 +455,8 @@ void loop () {
       }
     }
    #ifdef LOG_VALUES
-    if (armed) { // update min and max values here, so do not get cycle time of the motor arming (which is way higher than normal)
-      if (cycleTime > cycleTimeMax) cycleTimeMax = cycleTime; // remember highscore
-      if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
-    }
+    if (cycleTime > cycleTimeMax) cycleTimeMax = cycleTime; // remember highscore
+    if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
    #endif
 
     rcOptions1 = (rcData[AUX1]<1300)   + (1300<rcData[AUX1] && rcData[AUX1]<1700)*2  + (rcData[AUX1]>1700)*4
