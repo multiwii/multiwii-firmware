@@ -263,8 +263,6 @@ void lcd_telemetry() {
     #define LCD_BAR(n,v) LCDbarGraph(n,v);
   #endif
   
-  uint16_t intPowerMeterSum;   
-
   switch (telemetry) { // output telemetry data, if one of four modes is set
     case 'C': // button C on Textstar LCD -> cycle time
       strcpy(line1,"Cycle    -----us"); //uin16_t cycleTime
