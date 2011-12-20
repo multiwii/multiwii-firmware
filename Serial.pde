@@ -200,9 +200,9 @@ void SerialOpen(uint8_t port, uint32_t baud) {
   switch (port) {
     case 0: UCSR0A  = (1<<U2X0); UBRR0H = h; UBRR0L = l; UCSR0B |= (1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0)|(1<<UDRIE0); break;
     #if defined(MEGA)
-    case 1: UCSR1A  = (1<<U2X1); UBRR1H = h; UBRR1L = l; UCSR1B |= (1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1)|(1<<UDRIE1); break;
-    case 2: UCSR2A  = (1<<U2X2); UBRR2H = h; UBRR2L = l; UCSR2B |= (1<<RXEN2)|(1<<TXEN2)|(1<<RXCIE2)|(1<<UDRIE2); break;
-    case 3: UCSR3A  = (1<<U2X3); UBRR3H = h; UBRR3L = l; UCSR3B |= (1<<RXEN3)|(1<<TXEN3)|(1<<RXCIE3)|(1<<UDRIE3); break;
+    case 1: UCSR1A  = (1<<U2X1); UBRR1H = h; UBRR1L = l; UCSR1B |= (1<<RXEN1)|(1<<RXCIE1); break;
+    case 2: UCSR2A  = (1<<U2X2); UBRR2H = h; UBRR2L = l; UCSR2B |= (1<<RXEN2)|(1<<RXCIE2); break;
+    case 3: UCSR3A  = (1<<U2X3); UBRR3H = h; UBRR3L = l; UCSR3B |= (1<<RXEN3)|(1<<RXCIE3); break;
     #endif
   }
 }
@@ -218,7 +218,7 @@ void SerialEnd(uint8_t port) {
   }
 }
 
-#if defined(PROMINI) && !(defined(SPEKTRUM))
+#if defined(PROMINI)
 SIGNAL(USART_RX_vect){
   uint8_t i = (serialHeadRX[0] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = UDR0; serialHeadRX[0] = i;}
@@ -229,12 +229,10 @@ SIGNAL(USART0_RX_vect){
   uint8_t i = (serialHeadRX[0] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = UDR0; serialHeadRX[0] = i;}
 }
-#if !(defined(SPEKTRUM))
 SIGNAL(USART1_RX_vect){
   uint8_t i = (serialHeadRX[1] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[1]) {serialBufferRX[serialHeadRX[1]][1] = UDR1; serialHeadRX[1] = i;}
 }
-#endif
 SIGNAL(USART2_RX_vect){
   uint8_t i = (serialHeadRX[2] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[2]) {serialBufferRX[serialHeadRX[2]][2] = UDR2; serialHeadRX[2] = i;}
