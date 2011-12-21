@@ -10,6 +10,7 @@ December  2011     V1.dev
 
 #include "config.h"
 #include "def.h"
+#include <avr/pgmspace.h>
 #define   VERSION  19
 
 
@@ -338,11 +339,17 @@ void setup() {
   #if defined(GPS)
     SerialOpen(GPS_SERIAL,GPS_BAUD);
   #endif
-  #if defined(LCD_ETPP)
-    i2c_ETPP_init();
-    i2c_ETPP_set_cursor(0,0);LCDprintChar("MultiWii");
-    i2c_ETPP_set_cursor(0,1);LCDprintChar("Ready to Fly!");
+  #if defined(LCD_CONF)
+    initLCD();
   #endif
+  #ifdef LCD_TELEMETRY_DEBUG
+    telemetry_auto = 1;
+  #endif
+  #ifdef LCD_CONF_DEBUG
+    configurationLoop();
+  #endif
+  
+
 }
 
 // ******** Main Loop *********
@@ -534,7 +541,7 @@ void loop () {
       } 
     }
     if (spekFrameFlags == 0x03) {
-      computeRC;                                   //If a buffer is ready, trigger an "extra" computeRC immediately.  It will also be called from the 50hz loop. 
+      computeRC();                                   //If a buffer is ready, trigger an "extra" computeRC immediately.  It will also be called from the 50hz loop. 
       #if defined(FAILSAFE)
         if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // Valid frame, clear FailSafe counter
       #endif

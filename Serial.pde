@@ -75,7 +75,7 @@ void serialCom() {
             free_memory = ((int)&free_memory) - ((int)&__bss_end);
           else
             free_memory = ((int)&free_memory) - ((int)__brkval);
-          strcpy(line1," Free ---- "); //uint8_t vbat, intPowerMeterSum
+          strcpy_P(line1,pmsg11); //" Free ---- "   uint8_t free_memory
           line1[6] = '0' + free_memory / 1000 - (free_memory/10000) * 10;
           line1[7] = '0' + free_memory / 100  - (free_memory/1000)  * 10;
           line1[8] = '0' + free_memory / 10   - (free_memory/100)   * 10;

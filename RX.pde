@@ -218,7 +218,7 @@ uint16_t readRawRC(uint8_t chan) {
     #define SPEK_CHAN_SHIFT  3       // Assumes 11 bit frames, that is 2048 mode.
     #define SPEK_CHAN_MASK   0x07    // Assumes 11 bit frames, that is 2048 mode.
   #endif
-  static uint8_t spekFrame[SPEK_FRAME_SIZE];
+//  static uint8_t spekFrame[SPEK_FRAME_SIZE];
 
 uint16_t readSpektrum(uint8_t chan) {
   uint16_t data;
