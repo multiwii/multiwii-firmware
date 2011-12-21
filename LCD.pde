@@ -2,6 +2,7 @@
 // LCD & display & monitoring
 // ************************************************************************************************************
 #ifdef LCD_CONF
+#include <avr/pgmspace.h>                             // For V1.9 compatibilty.  Remove later. 
 static char line1[17],line2[17];
 
 // Program Space Strings - These sit in program flash, not SRAM.
@@ -97,6 +98,7 @@ PROGMEM prog_char lcd_param_text21 []  = "RC Expo";
 PROGMEM prog_char lcd_param_text22 []  = "Pitch&Roll Rate";
 PROGMEM prog_char lcd_param_text23 []  = "Yaw Rate";
 PROGMEM prog_char lcd_param_text24 []  = "Throttle PID";
+#ifdef LOG_VALUES
 #if (LOG_VALUES == 2) || (POWERMETER == 1)
 PROGMEM prog_char lcd_param_text25 []  = "pMeter M0";
 PROGMEM prog_char lcd_param_text26 []  = "pMeter M1";
@@ -106,6 +108,7 @@ PROGMEM prog_char lcd_param_text29 []  = "pMeter M4";
 PROGMEM prog_char lcd_param_text30 []  = "pMeter M5";
 PROGMEM prog_char lcd_param_text31 []  = "pMeter M6";
 PROGMEM prog_char lcd_param_text32 []  = "pMeter M7";
+#endif
 #endif
 #ifdef POWERMETER
 PROGMEM prog_char lcd_param_text33 []  = "pMeter Sum";
@@ -155,6 +158,7 @@ PROGMEM const void *lcd_param_ptr_table [] = {
 &lcd_param_text22,   &rollPitchRate,        &__RC,
 &lcd_param_text23,   &yawRate,              &__RC,
 &lcd_param_text24,   &dynThrPID,            &__RC,
+#ifdef LOG_VALUES
 #if (LOG_VALUES == 2) || (POWERMETER == 1)
 &lcd_param_text25,   &pMeter[0],            &__PM,
 &lcd_param_text26,   &pMeter[1],            &__PM,
@@ -164,6 +168,7 @@ PROGMEM const void *lcd_param_ptr_table [] = {
 &lcd_param_text30,   &pMeter[5],            &__PM,
 &lcd_param_text31,   &pMeter[6],            &__PM,
 &lcd_param_text32,   &pMeter[7],            &__PM,
+#endif
 #endif
 #ifdef POWERMETER
 &lcd_param_text33,   &pMeter[PMOTOR_SUM],   &__PS,
