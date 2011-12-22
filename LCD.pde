@@ -5,27 +5,6 @@
 #include <avr/pgmspace.h>                             // For V1.9 compatibilty.  Remove later. 
 static char line1[17],line2[17];
 
-// Program Space Strings - These sit in program flash, not SRAM.
-// Rewrite to support PROGMEM strings 21/21/2011 by Danal
-PROGMEM prog_char b16[]    = "                ";
-PROGMEM prog_char imsg1[]  = "MultiWii V1.9+";
-PROGMEM prog_char imsg2[]  = "Config All Parms";
-PROGMEM prog_char pmsg01[] = "Cycle    -----us";
-PROGMEM prog_char pmsg02[] = "(-----, -----)us";
-PROGMEM prog_char pmsg03[] = "--.-V   -----mAh";
-//PROGMEM prog_char pmsg04[] = ".......  .......";
-PROGMEM prog_char pmsg05[] = "Deg ---.-  ---.-";
-PROGMEM prog_char pmsg06[] = "---,-A max---,-A";
-PROGMEM prog_char pmsg07[] = "Fails i2c t-errs";
-PROGMEM prog_char pmsg08[] = "----  ----  ---- ";
-PROGMEM prog_char pmsg09[] = "Deg ---.-  ---.-";
-PROGMEM prog_char pmsg10[] = "---,-A max---,-A";
-PROGMEM prog_char pmsg11[] = " Free ---- ";
-PROGMEM prog_char pmsg12[] = "Saving...";
-PROGMEM prog_char pmsg13[] = "Aborting";
-PROGMEM prog_char pmsg14[] = "Exit";
-
-
 typedef void (*formatter_func_ptr)(void *, uint8_t, uint8_t);
 typedef void (*inc_func_ptr)(void *, int8_t);
 
@@ -69,6 +48,8 @@ static lcd_param_def_t __L   = {&LTU8,  0, 1, 0};
 static lcd_param_def_t __FS  = {&LTU8,  1, 1, 0};
 static lcd_param_def_t __SE  = {&LTU16,  0, 1, 10};
 
+// Program Space Strings - These sit in program flash, not SRAM.
+// Rewrite to support PROGMEM strings 21/21/2011 by Danal
 
 PROGMEM prog_char lcd_param_text01 []  = "Pitch&Roll P";
 PROGMEM prog_char lcd_param_text02 []  = "Roll P";
@@ -240,9 +221,9 @@ void initLCD() {
     PINMODE_LCD; //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
   #endif
   LCDclear();
-  strcpy_P(line1,imsg1); LCDsetLine(1); LCDprintChar(line1);
+  strcpy_P(line1,PSTR("MultiWii V1.9+")); LCDsetLine(1); LCDprintChar(line1);
   if (!cycleTime == 0) {  //Not called from Setup()
-    strcpy_P(line1,imsg2); LCDsetLine(2); LCDprintChar(line1);
+    strcpy_P(line1,PSTR("Config All Parms")); LCDsetLine(2); LCDprintChar(line1);
   }
   delay(2500);
   LCDclear();
@@ -315,8 +296,8 @@ void configurationLoop() {
   while (LCD == 1) {
     if (refreshLCD) {
       blinkLED(10,20,1);
-      strcpy_P(line1,b16);
-      strcpy_P(line2,b16);
+      strcpy_P(line1,PSTR("                "));
+      strcpy(line2,line1);
       strcpy_P(line1, (char*)pgm_read_word(&(lcd_param_ptr_table[p * 3])));
       lcd_param_def_t* deft = (lcd_param_def_t*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 2]));
       deft->type->fmt((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), deft->multiplier, deft->decimal);
@@ -356,15 +337,15 @@ void configurationLoop() {
   
   LCDclear();
   if (LCD == 0) {
-    strcpy_P(line1,pmsg12);  //Saving
+    strcpy_P(line1,PSTR("Saving..."));
     LCDprintChar(line1);
   } else {
-    strcpy_P(line1,pmsg13);  //Aborting
+    strcpy_P(line1,PSTR("Aborting"));
     LCDprintChar(line1);
   }    
   if (LCD == 0) writeParams();
   LCDsetLine(2);
-  strcpy_P(line1,pmsg14);  //exit
+  strcpy_P(line1,PSTR("Exit"));
   LCDprintChar(line1);
   #if !defined(LCD_TEXTSTAR) && !defined(LCD_ETPP)
     SerialOpen(0,115200);
@@ -394,9 +375,9 @@ void lcd_telemetry() {
 
   switch (telemetry) { // output telemetry data, if one of four modes is set
     case 3: // button C on Textstar LCD -> cycle time
-      strcpy_P(line1,pmsg01); //"Cycle    -----us"  uin16_t cycleTime
-                              // 0123456789.12345*/
-      strcpy_P(line2,pmsg02); //"(-----, -----)us"   uin16_t cycleTimeMax
+      strcpy_P(line1,PSTR("Cycle    -----us")); //uin16_t cycleTime
+                        // 0123456789.12345*/
+      strcpy_P(line2,PSTR("(-----, -----)us")); //uin16_t cycleTimeMax
       line1[9] = '0' + cycleTime / 10000;
       line1[10] = '0' + cycleTime / 1000 - (cycleTime/10000) * 10;
       line1[11] = '0' + cycleTime / 100  - (cycleTime/1000)  * 10;
@@ -418,9 +399,9 @@ void lcd_telemetry() {
       LCDsetLine(1);LCDprintChar(line1);
       break;
     case 2: // button B on Textstar LCD -> Voltage, PowerSum and power alarm trigger value
-      strcpy_P(line1,pmsg03); //"--.-V   -----mAh" uint8_t vbat, intPowerMeterSum
-                              // 0123456789.12345
-//    strcpy_P(line2,pmsg04); //".......  ......." intPowerMeterSum, intPowerTrigger1
+      strcpy_P(line1,PSTR("--.-V   -----mAh")); // uint8_t vbat, intPowerMeterSum
+                        // 0123456789.12345
+//    strcpy_P(line2,PSTR(".......  .......")); // intPowerMeterSum, intPowerTrigger1
     #ifdef VBAT
       line1[0] = '0'+vbat/100; line1[1] = '0'+vbat/10-(vbat/100)*10; line1[3] = '0'+vbat-(vbat/10)*10;
     #endif
@@ -456,9 +437,9 @@ void lcd_telemetry() {
       break;
     case 1: // button A on Textstar LCD -> angles 
       uint16_t unit;
-      strcpy_P(line1,pmsg05);    //"Deg ---.-  ---.-"
-                                 // 0123456789.12345
-      strcpy_P(line2,pmsg06); //"---,-A max---,-A"
+      strcpy_P(line1,PSTR("Deg ---.-  ---.-"));
+                        // 0123456789.12345
+      strcpy_P(line2,PSTR("---,-A max---,-A"));
       if (angle[0] < 0 ) {
         unit = -angle[0];
         line1[3] = '-';
@@ -505,9 +486,9 @@ void lcd_telemetry() {
       if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT) } else LCDprintChar("....");
       break;
     case 5: // No Z button.  Displays with auto telemetry only
-      strcpy_P(line1,pmsg07); //"Fails i2c t-errs"  
-                              // 0123456789012345
-      strcpy_P(line2,pmsg08); //"----  ----  ---- "
+      strcpy_P(line1,PSTR("Fails i2c t-errs"));  
+                        // 0123456789012345
+      strcpy_P(line2,PSTR("----  ----  ---- "));
       line2[0] = '0' + failsafeEvents / 1000 - (failsafeEvents/10000) * 10;
       line2[1] = '0' + failsafeEvents / 100  - (failsafeEvents/1000)  * 10;
       line2[2] = '0' + failsafeEvents / 10   - (failsafeEvents/100)   * 10;

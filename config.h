@@ -234,7 +234,7 @@
    comment this line only if you don't plan to used a LCD */
 #define LCD_CONF
 /* Use this to trigger telemetry without a TX */
-//#define LCD_CONF_DEBUG
+#define LCD_CONF_DEBUG
 
 
 /* To use an Eagle Tree Power Panel LCD for configuration, uncomment this line
@@ -355,7 +355,7 @@
 
 /* to log values like max loop time and others to come */
 /* logging values are visible via LCD config */
-/* set to 2, if you want powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> 1)
+/* set to 2, if you want powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> 1) */
 #define LOG_VALUES 1
  
 
