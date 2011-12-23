@@ -1,5 +1,4 @@
 volatile uint16_t rcValue[18] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
-
 #if defined(SERIAL_SUM_PPM)
   static uint8_t rcChannel[8] = {SERIAL_SUM_PPM};
 #elif defined(SBUS)
@@ -8,6 +7,19 @@ volatile uint16_t rcValue[18] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502,
   static uint16_t sbusIndex=0;
 #else
   static uint8_t rcChannel[8]  = {ROLLPIN, PITCHPIN, YAWPIN, THROTTLEPIN, AUX1PIN,AUX2PIN,AUX3PIN,AUX4PIN};
+#endif
+#if defined(SPEKTRUM)
+  #define SPEK_MAX_CHANNEL 7
+  #define SPEK_FRAME_SIZE 16
+  #if (SPEKTRUM == 1024)
+    #define SPEK_CHAN_SHIFT  2       // Assumes 10 bit frames, that is 1024 mode.
+    #define SPEK_CHAN_MASK   0x03    // Assumes 10 bit frames, that is 1024 mode.
+  #endif
+  #if (SPEKTRUM == 2048)
+    #define SPEK_CHAN_SHIFT  3       // Assumes 11 bit frames, that is 2048 mode.
+    #define SPEK_CHAN_MASK   0x07    // Assumes 11 bit frames, that is 2048 mode.
+  #endif
+  volatile uint8_t spekFrame[SPEK_FRAME_SIZE];
 #endif
 
 // Configure each rc pin for PCINT
@@ -40,7 +52,8 @@ void configureReceiver() {
     PPM_PIN_INTERRUPT;
   #endif
   #if defined (SPEKTRUM)
-    SerialOpen(SPEK_SERIAL_PORT,115200);
+    SPEK_BAUD_SET;
+    SPEK_SERIAL_INTERRUPT;
   #endif
   #if defined(SBUS)
     SerialOpen(1,100000);
@@ -157,6 +170,27 @@ void rxInt() {
 }
 #endif
 
+#if defined(SPEKTRUM)
+  ISR(SPEK_SERIAL_VECT) {
+    uint32_t spekTime;
+    static uint32_t spekTimeLast, spekTimeInterval;
+    static uint8_t  spekFramePosition;
+    spekTime=micros();
+    spekTimeInterval = spekTime - spekTimeLast;
+    spekTimeLast = spekTime;
+    if (spekTimeInterval > 5000) spekFramePosition = 0;
+    spekFrame[spekFramePosition] = SPEK_DATA_REG;
+    if (spekFramePosition == SPEK_FRAME_SIZE - 1) {
+      rcFrameComplete = 1;
+      #if defined(FAILSAFE)
+        if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // clear FailSafe counter
+      #endif
+    } else {
+      spekFramePosition++;
+    }
+  }
+#endif
+
 #if defined(SBUS)
 void  readSBus(){
   #define SBUS_SYNCBYTE 0x0F // Not 100% sure: at the beginning of coding it was 0xF0 !!!
@@ -203,51 +237,34 @@ uint16_t readRawRC(uint8_t chan) {
   uint16_t data;
   uint8_t oldSREG;
   oldSREG = SREG; cli(); // Let's disable interrupts
-    data = rcValue[rcChannel[chan]]; // Let's copy the data Atomically
+  data = rcValue[rcChannel[chan]]; // Let's copy the data Atomically
+  #if defined(SPEKTRUM)
+    static uint32_t spekChannelData[SPEK_MAX_CHANNEL];
+    if (rcFrameComplete) {
+      for (uint8_t b = 3; b < SPEK_FRAME_SIZE; b += 2) {
+        uint8_t spekChannel = 0x0F & (spekFrame[b - 1] >> SPEK_CHAN_SHIFT);
+        if (spekChannel < SPEK_MAX_CHANNEL) spekChannelData[spekChannel] = (long(spekFrame[b - 1] & SPEK_CHAN_MASK) << 8) + spekFrame[b];
+      }
+      rcFrameComplete = 0;
+    }
+  #endif
   SREG = oldSREG; sei();// Let's enable the interrupts
+  #if defined(SPEKTRUM)
+    static uint8_t spekRcChannelMap[SPEK_MAX_CHANNEL] = {1,2,3,0,4,5,6};
+    if (chan >= SPEK_MAX_CHANNEL) {
+      data = 1500;
+    } else {
+      #if (SPEKTRUM == 1024)
+        data = 988 + spekChannelData[spekRcChannelMap[chan]];          // 1024 mode
+      #endif
+      #if (SPEKTRUM == 2048)
+        data = 988 + (spekChannelData[spekRcChannelMap[chan]] >> 1);   // 2048 mode
+      #endif
+    }
+  #endif
   return data; // We return the value correctly copied when the IRQ's where disabled
 }
-  
-#if defined(SPEKTRUM)
-  #define SPEK_MAX_CHANNEL 7
-  #if (SPEKTRUM == 1024)
-    #define SPEK_CHAN_SHIFT  2       // Assumes 10 bit frames, that is 1024 mode.
-    #define SPEK_CHAN_MASK   0x03    // Assumes 10 bit frames, that is 1024 mode.
-  #endif
-  #if (SPEKTRUM == 2048)
-    #define SPEK_CHAN_SHIFT  3       // Assumes 11 bit frames, that is 2048 mode.
-    #define SPEK_CHAN_MASK   0x07    // Assumes 11 bit frames, that is 2048 mode.
-  #endif
-//  static uint8_t spekFrame[SPEK_FRAME_SIZE];
-
-uint16_t readSpektrum(uint8_t chan) {
-  uint16_t data;
-  static uint16_t spekChannelData[SPEK_MAX_CHANNEL];
-  if (spekFrameFlags == 0x03) {     //A complete frame is sitting in the serial buffer.  Read it. 
-    SerialRead(SPEK_SERIAL_PORT); SerialRead(SPEK_SERIAL_PORT);        //Eat the header bytes 
-    for (uint8_t b = 2; b < SPEK_FRAME_SIZE; b += 2) {
-      uint8_t bh = SerialRead(SPEK_SERIAL_PORT);
-      uint8_t bl = SerialRead(SPEK_SERIAL_PORT);
-      uint8_t spekChannel = 0x0F & (bh >> SPEK_CHAN_SHIFT);
-      if (spekChannel < SPEK_MAX_CHANNEL) spekChannelData[spekChannel] = (int(bh & SPEK_CHAN_MASK) << 8) + bl;
-    }
-    spekFrameFlags = 0;             //Done with this frame. 
-  }
-  uint8_t spekRcChannelMap[SPEK_MAX_CHANNEL] = {1,2,3,0,4,5,6};
-  if (chan >= SPEK_MAX_CHANNEL) {
-    data = 1500;
-  } else {
-    #if (SPEKTRUM == 1024)
-      data = 988 + spekChannelData[spekRcChannelMap[chan]];          // 1024 mode
-    #endif
-    #if (SPEKTRUM == 2048)
-      data = 988 + (spekChannelData[spekRcChannelMap[chan]] >> 1);   // 2048 mode
-    #endif
-  }
-  return data;
-}
-#endif
-
+    
 void computeRC() {
   static int16_t rcData4Values[8][4], rcDataMean[8];
   static uint8_t rc4ValuesIndex = 0;
@@ -258,11 +275,7 @@ void computeRC() {
   #endif
   rc4ValuesIndex++;
   for (chan = 0; chan < 8; chan++) {
-    #if defined(SPEKTRUM)
-      rcData4Values[chan][rc4ValuesIndex%4] = readSpektrum(chan);
-    #else
-      rcData4Values[chan][rc4ValuesIndex%4] = readRawRC(chan);
-    #endif
+    rcData4Values[chan][rc4ValuesIndex%4] = readRawRC(chan);
     rcDataMean[chan] = 0;
     for (a=0;a<4;a++) rcDataMean[chan] += rcData4Values[chan][a];
     rcDataMean[chan]= (rcDataMean[chan]+2)/4;

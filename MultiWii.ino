@@ -111,9 +111,8 @@ static int16_t rcCommand[4]; // interval [1000;2000] for THROTTLE and [-500;+500
 static uint8_t rcRate8;
 static uint8_t rcExpo8;
 static int16_t lookupRX[7]; //  lookup table for expo & RC rate
-#if defined(SPEKTRUM)
-  static uint8_t spekFrameFlags = 0;  
-#endif
+volatile uint8_t rcFrameComplete; //for serial rc receiver Spektrum
+
 
 // **************
 // gyro+acc IMU
@@ -289,9 +288,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
       calibratedACC = 1;
   }
 
-#if !(defined(SPEKTRUM) && defined(PROMINI))  //On Promini, Spektrum satellite uses serial 0.  
   serialCom();
-#endif
 
   #ifdef LCD_TELEMETRY_AUTO
     if ( (telemetry_auto) && (! (++telemetryAutoTimer % LCD_TELEMETRY_AUTO_FREQ) )  ){
@@ -371,9 +368,13 @@ void loop () {
   static int16_t lastVelError = 0;
   static int32_t AltHold;
  
+  #if defined(SPEKTRUM)
+    if (rcFrameComplete) computeRC();
+  #endif
+
   if (currentTime > rcTime ) { // 50Hz
     rcTime = currentTime + 20000;
-    #if !defined(BTSERIAL)
+    #if !(defined(SPEKTRUM) ||defined(BTSERIAL))
       computeRC();
     #endif
     // Failsafe routine - added by MIS
@@ -526,28 +527,6 @@ void loop () {
   cycleTime = currentTime - previousTime;
   previousTime = currentTime;
 
-  #if defined(SPEKTRUM)                                                       // Compute the time of character arrival for synching a spektrum frame
-    #define SPEK_FRAME_SIZE 16
-    static uint32_t spekTimeLast; 
-    uint8_t sa = SerialAvailable(SPEK_SERIAL_PORT); 
-    if (sa) {
-      uint32_t spekTimeInterval = currentTime - spekTimeLast;
-      spekTimeLast = currentTime;
-      if (spekTimeInterval > 5000) spekFrameFlags = 0x01;                    //Potential Start of Frame.
-      if (sa == SPEK_FRAME_SIZE) spekFrameFlags |= 0x02;                     //Enough for a complete frame.  Maybe End of Frame.
-      if (sa > SPEK_FRAME_SIZE) {                                            //Too many? Somehow, we missed something.  Ignore this and get the next one.
-        while(SerialAvailable(SPEK_SERIAL_PORT)) uint8_t C = SerialRead(SPEK_SERIAL_PORT);  //Flush the buffer.
-        spekFrameFlags = 0x00;                                                             //No longer in a valid frame started condition.
-      } 
-    }
-    if (spekFrameFlags == 0x03) {
-      computeRC();                                   //If a buffer is ready, trigger an "extra" computeRC immediately.  It will also be called from the 50hz loop. 
-      #if defined(FAILSAFE)
-        if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // Valid frame, clear FailSafe counter
-      #endif
-    } 
-  #endif
-  
   if(MAG) {
     if (abs(rcCommand[YAW]) <70 && magMode) {
       int16_t dif = heading - magHold;

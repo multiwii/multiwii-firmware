@@ -37,7 +37,10 @@
   #define DIGITAL_BI_LEFT_HIGH       PORTB |= 1<<3;
   #define DIGITAL_BI_LEFT_LOW        PORTB &= ~(1<<3);
   #define PPM_PIN_INTERRUPT          attachInterrupt(0, rxInt, RISING); //PIN 0
-  #define SPEK_SERIAL_PORT           0
+  #define SPEK_SERIAL_VECT           USART_RX_vect
+  #define SPEK_BAUD_SET              UCSR0A  = (1<<U2X0); UBRR0H = ((F_CPU  / 4 / 115200 -1) / 2) >> 8; UBRR0L = ((F_CPU  / 4 / 115200 -1) / 2);
+  #define SPEK_SERIAL_INTERRUPT      UCSR0B |= (1<<RXEN0)|(1<<RXCIE0);
+  #define SPEK_DATA_REG              UDR0
   #define MOTOR_ORDER                9,10,11,3,6,5  //for a quad+: rear,right,left,front
   #define DIGITAL_CAM_PINMODE        pinMode(A2,OUTPUT);
   #define DIGITAL_CAM_HIGH           PORTC |= 1<<2;
@@ -87,7 +90,10 @@
   #define DIGITAL_BI_LEFT_HIGH       PORTH |= 1<<3;
   #define DIGITAL_BI_LEFT_LOW        PORTH &= ~(1<<3);
   #define PPM_PIN_INTERRUPT          attachInterrupt(4, rxInt, RISING);  //PIN 19
-  #define SPEK_SERIAL_PORT           1
+  #define SPEK_SERIAL_VECT           USART1_RX_vect
+  #define SPEK_BAUD_SET              UCSR1A  = (1<<U2X1); UBRR1H = ((F_CPU  / 4 / 115200 -1) / 2) >> 8; UBRR1L = ((F_CPU  / 4 / 115200 -1) / 2);
+  #define SPEK_SERIAL_INTERRUPT      UCSR1B |= (1<<RXEN1)|(1<<RXCIE1);
+  #define SPEK_DATA_REG              UDR1
   #define MOTOR_ORDER                3,5,6,2,7,8,9,10   //for a quad+: rear,right,left,front   //+ for y6: 7:under right  8:under left
   #define DIGITAL_CAM_PINMODE        pinMode(33,OUTPUT); pinMode(46,OUTPUT); // 33 + 46
   #define DIGITAL_CAM_HIGH           PORTC |= 1<<4;PORTL |= 1<<3;

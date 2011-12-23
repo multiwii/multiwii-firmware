@@ -14,10 +14,10 @@
 //#define BI
 //#define TRI
 //#define QUADP
-#define QUADX
+//#define QUADX
 //#define Y4
 //#define Y6
-//#define HEX6
+#define HEX6
 //#define HEX6X
 //#define OCTOX8
 //#define OCTOFLATP
@@ -234,7 +234,7 @@
    comment this line only if you don't plan to used a LCD */
 #define LCD_CONF
 /* Use this to trigger telemetry without a TX */
-#define LCD_CONF_DEBUG
+//#define LCD_CONF_DEBUG
 
 
 /* To use an Eagle Tree Power Panel LCD for configuration, uncomment this line

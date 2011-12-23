@@ -185,7 +185,7 @@ void serialCom() {
 
 #define SERIAL_RX_BUFFER_SIZE 64
 
-#if defined(PROMINI)
+#if defined(PROMINI) 
 uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][1];
 volatile uint8_t serialHeadRX[1],serialTailRX[1];
 #endif
@@ -218,7 +218,7 @@ void SerialEnd(uint8_t port) {
   }
 }
 
-#if defined(PROMINI)
+#if defined(PROMINI) && !(defined(SPEKTRUM))
 SIGNAL(USART_RX_vect){
   uint8_t i = (serialHeadRX[0] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = UDR0; serialHeadRX[0] = i;}
@@ -229,10 +229,12 @@ SIGNAL(USART0_RX_vect){
   uint8_t i = (serialHeadRX[0] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = UDR0; serialHeadRX[0] = i;}
 }
+#if !(defined(SPEKTRUM))
 SIGNAL(USART1_RX_vect){
   uint8_t i = (serialHeadRX[1] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[1]) {serialBufferRX[serialHeadRX[1]][1] = UDR1; serialHeadRX[1] = i;}
 }
+#endif
 SIGNAL(USART2_RX_vect){
   uint8_t i = (serialHeadRX[2] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[2]) {serialBufferRX[serialHeadRX[2]][2] = UDR2; serialHeadRX[2] = i;}

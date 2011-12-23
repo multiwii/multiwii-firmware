@@ -110,7 +110,7 @@ PROGMEM prog_char lcd_param_text39 []  = "#Failsafes";
 PROGMEM prog_char lcd_param_text40 []  = "#i2c Errors";
 #endif
 
-PROGMEM const void *lcd_param_ptr_table [] = {
+PROGMEM const prog_void *lcd_param_ptr_table [] = {
 &lcd_param_text01,   &P8[ROLL],             &__P,
 &lcd_param_text02,   &P8[ROLL],             &__P,
 &lcd_param_text03,   &I8[ROLL],             &__I,
@@ -222,11 +222,12 @@ void initLCD() {
   #endif
   LCDclear();
   strcpy_P(line1,PSTR("MultiWii V1.9+")); LCDsetLine(1); LCDprintChar(line1);
-  if (!cycleTime == 0) {  //Not called from Setup()
+  if (cycleTime == 0) {  //Called from Setup()
+    strcpy_P(line1,PSTR("Ready to Fly")); LCDsetLine(2); LCDprintChar(line1);
+  } else {
     strcpy_P(line1,PSTR("Config All Parms")); LCDsetLine(2); LCDprintChar(line1);
+    delay(2500);
   }
-  delay(2500);
-  LCDclear();
 }
 
 void __u8Inc(void * var, int8_t inc) {*(uint8_t*)var += inc;};
