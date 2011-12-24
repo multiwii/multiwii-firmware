@@ -44,7 +44,11 @@ void writeMotors() { // [1000;2000] => [125;250]
       analogWrite(PWM_PIN[i], motor[i]>>3);
   #else
     for(uint8_t i=0;i<min(NUMBER_MOTOR,4);i++)
-      analogWrite(PWM_PIN[i], motor[i]>>3);
+    #ifndef EXT_MOTOR_RANGE 
+      analogWrite(PWM_PIN[i], motor[i]>>3); 
+    #else 
+      analogWrite(PWM_PIN[i], ((motor[i]>>2) - 250) + 2); 
+    #endif
     #if (NUMBER_MOTOR == 6)
       atomicPWM_PIN5_highState = motor[5]/8;
       atomicPWM_PIN5_lowState = 255-atomicPWM_PIN5_highState;
@@ -60,17 +64,23 @@ void writeAllMotors(int16_t mc) {   // Sends commands to all motors
   writeMotors();
 }
 
-#if defined(LOG_VALUES) || (POWERMETER == 1)
+#if (LOG_VALUES == 2) || (POWERMETER == 1)
 void logMotorsPower() {
   uint32_t amp;
-  /* true cubic function; when divided by vbat_max=126 (12.6V) for 3 cell battery this gives maximum value of ~ 1000 */
-  const uint32_t amperes[64] =   {0,4,13,31,60,104,165,246,350,481,640,831,1056,1319,1622,1969,2361,2803,3297,3845,4451,5118,5848,6645,
-	                             7510,8448,9461,10551,11723,12978,14319,15750,17273,18892,20608,22425,24346,26374,28512,30762,33127,35611,
-	                             38215,40944,43799,46785,49903,53156,56548,60081,63759,67583,71558,75685,79968,84410,89013,93781,98716,103821,
-	                             109099,114553,120186,126000 };
+  /* true cubic function; when divided by vbat_max=126 (12.6V) for 3 cell battery this gives maximum value of ~ 500 */
+  /* Lookup table moved to PROGMEM 11/21/2001 by Danal */
+  PROGMEM prog_uint16_t amperes[64] =   {   0,  2,  6, 15, 30, 52, 82,123,
+                                   175,240,320,415,528,659,811,984,
+                                   1181,1402,1648,1923,2226,2559,2924,3322,
+                                   3755,4224,4730,5276,5861,6489,7160,7875,
+                                   8637 ,9446 ,10304,11213,12173,13187,14256,15381,
+                                   16564,17805,19108,20472,21900,23392,24951,26578,
+                                   28274,30041,31879,33792,35779,37843,39984,42205,
+                                   44507,46890,49358,51910,54549,57276,60093,63000};
+
   if (vbat) { // by all means - must avoid division by zero 
     for (uint8_t i =0;i<NUMBER_MOTOR;i++) {
-      amp = amperes[(motor[i] - 1000)>>4] / vbat; // range mapped from [1000:2000] => [0:1000]; then break that up into 64 ranges; lookup amp
+      amp = pgm_read_word_near(amperes + ((motor[i] - 1000)>>4)) / vbat; // range mapped from [1000:2000] => [0:1000]; then break that up into 64 ranges; lookup amp
       #ifdef LOG_VALUES
          pMeter[i]+= amp; // sum up over time the mapped ESC input 
       #endif
@@ -273,7 +283,7 @@ void mixTable() {
     motor[0] = PIDMIX( 0,+4/3, 0); //REAR
     motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
     motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
-    servo[0] = constrain(TRI_YAW_MIDDLE + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
+    servo[0] = constrain(tail_servo_mid + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
   #endif
   #ifdef QUADP
     motor[0] = PIDMIX( 0,+1,-1); //REAR
@@ -362,15 +372,13 @@ void mixTable() {
     servo[2] = constrain(TILT_ROLL_MIDDLE + TILT_ROLL_PROP   * angle[ROLL]  /16 + rcCommand[ROLL], TILT_ROLL_MIN, TILT_ROLL_MAX);
   #endif
   #ifdef FLYING_WING
-   motor[0] = rcCommand[THROTTLE];
-    //if (passthroughMode) {// use raw stick values to drive output 
-    // follow aux1 as being three way switch **NOTE: better to implement via check boxes in GUI 
-    if (rcData[AUX1]<1300) { // passthrough
-       servo[1]  = constrain(WING_LEFT_MID  + PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC), WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
-       servo[2]  = constrain(WING_RIGHT_MID + PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC), WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+    motor[0] = rcCommand[THROTTLE];
+    if (passthroughMode) {// use raw stick values to drive output 
+       servo[1]  = constrain(wing_left_mid  + PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC), WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
+       servo[2]  = constrain(wing_right_mid + PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC), WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
     } else { // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration
-       servo[1]  = constrain(WING_LEFT_MID  + PITCH_DIRECTION_L * axisPID[PITCH]        + ROLL_DIRECTION_L * axisPID[ROLL], WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
-       servo[2]  = constrain(WING_RIGHT_MID + PITCH_DIRECTION_R * axisPID[PITCH]        + ROLL_DIRECTION_R * axisPID[ROLL], WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+       servo[1]  = constrain(wing_left_mid  + PITCH_DIRECTION_L * axisPID[PITCH]        + ROLL_DIRECTION_L * axisPID[ROLL], WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
+       servo[2]  = constrain(wing_right_mid + PITCH_DIRECTION_R * axisPID[PITCH]        + ROLL_DIRECTION_R * axisPID[ROLL], WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
     }
   #endif
   #if defined(CAMTRIG)
@@ -412,7 +420,7 @@ void mixTable() {
       motor[i] = MINCOMMAND;
   }
 
-  #if defined(LOG_VALUES) || (POWERMETER == 1)
+  #if (LOG_VALUES == 2) || (POWERMETER == 1)
     logMotorsPower();
   #endif
 }

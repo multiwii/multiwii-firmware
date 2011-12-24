@@ -2,6 +2,7 @@
 // LCD & display & monitoring
 // ************************************************************************************************************
 #ifdef LCD_CONF
+static char line1[17],line2[17];
 
 typedef void (*formatter_func_ptr)(void *, uint8_t, uint8_t);
 typedef void (*inc_func_ptr)(void *, int8_t);
@@ -23,11 +24,11 @@ typedef struct lcd_param_def_t{
   uint8_t  increment;
 };
 
-typedef struct lcd_param_t{
-  char*  paramText;
-  void * var; 
-  lcd_param_def_t * def;
-};
+//typedef struct lcd_param_t{
+//  char*  paramText;
+//  void * var; 
+//  lcd_param_def_t * def;
+//};
 
 // ************************************************************************************************************
 // LCD Layout definition
@@ -44,48 +45,131 @@ static lcd_param_def_t __PT  = {&LTU8,  0, 1, 1};
 static lcd_param_def_t __VB  = {&LTU8,  1, 1, 0};
 static lcd_param_def_t __L   = {&LTU8,  0, 1, 0};
 static lcd_param_def_t __FS  = {&LTU8,  1, 1, 0};
-// Parameters
-static lcd_param_t lcd_param[] = {
-  {"PITCH&ROLL P",    &P8[ROLL],      &__P}
-, {"ROLL   P",        &P8[ROLL],      &__P}, {"ROLL   I", &I8[ROLL],   &__I}, {"ROLL   D", &D8[ROLL],   &__D}
-, {"PITCH  P",        &P8[PITCH],     &__P}, {"PITCH  I", &I8[PITCH],  &__I}, {"PITCH  D", &D8[PITCH],  &__D}
-, {"YAW    P",        &P8[YAW],       &__P}, {"YAW    I", &I8[YAW],    &__I}, {"YAW    D", &D8[YAW],    &__D}
-#if BARO
-, {"ALT    P",        &P8[PIDALT],    &__P}, {"ALT    I", &I8[PIDALT], &__I}, {"ALT    D", &D8[PIDALT], &__D}
-, {"VEL    P",        &P8[PIDVEL],    &__P}, {"VEL    I", &I8[PIDVEL], &__I}, {"VEL    D", &D8[PIDVEL], &__D}
-#endif  
-, {"LEVEL  P",        &P8[PIDLEVEL],  &__P}, {"LEVEL  I", &I8[PIDLEVEL],&__I}
-#if MAG
-, {"MAG    P",        &P8[PIDMAG],    &__P}
-#endif  
-, {"RC RATE",         &rcRate8,       &__RCR}
-, {"RC EXPO",         &rcExpo8,       &__RC}
-, {"PITCH&ROLL RATE", &rollPitchRate, &__RC}
-, {"YAW RATE",        &yawRate,       &__RC}
-, {"THROTTLE PID",    &dynThrPID,     &__RC}
+static lcd_param_def_t __SE  = {&LTU16,  0, 1, 10};
+
+// Program Space Strings - These sit in program flash, not SRAM.
+// Rewrite to support PROGMEM strings 21/21/2011 by Danal
+
+PROGMEM prog_char lcd_param_text01 []  = "Pitch&Roll P";
+PROGMEM prog_char lcd_param_text02 []  = "Roll P";
+PROGMEM prog_char lcd_param_text03 []  = "Roll I";
+PROGMEM prog_char lcd_param_text04 []  = "Roll D";
+PROGMEM prog_char lcd_param_text05 []  = "Pitch P";
+PROGMEM prog_char lcd_param_text06 []  = "Pitch I";
+PROGMEM prog_char lcd_param_text07 []  = "Pitch D";
+PROGMEM prog_char lcd_param_text08 []  = "Yaw P";
+PROGMEM prog_char lcd_param_text09 []  = "Yaw I";
+PROGMEM prog_char lcd_param_text10 []  = "Yaw D";
+#ifdef  BARO
+PROGMEM prog_char lcd_param_text11 []  = "Alt P";
+PROGMEM prog_char lcd_param_text12 []  = "Alt I";
+PROGMEM prog_char lcd_param_text13 []  = "Alt D";
+PROGMEM prog_char lcd_param_text14 []  = "Vel P";
+PROGMEM prog_char lcd_param_text15 []  = "Vel I";
+PROGMEM prog_char lcd_param_text16 []  = "Vel D";
+#endif
+PROGMEM prog_char lcd_param_text17 []  = "Level P";
+PROGMEM prog_char lcd_param_text18 []  = "Level I";
+#ifdef MAG
+PROGMEM prog_char lcd_param_text19 []  = "Mag P";
+#endif
+PROGMEM prog_char lcd_param_text20 []  = "RC Rate";
+PROGMEM prog_char lcd_param_text21 []  = "RC Expo";
+PROGMEM prog_char lcd_param_text22 []  = "Pitch&Roll Rate";
+PROGMEM prog_char lcd_param_text23 []  = "Yaw Rate";
+PROGMEM prog_char lcd_param_text24 []  = "Throttle PID";
+#ifdef LOG_VALUES
+#if (LOG_VALUES == 2) || (POWERMETER == 1)
+PROGMEM prog_char lcd_param_text25 []  = "pMeter M0";
+PROGMEM prog_char lcd_param_text26 []  = "pMeter M1";
+PROGMEM prog_char lcd_param_text27 []  = "pMeter M2";
+PROGMEM prog_char lcd_param_text28 []  = "pMeter M3";
+PROGMEM prog_char lcd_param_text29 []  = "pMeter M4";
+PROGMEM prog_char lcd_param_text30 []  = "pMeter M5";
+PROGMEM prog_char lcd_param_text31 []  = "pMeter M6";
+PROGMEM prog_char lcd_param_text32 []  = "pMeter M7";
+#endif
+#endif
 #ifdef POWERMETER
-, {"pMeter Motor 0",  &pMeter[0],     &__PM}, {"pMeter Motor 1", &pMeter[1], &__PM}, {"pMeter Motor 2", &pMeter[2], &__PM}
-   #if (NUMBER_MOTOR > 3)
-   , {"pMeter Motor 3",  &pMeter[3],     &__PM}
-   #endif
-   #if (NUMBER_MOTOR > 4)
-   , {"pMeter Motor 4", &pMeter[4], &__PM}, {"pMeter Motor 5", &pMeter[5], &__PM}
-   #endif
-   #if (NUMBER_MOTOR > 6)
-   , {"pMeter Motor 6", &pMeter[6], &__PM}, {"pMeter Motor 7", &pMeter[7], &__PM}
-   #endif
-, {"pMeter Sum",      &pMeter[PMOTOR_SUM],     &__PS}
-, {"pAlarm /50",      &powerTrigger1, &__PT} // change text to represent PLEVELSCALE value
+PROGMEM prog_char lcd_param_text33 []  = "pMeter Sum";
+PROGMEM prog_char lcd_param_text34 []  = "pAlarm /50";  // change text to represent PLEVELSCALE value
 #endif
 #ifdef VBAT
-, {"Battery Volt",    &vbat,          &__VB} 
+PROGMEM prog_char lcd_param_text35 []  = "Batt Volt";
+#endif
+#ifdef FLYING_WING
+PROGMEM prog_char lcd_param_text36 []  = "Trim Servo1";
+PROGMEM prog_char lcd_param_text37 []  = "Trim Servo2";
+#endif
+#ifdef TRI
+PROGMEM prog_char lcd_param_text38 []  = "Trim ServoTail";
 #endif
 #ifdef LOG_VALUES
-, {"Failsafe    ",    &failsafeEvents,&__FS} 
-, {"i2c errors",       &i2c_errors_count,          &__L} 
+PROGMEM prog_char lcd_param_text39 []  = "#Failsafes";
+PROGMEM prog_char lcd_param_text40 []  = "#i2c Errors";
+#endif
+
+PROGMEM const prog_void *lcd_param_ptr_table [] = {
+&lcd_param_text01,   &P8[ROLL],             &__P,
+&lcd_param_text02,   &P8[ROLL],             &__P,
+&lcd_param_text03,   &I8[ROLL],             &__I,
+&lcd_param_text04,   &D8[ROLL],             &__D,
+&lcd_param_text05,   &P8[PITCH],            &__P,
+&lcd_param_text06,   &I8[PITCH],            &__I,
+&lcd_param_text07,   &D8[PITCH],            &__D,
+&lcd_param_text08,   &P8[YAW],              &__P,
+&lcd_param_text09,   &I8[YAW],              &__I,
+&lcd_param_text10,   &D8[YAW],              &__D,
+#ifdef  BARO
+&lcd_param_text11,   &P8[PIDALT],           &__P,
+&lcd_param_text12,   &I8[PIDALT],           &__I,
+&lcd_param_text13,   &D8[PIDALT],           &__D,
+&lcd_param_text14,   &P8[PIDVEL],           &__P,
+&lcd_param_text15,   &I8[PIDVEL],           &__I,
+&lcd_param_text16,   &D8[PIDVEL],           &__D,
+#endif
+&lcd_param_text17,   &P8[PIDLEVEL],         &__P,
+&lcd_param_text18,   &I8[PIDLEVEL],         &__I,
+#ifdef MAG
+&lcd_param_text19,   &P8[PIDMAG],           &__P,
+#endif
+&lcd_param_text20,   &rcRate8,              &__RCR,
+&lcd_param_text21,   &rcExpo8,              &__RC,
+&lcd_param_text22,   &rollPitchRate,        &__RC,
+&lcd_param_text23,   &yawRate,              &__RC,
+&lcd_param_text24,   &dynThrPID,            &__RC,
+#ifdef LOG_VALUES
+#if (LOG_VALUES == 2) || (POWERMETER == 1)
+&lcd_param_text25,   &pMeter[0],            &__PM,
+&lcd_param_text26,   &pMeter[1],            &__PM,
+&lcd_param_text27,   &pMeter[2],            &__PM,
+&lcd_param_text28,   &pMeter[3],            &__PM,
+&lcd_param_text29,   &pMeter[4],            &__PM,
+&lcd_param_text30,   &pMeter[5],            &__PM,
+&lcd_param_text31,   &pMeter[6],            &__PM,
+&lcd_param_text32,   &pMeter[7],            &__PM,
+#endif
+#endif
+#ifdef POWERMETER
+&lcd_param_text33,   &pMeter[PMOTOR_SUM],   &__PS,
+&lcd_param_text34,   &powerTrigger1,        &__PT,
+#endif
+#ifdef VBAT
+&lcd_param_text35,   &vbat,                 &__VB,
+#endif
+#ifdef FLYING_WING
+&lcd_param_text36,   &wing_left_mid,        &__SE,
+&lcd_param_text37,   &wing_right_mid,       &__SE,
+#endif
+#ifdef TRI
+&lcd_param_text38,   &tail_servo_mid,       &__SE,
+#endif
+#ifdef LOG_VALUES
+&lcd_param_text39,   &failsafeEvents,       &__FS,
+&lcd_param_text40,   &i2c_errors_count,     &__L
 #endif
 };
-#define PARAMMAX (sizeof(lcd_param)/sizeof(lcd_param_t) - 1)
+#define PARAMMAX (sizeof(lcd_param_ptr_table)/6 - 1)
 // ************************************************************************************************************
 
 // 1000000 / 9600  = 104 microseconds at 9600 baud.
@@ -94,8 +178,7 @@ static lcd_param_t lcd_param[] = {
 void LCDprint(uint8_t i) {
   #if defined(LCD_TEXTSTAR)
     SerialWrite(0, i );
-  #endif
-  #if defined(LCD_ETPP) 
+  #elif defined(LCD_ETPP) 
    i2c_ETPP_send_char(i);
   #else
     LCDPIN_OFF;
@@ -110,7 +193,13 @@ void LCDprint(uint8_t i) {
 }
 
 void LCDprintChar(const char *s) {
-  while (*s) LCDprint(*s++);
+  while (*s) {
+     #if defined(FIX_TIMING) && defined(LCD_TEXTSTAR)
+        SerialWrite(0, *s++);
+     #else
+        LCDprint(*s++);
+     #endif
+  }
 }
 
 void initLCD() {
@@ -130,13 +219,17 @@ void initLCD() {
     PINMODE_LCD; //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
   #endif
   LCDclear();
-  LCDsetLine(1);
-  LCDprintChar("MultiWii Config");
-  delay(2500);
-  LCDclear();
+  strcpy_P(line1,PSTR("MultiWii V1.9+")); LCDsetLine(1); LCDprintChar(line1);
+  if (cycleTime == 0) {  //Called from Setup()
+    strcpy_P(line1,PSTR("Ready to Fly")); LCDsetLine(2); LCDprintChar(line1);
+  } else {
+//    strcpy_P(line1,PSTR("Config All Parms")); LCDsetLine(2); LCDprintChar(line1);
+//    delay(2500); //Alex: this delay was not initially here.
+                   //Note we can also use the configuration loop without LCD to adjust rapidly P for ROLL&PITCH
+                   //It's the origin of the first param Pitch&Roll P
+                   //In this case, this delay would just be some time to wait for the user.
+  }
 }
-
-static char line1[17],line2[17];
 
 void __u8Inc(void * var, int8_t inc) {*(uint8_t*)var += inc;};
 void __u16Inc(void * var, int8_t inc) {*(uint16_t*)var += inc;};
@@ -205,10 +298,12 @@ void configurationLoop() {
   while (LCD == 1) {
     if (refreshLCD) {
       blinkLED(10,20,1);
-      strcpy(line1,"                ");
-      strcpy(line2,"                ");
-      i=0; char* point = lcd_param[p].paramText; while (*point) line1[i++] = *point++;
-      lcd_param[p].def->type->fmt(lcd_param[p].var, lcd_param[p].def->multiplier, lcd_param[p].def->decimal);
+      strcpy_P(line1,PSTR("                "));
+      strcpy(line2,line1);
+      strcpy_P(line1, (char*)pgm_read_word(&(lcd_param_ptr_table[p * 3])));
+      lcd_param_def_t* deft = (lcd_param_def_t*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 2]));
+      deft->type->fmt((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), deft->multiplier, deft->decimal);
+      LCDclear();
       LCDsetLine(1);LCDprintChar(line1); //refresh line 1 of LCD
       LCDsetLine(2);LCDprintChar(line2); //refresh line 2 of LCD
       refreshLCD = 0;
@@ -216,6 +311,10 @@ void configurationLoop() {
 
     #if defined(LCD_TEXTSTAR)
       key = ( SerialAvailable(0) ?  SerialRead(0) : 0 );
+    #endif
+    #ifdef LCD_CONF_DEBUG
+      delay(1000); 
+      if (key == LCD_MENU_NEXT) key=LCD_VALUE_UP; else key = LCD_MENU_NEXT;
     #endif
     for (i = ROLL; i < THROTTLE; i++) {uint16_t Tmp = readRawRC(i); lcdStickState[i] = (Tmp < MINCHECK) | ((Tmp > MAXCHECK) << 1);};
     if (IsLow(YAW) && IsHigh(PITCH)) LCD = 0;          // save and exit
@@ -226,25 +325,35 @@ void configurationLoop() {
       refreshLCD = 1; p--; if (p == 0xFF) p = PARAMMAX;
     } else if (key == LCD_VALUE_DOWN || (IsLow(ROLL))) { //+ or - param with low and high roll
       refreshLCD = 1;
-      lcd_param[p].def->type->inc(lcd_param[p].var, -lcd_param[p].def->increment);
-      if (p == 0) memcpy(lcd_param[4].var, lcd_param[0].var, 1);
+      lcd_param_def_t* deft = (lcd_param_def_t*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 2]));
+      deft->type->inc((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), -deft->increment);
+      if (p == 0) P8[PITCH] = P8[ROLL];
     } else if (key == LCD_VALUE_UP || (IsHigh(ROLL))) {
       refreshLCD = 1; 
-      lcd_param[p].def->type->inc(lcd_param[p].var, +lcd_param[p].def->increment);
-      if (p == 0) memcpy(lcd_param[4].var, lcd_param[0].var, 1);
+      lcd_param_def_t* deft = (lcd_param_def_t*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 2]));
+      deft->type->inc((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), +deft->increment);
+      if (p == 0) P8[PITCH] = P8[ROLL];
     }
   } // while (LCD == 1)
   blinkLED(20,30,1);
   
   LCDclear();
-  if (LCD == 0) LCDprintChar("Saving Settings"); else LCDprintChar("skipping Save");
+  if (LCD == 0) {
+    strcpy_P(line1,PSTR("Saving..."));
+    LCDprintChar(line1);
+  } else {
+    strcpy_P(line1,PSTR("Aborting"));
+    LCDprintChar(line1);
+  }    
   if (LCD == 0) writeParams();
-  LCDsetLine(2);LCDprintChar("exit config");
+  LCDsetLine(2);
+  strcpy_P(line1,PSTR("Exit"));
+  LCDprintChar(line1);
   #if !defined(LCD_TEXTSTAR) && !defined(LCD_ETPP)
     SerialOpen(0,115200);
   #endif
   #ifdef LCD_TELEMETRY
-    delay(1000); // keep exit message visible for one second even if (auto)telemetry continues writing in main loop
+    delay(1500); // keep exit message visible for one and one half seconds even if (auto)telemetry continues writing in main loop
   #endif
 }
 #endif
@@ -256,18 +365,21 @@ void configurationLoop() {
 void lcd_telemetry() {
   // LCD_BAR(n,v) : draw a bar graph - n number of chars for width, v value in % to display
   #define LCD_BAR(n,v) {} // add your own implementation here
-  #ifdef LCD_TEXTSTAR
+  #if defined(LCD_TEXTSTAR)
     #define LCD_BAR(n,v) { LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v); }
-  #endif
-  #ifdef LCD_ETPP
-    #define LCD_BAR(n,v) LCDbarGraph(n,v);
+  #elif defined(LCD_ETPP)
+    #define LCD_BAR(n,v) {LCDbarGraph(n,v); }
+  #else
+    #define LCD_BAR(n,v) {} // add your own implementation here  
   #endif
   
+  uint16_t intPowerMeterSum;   
+
   switch (telemetry) { // output telemetry data, if one of four modes is set
-    case 'C': // button C on Textstar LCD -> cycle time
-      strcpy(line1,"Cycle    -----us"); //uin16_t cycleTime
-      /*            0123456789.12345*/
-      strcpy(line2,"(-----, -----)us"); //uin16_t cycleTimeMax
+    case 3: // button C on Textstar LCD -> cycle time
+      strcpy_P(line1,PSTR("Cycle    -----us")); //uin16_t cycleTime
+                        // 0123456789.12345*/
+      strcpy_P(line2,PSTR("(-----, -----)us")); //uin16_t cycleTimeMax
       line1[9] = '0' + cycleTime / 10000;
       line1[10] = '0' + cycleTime / 1000 - (cycleTime/10000) * 10;
       line1[11] = '0' + cycleTime / 100  - (cycleTime/1000)  * 10;
@@ -288,10 +400,10 @@ void lcd_telemetry() {
     #endif
       LCDsetLine(1);LCDprintChar(line1);
       break;
-    case 'B': // button B on Textstar LCD -> Voltage, PowerSum and power alarm trigger value
-      strcpy(line1,"--.-V   -----mAh"); //uint8_t vbat, intPowerMeterSum
-      /*            0123456789.12345*/
-      //    (line2,".......  ......."); // intPowerMeterSum, intPowerTrigger1
+    case 2: // button B on Textstar LCD -> Voltage, PowerSum and power alarm trigger value
+      strcpy_P(line1,PSTR("--.-V   -----mAh")); // uint8_t vbat, intPowerMeterSum
+                        // 0123456789.12345
+//    strcpy_P(line2,PSTR(".......  .......")); // intPowerMeterSum, intPowerTrigger1
     #ifdef VBAT
       line1[0] = '0'+vbat/100; line1[1] = '0'+vbat/10-(vbat/100)*10; line1[3] = '0'+vbat-(vbat/10)*10;
     #endif
@@ -308,10 +420,8 @@ void lcd_telemetry() {
       //LCDprint(0x0c); //clear screen
       line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
     }
-    #ifdef LOG_VALUES
-      // set mark, if we had i2c errors
-      if (i2c_errors_count || failsafeEvents) line1[6] = 'I';
-    #endif
+    // set mark, if we had i2c errors, failsafes or annex650 overruns
+    if (i2c_errors_count || failsafeEvents || annex650_overrun_count) line1[6] = 'I';
     LCDsetLine(1);LCDprintChar(line1);
     LCDsetLine(2); //position on line 2 of LCD
     #ifdef VBAT
@@ -327,11 +437,11 @@ void lcd_telemetry() {
       LCDprintChar("        ");
     #endif
       break;
-    case 'A': // button A on Textstar LCD -> angles 
+    case 1: // button A on Textstar LCD -> angles 
       uint16_t unit;
-      strcpy(line1,"Deg ---.-  ---.-");
-      /*            0123456789.12345*/
-      strcpy(line2,"---,-A max---,-A");
+      strcpy_P(line1,PSTR("Deg ---.-  ---.-"));
+                        // 0123456789.12345
+      strcpy_P(line2,PSTR("---,-A max---,-A"));
       if (angle[0] < 0 ) {
         unit = -angle[0];
         line1[3] = '-';
@@ -365,9 +475,9 @@ void lcd_telemetry() {
       #endif
       LCDsetLine(2);LCDprintChar(line2); //refresh line 2 of LCD
       break;    
-    case 'D': // button D on Textstar LCD -> sensors
+    case 4: // button D on Textstar LCD -> sensors
     #define GYROLIMIT 30 // threshold: for larger values replace bar with dots
-    #define ACCLIMIT 30 // threshold: for larger values replace bar with dots     
+    #define ACCLIMIT 40 // threshold: for larger values replace bar with dots     
       LCDsetLine(1);LCDprintChar("G "); //refresh line 1 of LCD
       if (abs(gyroData[0]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[0])*50/GYROLIMIT) } else LCDprintChar("...."); LCDprint(' ');
       if (abs(gyroData[1]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[1])*50/GYROLIMIT) } else LCDprintChar("...."); LCDprint(' ');
@@ -377,15 +487,22 @@ void lcd_telemetry() {
       if (abs(accSmooth[1]) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT) } else LCDprintChar("...."); LCDprint(' ');
       if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT) } else LCDprintChar("....");
       break;
-    case 'Z': // No Z button.  Displays with auto telemetry only
-      strcpy(line1,"Failsafe -----  ");  
-      /*            0123456789012345   */
-      strcpy(line2,"                ");
-      line1[9] = '0' + failsafeEvents / 10000;
-      line1[10] = '0' + failsafeEvents / 1000 - (failsafeEvents/10000) * 10;
-      line1[11] = '0' + failsafeEvents / 100  - (failsafeEvents/1000)  * 10;
-      line1[12] = '0' + failsafeEvents / 10   - (failsafeEvents/100)   * 10;
-      line1[13] = '0' + failsafeEvents        - (failsafeEvents/10)    * 10;
+    case 5: // No Z button.  Displays with auto telemetry only
+      strcpy_P(line1,PSTR("Fails i2c t-errs"));  
+                        // 0123456789012345
+      strcpy_P(line2,PSTR("----  ----  ---- "));
+      line2[0] = '0' + failsafeEvents / 1000 - (failsafeEvents/10000) * 10;
+      line2[1] = '0' + failsafeEvents / 100  - (failsafeEvents/1000)  * 10;
+      line2[2] = '0' + failsafeEvents / 10   - (failsafeEvents/100)   * 10;
+      line2[3] = '0' + failsafeEvents        - (failsafeEvents/10)    * 10;
+      line2[6] = '0' + i2c_errors_count / 1000 - (i2c_errors_count/10000) * 10;
+      line2[7] = '0' + i2c_errors_count / 100  - (i2c_errors_count/1000)  * 10;
+      line2[8] = '0' + i2c_errors_count / 10   - (i2c_errors_count/100)   * 10;
+      line2[9] = '0' + i2c_errors_count        - (i2c_errors_count/10)    * 10;
+      line2[12] = '0' + annex650_overrun_count / 1000 - (annex650_overrun_count/10000) * 10;
+      line2[13] = '0' + annex650_overrun_count / 100  - (annex650_overrun_count/1000)  * 10;
+      line2[14] = '0' + annex650_overrun_count / 10   - (annex650_overrun_count/100)   * 10;
+      line2[15] = '0' + annex650_overrun_count        - (annex650_overrun_count/10)    * 10;
       LCDsetLine(1);LCDprintChar(line1);
       LCDsetLine(2);LCDprintChar(line2);
       break;
@@ -433,32 +550,8 @@ void lcd_telemetry() {
       i2c_write(0x40);                           // ETPP data register
       for (byte i = 0 ; i<8 ; i++) {i2c_write(*array); array++;}
     }
-  //*******************************************************************************************************************************************************************
-#endif //LCD_ETPP
-
-void LCDclear() {
-  #if defined(LCD_ETPP)
-    i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
-    for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
-  #endif
-  #if defined(LCD_TEXTSTAR)
-    LCDprint(0x0c); //clear screen
-  #endif
-}
-
-void LCDsetLine(byte line) {  // Line = 1 or 2
-  #if defined(LCD_TEXTSTAR)
-    LCDprint(0xFE);LCDprint('L');LCDprint(line);
-  #endif
-  #if defined(LCD_ETPP)
-    i2c_ETPP_set_cursor(0,line-1);
-  #else
-    if (line==1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
-  #endif
-}
-
-#if defined(LCD_ETPP)
-  static boolean charsInitialized;    // chars for servo signals are initialized
+//*******************************************************************************************************************************************************************
+  static boolean charsInitialized;      // chars for servo signals are initialized
   void LCDbarGraph(byte num, int val) { // num chars in graph; percent as 1 to 100
     if (!charsInitialized) {
       charsInitialized = true;
@@ -491,4 +584,27 @@ void LCDsetLine(byte line) {  // Line = 1 or 2
       i2c_ETPP_send_char(bar[i]); 
     }
   }
-#endif
+#endif //LCD_ETPP
+
+void LCDclear() {
+  #if defined(LCD_ETPP)
+    i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
+    for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
+  #elif defined(LCD_TEXTSTAR)
+    LCDprint(0x0c); //clear screen
+  #endif
+}
+
+void LCDsetLine(byte line) {  // Line = 1 or 2
+  #if defined(LCD_TEXTSTAR)
+    LCDprint(0xFE);LCDprint('L');LCDprint(line);
+  #endif
+  #if defined(LCD_ETPP)
+    i2c_ETPP_set_cursor(0,line-1);
+  #else
+    if (line==1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
+  #endif
+}
+
+
+

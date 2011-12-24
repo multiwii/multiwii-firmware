@@ -1,5 +1,4 @@
 volatile uint16_t rcValue[18] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
-
 #if defined(SERIAL_SUM_PPM)
   static uint8_t rcChannel[8] = {SERIAL_SUM_PPM};
 #elif defined(SBUS)
@@ -191,7 +190,6 @@ void rxInt() {
   }
 #endif
 
-
 #if defined(SBUS)
 void  readSBus(){
   #define SBUS_SYNCBYTE 0x0F // Not 100% sure: at the beginning of coding it was 0xF0 !!!
@@ -265,7 +263,7 @@ uint16_t readRawRC(uint8_t chan) {
   #endif
   return data; // We return the value correctly copied when the IRQ's where disabled
 }
-  
+    
 void computeRC() {
   static int16_t rcData4Values[8][4], rcDataMean[8];
   static uint8_t rc4ValuesIndex = 0;

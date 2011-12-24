@@ -5,9 +5,9 @@
 /* Set the minimum throttle command sent to the ESC (Electronic Speed Controller)
    This is the minimum value that allow motors to run at a idle speed  */
 //#define MINTHROTTLE 1300 // for Turnigy Plush ESCs 10A
-//#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
+#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
 //#define MINTHROTTLE 1220
-#define MINTHROTTLE 1150 
+//#define MINTHROTTLE 1150 
 
 /* The type of multicopter */
 //#define GIMBAL
@@ -233,6 +233,9 @@
 /* In order to save space, it's possibile to desactivate the LCD configuration functions
    comment this line only if you don't plan to used a LCD */
 #define LCD_CONF
+/* Use this to trigger telemetry without a TX */
+//#define LCD_CONF_DEBUG
+
 
 /* To use an Eagle Tree Power Panel LCD for configuration, uncomment this line
  White wire  to Ground
@@ -266,7 +269,7 @@
 /* you can change the tricopter servo travel here */
 #define TRI_YAW_CONSTRAINT_MIN 1020
 #define TRI_YAW_CONSTRAINT_MAX 2000
-#define TRI_YAW_MIDDLE 1500
+#define TRI_YAW_MIDDLE 1500 // can be configured via LCD
 
 /* Flying Wing: you can change change servo orientation and servo min/max values here */
 /* valid for all flight modes, even passThrough mode */
@@ -275,8 +278,8 @@
 #define PITCH_DIRECTION_R -1  // right servo - pitch orientation (opposite sign to PITCH_DIRECTION_L, if servos are mounted in mirrored orientation)
 #define ROLL_DIRECTION_L 1 // left servo - roll orientation
 #define ROLL_DIRECTION_R 1  // right servo - roll orientation  (same sign as ROLL_DIRECTION_L, if servos are mounted in mirrored orientation)
-#define WING_LEFT_MID  1500 // left servo center pos. - use this for trim
-#define WING_RIGHT_MID 1500 // right servo center pos. - use this for trim
+#define WING_LEFT_MID  1500 // left servo center pos. - use this for initial trim; later trim midpoint via LCD
+#define WING_RIGHT_MID 1500 // right servo center pos. - use this for initial trim; later trim midpoint via LCD
 #define WING_LEFT_MIN  1020 // limit servo travel range must be inside [1020;2000]
 #define WING_LEFT_MAX  2000 // limit servo travel range must be inside [1020;2000]
 #define WING_RIGHT_MIN 1020 // limit servo travel range must be inside [1020;2000]
@@ -287,7 +290,7 @@
 /* Two options: */
 /* 1 - soft: - (good results +-5% for plush and mystery ESCs @ 2S and 3S, not good with SuperSimple ESC */
 /*      00. relies on your combo of battery type (Voltage, cpacity), ESC, ESC settings, motors, props and multiwii cycle time */
-/*      01. set POWERMETER soft. Uses PLEVELSCALE = 50, PLEVELDIV = PLEVELDIVSOFT = 10000 */
+/*      01. set POWERMETER soft. Uses PLEVELSCALE = 50, PLEVELDIV = PLEVELDIVSOFT = 5000 */
 /*      0. output is a value that linearily scales to power (mAh) */
 /*      1. get voltage reading right first */
 /*      2. start with freshly charged battery */
@@ -315,7 +318,7 @@
 /* PLEVELSCALE is the step size you can use to set alarm */
 #define PLEVELSCALE 50 // if you change this value for other granularity, you must search for comments in code to change accordingly 
 /* larger PLEVELDIV will get you smaller value for power (mAh equivalent) */
-#define PLEVELDIV 10000 // default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
+#define PLEVELDIV 5000 // default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
 #define PLEVELDIVSOFT PLEVELDIV // for soft always equal to PLEVELDIV; for hard set to 10000
 //#define PLEVELDIV 1361L // to convert the sum into mAh divide by this value
 /* amploc 25A sensor has 37mV/A */
@@ -325,6 +328,11 @@
 /* set to analogRead() value for zero current */
 #define PSENSORNULL 510 // for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt
 #define PINT2mA 13 // for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
+/* frequency for reading the powermeter sensor in the main loop, depends on cycle time! */
+/* time base is main loop cycle time - a value of 6 means every 6th run through the main loop do the sensor read */
+/* example: with cycle time of approx 3ms, do sensor read every 6*3ms=18ms */
+#define PSENSORFREQ 6 
+
 
 /* to monitor system values (battery level, loop time etc. with LCD enable this */
 /* note: for now you must send single characters 'A', 'B', 'C', 'D' to request 4 different pages */
@@ -342,11 +350,19 @@
 /* so we try do define a meaningful part. For a 3S battery we define full=12,6V and calculate how much it is above first warning level */
 /* Example: 12.6V - VBATLEVEL1_3S  (for me = 126 - 102 = 24) */
 #define VBATREF 24 
+/* Use this to trigger telemetry without a TX */
+//#define LCD_TELEMETRY_DEBUG
 
 /* to log values like max loop time and others to come */
 /* logging values are visible via LCD config */
-//#define LOG_VALUES
+/* set to 2, if you want powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> 1) */
+#define LOG_VALUES 1
  
+
+/* temproary fix to some timing issues */
+//#define FIX_TIMING
+
+
 //****** end of advanced users settings *************
 
 //if you want to change to orientation of individual sensor
@@ -354,6 +370,12 @@
 //#define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = Z;}
 //#define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
 
+ 
+/* frequenies for rare cyclic actions in the main loop, depend on cycle time! */
+/* time base is main loop cycle time - a value of 6 means to trigger the action every 6th run through the main loop */
+/* example: with cycle time of approx 3ms, do action every 6*3ms=18ms */
+#define LCD_TELEMETRY_FREQ 41       // to send telemetry data over serial 41 <=> 120ms <=> 8Hz
+#define LCD_TELEMETRY_AUTO_FREQ 665 // to step to next telemetry page 666 <=> 2s
 /**************************************/
 /****END OF CONFIGURABLE PARAMETERS****/
 /**************************************/

@@ -1,4 +1,3 @@
-
 // *******************************************************
 // Interrupt driven UART transmitter - using a ring buffer
 // *******************************************************
@@ -20,7 +19,7 @@ void UartSendData() {         // Data transmission acivated when the ring is not
 void serialCom() {
   int16_t a;
   uint8_t i;
-
+  
   if (SerialAvailable(0)) {
     switch (SerialRead(0)) {
     #ifdef BTSERIAL
@@ -34,17 +33,47 @@ void serialCom() {
     #endif
     #ifdef LCD_TELEMETRY
     case 'A': // button A press
-      if (telemetry=='A') telemetry = 0; else { telemetry = 'A'; LCDprint(12); }
+    case '1':
+      if (telemetry==1) telemetry = 0; else { telemetry = 1; LCDclear(); }
       break;    
     case 'B': // button B press
-      if (telemetry=='B') telemetry = 0; else { telemetry = 'B'; LCDprint(12);  }
+    case '2':
+      if (telemetry==2) telemetry = 0; else { telemetry = 2; LCDclear(); }
       break;    
     case 'C': // button C press
-      if (telemetry=='C') telemetry = 0; else { telemetry = 'C'; LCDprint(12);  }
+    case '3':
+           if (telemetry==3) telemetry = 0; else { telemetry = 3; LCDclear(); 
+           #ifdef LOG_VALUES
+              cycleTimeMax = 0;
+              cycleTimeMin = 65535;
+           #endif
+           }
       break;    
     case 'D': // button D press
-      if (telemetry=='D') telemetry = 0; else { telemetry = 'D'; LCDprint(12);  }
+    case '4':
+      if (telemetry==4) telemetry = 0; else { telemetry = 4; LCDclear(); }
       break;
+    case '5':
+      if (telemetry==5) telemetry = 0; else { telemetry = 5; LCDclear(); }
+      break;
+    case '6':
+      {    
+          extern unsigned int __bss_end;
+          extern unsigned int __heap_start;
+          extern void *__brkval;
+          int free_memory;
+          if((int)__brkval == 0)
+            free_memory = ((int)&free_memory) - ((int)&__bss_end);
+          else
+            free_memory = ((int)&free_memory) - ((int)__brkval);
+          strcpy_P(line1,PSTR(" Free ---- ")); // uint8_t free_memory
+          line1[6] = '0' + free_memory / 1000 - (free_memory/10000) * 10;
+          line1[7] = '0' + free_memory / 100  - (free_memory/1000)  * 10;
+          line1[8] = '0' + free_memory / 10   - (free_memory/100)   * 10;
+          line1[9] = '0' + free_memory        - (free_memory/10)    * 10;
+          LCDprintChar(line1);
+          break;
+      }
     case 'a': // button A release
     case 'b': // button B release
     case 'c': // button C release
@@ -84,8 +113,8 @@ void serialCom() {
       serialize8(vbat);
       serialize16(BaroAlt/10);        // 4 variables are here for general monitoring purpose
       serialize16(i2c_errors_count);  // debug2
-      serialize16(0);                 // debug3
-      serialize16(0);                 // debug4
+      serialize16(annex650_overrun_count);// debug3
+      serialize16(armed);             // debug4
       serialize8('M');
       UartSendData();
       break;
@@ -130,7 +159,7 @@ void serialCom() {
 
 #define SERIAL_RX_BUFFER_SIZE 64
 
-#if defined(PROMINI)
+#if defined(PROMINI) 
 uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][1];
 volatile uint8_t serialHeadRX[1],serialTailRX[1];
 #endif
@@ -165,28 +194,33 @@ void SerialEnd(uint8_t port) {
 
 #if defined(PROMINI) && !(defined(SPEKTRUM))
 SIGNAL(USART_RX_vect){
+  uint8_t d = UDR0;
   uint8_t i = (serialHeadRX[0] + 1) % SERIAL_RX_BUFFER_SIZE;
-  if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = UDR0; serialHeadRX[0] = i;}
+  if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = d; serialHeadRX[0] = i;}
 }
 #endif
 #if defined(MEGA)
 SIGNAL(USART0_RX_vect){
+  uint8_t d = UDR0;
   uint8_t i = (serialHeadRX[0] + 1) % SERIAL_RX_BUFFER_SIZE;
-  if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = UDR0; serialHeadRX[0] = i;}
+  if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = d; serialHeadRX[0] = i;}
 }
 #if !(defined(SPEKTRUM))
 SIGNAL(USART1_RX_vect){
+  uint8_t d = UDR1;
   uint8_t i = (serialHeadRX[1] + 1) % SERIAL_RX_BUFFER_SIZE;
-  if (i != serialTailRX[1]) {serialBufferRX[serialHeadRX[1]][1] = UDR1; serialHeadRX[1] = i;}
+  if (i != serialTailRX[1]) {serialBufferRX[serialHeadRX[1]][1] = d; serialHeadRX[1] = i;}
 }
 #endif
 SIGNAL(USART2_RX_vect){
+  uint8_t d = UDR2;
   uint8_t i = (serialHeadRX[2] + 1) % SERIAL_RX_BUFFER_SIZE;
-  if (i != serialTailRX[2]) {serialBufferRX[serialHeadRX[2]][2] = UDR2; serialHeadRX[2] = i;}
+  if (i != serialTailRX[2]) {serialBufferRX[serialHeadRX[2]][2] = d; serialHeadRX[2] = i;}
 }
 SIGNAL(USART3_RX_vect){
+  uint8_t d = UDR3;
   uint8_t i = (serialHeadRX[3] + 1) % SERIAL_RX_BUFFER_SIZE;
-  if (i != serialTailRX[3]) {serialBufferRX[serialHeadRX[3]][3] = UDR3; serialHeadRX[3] = i;}
+  if (i != serialTailRX[3]) {serialBufferRX[serialHeadRX[3]][3] = d; serialHeadRX[3] = i;}
 }
 #endif
 
