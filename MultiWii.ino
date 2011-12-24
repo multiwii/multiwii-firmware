@@ -26,8 +26,9 @@ December  2011     V1.dev
 
 #define PIDALT     3
 #define PIDVEL     4
-#define PIDLEVEL   5
-#define PIDMAG     6
+#define PIDGPS     5
+#define PIDLEVEL   6
+#define PIDMAG     7
 
 #define BOXACC      0
 #define BOXBARO     1
@@ -37,10 +38,12 @@ December  2011     V1.dev
 #define BOXARM      5
 #define BOXGPSHOME  6
 #define BOXGPSHOLD  7
-#define BOXPASSTHRU    8
+#define BOXPASSTHRU 8
 #define BOXHEADFREE 9
 #define BOXALARMON  10
+
 #define CHECKBOXITEMS 11
+#define PIDITEMS 8
 
 static uint32_t currentTime = 0;
 static uint16_t previousTime = 0;
@@ -137,13 +140,25 @@ static uint16_t tail_servo_mid = TRI_YAW_MIDDLE;
 // **********************
 // EEPROM & LCD functions
 // **********************
-static uint8_t P8[7], I8[7], D8[7]; //8 bits is much faster and the code is much shorter
+static uint8_t P8[8], I8[9], D8[8]; //8 bits is much faster and the code is much shorter
 static uint8_t dynP8[3], dynI8[3], dynD8[3];
 static uint8_t rollPitchRate;
 static uint8_t yawRate;
 static uint8_t dynThrPID;
 static uint8_t activate1[CHECKBOXITEMS];
 static uint8_t activate2[CHECKBOXITEMS];
+
+// **********************
+// GPS
+// **********************
+static int32_t  GPS_latitude,GPS_longitude;
+static int32_t  GPS_latitude_home,GPS_longitude_home;
+static uint8_t  GPS_fix , GPS_fix_home = 0;
+static uint8_t  GPS_numSat;
+static uint16_t GPS_distanceToHome;      // in meters
+static int16_t  GPS_directionToHome = 0; // in degrees
+static uint8_t  GPS_update = 0;          // it's a binary toogle to distinct a GPS position update
+static int16_t  GPS_angle[2];            // it's the angles that must be applied for GPS correction
 
 void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
   uint8_t i,r;
@@ -158,22 +173,9 @@ void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
   }
 }
 
-// **********************
-// GPS
-// **********************
-static int32_t  GPS_latitude,GPS_longitude;
-static int32_t  GPS_latitude_home,GPS_longitude_home;
-static uint8_t  GPS_fix , GPS_fix_home = 0;
-static uint8_t  GPS_numSat;
-static uint16_t GPS_distanceToHome;
-static int16_t  GPS_directionToHome = 0;
-static uint8_t  GPS_update = 0;
-
 void annexCode() { //this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
-  static uint32_t buzzerTime,calibratedAccTime;
+  static uint32_t buzzerTime,calibratedAccTime,telemetryTime,telemetryAutoTime,psensorTime;
   static uint8_t  buzzerFreq;         //delay between buzzer ring
-  static uint32_t psensorTime = 0;  
-  static uint16_t telemetryTimer = 0, telemetryAutoTimer = 0;
   uint8_t axis,prop1,prop2;
   uint16_t pMeterRaw, powerValue;     //used for current reading
 
@@ -213,7 +215,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   }
 
   #if (POWERMETER == 2)
-  if (micros() > psensorTime + 20000) { // 50Hz, but avoid bulking of timed tasks
+  if (micros() > psensorTime + 19977 /*20000*/) { // 50Hz, but avoid bulking of timed tasks
      pMeterRaw =  analogRead(PSENSORPIN);
      powerValue = ( PSENSORNULL > pMeterRaw ? PSENSORNULL - pMeterRaw : pMeterRaw - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
      #ifdef LOG_VALUES
@@ -290,6 +292,11 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
 
   serialCom();
 
+  #if defined(POWERMETER)
+    intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
+    intPowerTrigger1 = powerTrigger1 * PLEVELSCALE; 
+  #endif
+
   #ifdef LCD_TELEMETRY_AUTO
     if ( (telemetry_auto) && (! (++telemetryAutoTimer % LCD_TELEMETRY_AUTO_FREQ) )  ){
       telemetry++;
@@ -336,7 +343,7 @@ void setup() {
   #if defined(GPS)
     SerialOpen(GPS_SERIAL,GPS_BAUD);
   #endif
-  #if defined(LCD_CONF)
+  #if defined(LCD_ETPP)
     initLCD();
   #endif
   #ifdef LCD_TELEMETRY_DEBUG
@@ -564,11 +571,23 @@ void loop () {
     }
   }
 
+
+  #if defined(GPS)
+    if ( (GPSModeHome == 1)) {
+      float radDiff = (GPS_directionToHome-heading) * 0.0174533f;
+      GPS_angle[ROLL]  = constrain(P8[PIDGPS] * sin(radDiff) * GPS_distanceToHome / 10,-D8[PIDGPS]*10,+D8[PIDGPS]*10); // with P=5, 1 meter = 0.5deg inclination
+      GPS_angle[PITCH] = constrain(P8[PIDGPS] * cos(radDiff) * GPS_distanceToHome / 10,-D8[PIDGPS]*10,+D8[PIDGPS]*10); // max inclination = D deg
+    } else {
+      GPS_angle[ROLL]  = 0;
+      GPS_angle[PITCH] = 0;
+    }
+  #endif
+
   //**** PITCH & ROLL & YAW PID ****    
   for(axis=0;axis<3;axis++) {
     if (accMode == 1 && axis<2 ) { //LEVEL MODE
       // 50 degrees max inclination
-      errorAngle = constrain(2*rcCommand[axis],-500,+500) - angle[axis] + accTrim[axis]; //16 bits is ok here
+      errorAngle = constrain(2*rcCommand[axis] + GPS_angle[axis],-500,+500) - angle[axis] + accTrim[axis]; //16 bits is ok here
       #ifdef LEVEL_PDF
         PTerm      = -(int32_t)angle[axis]*P8[PIDLEVEL]/100 ;
       #else  
@@ -607,10 +626,9 @@ void loop () {
   writeServos();
   writeMotors();
 
-  //GPS
   #if defined(GPS)
-    while (SerialAvailable(2)) {
-     if (GPS_newFrame(SerialRead(2))) {
+    while (SerialAvailable(GPS_SERIAL)) {
+     if (GPS_newFrame(SerialRead(GPS_SERIAL))) {
         if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;
         if (GPS_fix == 1) {
           if (GPS_fix_home == 0) {

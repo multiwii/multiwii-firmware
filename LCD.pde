@@ -2,7 +2,6 @@
 // LCD & display & monitoring
 // ************************************************************************************************************
 #ifdef LCD_CONF
-#include <avr/pgmspace.h>                             // For V1.9 compatibilty.  Remove later. 
 static char line1[17],line2[17];
 
 typedef void (*formatter_func_ptr)(void *, uint8_t, uint8_t);
@@ -179,8 +178,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 void LCDprint(uint8_t i) {
   #if defined(LCD_TEXTSTAR)
     SerialWrite(0, i );
-  #endif
-  #if defined(LCD_ETPP) 
+  #elif defined(LCD_ETPP) 
    i2c_ETPP_send_char(i);
   #else
     LCDPIN_OFF;
@@ -225,8 +223,11 @@ void initLCD() {
   if (cycleTime == 0) {  //Called from Setup()
     strcpy_P(line1,PSTR("Ready to Fly")); LCDsetLine(2); LCDprintChar(line1);
   } else {
-    strcpy_P(line1,PSTR("Config All Parms")); LCDsetLine(2); LCDprintChar(line1);
-    delay(2500);
+//    strcpy_P(line1,PSTR("Config All Parms")); LCDsetLine(2); LCDprintChar(line1);
+//    delay(2500); //Alex: this delay was not initially here.
+                   //Note we can also use the configuration loop without LCD to adjust rapidly P for ROLL&PITCH
+                   //It's the origin of the first param Pitch&Roll P
+                   //In this case, this delay would just be some time to wait for the user.
   }
 }
 

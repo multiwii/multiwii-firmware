@@ -52,8 +52,7 @@ void configureReceiver() {
     PPM_PIN_INTERRUPT;
   #endif
   #if defined (SPEKTRUM)
-    SPEK_BAUD_SET;
-    SPEK_SERIAL_INTERRUPT;
+    SerialOpen(1,115200);
   #endif
   #if defined(SBUS)
     SerialOpen(1,100000);

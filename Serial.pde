@@ -1,35 +1,26 @@
-static uint8_t point;
-static uint8_t s[200];
-void serialize16(int16_t a) {s[point++]  = a; s[point++]  = a>>8&0xff;}
-void serialize8(uint8_t a)  {s[point++]  = a;}
-
-// ***********************************
-// Interrupt driven UART transmitter for MIS_OSD
-// ***********************************
-static uint8_t tx_ptr;
-static uint8_t tx_busy = 0;
+// *******************************************************
+// Interrupt driven UART transmitter - using a ring buffer
+// *******************************************************
+static uint8_t head,tail;
+static uint8_t buf[256];      // 256 is choosen to avoid modulo operations on 8 bits pointers
+void serialize16(int16_t a) {buf[head++]  = a; buf[head++]  = a>>8&0xff;}
+void serialize8(uint8_t a)  {buf[head++]  = a;}
 
 ISR_UART {
-  UDR0 = s[tx_ptr++];           // Transmit next byte
-  if ( tx_ptr == point ) {      // Check if all data is transmitted
-    UCSR0B &= ~(1<<UDRIE0);     // Disable transmitter UDRE interrupt
-    tx_busy = 0;
-  }
+  UDR0 = buf[tail++];         // Transmit next byte in the ring
+  if ( tail == head )         // Check if all data is transmitted
+    UCSR0B &= ~(1<<UDRIE0);   // Disable transmitter UDRE interrupt
 }
 
-void UartSendData() {              // start of the data block transmission
-  tx_ptr = 0;
-  UCSR0A |= (1<<UDRE0);            // Clear UDRE interrupt flag
-  UCSR0B |= (1<<UDRIE0);           // Enable transmitter UDRE interrupt
-  cli();UDR0 = s[tx_ptr++];sei();  // Start transmission
-  tx_busy = 1;
+void UartSendData() {         // Data transmission acivated when the ring is not empty
+  UCSR0B |= (1<<UDRIE0);      // Enable transmitter UDRE interrupt
 }
 
 void serialCom() {
   int16_t a;
   uint8_t i;
   
-  if ((!tx_busy) && SerialAvailable(0)) {
+  if (SerialAvailable(0)) {
     switch (SerialRead(0)) {
     #ifdef BTSERIAL
     case 'K': //receive RC data from Bluetooth Serial adapter as a remote
@@ -90,7 +81,6 @@ void serialCom() {
       break;      
     #endif
     case 'M': // Multiwii @ arduino to GUI all data
-      point=0;
       serialize8('M');
       serialize8(VERSION);  // MultiWii Firmware version
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
@@ -103,18 +93,10 @@ void serialCom() {
       for(i=0;i<8;i++) serialize16(rcData[i]);
       serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3|GPSPRESENT<<4);
       serialize8(accMode|baroMode<<1|magMode<<2|(GPSModeHome|GPSModeHold)<<3);
-      #ifdef LOG_VALUES
-        serialize16(cycleTimeMax);
-        cycleTimeMax = 0;
-      #else
-        serialize16(cycleTime);
-      #endif
+      serialize16(cycleTime);
       for(i=0;i<2;i++) serialize16(angle[i]);
       serialize8(MULTITYPE);
-      for(i=0;i<5;i++) {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);}
-      serialize8(P8[PIDLEVEL]);
-      serialize8(I8[PIDLEVEL]);
-      serialize8(P8[PIDMAG]);
+      for(i=0;i<PIDITEMS;i++) {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);}
       serialize8(rcRate8);
       serialize8(rcExpo8);
       serialize8(rollPitchRate);
@@ -126,14 +108,8 @@ void serialCom() {
       serialize8(GPS_numSat);
       serialize8(GPS_fix);
       serialize8(GPS_update);
-      #if defined(POWERMETER)
-        intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
-        intPowerTrigger1 = powerTrigger1 * PLEVELSCALE; 
-        serialize16(intPowerMeterSum);
-        serialize16(intPowerTrigger1);
-      #else
-        serialize16(0);serialize16(0);
-      #endif
+      serialize16(intPowerMeterSum);
+      serialize16(intPowerTrigger1);
       serialize8(vbat);
       serialize16(BaroAlt/10);        // 4 variables are here for general monitoring purpose
       serialize16(i2c_errors_count);  // debug2
@@ -158,18 +134,16 @@ void serialCom() {
       serialize8('O'); //49
       break;
     case 'W': //GUI write params to eeprom @ arduino
-      while (SerialAvailable(0)<(25+2*CHECKBOXITEMS)) {delay(1);}//sss
-      for(i=0;i<5;i++) {P8[i]= SerialRead(0); I8[i]= SerialRead(0); D8[i]= SerialRead(0);} //15
-      P8[PIDLEVEL] = SerialRead(0); I8[PIDLEVEL] = SerialRead(0); //17
-      P8[PIDMAG] = SerialRead(0); //18
-      rcRate8 = SerialRead(0); rcExpo8 = SerialRead(0); //20
-      rollPitchRate = SerialRead(0); yawRate = SerialRead(0); //22
-      dynThrPID = SerialRead(0); //23
+      while (SerialAvailable(0)<(7+3*PIDITEMS+2*CHECKBOXITEMS)) {}
+      for(i=0;i<PIDITEMS;i++) {P8[i]= SerialRead(0); I8[i]= SerialRead(0); D8[i]= SerialRead(0);}
+      rcRate8 = SerialRead(0); rcExpo8 = SerialRead(0); //2
+      rollPitchRate = SerialRead(0); yawRate = SerialRead(0); //4
+      dynThrPID = SerialRead(0); //5
       for(i=0;i<CHECKBOXITEMS;i++) {activate1[i] = SerialRead(0);activate2[i] = SerialRead(0);}
      #if defined(POWERMETER)
       powerTrigger1 = (SerialRead(0) + 256* SerialRead(0) ) / PLEVELSCALE; // we rely on writeParams() to compute corresponding pAlarm value
      #else
-      SerialRead(0);SerialRead(0); // so we unload the two bytes
+      SerialRead(0);SerialRead(0); //7 so we unload the two bytes
      #endif
       writeParams();
       break;
@@ -200,9 +174,9 @@ void SerialOpen(uint8_t port, uint32_t baud) {
   switch (port) {
     case 0: UCSR0A  = (1<<U2X0); UBRR0H = h; UBRR0L = l; UCSR0B |= (1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0); break;
     #if defined(MEGA)
-    case 1: UCSR1A  = (1<<U2X1); UBRR1H = h; UBRR1L = l; UCSR1B |= (1<<RXEN1)|(1<<TXEN0)|(1<<RXCIE1); break;
-    case 2: UCSR2A  = (1<<U2X2); UBRR2H = h; UBRR2L = l; UCSR2B |= (1<<RXEN2)|(1<<TXEN0)|(1<<RXCIE2); break;
-    case 3: UCSR3A  = (1<<U2X3); UBRR3H = h; UBRR3L = l; UCSR3B |= (1<<RXEN3)|(1<<TXEN0)|(1<<RXCIE3); break;
+    case 1: UCSR1A  = (1<<U2X1); UBRR1H = h; UBRR1L = l; UCSR1B |= (1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1); break;
+    case 2: UCSR2A  = (1<<U2X2); UBRR2H = h; UBRR2L = l; UCSR2B |= (1<<RXEN2)|(1<<TXEN2)|(1<<RXCIE2); break;
+    case 3: UCSR3A  = (1<<U2X3); UBRR3H = h; UBRR3L = l; UCSR3B |= (1<<RXEN3)|(1<<TXEN3)|(1<<RXCIE3); break;
     #endif
   }
 }
@@ -211,37 +185,42 @@ void SerialEnd(uint8_t port) {
   switch (port) {
     case 0: UCSR0B &= ~((1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0)|(1<<UDRIE0)); break;
     #if defined(MEGA)
-    case 1: UCSR1B &= ~((1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1)|(1<<UDRIE1)); break;
-    case 2: UCSR2B &= ~((1<<RXEN2)|(1<<TXEN2)|(1<<RXCIE2)|(1<<UDRIE2)); break;
-    case 3: UCSR3B &= ~((1<<RXEN3)|(1<<TXEN3)|(1<<RXCIE3)|(1<<UDRIE3)); break;
+    case 1: UCSR1B &= ~((1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1)); break;
+    case 2: UCSR2B &= ~((1<<RXEN2)|(1<<TXEN2)|(1<<RXCIE2)); break;
+    case 3: UCSR3B &= ~((1<<RXEN3)|(1<<TXEN3)|(1<<RXCIE3)); break;
     #endif
   }
 }
 
 #if defined(PROMINI) && !(defined(SPEKTRUM))
 SIGNAL(USART_RX_vect){
+  uint8_t d = UDR0;
   uint8_t i = (serialHeadRX[0] + 1) % SERIAL_RX_BUFFER_SIZE;
-  if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = UDR0; serialHeadRX[0] = i;}
+  if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = d; serialHeadRX[0] = i;}
 }
 #endif
 #if defined(MEGA)
 SIGNAL(USART0_RX_vect){
+  uint8_t d = UDR0;
   uint8_t i = (serialHeadRX[0] + 1) % SERIAL_RX_BUFFER_SIZE;
-  if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = UDR0; serialHeadRX[0] = i;}
+  if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = d; serialHeadRX[0] = i;}
 }
 #if !(defined(SPEKTRUM))
 SIGNAL(USART1_RX_vect){
+  uint8_t d = UDR1;
   uint8_t i = (serialHeadRX[1] + 1) % SERIAL_RX_BUFFER_SIZE;
-  if (i != serialTailRX[1]) {serialBufferRX[serialHeadRX[1]][1] = UDR1; serialHeadRX[1] = i;}
+  if (i != serialTailRX[1]) {serialBufferRX[serialHeadRX[1]][1] = d; serialHeadRX[1] = i;}
 }
 #endif
 SIGNAL(USART2_RX_vect){
+  uint8_t d = UDR2;
   uint8_t i = (serialHeadRX[2] + 1) % SERIAL_RX_BUFFER_SIZE;
-  if (i != serialTailRX[2]) {serialBufferRX[serialHeadRX[2]][2] = UDR2; serialHeadRX[2] = i;}
+  if (i != serialTailRX[2]) {serialBufferRX[serialHeadRX[2]][2] = d; serialHeadRX[2] = i;}
 }
 SIGNAL(USART3_RX_vect){
+  uint8_t d = UDR3;
   uint8_t i = (serialHeadRX[3] + 1) % SERIAL_RX_BUFFER_SIZE;
-  if (i != serialTailRX[3]) {serialBufferRX[serialHeadRX[3]][3] = UDR3; serialHeadRX[3] = i;}
+  if (i != serialTailRX[3]) {serialBufferRX[serialHeadRX[3]][3] = d; serialHeadRX[3] = i;}
 }
 #endif
 
@@ -257,12 +236,11 @@ uint8_t SerialAvailable(uint8_t port) {
 
 void SerialWrite(uint8_t port,uint8_t c){
   switch (port) {
-    case 0: while (!(UCSR0A & (1 << UDRIE0))) ; UDR0 = c; break;
+    case 0: serialize8(c);UartSendData(); break;                 // Serial0 TX is driven via a buffer and a background intterupt
     #if defined(MEGA)
-    case 1: while (!(UCSR1A & (1 << UDRIE1))) ; UDR1 = c; break;
-    case 2: while (!(UCSR2A & (1 << UDRIE2))) ; UDR2 = c; break;
-    case 3: while (!(UCSR3A & (1 << UDRIE3))) ; UDR3 = c; break;
+    case 1: while (!(UCSR1A & (1 << UDRE1))) ; UDR1 = c; break;  // Serial1 Serial2 and Serial3 TX are not driven via interrupts
+    case 2: while (!(UCSR2A & (1 << UDRE2))) ; UDR2 = c; break;
+    case 3: while (!(UCSR3A & (1 << UDRE3))) ; UDR3 = c; break;
     #endif
   }
 }
-
