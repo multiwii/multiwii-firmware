@@ -236,6 +236,13 @@
 /* Use this to trigger telemetry without a TX */
 //#define LCD_CONF_DEBUG
 
+/* choice of LCD attached for configuration and telemetry, see notes below */
+/* 1 = Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed */
+/* 2 = TEXTSTAR lcd with 4 keys */
+/* 3 = Eagle Tree Power Panel LCD */
+#define LCD_TYPE 1   // 3 wire serial
+//#define LCD_TYPE 2 // TEXTSTAR
+//#define LCD_TYPE 3 // Eagle Tree Power Panel LCD
 
 /* To use an Eagle Tree Power Panel LCD for configuration, uncomment this line
  White wire  to Ground
@@ -243,13 +250,12 @@
  Yellow wire to SDA - Pin A4 Mini Pro - Pin 20 Mega
  Brown wire  to SCL - Pin A5 Mini Pro - Pin 21 Mega 
  (Contribution by Danal) */
-//#define LCD_ETPP
 
-/* to use Cat's whisker TEXTSTAR LCD, uncomment following line.
+/* Cat's whisker TEXTSTAR LCD
    Pleae note this display needs a full 4 wire connection to (+5V, Gnd, RXD, TXD )
    Configure display as follows: 115K baud, and TTL levels for RXD and TXD, terminal mode
    NO rx / tx line reconfiguration, use natural pins */
-//#define LCD_TEXTSTAR
+
 
 /* motors will not spin when the throttle command is in low position
    this is an alternative method to stop immediately the motors */
@@ -269,7 +275,7 @@
 /* you can change the tricopter servo travel here */
 #define TRI_YAW_CONSTRAINT_MIN 1020
 #define TRI_YAW_CONSTRAINT_MAX 2000
-#define TRI_YAW_MIDDLE 1500 // can be configured via LCD
+#define TRI_YAW_MIDDLE 1500 // tail servo center pos. - use this for initial trim; later trim midpoint via LCD
 
 /* Flying Wing: you can change change servo orientation and servo min/max values here */
 /* valid for all flight modes, even passThrough mode */
@@ -305,8 +311,9 @@
 /*      00. uses analog pin 2 to read voltage output from sensor. */
 /*      01. set POWERMETER hard. Uses PLEVELSCALE = 50 */
 /*      02. install low path filter for 25 Hz to sensor input */
+/*      03. check your average cycle time. If not close to 3ms, then you must change PLEVELDIV accordingly
 /*      1. compute PLEVELDIV for your sensor (see below for insturctions) */
-/*      2. set PLEVELDIVSOFT to 10000 ( to use LOG_VALUES for individual motor comparison) */
+/*      2. set PLEVELDIVSOFT to 5000 ( to use LOG_VALUES for individual motor comparison) */
 /*      3. attach, set PSENSORNULL and  PINT2mA */
 /*      4. configure, compile, upload, set alarm value in GUI or LCD */
 /*      3. enjoy true readings of mAh consumed */
@@ -319,19 +326,16 @@
 #define PLEVELSCALE 50 // if you change this value for other granularity, you must search for comments in code to change accordingly 
 /* larger PLEVELDIV will get you smaller value for power (mAh equivalent) */
 #define PLEVELDIV 5000 // default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
-#define PLEVELDIVSOFT PLEVELDIV // for soft always equal to PLEVELDIV; for hard set to 10000
+#define PLEVELDIVSOFT PLEVELDIV // for soft always equal to PLEVELDIV; for hard set to 5000
 //#define PLEVELDIV 1361L // to convert the sum into mAh divide by this value
 /* amploc 25A sensor has 37mV/A */
 /* arduino analog resolution is 4.9mV per unit; units from [0..1023] */
 /* sampling rate 20ms, approx 19977 micro seconds */
-/* PLEVELDIV = 37 / 4.9  * 10e6 / 19977  * 3600 / 1000  = 1361L */
+/* PLEVELDIV = 37 / 4.9  * 10e6 / 18000  * 3600 / 1000  = 1361L */
 /* set to analogRead() value for zero current */
 #define PSENSORNULL 510 // for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt
 #define PINT2mA 13 // for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
-/* frequency for reading the powermeter sensor in the main loop, depends on cycle time! */
-/* time base is main loop cycle time - a value of 6 means every 6th run through the main loop do the sensor read */
-/* example: with cycle time of approx 3ms, do sensor read every 6*3ms=18ms */
-#define PSENSORFREQ 6 
+
 
 
 /* to monitor system values (battery level, loop time etc. with LCD enable this */
@@ -357,10 +361,6 @@
 /* logging values are visible via LCD config */
 /* set to 2, if you want powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> 1) */
 #define LOG_VALUES 1
- 
-
-/* temproary fix to some timing issues */
-//#define FIX_TIMING
 
 
 //****** end of advanced users settings *************
@@ -374,8 +374,10 @@
 /* frequenies for rare cyclic actions in the main loop, depend on cycle time! */
 /* time base is main loop cycle time - a value of 6 means to trigger the action every 6th run through the main loop */
 /* example: with cycle time of approx 3ms, do action every 6*3ms=18ms */
-#define LCD_TELEMETRY_FREQ 41       // to send telemetry data over serial 41 <=> 120ms <=> 8Hz
-#define LCD_TELEMETRY_AUTO_FREQ 665 // to step to next telemetry page 666 <=> 2s
+/* value must be [1; 65535] */
+#define LCD_TELEMETRY_FREQ 43       // to send telemetry data over serial 43 <=> 120ms <=> 8Hz
+#define LCD_TELEMETRY_AUTO_FREQ 667 // to step to next telemetry page 667 <=> 2s
+#define PSENSORFREQ 6               //  to read hardware powermeter sensor 6 <=> 18ms
 /**************************************/
 /****END OF CONFIGURABLE PARAMETERS****/
 /**************************************/

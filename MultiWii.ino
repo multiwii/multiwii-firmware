@@ -40,7 +40,7 @@ December  2011     V1.dev
 #define BOXGPSHOLD  7
 #define BOXPASSTHRU 8
 #define BOXHEADFREE 9
-#define BOXALARMON  10
+#define BOXBEEPERON  10
 
 #define CHECKBOXITEMS 11
 #define PIDITEMS 8
@@ -81,7 +81,7 @@ static uint8_t  buzzerState = 0;
 static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
 static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
 static uint16_t powerMax = 0;           // highest ever current
-static uint16_t powerAvg = 0;           // last known current
+
 static int16_t  i2c_errors_count = 0;
 static int16_t  annex650_overrun_count = 0;
 
@@ -92,7 +92,8 @@ static int16_t  annex650_overrun_count = 0;
 static uint32_t pMeter[PMOTOR_SUM + 1];  //we use [0:7] for eight motors,one extra for sum
 static uint8_t pMeterV;                  // dummy to satisfy the paramStruct logic in ConfigurationLoop()
 static uint32_t pAlarm;                  // we scale the eeprom value from [0:255] to this value we can directly compare to the sum in pMeter[6]
-static uint8_t powerTrigger1 = 0;       // trigger for alarm based on power consumption
+static uint8_t powerTrigger1 = 0;        // trigger for alarm based on power consumption
+static uint16_t powerValue = 0;          // last known current
 static uint16_t intPowerMeterSum, intPowerTrigger1;
 
 // **********************
@@ -174,10 +175,11 @@ void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
 }
 
 void annexCode() { //this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
-  static uint32_t buzzerTime,calibratedAccTime,telemetryTime,telemetryAutoTime,psensorTime;
+  static uint32_t buzzerTime,calibratedAccTime;
+  static uint16_t telemetryTimer = 0, telemetryAutoTimer = 0, psensorTimer = 0;
   static uint8_t  buzzerFreq;         //delay between buzzer ring
   uint8_t axis,prop1,prop2;
-  uint16_t pMeterRaw, powerValue;     //used for current reading
+  uint16_t pMeterRaw;     //used for current reading
 
   //PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
   if      (rcData[THROTTLE]<1500) prop2 = 100;
@@ -215,17 +217,17 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   }
 
   #if (POWERMETER == 2)
-  if (micros() > psensorTime + 19977 /*20000*/) { // 50Hz, but avoid bulking of timed tasks
+    if (! (++psensorTimer % PSENSORFREQ)) { 
      pMeterRaw =  analogRead(PSENSORPIN);
      powerValue = ( PSENSORNULL > pMeterRaw ? PSENSORNULL - pMeterRaw : pMeterRaw - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
+     if ( powerValue < 333) {  // only accept reasonable values. 333 is empirical
      #ifdef LOG_VALUES
-       if ( powerValue < 333) {  // only accept reasonable values. 333 is empirical
-         if (powerValue > powerMax) powerMax = powerValue;
-         powerAvg = powerValue;
-       }
+        if (powerValue > powerMax) powerMax = powerValue;
      #endif
+     } else {
+        powerValue = 333;
+     }        
      pMeter[PMOTOR_SUM] += (uint32_t) powerValue;
-     psensorTime = micros();
   }
   #endif
 
@@ -237,7 +239,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
     vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
 
-    if ( (rcOptions1 & activate1[BOXALARMON]) || (rcOptions2 & activate2[BOXALARMON]) ){ // unconditional buzzer on via AUXn switch 
+    if ( (rcOptions1 & activate1[BOXBEEPERON]) || (rcOptions2 & activate2[BOXBEEPERON]) ){ // unconditional beeper on via AUXn switch 
        buzzerFreq = 7;
     } else  if ( ( (vbat>VBATLEVEL1_3S) 
     #if defined(POWERMETER)
@@ -343,7 +345,7 @@ void setup() {
   #if defined(GPS)
     SerialOpen(GPS_SERIAL,GPS_BAUD);
   #endif
-  #if defined(LCD_ETPP)
+  #if (LCD_TYPE == 3) //ETPP)
     initLCD();
   #endif
   #ifdef LCD_TELEMETRY_DEBUG

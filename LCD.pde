@@ -79,7 +79,7 @@ PROGMEM prog_char lcd_param_text22 []  = "Pitch&Roll Rate";
 PROGMEM prog_char lcd_param_text23 []  = "Yaw Rate";
 PROGMEM prog_char lcd_param_text24 []  = "Throttle PID";
 #ifdef LOG_VALUES
-#if (LOG_VALUES == 2) || (POWERMETER == 1)
+#if (LOG_VALUES == 2)
 PROGMEM prog_char lcd_param_text25 []  = "pMeter M0";
 PROGMEM prog_char lcd_param_text26 []  = "pMeter M1";
 PROGMEM prog_char lcd_param_text27 []  = "pMeter M2";
@@ -139,7 +139,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 &lcd_param_text23,   &yawRate,              &__RC,
 &lcd_param_text24,   &dynThrPID,            &__RC,
 #ifdef LOG_VALUES
-#if (LOG_VALUES == 2) || (POWERMETER == 1)
+#if (LOG_VALUES == 2)
 &lcd_param_text25,   &pMeter[0],            &__PM,
 &lcd_param_text26,   &pMeter[1],            &__PM,
 &lcd_param_text27,   &pMeter[2],            &__PM,
@@ -172,51 +172,45 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #define PARAMMAX (sizeof(lcd_param_ptr_table)/6 - 1)
 // ************************************************************************************************************
 
-// 1000000 / 9600  = 104 microseconds at 9600 baud.
-// we set it below to take some margin with the running interrupts
-#define BITDELAY 102
+
 void LCDprint(uint8_t i) {
-  #if defined(LCD_TEXTSTAR)
-    SerialWrite(0, i );
-  #elif defined(LCD_ETPP) 
-   i2c_ETPP_send_char(i);
-  #else
-    LCDPIN_OFF;
-    delayMicroseconds(BITDELAY);
-    for (uint8_t mask = 0x01; mask; mask <<= 1) {
-      if (i & mask) {LCDPIN_ON;} else {LCDPIN_OFF;} // choose bit
+  #if (LCD_TYPE == 1)
+      // 1000000 / 9600  = 104 microseconds at 9600 baud.
+      // we set it below to take some margin with the running interrupts
+      #define BITDELAY 102    LCDPIN_OFF;
       delayMicroseconds(BITDELAY);
-    }
-    LCDPIN_ON //switch ON digital PIN 0
-    delayMicroseconds(BITDELAY);
+      for (uint8_t mask = 0x01; mask; mask <<= 1) {
+        if (i & mask) {LCDPIN_ON;} else {LCDPIN_OFF;} // choose bit
+        delayMicroseconds(BITDELAY);
+      }
+      LCDPIN_ON //switch ON digital PIN 0
+      delayMicroseconds(BITDELAY);
+  #elif (LCD_TYPE == 2)
+      SerialWrite(0, i );
+  #elif (LCD_TYPE == 3)
+      i2c_ETPP_send_char(i);
   #endif
 }
 
 void LCDprintChar(const char *s) {
-  while (*s) {
-     #if defined(FIX_TIMING) && defined(LCD_TEXTSTAR)
-        SerialWrite(0, *s++);
-     #else
-        LCDprint(*s++);
-     #endif
-  }
+  while (*s) { LCDprint(*s++);  }
 }
 
 void initLCD() {
   blinkLED(20,30,1);
-  #if defined(LCD_TEXTSTAR)
-    // Cat's Whisker Technologies 'TextStar' Module CW-LCD-02
-    // http://cats-whisker.com/resources/documents/cw-lcd-02_datasheet.pdf
-    // Modified by Luca Brizzi aka gtrick90 @ RCG
-    LCDprint(0xFE);LCDprint(0x43);LCDprint(0x02); //cursor blink mode
-  #elif defined(LCD_ETPP)
-    // Eagle Tree Power Panel - I2C & Daylight Readable LCD
-    // Contributed by Danal
-    i2c_ETPP_init();
-  #else
+  #if (LCD_TYPE == 1)
     SerialEnd(0);
     //init LCD
     PINMODE_LCD; //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
+  #elif (LCD_TYPE == 2)
+    // Cat's Whisker Technologies 'TextStar' Module CW-LCD-02
+    // http://cats-whisker.com/resources/documents/cw-lcd-02_datasheet.pdf
+    // Modified by Luca Brizzi aka gtrick90 @ RCG
+    LCDprint(0xFE);LCDprint(0x43);LCDprint(0x02); //cursor blink mode	
+  #elif (LCD_TYPE == 3)
+    // Eagle Tree Power Panel - I2C & Daylight Readable LCD
+    // Contributed by Danal
+    i2c_ETPP_init();
   #endif
   LCDclear();
   strcpy_P(line1,PSTR("MultiWii V1.9+")); LCDsetLine(1); LCDprintChar(line1);
@@ -309,7 +303,7 @@ void configurationLoop() {
       refreshLCD = 0;
     }
 
-    #if defined(LCD_TEXTSTAR)
+    #if (LCD_TYPE == 2) // textstar
       key = ( SerialAvailable(0) ?  SerialRead(0) : 0 );
     #endif
     #ifdef LCD_CONF_DEBUG
@@ -349,7 +343,7 @@ void configurationLoop() {
   LCDsetLine(2);
   strcpy_P(line1,PSTR("Exit"));
   LCDprintChar(line1);
-  #if !defined(LCD_TEXTSTAR) && !defined(LCD_ETPP)
+  #if (LCD_TYPE == 1)
     SerialOpen(0,115200);
   #endif
   #ifdef LCD_TELEMETRY
@@ -362,17 +356,17 @@ void configurationLoop() {
 // -------------------- telemtry output to LCD over serial ----------------------------------
 
 #ifdef LCD_TELEMETRY
-void lcd_telemetry() {
+
   // LCD_BAR(n,v) : draw a bar graph - n number of chars for width, v value in % to display
-  #define LCD_BAR(n,v) {} // add your own implementation here
-  #if defined(LCD_TEXTSTAR)
-    #define LCD_BAR(n,v) { LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v); }
-  #elif defined(LCD_ETPP)
-    #define LCD_BAR(n,v) {LCDbarGraph(n,v); }
-  #else
-    #define LCD_BAR(n,v) {} // add your own implementation here  
-  #endif
-  
+   #if (LCD_TYPE == 1)
+     #define LCD_BAR(n,v) {} // add your own implementation here
+   #elif (LCD_TYPE == 2)
+     #define LCD_BAR(n,v) { LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v); }	
+   #elif (LCD_TYPE == 3)
+     #define LCD_BAR(n,v) {LCDbarGraph(n,v); }
+   #endif
+
+void lcd_telemetry() {
   uint16_t intPowerMeterSum;   
 
   switch (telemetry) { // output telemetry data, if one of four modes is set
@@ -403,7 +397,6 @@ void lcd_telemetry() {
     case 2: // button B on Textstar LCD -> Voltage, PowerSum and power alarm trigger value
       strcpy_P(line1,PSTR("--.-V   -----mAh")); // uint8_t vbat, intPowerMeterSum
                         // 0123456789.12345
-//    strcpy_P(line2,PSTR(".......  .......")); // intPowerMeterSum, intPowerTrigger1
     #ifdef VBAT
       line1[0] = '0'+vbat/100; line1[1] = '0'+vbat/10-(vbat/100)*10; line1[3] = '0'+vbat-(vbat/10)*10;
     #endif
@@ -417,7 +410,6 @@ void lcd_telemetry() {
       //line2[13] = '0'+powerTrigger1/100; line2[14] = '0'+powerTrigger1/10-(powerTrigger1/100)*10; line2[15] = '0'+powerTrigger1-(powerTrigger1/10)*10;
     #endif
     if (buzzerState) { // buzzer on? then add some blink for attention
-      //LCDprint(0x0c); //clear screen
       line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
     }
     // set mark, if we had i2c errors, failsafes or annex650 overruns
@@ -427,6 +419,8 @@ void lcd_telemetry() {
     #ifdef VBAT
       LCD_BAR(7, (((vbat-VBATLEVEL1_3S)*100)/VBATREF) );
       LCDprint(' ');
+    #else
+      LCDprintChar("        ");
     #endif
     #ifdef POWERMETER  
       //     intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
@@ -462,7 +456,7 @@ void lcd_telemetry() {
       line1[15] = '0' + unit        - (unit/10)    * 10;
       LCDsetLine(1);LCDprintChar(line1);
       #ifdef LOG_VALUES
-        unit = powerAvg * PINT2mA;
+        unit = powerValue * PINT2mA;
         line2[0] = '0' + unit / 10000;
         line2[1] = '0' + unit / 1000 - (unit/10000) * 10;
         line2[2] = '0' + unit / 100  - (unit/1000)  * 10;
@@ -487,7 +481,7 @@ void lcd_telemetry() {
       if (abs(accSmooth[1]) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT) } else LCDprintChar("...."); LCDprint(' ');
       if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT) } else LCDprintChar("....");
       break;
-    case 5: // No Z button.  Displays with auto telemetry only
+    case 5: // No button.  Displays with auto telemetry only
       strcpy_P(line1,PSTR("Fails i2c t-errs"));  
                         // 0123456789012345
       strcpy_P(line2,PSTR("----  ----  ---- "));
@@ -510,7 +504,7 @@ void lcd_telemetry() {
 } // end function
 #endif //  LCD_TELEMETRY
 
-#if defined(LCD_ETPP)
+#if (LCD_TYPE == 3) // ETPP
   // *********************
   // i2c Eagle Tree Power Panel primitives
   // *********************
@@ -587,23 +581,24 @@ void lcd_telemetry() {
 #endif //LCD_ETPP
 
 void LCDclear() {
-  #if defined(LCD_ETPP)
+   #if (LCD_TYPE == 1)
+    // nothing ???
+   #elif (LCD_TYPE == 2)
+    LCDprint(0x0c); //clear screen	
+   #elif (LCD_TYPE == 3)
     i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
     for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
-  #elif defined(LCD_TEXTSTAR)
-    LCDprint(0x0c); //clear screen
-  #endif
+   #endif
 }
 
 void LCDsetLine(byte line) {  // Line = 1 or 2
-  #if defined(LCD_TEXTSTAR)
-    LCDprint(0xFE);LCDprint('L');LCDprint(line);
-  #endif
-  #if defined(LCD_ETPP)
-    i2c_ETPP_set_cursor(0,line-1);
-  #else
+   #if (LCD_TYPE == 1)
     if (line==1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
-  #endif
+   #elif (LCD_TYPE == 2)
+    LCDprint(0xFE);LCDprint('L');LCDprint(line);
+   #elif (LCD_TYPE == 3)
+    i2c_ETPP_set_cursor(0,line-1);
+   #endif
 }
 
 
