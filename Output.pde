@@ -283,7 +283,7 @@ void mixTable() {
     motor[0] = PIDMIX( 0,+4/3, 0); //REAR
     motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
     motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
-    servo[0] = constrain(tail_servo_mid + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
+    servo[0] = constrain(tri_yaw_middle + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
   #endif
   #ifdef QUADP
     motor[0] = PIDMIX( 0,+1,-1); //REAR
