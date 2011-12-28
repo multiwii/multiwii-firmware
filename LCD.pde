@@ -174,7 +174,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 
 
 void LCDprint(uint8_t i) {
-  #if (LCD_TYPE == 1)
+  #if (LCD_TYPE == SERIAL3W)
       // 1000000 / 9600  = 104 microseconds at 9600 baud.
       // we set it below to take some margin with the running interrupts
       #define BITDELAY 102
@@ -186,9 +186,9 @@ void LCDprint(uint8_t i) {
       }
       LCDPIN_ON //switch ON digital PIN 0
       delayMicroseconds(BITDELAY);
-  #elif (LCD_TYPE == 2)
+  #elif (LCD_TYPE == TEXTSTAR)
       SerialWrite(0, i );
-  #elif (LCD_TYPE == 3)
+  #elif (LCD_TYPE == ETPP)
       i2c_ETPP_send_char(i);
   #endif
 }
@@ -199,24 +199,24 @@ void LCDprintChar(const char *s) {
 
 void initLCD() {
   blinkLED(20,30,1);
-  #if (LCD_TYPE == 1)
+  #if (LCD_TYPE == SERIAL3W)
     SerialEnd(0);
     //init LCD
     PINMODE_LCD; //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
-  #elif (LCD_TYPE == 2)
+  #elif (LCD_TYPE == TEXTSTAR)
     // Cat's Whisker Technologies 'TextStar' Module CW-LCD-02
     // http://cats-whisker.com/resources/documents/cw-lcd-02_datasheet.pdf
     // Modified by Luca Brizzi aka gtrick90 @ RCG
     //LCDprint(0xFE);LCDprint(0x43);LCDprint(0x02); //cursor blink mode	
     LCDprint(0xFE);LCDprint('R'); //reset	
-  #elif (LCD_TYPE == 3)
+  #elif (LCD_TYPE == ETPP)
     // Eagle Tree Power Panel - I2C & Daylight Readable LCD
     // Contributed by Danal
     i2c_ETPP_init();
   #endif
   LCDclear();
   strcpy_P(line1,PSTR("MultiWii V1.9+")); LCDsetLine(1);   LCDprintChar(line1);
-  #if (LCD_TYPE == 2)
+  #if (LCD_TYPE == TEXTSTAR)
      delay(2500);
      LCDclear();
   #endif
@@ -269,7 +269,7 @@ void __upMFmt(void * var, uint8_t mul, uint8_t dec) {
 
 void __upSFmt(void * var, uint8_t mul, uint8_t dec) {
   uint32_t unit = *(uint32_t*)var; 
-  #if (POWERMETER == 1)
+  #if (POWERMETER == SERIAL3W)
     unit = unit / PLEVELDIVSOFT; 
   #else
     unit = unit / PLEVELDIV;
@@ -309,7 +309,7 @@ void configurationLoop() {
       refreshLCD = 0;
     }
 
-    #if (LCD_TYPE == 2) // textstar
+    #if (LCD_TYPE == TEXTSTAR) // textstar
       key = ( SerialAvailable(0) ?  SerialRead(0) : 0 );
     #endif
     #ifdef LCD_CONF_DEBUG
@@ -350,7 +350,7 @@ void configurationLoop() {
   LCDsetLine(2);
   strcpy_P(line1,PSTR("Exit"));
   LCDprintChar(line1);
-  #if (LCD_TYPE == 1)
+  #if (LCD_TYPE == SERIAL3W)
     SerialOpen(0,115200);
   #endif
   #ifdef LCD_TELEMETRY
@@ -365,11 +365,11 @@ void configurationLoop() {
 #ifdef LCD_TELEMETRY
 
   // LCD_BAR(n,v) : draw a bar graph - n number of chars for width, v value in % to display
-   #if (LCD_TYPE == 1)
+   #if (LCD_TYPE == SERIAL3W)
      #define LCD_BAR(n,v) {} // add your own implementation here
-   #elif (LCD_TYPE == 2)
+   #elif (LCD_TYPE == TEXTSTAR)
      #define LCD_BAR(n,v) { LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(constrain(v,0,100)); }	
-   #elif (LCD_TYPE == 3)
+   #elif (LCD_TYPE == ETPP)
      #define LCD_BAR(n,v) {LCDbarGraph(n,v); }
    #endif
 
@@ -513,7 +513,7 @@ void lcd_telemetry() {
 } // end function
 #endif //  LCD_TELEMETRY
 
-#if (LCD_TYPE == 3) // ETPP
+#if (LCD_TYPE == ETPP) // ETPP
   // *********************
   // i2c Eagle Tree Power Panel primitives
   // *********************
@@ -590,22 +590,22 @@ void lcd_telemetry() {
 #endif //LCD_ETPP
 
 void LCDclear() {
-   #if (LCD_TYPE == 1)
+   #if (LCD_TYPE == SERIAL3W)
     // nothing ???
-   #elif (LCD_TYPE == 2)
+   #elif (LCD_TYPE == TEXTSTAR)
     LCDprint(0x0c); //clear screen	
-   #elif (LCD_TYPE == 3)
+   #elif (LCD_TYPE == ETPP)
     i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
     for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
    #endif
 }
 
 void LCDsetLine(byte line) {  // Line = 1 or 2
-   #if (LCD_TYPE == 1)
+   #if (LCD_TYPE == SERIAL3W)
     if (line==1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
-   #elif (LCD_TYPE == 2)
+   #elif (LCD_TYPE == TEXTSTAR)
     LCDprint(0xfe);LCDprint('L');LCDprint(line);
-   #elif (LCD_TYPE == 3)
+   #elif (LCD_TYPE == ETPP)
     i2c_ETPP_set_cursor(0,line-1);
    #endif
 }

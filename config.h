@@ -232,19 +232,16 @@
 
 /* In order to save space, it's possibile to desactivate the LCD configuration functions
    comment this line only if you don't plan to used a LCD */
-#define LCD_CONF
-/* Use this to trigger telemetry without a TX */
+//#define LCD_CONF
+/* Use this to trigger LCD configuration without a TX */
 //#define LCD_CONF_DEBUG
 
 /* choice of LCD attached for configuration and telemetry, see notes below */
-/* 1 = Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed */
-/* 2 = TEXTSTAR lcd with 4 keys */
-/* 3 = Eagle Tree Power Panel LCD */
-#define LCD_TYPE 1   // 3 wire serial
-//#define LCD_TYPE 2 // TEXTSTAR
-//#define LCD_TYPE 3 // Eagle Tree Power Panel LCD
+//#define LCD_TYPE SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
+//#define LCD_TYPE TEXTSTAR    // Cat's Whisker TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
+//#define LCD_TYPE ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
 
-/* To use an Eagle Tree Power Panel LCD for configuration, uncomment this line
+/* To use an Eagle Tree Power Panel LCD for configuration:
  White wire  to Ground
  Red wire    to +5V VCC (or to the WMP power pin, if you prefer to reset everything on the bus when WMP resets)
  Yellow wire to SDA - Pin A4 Mini Pro - Pin 20 Mega

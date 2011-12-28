@@ -373,3 +373,11 @@
 #elif defined(OCTOFLATX)
   #define MULTITYPE 11      //the GUI is the same for all 8 motor configs
 #endif
+
+/**************************/
+/* Error Checking Section */
+/**************************/
+
+#if defined(LCD_CONF) && !defined(LCD_TYPE)
+  #error LCD_CONF requires LCD_TYPE definition
+#endif
