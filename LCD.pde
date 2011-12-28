@@ -177,7 +177,8 @@ void LCDprint(uint8_t i) {
   #if (LCD_TYPE == 1)
       // 1000000 / 9600  = 104 microseconds at 9600 baud.
       // we set it below to take some margin with the running interrupts
-      #define BITDELAY 102    LCDPIN_OFF;
+      #define BITDELAY 102
+      LCDPIN_OFF;
       delayMicroseconds(BITDELAY);
       for (uint8_t mask = 0x01; mask; mask <<= 1) {
         if (i & mask) {LCDPIN_ON;} else {LCDPIN_OFF;} // choose bit
