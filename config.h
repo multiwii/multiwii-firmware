@@ -308,7 +308,7 @@
 /*      00. uses analog pin 2 to read voltage output from sensor. */
 /*      01. set POWERMETER hard. Uses PLEVELSCALE = 50 */
 /*      02. install low path filter for 25 Hz to sensor input */
-/*      03. check your average cycle time. If not close to 3ms, then you must change PLEVELDIV accordingly
+/*      03. check your average cycle time. If not close to 3ms, then you must change PLEVELDIV accordingly */
 /*      1. compute PLEVELDIV for your sensor (see below for insturctions) */
 /*      2. set PLEVELDIVSOFT to 5000 ( to use LOG_VALUES for individual motor comparison) */
 /*      3. attach, set PSENSORNULL and  PINT2mA */
