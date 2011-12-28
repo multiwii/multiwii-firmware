@@ -2,7 +2,7 @@
 
 static uint8_t checkNewConf = 149;
 
-typedef struct eep_entry_t{
+struct eep_entry_t{
   void *  var;
   uint8_t size;
 };
@@ -11,27 +11,27 @@ typedef struct eep_entry_t{
 // EEPROM Layout definition
 // ************************************************************************************************************
 static eep_entry_t eep_entry[] = {
-  &checkNewConf, sizeof(checkNewConf)
-, &P8, sizeof(P8)
-, &I8, sizeof(I8) 
-, &D8, sizeof(D8) 
-, &rcRate8, sizeof(rcRate8)
-, &rcExpo8, sizeof(rcExpo8)
-, &rollPitchRate, sizeof(rollPitchRate)
-, &yawRate, sizeof(yawRate)
-, &dynThrPID, sizeof(dynThrPID)
-, &accZero, sizeof(accZero)
-, &magZero, sizeof(magZero)
-, &accTrim, sizeof(accTrim)
-, &activate1, sizeof(activate1)
-, &activate2, sizeof(activate2)
-, &powerTrigger1, sizeof(powerTrigger1)
+  {&checkNewConf, sizeof(checkNewConf)}
+, {&P8, sizeof(P8)}
+, {&I8, sizeof(I8)} 
+, {&D8, sizeof(D8)} 
+, {&rcRate8, sizeof(rcRate8)}
+, {&rcExpo8, sizeof(rcExpo8)}
+, {&rollPitchRate, sizeof(rollPitchRate)}
+, {&yawRate, sizeof(yawRate)}
+, {&dynThrPID, sizeof(dynThrPID)}
+, {&accZero, sizeof(accZero)}
+, {&magZero, sizeof(magZero)}
+, {&accTrim, sizeof(accTrim)}
+, {&activate1, sizeof(activate1)}
+, {&activate2, sizeof(activate2)}
+, {&powerTrigger1, sizeof(powerTrigger1)}
 #ifdef FLYING_WING
-, &wing_left_mid,  sizeof(wing_left_mid)
-, &wing_right_mid, sizeof(wing_right_mid)
+, {&wing_left_mid,  sizeof(wing_left_mid)}
+, {&wing_right_mid, sizeof(wing_right_mid)}
 #endif
 #ifdef TRI
-, &tri_yaw_middle,  sizeof(tri_yaw_middle)
+, {&tri_yaw_middle,  sizeof(tri_yaw_middle)}
 #endif
 
 };  
