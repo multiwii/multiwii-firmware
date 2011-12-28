@@ -4,9 +4,11 @@ void computeIMU () {
   static int16_t gyroADCprevious[3] = {0,0,0};
   int16_t gyroADCp[3];
   int16_t gyroADCinter[3];
-  static int16_t lastAccADC[3] = {0,0,0};
+//  static int16_t lastAccADC[3] = {0,0,0};
   static uint32_t timeInterleave = 0;
+#if defined(TRI)
   static int16_t gyroYawSmooth = 0;
+#endif
 
   //we separate the 2 situations because reading gyro values with a gyro only setup can be acchieved at a higher rate
   //gyro+nunchuk: we must wait for a quite high delay betwwen 2 reads to get both WM+ and Nunchuk data. It works with 3ms
@@ -243,8 +245,16 @@ void rotateV(struct fp_vector *v,float* delta) {
 void getEstimatedAttitude(){
   uint8_t axis;
   int16_t accMag = 0;
-  static t_fp_vector EstG,EstM;
-  static int16_t mgSmooth[3],accTemp[3];  //projection of smoothed and normalized magnetic vector on x/y/z axis, as measured by magnetometer
+  static t_fp_vector EstG;
+#if MAG
+  static t_fp_vector EstM;
+#endif
+#if defined(MG_LPF_FACTOR)
+  static int16_t mgSmooth[3]; 
+#endif
+#if defined(ACC_LPF_FACTOR)
+  static int16_t accTemp[3];  //projection of smoothed and normalized magnetic vector on x/y/z axis, as measured by magnetometer
+#endif
   static uint16_t previousT;
   uint16_t currentT = micros();
   float scale, deltaGyroAngle[3];
