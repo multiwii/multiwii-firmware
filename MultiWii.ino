@@ -176,10 +176,14 @@ void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
 
 void annexCode() { //this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
   static uint32_t buzzerTime,calibratedAccTime;
+#if defined(LCD_TELEMETRY)
   static uint16_t telemetryTimer = 0, telemetryAutoTimer = 0, psensorTimer = 0;
+#endif
   static uint8_t  buzzerFreq;         //delay between buzzer ring
   uint8_t axis,prop1,prop2;
+#if (POWERMETER == 2)
   uint16_t pMeterRaw;     //used for current reading
+#endif
 
   //PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
   if      (rcData[THROTTLE]<1500) prop2 = 100;
