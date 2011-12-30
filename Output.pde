@@ -81,7 +81,7 @@ void logMotorsPower() {
   if (vbat) { // by all means - must avoid division by zero 
     for (uint8_t i =0;i<NUMBER_MOTOR;i++) {
       amp = pgm_read_word_near(amperes + ((motor[i] - 1000)>>4)) / vbat; // range mapped from [1000:2000] => [0:1000]; then break that up into 64 ranges; lookup amp
-      #ifdef LOG_VALUES
+      #if (LOG_VALUES == 2)
          pMeter[i]+= amp; // sum up over time the mapped ESC input 
       #endif
       #if (POWERMETER == 1)
@@ -283,7 +283,7 @@ void mixTable() {
     motor[0] = PIDMIX( 0,+4/3, 0); //REAR
     motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
     motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
-    servo[0] = constrain(tail_servo_mid + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
+    servo[0] = constrain(tri_yaw_middle + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
   #endif
   #ifdef QUADP
     motor[0] = PIDMIX( 0,+1,-1); //REAR
@@ -373,7 +373,7 @@ void mixTable() {
   #endif
   #ifdef FLYING_WING
     motor[0] = rcCommand[THROTTLE];
-    if (passthroughMode) {// use raw stick values to drive output 
+    if (passThruMode) {// use raw stick values to drive output 
        servo[1]  = constrain(wing_left_mid  + PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC), WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
        servo[2]  = constrain(wing_right_mid + PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC), WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
     } else { // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration

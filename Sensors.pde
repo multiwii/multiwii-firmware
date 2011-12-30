@@ -525,6 +525,7 @@ void ACC_getADC () {
 // adaptation from C2po (may 2011)
 // contribution from ziss_dm (June 2011)
 // contribution from ToLuSe (Jully 2011)
+// contribution from Alex (December 2011)
 // I2C Accelerometer BMA180
 // ************************************************************************************************************
 // I2C adress: 0x80 (8bit)    0x40 (7bit) (SDO connection to VCC) 
@@ -533,8 +534,12 @@ void ACC_getADC () {
 //
 // Control registers:
 //
-// 0x20    bw_tcs:   |                                           bw<3:0> |                        tcs<3:0> |
-//                   |                                             150Hz |                 !!Calibration!! |
+// 0x20    bw_tcs:      |                                           bw<3:0> |                        tcs<3:0> |
+//                      |                                             150Hz |                        xxxxxxxx |
+// 0x30    tco_z:       |                                                tco_z<5:0>    |     mode_config<1:0> |
+//                      |                                                xxxxxxxxxx    |                   00 |
+// 0x35    offset_lsb1: |          offset_x<3:0>              |                   range<2:0>       | smp_skip |
+//                      |          xxxxxxxxxxxxx              |                    8G:   101       | xxxxxxxx |
 // ************************************************************************************************************
 #if defined(BMA180)
 void ACC_init () {
@@ -543,25 +548,30 @@ void ACC_init () {
   i2c_writeReg(BMA180_ADDRESS,0x0D,1<<4); // register: ctrl_reg0  -- value: set bit ee_w to 1 to enable writing
   delay(5);
   uint8_t control = i2c_readReg(BMA180_ADDRESS, 0x20);
-  control = control & 0x0F; // register: bw_tcs reg: bits 4-7 to set bw -- value: set low pass filter to 10Hz (bits value = 0000xxxx)
-  control = control | 0x00; 
+  control = control & 0x0F;        // save tcs register
+  control = control | (0x00 << 4); // set low pass filter to 10Hz (bits value = 0000xxxx)
   i2c_writeReg(BMA180_ADDRESS, 0x20, control);
   delay(5); 
   control = i2c_readReg(BMA180_ADDRESS, 0x30);
-  control = control & 0xFC; 
-  control = control | 0x02; 
+  control = control & 0xFC;        // save tco_z register
+  control = control | 0x00;        // set mode_config to 0
   i2c_writeReg(BMA180_ADDRESS, 0x30, control);
   delay(5); 
-  acc_1G = 512;
+  control = i2c_readReg(BMA180_ADDRESS, 0x35);
+  control = control & 0xF1;        // save offset_x and smp_skip register
+  control = control | (0x05 << 1); // set range to 8G
+  i2c_writeReg(BMA180_ADDRESS, 0x35, control);
+  delay(5); 
+  acc_1G = 255;
 }
 
 void ACC_getADC () {
   TWBR = ((16000000L / 400000L) - 16) / 2;  // Optional line.  Sensor is good for it in the spec.
   i2c_getSixRawADC(BMA180_ADDRESS,0x02);
-  //usefull info is on the 14 bits  [2-15] bits  /4 => [0-13] bits  /8 => 11 bit resolution
-  ACC_ORIENTATION(  - ((rawADC[1]<<8) | rawADC[0])/32 ,
-                    - ((rawADC[3]<<8) | rawADC[2])/32 ,
-                      ((rawADC[5]<<8) | rawADC[4])/32 );
+  //usefull info is on the 14 bits  [2-15] bits  /4 => [0-13] bits  /4 => 12 bit resolution
+  ACC_ORIENTATION(  - ((rawADC[1]<<8) | rawADC[0])/16 ,
+                    - ((rawADC[3]<<8) | rawADC[2])/16 ,
+                      ((rawADC[5]<<8) | rawADC[4])/16 );
   ACC_Common();
 }
 #endif
@@ -587,13 +597,13 @@ void ACC_getADC () {
 // ************************************************************************************************************
 #if defined(BMA020)
 void ACC_init(){
-  i2c_writeReg(0x70,0x15,0x80);
+  i2c_writeReg(0x70,0x15,0x80);    // set SPI4 bit
   uint8_t control = i2c_readReg(0x70, 0x14);
-  control = control & 0xE0;
-  control = control | (0x00 << 3); //Range 2G 00
-  control = control | 0x00;        //Bandwidth 25 Hz 000
+  control = control & 0xE0;        // save bits 7,6,5
+  control = control | (0x02 << 3); // Range 8G (10)
+  control = control | 0x00;        // Bandwidth 25 Hz 000
   i2c_writeReg(0x70,0x14,control); 
-  acc_1G = 255;
+  acc_1G = 63;
 }
 
 void ACC_getADC(){

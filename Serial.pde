@@ -42,12 +42,12 @@ void serialCom() {
       break;    
     case 'C': // button C press
     case '3':
-           if (telemetry==3) telemetry = 0; else { telemetry = 3; LCDclear(); 
-           #ifdef LOG_VALUES
-              cycleTimeMax = 0;
-              cycleTimeMin = 65535;
-           #endif
-           }
+           if (telemetry==3) { telemetry = 0; 
+              #ifdef LOG_VALUES
+                 cycleTimeMax = 0; // reset min/max on transition on->off
+                 cycleTimeMin = 65535;
+              #endif
+           }else { telemetry = 3; LCDclear(); }
       break;    
     case 'D': // button D press
     case '4':
@@ -66,7 +66,7 @@ void serialCom() {
             free_memory = ((int)&free_memory) - ((int)&__bss_end);
           else
             free_memory = ((int)&free_memory) - ((int)__brkval);
-          strcpy_P(line1,PSTR(" Free ---- ")); // uint8_t free_memory
+          strcpy_P(line1,PSTR(" Free ----")); // uint8_t free_memory
           line1[6] = '0' + free_memory / 1000 - (free_memory/10000) * 10;
           line1[7] = '0' + free_memory / 100  - (free_memory/1000)  * 10;
           line1[8] = '0' + free_memory / 10   - (free_memory/100)   * 10;
@@ -93,7 +93,12 @@ void serialCom() {
       for(i=0;i<8;i++) serialize16(rcData[i]);
       serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3|GPSPRESENT<<4);
       serialize8(accMode|baroMode<<1|magMode<<2|(GPSModeHome|GPSModeHold)<<3);
-      serialize16(cycleTime);
+      #if defined(LOG_VALUES)
+         serialize16(cycleTimeMax);
+         cycleTimeMax = 0;
+      #else
+         serialize16(cycleTime);
+      #endif
       for(i=0;i<2;i++) serialize16(angle[i]);
       serialize8(MULTITYPE);
       for(i=0;i<PIDITEMS;i++) {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);}
