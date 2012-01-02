@@ -2,6 +2,19 @@
 /****CONFIGURABLE PARAMETERS****/
 /*******************************/
 
+/* do _not_ change  -- configurable parameters follow below */
+
+#define LCD_SERIAL3W	1
+#define LCD_TEXTSTAR	2
+#define LCD_ETPP 		3
+#define PM_SOFT 1
+#define PM_HARD 2
+
+
+/*******************************/
+/****CONFIGURABLE PARAMETERS****/
+/*******************************/
+
 /* Set the minimum throttle command sent to the ESC (Electronic Speed Controller)
    This is the minimum value that allow motors to run at a idle speed  */
 //#define MINTHROTTLE 1300 // for Turnigy Plush ESCs 10A
@@ -237,9 +250,9 @@
 //#define LCD_CONF_DEBUG
 
 /* choice of LCD attached for configuration and telemetry, see notes below */
-//#define LCD_TYPE SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
-//#define LCD_TYPE TEXTSTAR    // Cat's Whisker TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
-//#define LCD_TYPE ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
+//#define LCD_TYPE LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
+//#define LCD_TYPE LCD_TEXTSTAR    // Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
+//#define LCD_TYPE LCD_ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
 
 /* To use an Eagle Tree Power Panel LCD for configuration:
  White wire  to Ground
@@ -248,7 +261,7 @@
  Brown wire  to SCL - Pin A5 Mini Pro - Pin 21 Mega 
  (Contribution by Danal) */
 
-/* Cat's whisker TEXTSTAR LCD
+/* Cat's whisker LCD_TEXTSTAR LCD
    Pleae note this display needs a full 4 wire connection to (+5V, Gnd, RXD, TXD )
    Configure display as follows: 115K baud, and TTL levels for RXD and TXD, terminal mode
    NO rx / tx line reconfiguration, use natural pins */
@@ -315,8 +328,8 @@
 /*      4. configure, compile, upload, set alarm value in GUI or LCD */
 /*      3. enjoy true readings of mAh consumed */
 /* set POWERMETER to "soft" (1) or "hard" (2) depending on sensor you want to utilize */
-//#define POWERMETER 1
-//#define POWERMETER 2
+//#define POWERMETER PM_SOFT
+//#define POWERMETER PM_HARD
 /* the sum of all powermeters ranges from [0:60000 e4] theoretically. */
 /* the alarm level from eeprom is out of [0:255], so we multipy alarm level with PLEVELSCALE and with 1e4 before comparing */
 /* PLEVELSCALE is the step size you can use to set alarm */
@@ -356,7 +369,7 @@
 
 /* to log values like max loop time and others to come */
 /* logging values are visible via LCD config */
-/* set to 2, if you want powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> 1) */
+/* set to 2, if you want powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> PM_SOFT) */
 #define LOG_VALUES 1
 
 

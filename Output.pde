@@ -64,7 +64,7 @@ void writeAllMotors(int16_t mc) {   // Sends commands to all motors
   writeMotors();
 }
 
-#if (LOG_VALUES == 2) || (POWERMETER == 1)
+#if (LOG_VALUES == 2) || (POWERMETER == PM_SOFT)
 void logMotorsPower() {
   uint32_t amp;
   /* true cubic function; when divided by vbat_max=126 (12.6V) for 3 cell battery this gives maximum value of ~ 500 */
@@ -84,7 +84,7 @@ void logMotorsPower() {
       #if (LOG_VALUES == 2)
          pMeter[i]+= amp; // sum up over time the mapped ESC input 
       #endif
-      #if (POWERMETER == 1)
+      #if (POWERMETER == PM_SOFT)
          pMeter[PMOTOR_SUM]+= amp; // total sum over all motors
       #endif
     }
@@ -420,7 +420,7 @@ void mixTable() {
       motor[i] = MINCOMMAND;
   }
 
-  #if (LOG_VALUES == 2) || (POWERMETER == 1)
+  #if (LOG_VALUES == 2) || (POWERMETER == PM_SOFT)
     logMotorsPower();
   #endif
 }

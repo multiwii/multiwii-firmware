@@ -105,9 +105,11 @@ PROGMEM prog_char lcd_param_text37 []  = "Trim Servo2";
 PROGMEM prog_char lcd_param_text38 []  = "Trim ServoTail";
 #endif
 #ifdef LOG_VALUES
-PROGMEM prog_char lcd_param_text39 []  = "#Failsafes";
-PROGMEM prog_char lcd_param_text40 []  = "#i2c Errors";
+PROGMEM prog_char lcd_param_text39 []  = "Failsafes";
+PROGMEM prog_char lcd_param_text40 []  = "i2c Errors";
+PROGMEM prog_char lcd_param_text41 []  = "annex overruns";
 #endif
+//                                        0123456789.12345
 
 PROGMEM const prog_void *lcd_param_ptr_table [] = {
 &lcd_param_text01,   &P8[ROLL],             &__P,
@@ -166,7 +168,8 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #endif
 #ifdef LOG_VALUES
 &lcd_param_text39,   &failsafeEvents,       &__FS,
-&lcd_param_text40,   &i2c_errors_count,     &__L
+&lcd_param_text40,   &i2c_errors_count,     &__L,
+&lcd_param_text41,   &annex650_overrun_count, &__L
 #endif
 };
 #define PARAMMAX (sizeof(lcd_param_ptr_table)/6 - 1)
@@ -174,7 +177,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 
 
 void LCDprint(uint8_t i) {
-  #if (LCD_TYPE == SERIAL3W)
+  #if (LCD_TYPE == LCD_SERIAL3W)
       // 1000000 / 9600  = 104 microseconds at 9600 baud.
       // we set it below to take some margin with the running interrupts
       #define BITDELAY 102
@@ -186,9 +189,9 @@ void LCDprint(uint8_t i) {
       }
       LCDPIN_ON //switch ON digital PIN 0
       delayMicroseconds(BITDELAY);
-  #elif (LCD_TYPE == TEXTSTAR)
+  #elif (LCD_TYPE == LCD_TEXTSTAR)
       SerialWrite(0, i );
-  #elif (LCD_TYPE == ETPP)
+  #elif (LCD_TYPE == LCD_ETPP)
       i2c_ETPP_send_char(i);
   #endif
 }
@@ -199,24 +202,24 @@ void LCDprintChar(const char *s) {
 
 void initLCD() {
   blinkLED(20,30,1);
-  #if (LCD_TYPE == SERIAL3W)
+  #if (LCD_TYPE == LCD_SERIAL3W)
     SerialEnd(0);
     //init LCD
     PINMODE_LCD; //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
-  #elif (LCD_TYPE == TEXTSTAR)
+  #elif (LCD_TYPE == LCD_TEXTSTAR)
     // Cat's Whisker Technologies 'TextStar' Module CW-LCD-02
     // http://cats-whisker.com/resources/documents/cw-lcd-02_datasheet.pdf
     // Modified by Luca Brizzi aka gtrick90 @ RCG
     //LCDprint(0xFE);LCDprint(0x43);LCDprint(0x02); //cursor blink mode	
     LCDprint(0xFE);LCDprint('R'); //reset	
-  #elif (LCD_TYPE == ETPP)
+  #elif (LCD_TYPE == LCD_ETPP)
     // Eagle Tree Power Panel - I2C & Daylight Readable LCD
     // Contributed by Danal
     i2c_ETPP_init();
   #endif
   LCDclear();
   strcpy_P(line1,PSTR("MultiWii V1.9+")); LCDsetLine(1);   LCDprintChar(line1);
-  #if (LCD_TYPE == TEXTSTAR)
+  #if (LCD_TYPE == LCD_TEXTSTAR)
      delay(2500);
      LCDclear();
   #endif
@@ -269,9 +272,9 @@ void __upMFmt(void * var, uint8_t mul, uint8_t dec) {
 
 void __upSFmt(void * var, uint8_t mul, uint8_t dec) {
   uint32_t unit = *(uint32_t*)var; 
-  #if (POWERMETER == SERIAL3W)
+  #if (POWERMETER == PM_SOFT)
     unit = unit / PLEVELDIVSOFT; 
-  #else
+  #elif (POWERMETER == PM_HARD)
     unit = unit / PLEVELDIV;
   #endif
   __u16Fmt(&unit, mul, dec);
@@ -282,7 +285,7 @@ static uint8_t lcdStickState[3];
 #define IsHigh(x) (lcdStickState[x] & 0x2)
 #define IsMid(x)  (!lcdStickState[x])
 
-/* keys to navigate the LCD menu (preset to TEXTSTAR key-depress codes)*/
+/* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
 #define LCD_MENU_PREV 'a'
 #define LCD_MENU_NEXT 'c'
 #define LCD_VALUE_UP 'd'
@@ -309,7 +312,7 @@ void configurationLoop() {
       refreshLCD = 0;
     }
 
-    #if (LCD_TYPE == TEXTSTAR) // textstar
+    #if (LCD_TYPE == LCD_TEXTSTAR) // textstar
       key = ( SerialAvailable(0) ?  SerialRead(0) : 0 );
     #endif
     #ifdef LCD_CONF_DEBUG
@@ -350,7 +353,7 @@ void configurationLoop() {
   LCDsetLine(2);
   strcpy_P(line1,PSTR("Exit"));
   LCDprintChar(line1);
-  #if (LCD_TYPE == SERIAL3W)
+  #if (LCD_TYPE == LCD_SERIAL3W)
     SerialOpen(0,115200);
   #endif
   #ifdef LCD_TELEMETRY
@@ -365,11 +368,11 @@ void configurationLoop() {
 #ifdef LCD_TELEMETRY
 
   // LCD_BAR(n,v) : draw a bar graph - n number of chars for width, v value in % to display
-   #if (LCD_TYPE == SERIAL3W)
+   #if (LCD_TYPE == LCD_SERIAL3W)
      #define LCD_BAR(n,v) {} // add your own implementation here
-   #elif (LCD_TYPE == TEXTSTAR)
+   #elif (LCD_TYPE == LCD_TEXTSTAR)
      #define LCD_BAR(n,v) { LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(constrain(v,0,100)); }	
-   #elif (LCD_TYPE == ETPP)
+   #elif (LCD_TYPE == LCD_ETPP)
      #define LCD_BAR(n,v) {LCDbarGraph(n,v); }
    #endif
 
@@ -513,13 +516,13 @@ void lcd_telemetry() {
 } // end function
 #endif //  LCD_TELEMETRY
 
-#if (LCD_TYPE == ETPP) // ETPP
+#if (LCD_TYPE == LCD_ETPP) // LCD_ETPP
   // *********************
   // i2c Eagle Tree Power Panel primitives
   // *********************
     void i2c_ETPP_init () {
-      i2c_rep_start(0x76+0);      // ETPP i2c address: 0x3B in 7 bit form. Shift left one bit and concatenate i2c write command bit of zero = 0x76 in 8 bit form.
-      i2c_write(0x00);            // ETPP command register
+      i2c_rep_start(0x76+0);      // LCD_ETPP i2c address: 0x3B in 7 bit form. Shift left one bit and concatenate i2c write command bit of zero = 0x76 in 8 bit form.
+      i2c_write(0x00);            // LCD_ETPP command register
       i2c_write(0x24);            // Function Set 001D0MSL D : data length for parallel interface only; M: 0 = 1x32 , 1 = 2x16; S: 0 = 1:18 multiplex drive mode, 1x32 or 2x16 character display, 1 = 1:9 multiplex drive mode, 1x16 character display; H: 0 = basic instruction set plus standard instruction set, 1 = basic instruction set plus extended instruction set
       i2c_write(0x0C);            // Display on   00001DCB D : 0 = Display Off, 1 = Display On; C : 0 = Underline Cursor Off, 1 = Underline Cursor On; B : 0 = Blinking Cursor Off, 1 = Blinking Cursor On
       i2c_write(0x06);            // Cursor Move  000001IS I : 0 = DDRAM or CGRAM address decrements by 1, cursor moves to the left, 1 = DDRAM or CGRAM address increments by 1, cursor moves to the right; S : 0 = display does not shift,  1 = display does shifts
@@ -527,13 +530,13 @@ void lcd_telemetry() {
     }
     void i2c_ETPP_send_cmd (byte c) {
       i2c_rep_start(0x76+0);      // I2C write direction
-      i2c_write(0x00);            // ETPP command register
+      i2c_write(0x00);            // LCD_ETPP command register
       i2c_write(c);
     }
     void i2c_ETPP_send_char (char c) {
-      if (c > 0x0f) c |=  0x80;   // ETPP uses character set "R", which has A->z mapped same as ascii + high bit; don't mess with custom chars. 
+      if (c > 0x0f) c |=  0x80;   // LCD_ETPP uses character set "R", which has A->z mapped same as ascii + high bit; don't mess with custom chars. 
       i2c_rep_start(0x76+0);      // I2C write direction
-      i2c_write(0x40);            // ETPP data register
+      i2c_write(0x40);            // LCD_ETPP data register
       i2c_write(c);
     }
 
@@ -550,7 +553,7 @@ void lcd_telemetry() {
       i2c_ETPP_send_cmd(0x80);                   // CGRAM and DDRAM share an address register, but you can't set certain bits with the CGRAM address command.   Use DDRAM address command to be sure high order address bits are zero. 
       i2c_ETPP_send_cmd(0x40 | byte(idx * 8));   // Set CGRAM address 
       i2c_rep_start(0x76+0);                     // I2C write direction
-      i2c_write(0x40);                           // ETPP data register
+      i2c_write(0x40);                           // LCD_ETPP data register
       for (byte i = 0 ; i<8 ; i++) {i2c_write(*array); array++;}
     }
 //*******************************************************************************************************************************************************************
@@ -590,22 +593,22 @@ void lcd_telemetry() {
 #endif //LCD_ETPP
 
 void LCDclear() {
-   #if (LCD_TYPE == SERIAL3W)
+   #if (LCD_TYPE == LCD_SERIAL3W)
    LCDprint(0xFE);LCDprint(0x01);delay(10);LCDprint(0xFE);LCDprint(0x02);delay(10); // clear screen, cursor line 1, pos 0 for serial LCD Sparkfun - contrib by flyman777
-   #elif (LCD_TYPE == TEXTSTAR)
+   #elif (LCD_TYPE == LCD_TEXTSTAR)
     LCDprint(0x0c); //clear screen	
-   #elif (LCD_TYPE == ETPP)
+   #elif (LCD_TYPE == LCD_ETPP)
     i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
     for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
    #endif
 }
 
 void LCDsetLine(byte line) {  // Line = 1 or 2
-   #if (LCD_TYPE == SERIAL3W)
+   #if (LCD_TYPE == LCD_SERIAL3W)
     if (line==1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
-   #elif (LCD_TYPE == TEXTSTAR)
+   #elif (LCD_TYPE == LCD_TEXTSTAR)
     LCDprint(0xfe);LCDprint('L');LCDprint(line);
-   #elif (LCD_TYPE == ETPP)
+   #elif (LCD_TYPE == LCD_ETPP)
     i2c_ETPP_set_cursor(0,line-1);
    #endif
 }
