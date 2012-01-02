@@ -591,7 +591,7 @@ void lcd_telemetry() {
 
 void LCDclear() {
    #if (LCD_TYPE == SERIAL3W)
-    // nothing ???
+   LCDprint(0xFE);LCDprint(0x01);delay(10);LCDprint(0xFE);LCDprint(0x02);delay(10); // clear screen, cursor line 1, pos 0 for serial LCD Sparkfun - contrib by flyman777
    #elif (LCD_TYPE == TEXTSTAR)
     LCDprint(0x0c); //clear screen	
    #elif (LCD_TYPE == ETPP)
