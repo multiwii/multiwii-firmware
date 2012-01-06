@@ -1,4 +1,3 @@
-#include "preconfig.h"
 /*******************************/
 /****CONFIGURABLE PARAMETERS****/
 /*******************************/
@@ -238,9 +237,9 @@
 //#define LCD_CONF_DEBUG
 
 /* choice of LCD attached for configuration and telemetry, see notes below */
-//#define LCD_TYPE LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
-//#define LCD_TYPE LCD_TEXTSTAR    // Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
-//#define LCD_TYPE LCD_ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
+//#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
+//#define LCD_TEXTSTAR    // Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
+//#define LCD_ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
 
 /* To use an Eagle Tree Power Panel LCD for configuration:
  White wire  to Ground
@@ -316,8 +315,8 @@
 /*      4. configure, compile, upload, set alarm value in GUI or LCD */
 /*      3. enjoy true readings of mAh consumed */
 /* set POWERMETER to "soft" (1) or "hard" (2) depending on sensor you want to utilize */
-//#define POWERMETER PM_SOFT
-//#define POWERMETER PM_HARD
+//#define POWERMETER_SOFT
+//#define POWERMETER_HARD
 /* the sum of all powermeters ranges from [0:60000 e4] theoretically. */
 /* the alarm level from eeprom is out of [0:255], so we multipy alarm level with PLEVELSCALE and with 1e4 before comparing */
 /* PLEVELSCALE is the step size you can use to set alarm */
@@ -348,12 +347,13 @@
 /* hopping is activated and deactivated in unarmed mode with throttle=low & roll=left & pitch=forward */
 /* The value represents the hopping interval in cpu time (micro seconds) */
 //#define LCD_TELEMETRY_AUTO 2000123
+/* Use this to trigger telemetry without a TX */
+//#define LCD_TELEMETRY_DEBUG
+
 /* on telemetry page B it gives a bar graph which shows how much voltage battery has left. Range from 0 to 12 Volt is not very informative */
 /* so we try do define a meaningful part. For a 3S battery we define full=12,6V and calculate how much it is above first warning level */
 /* Example: 12.6V - VBATLEVEL1_3S  (for me = 126 - 102 = 24) */
 #define VBATREF 24 
-/* Use this to trigger telemetry without a TX */
-//#define LCD_TELEMETRY_DEBUG
 
 /* to log values like max loop time and others to come */
 /* logging values are visible via LCD config */

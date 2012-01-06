@@ -181,7 +181,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
 #endif
   static uint8_t  buzzerFreq;         //delay between buzzer ring
   uint8_t axis,prop1,prop2;
-#if (POWERMETER == PM_HARD)
+#if defined(POWERMETER_HARD)
   uint16_t pMeterRaw;     //used for current reading
 #endif
 
@@ -220,7 +220,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     rcCommand[PITCH] = rcCommand_PITCH;
   }
 
-  #if (POWERMETER == PM_HARD)
+  #if defined(POWERMETER_HARD)
     if (! (++psensorTimer % PSENSORFREQ)) { 
      pMeterRaw =  analogRead(PSENSORPIN);
      powerValue = ( PSENSORNULL > pMeterRaw ? PSENSORNULL - pMeterRaw : pMeterRaw - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
@@ -349,7 +349,7 @@ void setup() {
   #if defined(GPS)
     SerialOpen(GPS_SERIAL,GPS_BAUD);
   #endif
-  #if (LCD_TYPE == LCD_ETPP)
+  #if defined(LCD_ETPP)
     initLCD();
   #endif
   #ifdef LCD_TELEMETRY_DEBUG
