@@ -531,9 +531,7 @@ void loop () {
     if ((rcOptions1 & activate1[BOXPASSTHRU]) || (rcOptions2 & activate2[BOXPASSTHRU])) {passThruMode = 1;}
     else passThruMode = 0;
   }
-  if (MAG)  Mag_getADC();
-  if (BARO) Baro_update();
-    
+  
   computeIMU();
   // Measure loop rate just afer reading the sensors
   currentTime = micros();
@@ -593,7 +591,7 @@ void loop () {
   for(axis=0;axis<3;axis++) {
     if (accMode == 1 && axis<2 ) { //LEVEL MODE
       // 50 degrees max inclination
-      errorAngle = constrain(2*rcCommand[axis] + GPS_angle[axis],-500,+500) - angle[axis] + accTrim[axis]; //16 bits is ok here
+      errorAngle = constrain(2*rcCommand[axis] - GPS_angle[axis],-500,+500) - angle[axis] + accTrim[axis]; //16 bits is ok here
       #ifdef LEVEL_PDF
         PTerm      = -(int32_t)angle[axis]*P8[PIDLEVEL]/100 ;
       #else  

@@ -171,6 +171,17 @@
   #endif
 #endif
 
+#if defined(FREEIMUv04)
+  #define MPU6050
+  #define HMC5883
+  #define MS561101BA
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X;  gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  -Y;  magADC[PITCH]  = X; magADC[YAW]  = Z;}
+  #define MPU6050_EN_I2C_BYPASS // HMC5883 connected to the AUX I2C bus of MPU6050
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+
 #if defined(PIPO)
   #define L3G4200D
   #define ADXL345
@@ -197,7 +208,7 @@
   #define ITG3200
   #define BMA180
   #define BMP085  // note, can be also #define MS561101BA  on some versions
-  //#define MS561101BA
+//  #define MS561101BA
   #define HMC5883
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
@@ -290,7 +301,7 @@
   #define ITG3200_ADDRESS 0XD2
 #endif
 
-#if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(ADCACC) || defined(LSM303DLx_ACC)
+#if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(ADCACC) || defined(LSM303DLx_ACC) || defined(MPU6050)
   #define ACC 1
 #else
   #define ACC 0
@@ -302,7 +313,7 @@
   #define MAG 0
 #endif
 
-#if defined(ITG3200) || defined(L3G4200D)
+#if defined(ITG3200) || defined(L3G4200D) || defined(MPU6050)
   #define GYRO 1
 #else
   #define GYRO 0

@@ -87,6 +87,8 @@
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
 //#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
 //#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
+#define FREEIMUv04        // FreeIMU v0.4 with MPU6050, HMC5883L, MS561101BA                  <- confirmed by Alex
+//#define FREEIMUv04_DMP  // FreeIMU v0.4   using DMP fusion algorithm for ACC+GYRO           //not yet
 //#define PIPO            // 9DOF board from erazz
 //#define QUADRINO        // full FC board 9DOF+baro board from witespy  with BMP085 baro     <- confirmed by Alex
 //#define QUADRINO_ZOOM   // full FC board 9DOF+baro board from witespy  second edition       <- confirmed by Alex
@@ -137,6 +139,18 @@
 //#define ITG3200_LPF_42HZ
 //#define ITG3200_LPF_20HZ
 //#define ITG3200_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
+
+/* MPU6050 Low pass filter setting. In case you cannot eliminate all vibrations to the Gyro, you can try
+   to decrease the LPF frequency, only one step per try. As soon as twitching gone, stick with that setting.
+   It will not help on feedback wobbles, so change only when copter is randomly twiching and all dampening and
+   balancing options ran out. Uncomment only one option!
+   IMPORTANT! Change low pass filter setting changes PID behaviour, so retune your PID's after changing LPF.*/
+//#define MPU6050_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
+//#define MPU6050_LPF_188HZ
+//#define MPU6050_LPF_98HZ
+//#define MPU6050_LPF_42HZ
+//#define MPU6050_LPF_20HZ
+//#define MPU6050_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
 
 /* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
    IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini

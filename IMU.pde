@@ -10,6 +10,10 @@ void computeIMU () {
   static int16_t gyroYawSmooth = 0;
 #endif
 
+  if (MAG)  Mag_getADC();
+  if (BARO) Baro_update();
+
+
   //we separate the 2 situations because reading gyro values with a gyro only setup can be acchieved at a higher rate
   //gyro+nunchuk: we must wait for a quite high delay betwwen 2 reads to get both WM+ and Nunchuk data. It works with 3ms
   //gyro only: the delay to read 2 consecutive values can be reduced to only 0.65ms
@@ -168,7 +172,7 @@ void rotateV(struct fp_vector *v,float* delta) {
 
 void getEstimatedAttitude(){
   uint8_t axis;
-  int16_t accMag = 0;
+  int32_t accMag = 0;
   static t_fp_vector EstG;
 #if MAG
   static t_fp_vector EstM;
@@ -197,7 +201,8 @@ void getEstimatedAttitude(){
       accSmooth[axis] = accADC[axis];
       #define ACC_VALUE accADC[axis]
     #endif
-    accMag += (ACC_VALUE * 10 / (int16_t)acc_1G) * (ACC_VALUE * 10 / (int16_t)acc_1G);
+//    accMag += (ACC_VALUE * 10 / (int16_t)acc_1G) * (ACC_VALUE * 10 / (int16_t)acc_1G);
+    accMag += (int32_t)ACC_VALUE*ACC_VALUE ;
     #if MAG
       #if defined(MG_LPF_FACTOR)
         mgSmooth[axis] = (mgSmooth[axis] * (MG_LPF_FACTOR - 1) + magADC[axis]) / MG_LPF_FACTOR; // LPF for Magnetometer values
@@ -207,7 +212,8 @@ void getEstimatedAttitude(){
       #endif
     #endif
   }
-
+  accMag = accMag*100/((int32_t)acc_1G*acc_1G);
+  
   rotateV(&EstG.V,deltaGyroAngle);
   #if MAG
     rotateV(&EstM.V,deltaGyroAngle);
