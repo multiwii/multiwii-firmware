@@ -193,6 +193,8 @@ void LCDprint(uint8_t i) {
       SerialWrite(0, i );
   #elif defined(LCD_ETPP)
       i2c_ETPP_send_char(i);
+  #elif defined(LCD_LCD03)
+      i2c_LCD03_send_char(i);
   #endif
 }
 
@@ -216,6 +218,11 @@ void initLCD() {
     // Eagle Tree Power Panel - I2C & Daylight Readable LCD
     // Contributed by Danal
     i2c_ETPP_init();
+  #elif defined(LCD_LCD03)
+    // LCD03 - I2C LCD
+	// http://www.robot-electronics.co.uk/htm/Lcd03tech.htm
+    // by Th0rsten
+    i2c_LCD03_init();
   #endif
   LCDclear();
   strcpy_P(line1,PSTR("MultiWii V1.9+")); LCDsetLine(1);   LCDprintChar(line1);
@@ -223,6 +230,10 @@ void initLCD() {
      delay(2500);
      LCDclear();
   #endif
+  #if defined(LCD_LCD03)
+     strcpy_P(line1,PSTR("Ready to fly!")); LCDsetLine(2); LCDprintChar(line1);
+  #endif
+  
 //  if (cycleTime == 0) {  //Called from Setup()
 //    strcpy_P(line1,PSTR("Ready to Fly")); LCDsetLine(2); LCDprintChar(line1);
 //  } else {
@@ -353,6 +364,10 @@ void configurationLoop() {
   LCDsetLine(2);
   strcpy_P(line1,PSTR("Exit"));
   LCDprintChar(line1);
+  #if defined(LCD_LCD03)
+    delay(2000); // wait for two seconds then clear screen and show initial message
+    initLCD();
+  #endif
   #if defined(LCD_SERIAL3W)
     SerialOpen(0,115200);
   #endif
@@ -374,6 +389,8 @@ void configurationLoop() {
      #define LCD_BAR(n,v) { LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(constrain(v,0,100)); }	
    #elif defined(LCD_ETPP)
      #define LCD_BAR(n,v) {LCDbarGraph(n,v); }
+   #elif defined(LCD_LCD03)
+     #define LCD_BAR(n,v) { i2c_LCD03_barGraph(n,v); }
    #endif
 
 void lcd_telemetry() {
@@ -592,6 +609,41 @@ void lcd_telemetry() {
   }
 #endif //LCD_ETPP
 
+#if defined(LCD_LCD03) // LCD_LCD03
+  // *********************
+  // I2C LCD03 primitives
+  // *********************
+    void i2c_LCD03_init () {
+      i2c_rep_start(0xC6); // The LCD03 is located on the I2C bus at address 0xC6
+      i2c_write(0x00);     // Command register
+      i2c_write(04);       // Hide cursor
+      i2c_write(12);       // Clear screen
+      i2c_write(19);       // Backlight on
+    }
+    void i2c_LCD03_send_cmd (byte c) {
+      i2c_rep_start(0xC6);
+      i2c_write(0x00);
+      i2c_write(c);
+    }
+    void i2c_LCD03_send_char (char c) {
+      i2c_rep_start(0xC6);
+      i2c_write(0x00);
+      i2c_write(c);
+    }
+    void i2c_LCD03_set_cursor (byte col, byte row) {  
+      row = min(row,1);
+      col = min(col,15);
+      i2c_LCD03_send_cmd(03); // set cursor (row, column)
+      i2c_LCD03_send_cmd(row+1);
+      i2c_LCD03_send_cmd(col+1);   
+    }
+    void i2c_LCD03_barGraph(byte num, int val) { // more to come...
+      for (int8_t i = 0; i < num; i++) {
+        i2c_LCD03_send_char('x');
+      }
+    }
+#endif // LCD_LCD03
+
 void LCDclear() {
    #if defined(LCD_SERIAL3W)
    LCDprint(0xFE);LCDprint(0x01);delay(10);LCDprint(0xFE);LCDprint(0x02);delay(10); // clear screen, cursor line 1, pos 0 for serial LCD Sparkfun - contrib by flyman777
@@ -600,6 +652,8 @@ void LCDclear() {
    #elif defined(LCD_ETPP)
     i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
     for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
+   #elif defined(LCD_LCD03)
+    i2c_LCD03_send_cmd(12); // clear screen
    #endif
 }
 
@@ -610,6 +664,8 @@ void LCDsetLine(byte line) {  // Line = 1 or 2
     LCDprint(0xfe);LCDprint('L');LCDprint(line);
    #elif defined(LCD_ETPP)
     i2c_ETPP_set_cursor(0,line-1);
+   #elif defined(LCD_LCD03)
+    i2c_LCD03_set_cursor(0,line-1);
    #endif
 }
 

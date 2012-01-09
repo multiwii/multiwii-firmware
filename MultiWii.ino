@@ -351,6 +351,8 @@ void setup() {
   #endif
   #if defined(LCD_ETPP)
     initLCD();
+  #elif defined(LCD_LCD03)
+    initLCD();
   #endif
   #ifdef LCD_TELEMETRY_DEBUG
     telemetry_auto = 1;
