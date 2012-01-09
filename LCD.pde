@@ -220,7 +220,7 @@ void initLCD() {
     i2c_ETPP_init();
   #elif defined(LCD_LCD03)
     // LCD03 - I2C LCD
-	// http://www.robot-electronics.co.uk/htm/Lcd03tech.htm
+    // http://www.robot-electronics.co.uk/htm/Lcd03tech.htm
     // by Th0rsten
     i2c_LCD03_init();
   #endif
