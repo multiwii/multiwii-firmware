@@ -261,7 +261,7 @@ PROGMEM prog_char lcd_param_text07 []  = "Pitch D";
 PROGMEM prog_char lcd_param_text08 []  = "Yaw P";
 PROGMEM prog_char lcd_param_text09 []  = "Yaw I";
 PROGMEM prog_char lcd_param_text10 []  = "Yaw D";
-#ifdef  BARO
+#if  BARO
 PROGMEM prog_char lcd_param_text11 []  = "Alt P";
 PROGMEM prog_char lcd_param_text12 []  = "Alt I";
 PROGMEM prog_char lcd_param_text13 []  = "Alt D";
@@ -323,7 +323,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 &lcd_param_text08,   &P8[YAW],              &__P,
 &lcd_param_text09,   &I8[YAW],              &__I,
 &lcd_param_text10,   &D8[YAW],              &__D,
-#ifdef  BARO
+#if BARO
 &lcd_param_text11,   &P8[PIDALT],           &__P,
 &lcd_param_text12,   &I8[PIDALT],           &__I,
 &lcd_param_text13,   &D8[PIDALT],           &__D,

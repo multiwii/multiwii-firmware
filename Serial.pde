@@ -173,6 +173,19 @@ uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][4];
 volatile uint8_t serialHeadRX[4],serialTailRX[4];
 #endif
 
+//#if defined(PROMINI) 
+//uint8_t serialBufferRX0[SERIAL_RX_BUFFER_SIZE];
+//volatile uint8_t serialHeadRX0,serialTailRX0;
+//#endif
+//#if defined(MEGA)
+//uint8_t serialBufferRX1[SERIAL_RX_BUFFER_SIZE];
+//volatile uint8_t serialHeadRX1,serialTailRX1;
+//uint8_t serialBufferRX2[SERIAL_RX_BUFFER_SIZE];
+//volatile uint8_t serialHeadRX2,serialTailRX2;
+//uint8_t serialBufferRX3[SERIAL_RX_BUFFER_SIZE];
+//volatile uint8_t serialHeadRX3,serialTailRX3;
+//#endif
+
 void SerialOpen(uint8_t port, uint32_t baud) {
   uint8_t h = ((F_CPU  / 4 / baud -1) / 2) >> 8;
   uint8_t l = ((F_CPU  / 4 / baud -1) / 2);
@@ -229,15 +242,82 @@ SIGNAL(USART3_RX_vect){
 }
 #endif
 
+//#if defined(PROMINI) && !(defined(SPEKTRUM))
+//SIGNAL(USART_RX_vect){
+//  uint8_t d = UDR0;
+//  uint8_t i = (serialHeadRX0 + 1) % SERIAL_RX_BUFFER_SIZE;
+//  if (i != serialTailRX0) {serialBufferRX0[serialHeadRX0] = d; serialHeadRX0 = i;}
+//}
+//#endif
+//#if defined(MEGA)
+//SIGNAL(USART0_RX_vect){
+//  uint8_t d = UDR0;
+//  uint8_t i = (serialHeadRX0 + 1) % SERIAL_RX_BUFFER_SIZE;
+//  if (i != serialTailRX0) {serialBufferRX0[serialHeadRX0] = d; serialHeadRX0 = i;}
+//}
+//#if !(defined(SPEKTRUM))
+//SIGNAL(USART1_RX_vect){
+//  uint8_t d = UDR1;
+//  uint8_t i = (serialHeadRX1 + 1) % SERIAL_RX_BUFFER_SIZE;
+//  if (i != serialTailRX1) {serialBufferRX1[serialHeadRX1] = d; serialHeadRX1 = i;}
+//}
+//#endif
+//SIGNAL(USART2_RX_vect){
+//  uint8_t d = UDR2;
+//  uint8_t i = (serialHeadRX2 + 1) % SERIAL_RX_BUFFER_SIZE;
+//  if (i != serialTailRX2) {serialBufferRX2[serialHeadRX2] = d; serialHeadRX2 = i;}
+//}
+//SIGNAL(USART3_RX_vect){
+//  uint8_t d = UDR3;
+//  uint8_t i = (serialHeadRX3 + 1) % SERIAL_RX_BUFFER_SIZE;
+//  if (i != serialTailRX3) {serialBufferRX3[serialHeadRX3] = d; serialHeadRX3 = i;}
+//}
+//#endif
+
 uint8_t SerialRead(uint8_t port) {
     uint8_t c = serialBufferRX[serialTailRX[port]][port];
     if ((serialHeadRX[port] != serialTailRX[port])) serialTailRX[port] = (serialTailRX[port] + 1) % SERIAL_RX_BUFFER_SIZE;
     return c;
 }
 
+//void SerialRead(uint8_t port,uint8_t c){
+//  switch (port) {
+//    case 0: 
+//      uint8_t c = serialBufferRX0[serialTailRX0];
+//      if ((serialHeadRX0 != serialTailRX0)) serialTailRX0 = (serialTailRX0 + 1) % SERIAL_RX_BUFFER_SIZE;
+//      break;
+//    #if defined(MEGA)
+//    case 1: 
+//      uint8_t c = serialBufferRX1[serialTailRX1];
+//      if ((serialHeadRX1 != serialTailRX1)) serialTailRX1 = (serialTailRX1 + 1) % SERIAL_RX_BUFFER_SIZE;
+//      break;
+//    case 2: 
+//      uint8_t c = serialBufferRX2[serialTailRX2];
+//      if ((serialHeadRX2 != serialTailRX2)) serialTailRX2 = (serialTailRX2 + 1) % SERIAL_RX_BUFFER_SIZE;
+//      break;
+//    case 3: 
+//      uint8_t c = serialBufferRX3[serialTailRX3];
+//      if ((serialHeadRX3 != serialTailRX3)) serialTailRX3 = (serialTailRX3 + 1) % SERIAL_RX_BUFFER_SIZE;
+//      break;
+//    #endif
+//  }
+//  return c;
+//}
+
 uint8_t SerialAvailable(uint8_t port) {
   return (SERIAL_RX_BUFFER_SIZE + serialHeadRX[port] - serialTailRX[port]) % SERIAL_RX_BUFFER_SIZE;
 }
+
+//void SerialAvailable(uint8_t port,uint8_t c){
+//  switch (port) {
+//    case 0: return (SERIAL_RX_BUFFER_SIZE + serialHeadRX0 - serialTailRX0) % SERIAL_RX_BUFFER_SIZE;
+//    #if defined(MEGA)
+//    case 1: return (SERIAL_RX_BUFFER_SIZE + serialHeadRX1 - serialTailRX1) % SERIAL_RX_BUFFER_SIZE;
+//    case 2: return (SERIAL_RX_BUFFER_SIZE + serialHeadRX2 - serialTailRX2) % SERIAL_RX_BUFFER_SIZE;
+//    case 3: return (SERIAL_RX_BUFFER_SIZE + serialHeadRX3 - serialTailRX3) % SERIAL_RX_BUFFER_SIZE;
+//    #endif
+//  }
+//}
 
 void SerialWrite(uint8_t port,uint8_t c){
   switch (port) {
