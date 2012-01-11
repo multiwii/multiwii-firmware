@@ -1,8 +1,209 @@
 // ************************************************************************************************************
 // LCD & display & monitoring
 // ************************************************************************************************************
-#ifdef LCD_CONF
+#if defined(LCD_CONF) || defined(LCD_TELEMETRY)
 static char line1[17],line2[17];
+
+#if defined(LCD_ETPP)
+  // *********************
+  // i2c Eagle Tree Power Panel primitives
+  // *********************
+    void i2c_ETPP_init () {
+      i2c_rep_start(0x76+0);      // LCD_ETPP i2c address: 0x3B in 7 bit form. Shift left one bit and concatenate i2c write command bit of zero = 0x76 in 8 bit form.
+      i2c_write(0x00);            // LCD_ETPP command register
+      i2c_write(0x24);            // Function Set 001D0MSL D : data length for parallel interface only; M: 0 = 1x32 , 1 = 2x16; S: 0 = 1:18 multiplex drive mode, 1x32 or 2x16 character display, 1 = 1:9 multiplex drive mode, 1x16 character display; H: 0 = basic instruction set plus standard instruction set, 1 = basic instruction set plus extended instruction set
+      i2c_write(0x0C);            // Display on   00001DCB D : 0 = Display Off, 1 = Display On; C : 0 = Underline Cursor Off, 1 = Underline Cursor On; B : 0 = Blinking Cursor Off, 1 = Blinking Cursor On
+      i2c_write(0x06);            // Cursor Move  000001IS I : 0 = DDRAM or CGRAM address decrements by 1, cursor moves to the left, 1 = DDRAM or CGRAM address increments by 1, cursor moves to the right; S : 0 = display does not shift,  1 = display does shifts
+      LCDclear();         
+    }
+    void i2c_ETPP_send_cmd (byte c) {
+      i2c_rep_start(0x76+0);      // I2C write direction
+      i2c_write(0x00);            // LCD_ETPP command register
+      i2c_write(c);
+    }
+    void i2c_ETPP_send_char (char c) {
+      if (c > 0x0f) c |=  0x80;   // LCD_ETPP uses character set "R", which has A->z mapped same as ascii + high bit; don't mess with custom chars. 
+      i2c_rep_start(0x76+0);      // I2C write direction
+      i2c_write(0x40);            // LCD_ETPP data register
+      i2c_write(c);
+    }
+
+    void i2c_ETPP_set_cursor (byte addr) {  
+      i2c_ETPP_send_cmd(0x80 | addr);    // High bit is "Set DDRAM" command, remaing bits are addr.  
+    }
+    void i2c_ETPP_set_cursor (byte col, byte row) {  
+      row = min(row,1);
+      col = min(col,15);  
+      byte addr = col + row * 0x40;      // Why 0x40? RAM in this controller has many more bytes than are displayed.  In particular, the start of the second line (line 1 char 0) is 0x40 in DDRAM. The bytes between 0x0F (last char of line 1) and 0x40 are not displayable (unless the display is placed in marquee scroll mode)
+      i2c_ETPP_set_cursor(addr);          
+    }
+    void i2c_ETPP_create_char (byte idx, uint8_t* array) {
+      i2c_ETPP_send_cmd(0x80);                   // CGRAM and DDRAM share an address register, but you can't set certain bits with the CGRAM address command.   Use DDRAM address command to be sure high order address bits are zero. 
+      i2c_ETPP_send_cmd(0x40 | byte(idx * 8));   // Set CGRAM address 
+      i2c_rep_start(0x76+0);                     // I2C write direction
+      i2c_write(0x40);                           // LCD_ETPP data register
+      for (byte i = 0 ; i<8 ; i++) {i2c_write(*array); array++;}
+    }
+//*******************************************************************************************************************************************************************
+  static boolean charsInitialized;      // chars for servo signals are initialized
+  void ETPP_barGraph(byte num, int val) { // num chars in graph; percent as 1 to 100
+    if (!charsInitialized) {
+      charsInitialized = true;
+    
+      static byte bars[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15, };
+      static byte less[8] = { 0x00, 0x04, 0x0C, 0x1C, 0x0C, 0x04, 0x00, 0x15, };
+      static byte grt [8] = { 0x00, 0x04, 0x06, 0x07, 0x06, 0x04, 0x00, 0x15, };
+  
+      byte pattern = 0x10;
+      for (int8_t i = 0; i <= 5; i++) {
+        for (int8_t j = 0; j < 7; j++) {
+          bars[j] = pattern;
+        }
+        i2c_ETPP_create_char(i, bars);
+        pattern >>= 1;
+      }
+      i2c_ETPP_create_char(6, less);
+      i2c_ETPP_create_char(7, grt);
+    }  
+    
+    static char bar[16];
+    for (int8_t i = 0; i < num; i++)    { bar[i] = 5; }
+    
+    if      (val < -100 || val > 100) { bar[0] = 6; bar[num] = 7; }    // invalid
+    else if (val <    0)              { bar[0] = 6; }                // <...
+    else if (val >= 100)              { bar[3] = 7; }                // ...>
+    else                              { bar[val/(100/num)] = (val%(100/num))/5; }  // ..|.
+  
+    for (int8_t i = 0; i < num; i++) {
+      i2c_ETPP_send_char(bar[i]); 
+    }
+  }
+#endif //LCD_ETPP
+
+#if defined(LCD_LCD03) // LCD_LCD03
+  // *********************
+  // I2C LCD03 primitives
+  // *********************
+    void i2c_LCD03_init () {
+      i2c_rep_start(0xC6); // The LCD03 is located on the I2C bus at address 0xC6
+      i2c_write(0x00);     // Command register
+      i2c_write(04);       // Hide cursor
+      i2c_write(12);       // Clear screen
+      i2c_write(19);       // Backlight on
+    }
+    void i2c_LCD03_send_cmd (byte c) {
+      i2c_rep_start(0xC6);
+      i2c_write(0x00);
+      i2c_write(c);
+    }
+    void i2c_LCD03_send_char (char c) {
+      i2c_rep_start(0xC6);
+      i2c_write(0x00);
+      i2c_write(c);
+    }
+    void i2c_LCD03_set_cursor (byte col, byte row) {  
+      row = min(row,1);
+      col = min(col,15);
+      i2c_LCD03_send_cmd(03); // set cursor (row, column)
+      i2c_LCD03_send_cmd(row+1);
+      i2c_LCD03_send_cmd(col+1);   
+    }
+    void i2c_LCD03_barGraph(byte num, int val) { // more to come...
+      for (int8_t i = 0; i < num; i++) {
+        i2c_LCD03_send_char('x');
+      }
+    }
+#endif // LCD_LCD03
+
+void LCDprint(uint8_t i) {
+  #if defined(LCD_SERIAL3W)
+      // 1000000 / 9600  = 104 microseconds at 9600 baud.
+      // we set it below to take some margin with the running interrupts
+      #define BITDELAY 102
+      LCDPIN_OFF;
+      delayMicroseconds(BITDELAY);
+      for (uint8_t mask = 0x01; mask; mask <<= 1) {
+        if (i & mask) {LCDPIN_ON;} else {LCDPIN_OFF;} // choose bit
+        delayMicroseconds(BITDELAY);
+      }
+      LCDPIN_ON //switch ON digital PIN 0
+      delayMicroseconds(BITDELAY);
+  #elif defined(LCD_TEXTSTAR)
+      SerialWrite(0, i );
+  #elif defined(LCD_ETPP)
+      i2c_ETPP_send_char(i);
+  #elif defined(LCD_LCD03)
+      i2c_LCD03_send_char(i);
+  #endif
+}
+
+void LCDprintChar(const char *s) {
+  while (*s) { LCDprint(*s++);  }
+}
+
+void LCDclear() {
+   #if defined(LCD_SERIAL3W)
+   LCDprint(0xFE);LCDprint(0x01);delay(10);LCDprint(0xFE);LCDprint(0x02);delay(10); // clear screen, cursor line 1, pos 0 for serial LCD Sparkfun - contrib by flyman777
+   #elif defined(LCD_TEXTSTAR)
+    LCDprint(0x0c); //clear screen	
+   #elif defined(LCD_ETPP)
+    i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
+    for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
+   #elif defined(LCD_LCD03)
+    i2c_LCD03_send_cmd(12); // clear screen
+   #endif
+}
+
+void LCDsetLine(byte line) {  // Line = 1 or 2
+   #if defined(LCD_SERIAL3W)
+    if (line==1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
+   #elif defined(LCD_TEXTSTAR)
+    LCDprint(0xfe);LCDprint('L');LCDprint(line);
+   #elif defined(LCD_ETPP)
+    i2c_ETPP_set_cursor(0,line-1);
+   #elif defined(LCD_LCD03)
+    i2c_LCD03_set_cursor(0,line-1);
+   #endif
+}
+
+void initLCD() {
+  blinkLED(20,30,1);
+  #if defined(LCD_SERIAL3W)
+    SerialEnd(0);
+    //init LCD
+    PINMODE_LCD; //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
+  #elif defined(LCD_TEXTSTAR)
+    // Cat's Whisker Technologies 'TextStar' Module CW-LCD-02
+    // http://cats-whisker.com/resources/documents/cw-lcd-02_datasheet.pdf
+    // Modified by Luca Brizzi aka gtrick90 @ RCG
+    //LCDprint(0xFE);LCDprint(0x43);LCDprint(0x02); //cursor blink mode	
+    LCDprint(0xFE);LCDprint('R'); //reset	
+  #elif defined(LCD_ETPP)
+    // Eagle Tree Power Panel - I2C & Daylight Readable LCD
+    // Contributed by Danal
+    i2c_ETPP_init();
+  #elif defined(LCD_LCD03)
+    // LCD03 - I2C LCD
+    // http://www.robot-electronics.co.uk/htm/Lcd03tech.htm
+    // by Th0rsten
+    i2c_LCD03_init();
+  #endif
+  LCDclear();
+  strcpy_P(line1,PSTR("MultiWii V1.9+")); LCDsetLine(1);   LCDprintChar(line1);
+  #if defined(LCD_TEXTSTAR)
+     delay(2500);
+     LCDclear();
+  #endif
+  if (cycleTime == 0) {  //Called from Setup()
+    strcpy_P(line1,PSTR("Ready to Fly")); LCDsetLine(2); LCDprintChar(line1);
+  } else {
+    strcpy_P(line1,PSTR("Config All Parms")); LCDsetLine(2); LCDprintChar(line1);
+  }
+}
+#endif //Support functions for LCD_CONF and LCD_TELEMETRY
+
+
+#ifdef LCD_CONF
 
 typedef void (*formatter_func_ptr)(void *, uint8_t, uint8_t);
 typedef void (*inc_func_ptr)(void *, int8_t);
@@ -175,76 +376,6 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #define PARAMMAX (sizeof(lcd_param_ptr_table)/6 - 1)
 // ************************************************************************************************************
 
-
-void LCDprint(uint8_t i) {
-  #if defined(LCD_SERIAL3W)
-      // 1000000 / 9600  = 104 microseconds at 9600 baud.
-      // we set it below to take some margin with the running interrupts
-      #define BITDELAY 102
-      LCDPIN_OFF;
-      delayMicroseconds(BITDELAY);
-      for (uint8_t mask = 0x01; mask; mask <<= 1) {
-        if (i & mask) {LCDPIN_ON;} else {LCDPIN_OFF;} // choose bit
-        delayMicroseconds(BITDELAY);
-      }
-      LCDPIN_ON //switch ON digital PIN 0
-      delayMicroseconds(BITDELAY);
-  #elif defined(LCD_TEXTSTAR)
-      SerialWrite(0, i );
-  #elif defined(LCD_ETPP)
-      i2c_ETPP_send_char(i);
-  #elif defined(LCD_LCD03)
-      i2c_LCD03_send_char(i);
-  #endif
-}
-
-void LCDprintChar(const char *s) {
-  while (*s) { LCDprint(*s++);  }
-}
-
-void initLCD() {
-  blinkLED(20,30,1);
-  #if defined(LCD_SERIAL3W)
-    SerialEnd(0);
-    //init LCD
-    PINMODE_LCD; //TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
-  #elif defined(LCD_TEXTSTAR)
-    // Cat's Whisker Technologies 'TextStar' Module CW-LCD-02
-    // http://cats-whisker.com/resources/documents/cw-lcd-02_datasheet.pdf
-    // Modified by Luca Brizzi aka gtrick90 @ RCG
-    //LCDprint(0xFE);LCDprint(0x43);LCDprint(0x02); //cursor blink mode	
-    LCDprint(0xFE);LCDprint('R'); //reset	
-  #elif defined(LCD_ETPP)
-    // Eagle Tree Power Panel - I2C & Daylight Readable LCD
-    // Contributed by Danal
-    i2c_ETPP_init();
-  #elif defined(LCD_LCD03)
-    // LCD03 - I2C LCD
-    // http://www.robot-electronics.co.uk/htm/Lcd03tech.htm
-    // by Th0rsten
-    i2c_LCD03_init();
-  #endif
-  LCDclear();
-  strcpy_P(line1,PSTR("MultiWii V1.9+")); LCDsetLine(1);   LCDprintChar(line1);
-  #if defined(LCD_TEXTSTAR)
-     delay(2500);
-     LCDclear();
-  #endif
-  #if defined(LCD_LCD03)
-     strcpy_P(line1,PSTR("Ready to fly!")); LCDsetLine(2); LCDprintChar(line1);
-  #endif
-  
-//  if (cycleTime == 0) {  //Called from Setup()
-//    strcpy_P(line1,PSTR("Ready to Fly")); LCDsetLine(2); LCDprintChar(line1);
-//  } else {
-//    strcpy_P(line1,PSTR("Config All Parms")); LCDsetLine(2); LCDprintChar(line1);
-//    delay(2500); //Alex: this delay was not initially here.
-                   //Note we can also use the configuration loop without LCD to adjust rapidly P for ROLL&PITCH
-                   //It's the origin of the first param Pitch&Roll P
-                   //In this case, this delay would just be some time to wait for the user.
-//  }
-}
-
 void __u8Inc(void * var, int8_t inc) {*(uint8_t*)var += inc;};
 void __u16Inc(void * var, int8_t inc) {*(uint16_t*)var += inc;};
 void __nullInc(void * var, int8_t inc) {};
@@ -307,7 +438,7 @@ void configurationLoop() {
   uint8_t LCD=1;
   uint8_t refreshLCD = 1;
   uint8_t key = 0;
-  initLCD();
+  initLCD(); 
   p = 0;
   while (LCD == 1) {
     if (refreshLCD) {
@@ -388,7 +519,7 @@ void configurationLoop() {
    #elif defined(LCD_TEXTSTAR)
      #define LCD_BAR(n,v) { LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(constrain(v,0,100)); }	
    #elif defined(LCD_ETPP)
-     #define LCD_BAR(n,v) {LCDbarGraph(n,v); }
+     #define LCD_BAR(n,v) {ETPP_barGraph(n,v); }
    #elif defined(LCD_LCD03)
      #define LCD_BAR(n,v) { i2c_LCD03_barGraph(n,v); }
    #endif
@@ -533,141 +664,6 @@ void lcd_telemetry() {
 } // end function
 #endif //  LCD_TELEMETRY
 
-#if defined(LCD_ETPP) // LCD_ETPP
-  // *********************
-  // i2c Eagle Tree Power Panel primitives
-  // *********************
-    void i2c_ETPP_init () {
-      i2c_rep_start(0x76+0);      // LCD_ETPP i2c address: 0x3B in 7 bit form. Shift left one bit and concatenate i2c write command bit of zero = 0x76 in 8 bit form.
-      i2c_write(0x00);            // LCD_ETPP command register
-      i2c_write(0x24);            // Function Set 001D0MSL D : data length for parallel interface only; M: 0 = 1x32 , 1 = 2x16; S: 0 = 1:18 multiplex drive mode, 1x32 or 2x16 character display, 1 = 1:9 multiplex drive mode, 1x16 character display; H: 0 = basic instruction set plus standard instruction set, 1 = basic instruction set plus extended instruction set
-      i2c_write(0x0C);            // Display on   00001DCB D : 0 = Display Off, 1 = Display On; C : 0 = Underline Cursor Off, 1 = Underline Cursor On; B : 0 = Blinking Cursor Off, 1 = Blinking Cursor On
-      i2c_write(0x06);            // Cursor Move  000001IS I : 0 = DDRAM or CGRAM address decrements by 1, cursor moves to the left, 1 = DDRAM or CGRAM address increments by 1, cursor moves to the right; S : 0 = display does not shift,  1 = display does shifts
-      LCDclear();         
-    }
-    void i2c_ETPP_send_cmd (byte c) {
-      i2c_rep_start(0x76+0);      // I2C write direction
-      i2c_write(0x00);            // LCD_ETPP command register
-      i2c_write(c);
-    }
-    void i2c_ETPP_send_char (char c) {
-      if (c > 0x0f) c |=  0x80;   // LCD_ETPP uses character set "R", which has A->z mapped same as ascii + high bit; don't mess with custom chars. 
-      i2c_rep_start(0x76+0);      // I2C write direction
-      i2c_write(0x40);            // LCD_ETPP data register
-      i2c_write(c);
-    }
-
-    void i2c_ETPP_set_cursor (byte addr) {  
-      i2c_ETPP_send_cmd(0x80 | addr);    // High bit is "Set DDRAM" command, remaing bits are addr.  
-    }
-    void i2c_ETPP_set_cursor (byte col, byte row) {  
-      row = min(row,1);
-      col = min(col,15);  
-      byte addr = col + row * 0x40;      // Why 0x40? RAM in this controller has many more bytes than are displayed.  In particular, the start of the second line (line 1 char 0) is 0x40 in DDRAM. The bytes between 0x0F (last char of line 1) and 0x40 are not displayable (unless the display is placed in marquee scroll mode)
-      i2c_ETPP_set_cursor(addr);          
-    }
-    void i2c_ETPP_create_char (byte idx, uint8_t* array) {
-      i2c_ETPP_send_cmd(0x80);                   // CGRAM and DDRAM share an address register, but you can't set certain bits with the CGRAM address command.   Use DDRAM address command to be sure high order address bits are zero. 
-      i2c_ETPP_send_cmd(0x40 | byte(idx * 8));   // Set CGRAM address 
-      i2c_rep_start(0x76+0);                     // I2C write direction
-      i2c_write(0x40);                           // LCD_ETPP data register
-      for (byte i = 0 ; i<8 ; i++) {i2c_write(*array); array++;}
-    }
-//*******************************************************************************************************************************************************************
-  static boolean charsInitialized;      // chars for servo signals are initialized
-  void LCDbarGraph(byte num, int val) { // num chars in graph; percent as 1 to 100
-    if (!charsInitialized) {
-      charsInitialized = true;
-    
-      static byte bars[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15, };
-      static byte less[8] = { 0x00, 0x04, 0x0C, 0x1C, 0x0C, 0x04, 0x00, 0x15, };
-      static byte grt [8] = { 0x00, 0x04, 0x06, 0x07, 0x06, 0x04, 0x00, 0x15, };
-  
-      byte pattern = 0x10;
-      for (int8_t i = 0; i <= 5; i++) {
-        for (int8_t j = 0; j < 7; j++) {
-          bars[j] = pattern;
-        }
-        i2c_ETPP_create_char(i, bars);
-        pattern >>= 1;
-      }
-      i2c_ETPP_create_char(6, less);
-      i2c_ETPP_create_char(7, grt);
-    }  
-    
-    static char bar[16];
-    for (int8_t i = 0; i < num; i++)    { bar[i] = 5; }
-    
-    if      (val < -100 || val > 100) { bar[0] = 6; bar[num] = 7; }    // invalid
-    else if (val <    0)              { bar[0] = 6; }                // <...
-    else if (val >= 100)              { bar[3] = 7; }                // ...>
-    else                              { bar[val/(100/num)] = (val%(100/num))/5; }  // ..|.
-  
-    for (int8_t i = 0; i < num; i++) {
-      i2c_ETPP_send_char(bar[i]); 
-    }
-  }
-#endif //LCD_ETPP
-
-#if defined(LCD_LCD03) // LCD_LCD03
-  // *********************
-  // I2C LCD03 primitives
-  // *********************
-    void i2c_LCD03_init () {
-      i2c_rep_start(0xC6); // The LCD03 is located on the I2C bus at address 0xC6
-      i2c_write(0x00);     // Command register
-      i2c_write(04);       // Hide cursor
-      i2c_write(12);       // Clear screen
-      i2c_write(19);       // Backlight on
-    }
-    void i2c_LCD03_send_cmd (byte c) {
-      i2c_rep_start(0xC6);
-      i2c_write(0x00);
-      i2c_write(c);
-    }
-    void i2c_LCD03_send_char (char c) {
-      i2c_rep_start(0xC6);
-      i2c_write(0x00);
-      i2c_write(c);
-    }
-    void i2c_LCD03_set_cursor (byte col, byte row) {  
-      row = min(row,1);
-      col = min(col,15);
-      i2c_LCD03_send_cmd(03); // set cursor (row, column)
-      i2c_LCD03_send_cmd(row+1);
-      i2c_LCD03_send_cmd(col+1);   
-    }
-    void i2c_LCD03_barGraph(byte num, int val) { // more to come...
-      for (int8_t i = 0; i < num; i++) {
-        i2c_LCD03_send_char('x');
-      }
-    }
-#endif // LCD_LCD03
-
-void LCDclear() {
-   #if defined(LCD_SERIAL3W)
-   LCDprint(0xFE);LCDprint(0x01);delay(10);LCDprint(0xFE);LCDprint(0x02);delay(10); // clear screen, cursor line 1, pos 0 for serial LCD Sparkfun - contrib by flyman777
-   #elif defined(LCD_TEXTSTAR)
-    LCDprint(0x0c); //clear screen	
-   #elif defined(LCD_ETPP)
-    i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
-    for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
-   #elif defined(LCD_LCD03)
-    i2c_LCD03_send_cmd(12); // clear screen
-   #endif
-}
-
-void LCDsetLine(byte line) {  // Line = 1 or 2
-   #if defined(LCD_SERIAL3W)
-    if (line==1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
-   #elif defined(LCD_TEXTSTAR)
-    LCDprint(0xfe);LCDprint('L');LCDprint(line);
-   #elif defined(LCD_ETPP)
-    i2c_ETPP_set_cursor(0,line-1);
-   #elif defined(LCD_LCD03)
-    i2c_LCD03_set_cursor(0,line-1);
-   #endif
-}
 
 
 
