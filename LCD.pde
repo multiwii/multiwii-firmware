@@ -108,7 +108,7 @@ static char line1[17],line2[17];
       i2c_LCD03_send_cmd(row+1);
       i2c_LCD03_send_cmd(col+1);   
     }
-    void i2c_LCD03_barGraph(byte num, int val) { // more to come...
+    void LCD03_barGraph(byte num, int val) { // more to come...
       for (int8_t i = 0; i < num; i++) {
         i2c_LCD03_send_char('x');
       }
@@ -519,9 +519,9 @@ void configurationLoop() {
    #elif defined(LCD_TEXTSTAR)
      #define LCD_BAR(n,v) { LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(constrain(v,0,100)); }	
    #elif defined(LCD_ETPP)
-     #define LCD_BAR(n,v) {ETPP_barGraph(n,v); }
+     #define LCD_BAR(n,v) { ETPP_barGraph(n,v); }
    #elif defined(LCD_LCD03)
-     #define LCD_BAR(n,v) { i2c_LCD03_barGraph(n,v); }
+     #define LCD_BAR(n,v) { LCD03_barGraph(n,v); }
    #endif
 
 void lcd_telemetry() {
