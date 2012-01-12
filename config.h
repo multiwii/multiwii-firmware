@@ -367,7 +367,8 @@
 /* hopping is activated and deactivated in unarmed mode with throttle=low & roll=left & pitch=forward */
 //#define LCD_TELEMETRY_AUTO
 /* Use this to trigger telemetry without a TX - only for debugging - do NOT fly with this activated */
-//#define LCD_TELEMETRY_DEBUG
+//#define LCD_TELEMETRY_DEBUG  //This form rolls between all screens, LCD_TELEMETRY_AUTO must also be defined.
+//#define LCD_TELEMETRY_DEBUG 6  //This form stays on the screen specified.
 
 /* on telemetry page B it gives a bar graph which shows how much voltage battery has left. Range from 0 to 12 Volt is not very informative */
 /* so we try do define a meaningful part. For a 3S battery we define full=12,6V and calculate how much it is above first warning level */
