@@ -371,20 +371,18 @@
 /* Error Checking Section */
 /**************************/
 
-#if (defined(LCD_CONF) || defined(LCD_TELEMETRY)) && !(defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_ETPP) || defined(LCD_LCD03))
-  #error "LCD_CONF or LCD_TELEMETRY defined, and choice of LCD not defined.  Uncomment one of LCD_SERIAL3W or LCD_TEXTSTAR or LCD_ETPP or LCD_LCD03"
+#if (defined(LCD_CONF) || defined(LCD_TELEMETRY)) && !(defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_ETPP) || defined(LCD_LCD03))
+  #error "LCD_CONF or LCD_TELEMETRY defined, and choice of LCD not defined.  Uncomment one of LCD_SERIAL3W or LCD_TEXTSTAR or LCD_VT100 or LCD_ETPP or LCD_LCD03"
 #endif
 
-#if defined(POWERMETER)
-  #ifndef VBAT
-	#error "to use powermeter, you must also define and configure VBAT"
-  #endif
+
+#if defined(POWERMETER) && !(defined(VBAT))
+  	#error "to use powermeter, you must also define and configure VBAT"
 #endif
 
-#ifdef LCD_TELEMETRY_AUTO
-  #ifndef LCD_TELEMETRY
-     #error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
-  #endif
+#if defined(LCD_TELEMETRY_AUTO) && !(defined(LCD_TELEMETRY))
+ 	#error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
 #endif
+
 
 

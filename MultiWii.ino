@@ -13,7 +13,6 @@ December  2011     V1.dev
 #include <avr/pgmspace.h>
 #define   VERSION  19
 
-
 /*********** RC alias *****************/
 #define ROLL       0
 #define PITCH      1

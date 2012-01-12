@@ -233,14 +233,25 @@
 /* In order to save space, it's possibile to desactivate the LCD configuration functions
    comment this line only if you don't plan to used a LCD */
 //#define LCD_CONF
-/* Use this to trigger LCD configuration without a TX */
+/* to include setting the aux switches for AUX1 and AUX2 via LCD */
+//#define LCD_CONF_AUX_12
+/* Use this to trigger LCD configuration without a TX - only for debugging - do NOT fly with this activated */
 //#define LCD_CONF_DEBUG
 
 /* choice of LCD attached for configuration and telemetry, see notes below */
 //#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
+/* serial (wired or wireless via BT etc.) */
 //#define LCD_TEXTSTAR    // Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
+//#define LCD_VT100		  // vt100 compatible terminal emulation (blueterm, putty, etc.)
+/* i2c devices */
 //#define LCD_ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
 //#define LCD_LCD03       // LCD03, which is i2c
+
+/* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
+#define LCD_MENU_PREV 'a'
+#define LCD_MENU_NEXT 'c'
+#define LCD_VALUE_UP 'd'
+#define LCD_VALUE_DOWN 'b'
 
 /* To use an LCD03 for configuration:
  http://www.robot-electronics.co.uk/htm/Lcd03tech.htm
@@ -349,15 +360,13 @@
 /* note: for now you must send single characters 'A', 'B', 'C', 'D' to request 4 different pages */
 /* Buttons toggle request for page on/off */
 /* The active page on the LCD does get updated automatically */
-/* Easy to use with Terminal application or Textstar LCD - the 4 buttons are preconfigured to send 'A', 'B', 'C', 'D' */
-/* The value represents the refresh interval in cpu time (micro seconds) */
-//#define LCD_TELEMETRY 100011
+/* Easy to use with Terminal application or display like LCD - uses the 4 buttons are preconfigured to send 'A', 'B', 'C', 'D' */
+//#define LCD_TELEMETRY
 /* to enable automatic hopping between 4 telemetry pages uncomment this. */
 /* This may be useful if your LCD has no buttons or the sending is broken */
 /* hopping is activated and deactivated in unarmed mode with throttle=low & roll=left & pitch=forward */
-/* The value represents the hopping interval in cpu time (micro seconds) */
-//#define LCD_TELEMETRY_AUTO 2000123
-/* Use this to trigger telemetry without a TX */
+//#define LCD_TELEMETRY_AUTO
+/* Use this to trigger telemetry without a TX - only for debugging - do NOT fly with this activated */
 //#define LCD_TELEMETRY_DEBUG
 
 /* on telemetry page B it gives a bar graph which shows how much voltage battery has left. Range from 0 to 12 Volt is not very informative */

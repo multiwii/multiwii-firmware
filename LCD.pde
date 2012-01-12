@@ -128,7 +128,7 @@ void LCDprint(uint8_t i) {
       }
       LCDPIN_ON //switch ON digital PIN 0
       delayMicroseconds(BITDELAY);
-  #elif defined(LCD_TEXTSTAR)
+  #elif defined(LCD_TEXTSTAR) || defined(LCD_VT100)
       SerialWrite(0, i );
   #elif defined(LCD_ETPP)
       i2c_ETPP_send_char(i);
@@ -145,7 +145,10 @@ void LCDclear() {
    #if defined(LCD_SERIAL3W)
    LCDprint(0xFE);LCDprint(0x01);delay(10);LCDprint(0xFE);LCDprint(0x02);delay(10); // clear screen, cursor line 1, pos 0 for serial LCD Sparkfun - contrib by flyman777
    #elif defined(LCD_TEXTSTAR)
-    LCDprint(0x0c); //clear screen	
+    LCDprint(0x0c);
+   #elif defined(LCD_VT100)
+    //LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("2J"); //ED2
+    LCDprint(0x1b); LCDprint(0x5b); LCDprint('K'); //EL0
    #elif defined(LCD_ETPP)
     i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
     for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
@@ -159,6 +162,13 @@ void LCDsetLine(byte line) {  // Line = 1 or 2
     if (line==1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
    #elif defined(LCD_TEXTSTAR)
     LCDprint(0xfe);LCDprint('L');LCDprint(line);
+   #elif defined(LCD_VT100)
+    if (line == 1) {
+    	LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("H"); //cursorhome
+    } else {
+    	LCDprint(0x1b); LCDprint('E'); //NEL
+    }
+    LCDprint(0x1b); LCDprint(0x5b); LCDprint('K'); //EL0
    #elif defined(LCD_ETPP)
     i2c_ETPP_set_cursor(0,line-1);
    #elif defined(LCD_LCD03)
@@ -178,6 +188,8 @@ void initLCD() {
     // Modified by Luca Brizzi aka gtrick90 @ RCG
     //LCDprint(0xFE);LCDprint(0x43);LCDprint(0x02); //cursor blink mode	
     LCDprint(0xFE);LCDprint('R'); //reset	
+   #elif defined(LCD_VT100)
+    LCDprint(0x1b); LCDprint('c'); //RIS
   #elif defined(LCD_ETPP)
     // Eagle Tree Power Panel - I2C & Daylight Readable LCD
     // Contributed by Danal
@@ -190,7 +202,7 @@ void initLCD() {
   #endif
   LCDclear();
   strcpy_P(line1,PSTR("MultiWii V1.9+")); LCDsetLine(1);   LCDprintChar(line1);
-  #if defined(LCD_TEXTSTAR)
+  #if defined(LCD_TEXTSTAR) || defined(LCD_VT100)
      delay(2500);
      LCDclear();
   #endif
@@ -217,6 +229,7 @@ static lcd_type_desc_t LTU8  = {&__u8Fmt,  &__u8Inc};
 static lcd_type_desc_t LTU16 = {&__u16Fmt, &__u16Inc};
 static lcd_type_desc_t LPMM  = {&__upMFmt, &__nullInc};
 static lcd_type_desc_t LPMS  = {&__upSFmt, &__nullInc};
+static lcd_type_desc_t LAUX  = {&__uAuxFmt,  &__u8Inc};
 
 typedef struct lcd_param_def_t{
   lcd_type_desc_t * type;
@@ -247,6 +260,7 @@ static lcd_param_def_t __VB  = {&LTU8,  1, 1, 0};
 static lcd_param_def_t __L   = {&LTU8,  0, 1, 0};
 static lcd_param_def_t __FS  = {&LTU8,  1, 1, 0};
 static lcd_param_def_t __SE  = {&LTU16,  0, 1, 10};
+static lcd_param_def_t __AUX = {&LAUX,  0, 1, 1};
 
 // Program Space Strings - These sit in program flash, not SRAM.
 // Rewrite to support PROGMEM strings 21/21/2011 by Danal
@@ -271,7 +285,7 @@ PROGMEM prog_char lcd_param_text16 []  = "Vel D";
 #endif
 PROGMEM prog_char lcd_param_text17 []  = "Level P";
 PROGMEM prog_char lcd_param_text18 []  = "Level I";
-#ifdef MAG
+#if MAG
 PROGMEM prog_char lcd_param_text19 []  = "Mag P";
 #endif
 PROGMEM prog_char lcd_param_text20 []  = "RC Rate";
@@ -310,6 +324,19 @@ PROGMEM prog_char lcd_param_text39 []  = "Failsafes";
 PROGMEM prog_char lcd_param_text40 []  = "i2c Errors";
 PROGMEM prog_char lcd_param_text41 []  = "annex overruns";
 #endif
+#ifdef LCD_CONF_AUX_12
+PROGMEM prog_char lcd_param_text42 []  = "AUX1/2 level";
+PROGMEM prog_char lcd_param_text43 []  = "AUX1/2 baro";
+PROGMEM prog_char lcd_param_text44 []  = "AUX1/2 mag";
+PROGMEM prog_char lcd_param_text45 []  = "AUX1/2 cam stab";
+PROGMEM prog_char lcd_param_text46 []  = "AUX1/2 cam trig";
+PROGMEM prog_char lcd_param_text47 []  = "AUX1/2 arm";
+PROGMEM prog_char lcd_param_text48 []  = "AUX1/2 gps home";
+PROGMEM prog_char lcd_param_text49 []  = "AUX1/2 gps hold";
+PROGMEM prog_char lcd_param_text50 []  = "AUX1/2 passthru";
+PROGMEM prog_char lcd_param_text51 []  = "AUX1/2 headsfree";
+PROGMEM prog_char lcd_param_text52 []  = "AUX1/2 beeper";
+#endif
 //                                        0123456789.12345
 
 PROGMEM const prog_void *lcd_param_ptr_table [] = {
@@ -333,7 +360,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #endif
 &lcd_param_text17,   &P8[PIDLEVEL],         &__P,
 &lcd_param_text18,   &I8[PIDLEVEL],         &__I,
-#ifdef MAG
+#if MAG
 &lcd_param_text19,   &P8[PIDMAG],           &__P,
 #endif
 &lcd_param_text20,   &rcRate8,              &__RCR,
@@ -341,6 +368,19 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 &lcd_param_text22,   &rollPitchRate,        &__RC,
 &lcd_param_text23,   &yawRate,              &__RC,
 &lcd_param_text24,   &dynThrPID,            &__RC,
+#ifdef LCD_CONF_AUX_12
+&lcd_param_text42,   &activate1[BOXACC],     &__AUX,
+&lcd_param_text43,   &activate1[BOXBARO],    &__AUX,
+&lcd_param_text44,   &activate1[BOXMAG],     &__AUX,
+&lcd_param_text45,   &activate1[BOXCAMSTAB], &__AUX,
+&lcd_param_text46,   &activate1[BOXCAMTRIG], &__AUX,
+&lcd_param_text47,   &activate1[BOXARM],     &__AUX,
+&lcd_param_text48,   &activate1[BOXGPSHOME], &__AUX,
+&lcd_param_text49,   &activate1[BOXGPSHOLD], &__AUX,
+&lcd_param_text50,   &activate1[BOXPASSTHRU],&__AUX,
+&lcd_param_text51,   &activate1[BOXHEADFREE],&__AUX,
+&lcd_param_text52,   &activate1[BOXBEEPERON],&__AUX,
+#endif
 #ifdef LOG_VALUES
 #if (LOG_VALUES == 2)
 &lcd_param_text25,   &pMeter[0],            &__PM,
@@ -402,6 +442,19 @@ void __u16Fmt(void * var, uint8_t mul, uint8_t dec) {
   line2[8] = '0' + unit        - (unit/10)    * 10;
 }  
 
+void __uAuxFmt(void * var, uint8_t mul, uint8_t dec) {
+  uint8_t unit = *(uint8_t*)var;
+  line2[0] = 'L';
+  line2[1] = 'M';
+  line2[2] = 'H';
+  line2[4] = ( unit & 1<<0 ? 'X' : '.' );
+  line2[5] = ( unit & 1<<1 ? 'X' : '.' );
+  line2[6] = ( unit & 1<<2 ? 'X' : '.' );
+  line2[8] = ( unit & 1<<3 ? 'X' : '.' );
+  line2[9] = ( unit & 1<<4 ? 'X' : '.' );
+  line2[10] = ( unit & 1<<5 ? 'X' : '.' );
+}
+
 void __upMFmt(void * var, uint8_t mul, uint8_t dec) {
   uint32_t unit = *(uint32_t*)var; 
   // pmeter values need special treatment, too many digits to fit standard 8 bit scheme
@@ -454,7 +507,7 @@ void configurationLoop() {
       refreshLCD = 0;
     }
 
-    #if defined(LCD_TEXTSTAR) // textstar
+    #if defined(LCD_TEXTSTAR) || defined(LCD_VT100) // textstar or vt100 can send keys
       key = ( SerialAvailable(0) ?  SerialRead(0) : 0 );
     #endif
     #ifdef LCD_CONF_DEBUG
@@ -513,16 +566,20 @@ void configurationLoop() {
 
 #ifdef LCD_TELEMETRY
 
-  // LCD_BAR(n,v) : draw a bar graph - n number of chars for width, v value in % to display
-   #if defined(LCD_SERIAL3W)
-     #define LCD_BAR(n,v) {} // add your own implementation here
+  // LCDbar(n,v) : draw a bar graph - n number of chars for width, v value in % to display
+void LCDbar(uint8_t n,uint8_t v) {
+	#if defined(LCD_SERIAL3W)
+     // add your own implementation here
    #elif defined(LCD_TEXTSTAR)
-     #define LCD_BAR(n,v) { LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(constrain(v,0,100)); }	
-   #elif defined(LCD_ETPP)
-     #define LCD_BAR(n,v) { ETPP_barGraph(n,v); }
+     LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(constrain(v,0,100));
+   #elif defined(LCD_VT100)
+     for (uint16_t i=0; i< n*4*v/100; i++) LCDprint('=');
+  #elif defined(LCD_ETPP)
+     ETPP_barGraph(n,v);
    #elif defined(LCD_LCD03)
-     #define LCD_BAR(n,v) { LCD03_barGraph(n,v); }
+     LCD03_barGraph(n,v);
    #endif
+}
 
 void lcd_telemetry() {
   uint16_t intPowerMeterSum;   
@@ -577,7 +634,7 @@ void lcd_telemetry() {
     LCDsetLine(1); LCDprintChar(line1);
     LCDsetLine(2);
     #ifdef VBAT
-      LCD_BAR(7, (((vbat-VBATLEVEL1_3S)*100)/VBATREF) );
+      LCDbar(7, (((vbat-VBATLEVEL1_3S)*100)/VBATREF) );
       LCDprint(' ');
     #else
       LCDprintChar("        ");
@@ -586,7 +643,7 @@ void lcd_telemetry() {
       //     intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
       //   pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
       if (powerTrigger1)
-        LCD_BAR(8, (intPowerMeterSum/powerTrigger1 *2) ); // bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
+        LCDbar(8, (intPowerMeterSum/powerTrigger1 *2) ); // bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
     #else
       LCDprintChar("        ");
     #endif
@@ -633,13 +690,13 @@ void lcd_telemetry() {
     #define GYROLIMIT 30 // threshold: for larger values replace bar with dots
     #define ACCLIMIT 40 // threshold: for larger values replace bar with dots     
       LCDsetLine(1);LCDprintChar("G "); //refresh line 1 of LCD
-      if (abs(gyroData[0]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[0])*50/GYROLIMIT) } else LCDprintChar("...."); LCDprint(' ');
-      if (abs(gyroData[1]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[1])*50/GYROLIMIT) } else LCDprintChar("...."); LCDprint(' ');
-      if (abs(gyroData[2]) < GYROLIMIT) { LCD_BAR(4,(GYROLIMIT+gyroData[2])*50/GYROLIMIT) } else LCDprintChar("....");
+      if (abs(gyroData[0]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[0])*50/GYROLIMIT); } else LCDprintChar("...."); LCDprint(' ');
+      if (abs(gyroData[1]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[1])*50/GYROLIMIT); } else LCDprintChar("...."); LCDprint(' ');
+      if (abs(gyroData[2]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[2])*50/GYROLIMIT); } else LCDprintChar("....");
       LCDsetLine(2);LCDprintChar("A "); //refresh line 2 of LCD
-      if (abs(accSmooth[0]) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[0])*50/ACCLIMIT) } else LCDprintChar("...."); LCDprint(' ');
-      if (abs(accSmooth[1]) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT) } else LCDprintChar("...."); LCDprint(' ');
-      if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCD_BAR(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT) } else LCDprintChar("....");
+      if (abs(accSmooth[0]) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[0])*50/ACCLIMIT); } else LCDprintChar("...."); LCDprint(' ');
+      if (abs(accSmooth[1]) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT); } else LCDprintChar("...."); LCDprint(' ');
+      if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT); } else LCDprintChar("....");
       break;
     case 5: // No button.  Displays with auto telemetry only
       strcpy_P(line1,PSTR("Fails i2c t-errs"));  
