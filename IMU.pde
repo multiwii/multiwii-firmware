@@ -4,15 +4,13 @@ void computeIMU () {
   static int16_t gyroADCprevious[3] = {0,0,0};
   int16_t gyroADCp[3];
   int16_t gyroADCinter[3];
-//  static int16_t lastAccADC[3] = {0,0,0};
   static uint32_t timeInterleave = 0;
-#if defined(TRI)
-  static int16_t gyroYawSmooth = 0;
-#endif
+  #if defined(TRI)
+    static int16_t gyroYawSmooth = 0;
+  #endif
 
   if (MAG)  Mag_getADC();
   if (BARO) Baro_update();
-
 
   //we separate the 2 situations because reading gyro values with a gyro only setup can be acchieved at a higher rate
   //gyro+nunchuk: we must wait for a quite high delay betwwen 2 reads to get both WM+ and Nunchuk data. It works with 3ms
@@ -71,7 +69,7 @@ void computeIMU () {
 // Simplified IMU based on "Complementary Filter"
 // Inspired by http://starlino.com/imu_guide.html
 //
-// adapted by ziss_dm : http://wbb.multiwii.com/viewtopic.php?f=8&t=198
+// adapted by ziss_dm : http://www.multiwii.com/forum/viewtopic.php?f=8&t=198
 //
 // The following ideas was used in this project:
 // 1) Rotation matrix: http://en.wikipedia.org/wiki/Rotation_matrix
@@ -93,7 +91,7 @@ void computeIMU () {
 /* Increasing this value would reduce ACC noise (visible in GUI), but would increase ACC lag time*/
 /* Comment this if  you do not want filter at all.*/
 /* Default WMC value: 8*/
-#define ACC_LPF_FACTOR 8
+#define ACC_LPF_FACTOR 4
 
 /* Set the Low Pass Filter factor for Magnetometer */
 /* Increasing this value would reduce Magnetometer noise (not visible in GUI), but would increase Magnetometer lag time*/
@@ -194,8 +192,8 @@ void getEstimatedAttitude(){
   for (axis = 0; axis < 3; axis++) {
     deltaGyroAngle[axis] = gyroADC[axis]  * scale;
     #if defined(ACC_LPF_FACTOR)
-      accTemp[axis] = (accTemp[axis] - (accTemp[axis] >>4)) + accADC[axis];
-      accSmooth[axis] = accTemp[axis]>>4;
+      accTemp[axis] = (accTemp[axis] - (accTemp[axis] >>ACC_LPF_FACTOR)) + accADC[axis];
+      accSmooth[axis] = accTemp[axis]>>ACC_LPF_FACTOR;
       #define ACC_VALUE accSmooth[axis]
     #else  
       accSmooth[axis] = accADC[axis];
@@ -266,19 +264,22 @@ int32_t isq(int32_t x){return x * x;}
 
 #define UPDATE_INTERVAL 25000    // 40hz update rate (20hz LPF on acc)
 #define INIT_DELAY      4000000  // 4 sec initialization delay
-#define Kp1 0.55f                // PI observer velocity gain 
-#define Kp2 1.0f                 // PI observer position gain
+#define Kp1 5.5f                // PI observer velocity gain 
+#define Kp2 10.0f                 // PI observer position gain
 #define Ki  0.001f               // PI observer integral gain (bias cancellation)
 #define dt  (UPDATE_INTERVAL / 1000000.0f)
 
 void getEstimatedAltitude(){
   static uint8_t inited = 0;
   static int16_t AltErrorI = 0;
-  static float AccScale  = 0.0f;
+  static float AccScale;
   static uint32_t deadLine = INIT_DELAY;
   int16_t AltError;
   int16_t InstAcc;
-  int16_t Delta;
+
+
+  static int32_t tmpAlt;
+  static int16_t  EstVelocity=0;
   
   if (currentTime < deadLine) return;
   deadLine = currentTime + UPDATE_INTERVAL; 
@@ -286,25 +287,27 @@ void getEstimatedAltitude(){
 
   if (!inited) {
     inited = 1;
-    EstAlt = BaroAlt;
-    EstVelocity = 0;
-    AltErrorI = 0;
+    tmpAlt = BaroAlt*10;
     AccScale = 100 * 9.80665f / acc_1G;
   }
+
   // Estimation Error
   AltError = BaroAlt - EstAlt; 
   AltErrorI += AltError;
-  AltErrorI=constrain(AltErrorI,-25000,+25000);
+  AltErrorI=constrain(AltErrorI,-2500,+2500);
   // Gravity vector correction and projection to the local Z
   //InstAcc = (accADC[YAW] * (1 - acc_1G * InvSqrt(isq(accADC[ROLL]) + isq(accADC[PITCH]) + isq(accADC[YAW])))) * AccScale + (Ki) * AltErrorI;
   #if defined(TRUSTED_ACCZ)
-    InstAcc = (accADC[YAW] * (1 - acc_1G * InvSqrt(isq(accADC[ROLL]) + isq(accADC[PITCH]) + isq(accADC[YAW])))) * AccScale +  AltErrorI / 1000;
+    InstAcc = (accADC[YAW] * (1 - acc_1G * InvSqrt(isq(accADC[ROLL]) + isq(accADC[PITCH]) + isq(accADC[YAW])))) * AccScale +  AltErrorI / 100;
   #else
-    InstAcc = AltErrorI / 1000;
+    InstAcc = AltErrorI / 100;
   #endif
-  
+
   // Integrators
-  Delta = InstAcc * dt + (Kp1 * dt) * AltError;
-  EstAlt += (EstVelocity/5 + Delta) * (dt / 2) + (Kp2 * dt) * AltError;
-  EstVelocity += Delta*10;
+  tmpAlt += EstVelocity*(dt*dt) + (Kp2 *dt) * AltError;
+  EstVelocity += InstAcc + Kp1 * AltError;
+  EstVelocity = constrain(EstVelocity,-25000,+25000);
+  //EstVelocity *= 0.99;
+
+  EstAlt = tmpAlt/10;
 }

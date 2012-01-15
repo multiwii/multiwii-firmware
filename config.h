@@ -39,7 +39,8 @@
 //#define LED_RING
 
 /* This option should be uncommented if ACC Z is accurate enough when motors are running*/
-//#define TRUSTED_ACCZ
+/* should now be ok with BMA020 and BMA180 ACC */
+#define TRUSTED_ACCZ
 
 /* PIN A0 and A1 instead of PIN D5 & D6 for 6 motors config and promini config
    This mod allow the use of a standard receiver on a pro mini
@@ -87,8 +88,7 @@
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
 //#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
 //#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
-#define FREEIMUv04        // FreeIMU v0.4 with MPU6050, HMC5883L, MS561101BA                  <- confirmed by Alex
-//#define FREEIMUv04_DMP  // FreeIMU v0.4   using DMP fusion algorithm for ACC+GYRO           //not yet
+//#define FREEIMUv04      // FreeIMU v0.4 with MPU6050, HMC5883L, MS561101BA                  <- confirmed by Alex
 //#define PIPO            // 9DOF board from erazz
 //#define QUADRINO        // full FC board 9DOF+baro board from witespy  with BMP085 baro     <- confirmed by Alex
 //#define QUADRINO_ZOOM   // full FC board 9DOF+baro board from witespy  second edition       <- confirmed by Alex
@@ -166,7 +166,7 @@
      There is no 3.3V source on a pro mini; you can either use a different 3V source, or attach orange to 5V with a 3V regulator in-line (such as http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail&name=MCP1700-3002E/TO-ND)
      If you use an inline-regulator, a standard 3-pin servo connector can connect to ground, +5V, and RX0; solder the correct wires (and the 3V regulator!) to a Spektrum baseRX-to-Sat cable that has been cut in half. 
      NOTE: Because there is only one serial port on the Pro Mini, using a Spektrum Satellite implies you CANNOT use the PC based configuration tool. Further, you cannot use on-aircraft serial LCD as the baud rates are incompatible. You can configure by one of two methods:
-       1) Coming soon: Use an on-aircraft Eagle Tree LCD for setting gains, reading sensors, etc. 
+       1) Use an on-aircraft i2c LCD (such as Eagle Tree or LCD03) for setting gains, reading sensors, etc. 
        2) Available now: Comment out the Spektrum definition, upload, plug in PC, configure; uncomment the Spektrum definition, upload, plug in RX, and fly.  Repeat as required to configure. 
    (Contribution by Danal) */
 //#define SPEKTRUM 1024
@@ -247,13 +247,34 @@
 /* In order to save space, it's possibile to desactivate the LCD configuration functions
    comment this line only if you don't plan to used a LCD */
 #define LCD_CONF
-/* Use this to trigger LCD configuration without a TX */
+/* to include setting the aux switches for AUX1 and AUX2 via LCD */
+//#define LCD_CONF_AUX_12
+/* Use this to trigger LCD configuration without a TX - only for debugging - do NOT fly with this activated */
 //#define LCD_CONF_DEBUG
 
 /* choice of LCD attached for configuration and telemetry, see notes below */
-#define LCD_TYPE SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
-//#define LCD_TYPE TEXTSTAR    // Cat's Whisker TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
-//#define LCD_TYPE ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
+#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
+/* serial (wired or wireless via BT etc.) */
+//#define LCD_TEXTSTAR    // Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
+//#define LCD_VT100		  // vt100 compatible terminal emulation (blueterm, putty, etc.)
+/* i2c devices */
+//#define LCD_ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
+//#define LCD_LCD03       // LCD03, which is i2c
+
+/* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
+#define LCD_MENU_PREV 'a'
+#define LCD_MENU_NEXT 'c'
+#define LCD_VALUE_UP 'd'
+#define LCD_VALUE_DOWN 'b'
+
+/* To use an LCD03 for configuration:
+ http://www.robot-electronics.co.uk/htm/Lcd03tech.htm
+ Remove the jumper on its back to set i2c control.
+ VCC to +5V VCC (pin1 from top)
+ SDA - Pin A4 Mini Pro - Pin 20 Mega (pin2 from top)
+ SCL - Pin A5 Mini Pro - Pin 21 Mega (pin3 from top)
+ GND to Ground (pin4 from top)
+ (by Th0rsten) */
 
 /* To use an Eagle Tree Power Panel LCD for configuration:
  White wire  to Ground
@@ -262,7 +283,7 @@
  Brown wire  to SCL - Pin A5 Mini Pro - Pin 21 Mega 
  (Contribution by Danal) */
 
-/* Cat's whisker TEXTSTAR LCD
+/* Cat's whisker LCD_TEXTSTAR LCD
    Pleae note this display needs a full 4 wire connection to (+5V, Gnd, RXD, TXD )
    Configure display as follows: 115K baud, and TTL levels for RXD and TXD, terminal mode
    NO rx / tx line reconfiguration, use natural pins */
@@ -329,8 +350,8 @@
 /*      4. configure, compile, upload, set alarm value in GUI or LCD */
 /*      3. enjoy true readings of mAh consumed */
 /* set POWERMETER to "soft" (1) or "hard" (2) depending on sensor you want to utilize */
-//#define POWERMETER 1
-//#define POWERMETER 2
+//#define POWERMETER_SOFT
+//#define POWERMETER_HARD
 /* the sum of all powermeters ranges from [0:60000 e4] theoretically. */
 /* the alarm level from eeprom is out of [0:255], so we multipy alarm level with PLEVELSCALE and with 1e4 before comparing */
 /* PLEVELSCALE is the step size you can use to set alarm */
@@ -353,25 +374,25 @@
 /* note: for now you must send single characters 'A', 'B', 'C', 'D' to request 4 different pages */
 /* Buttons toggle request for page on/off */
 /* The active page on the LCD does get updated automatically */
-/* Easy to use with Terminal application or Textstar LCD - the 4 buttons are preconfigured to send 'A', 'B', 'C', 'D' */
-/* The value represents the refresh interval in cpu time (micro seconds) */
-//#define LCD_TELEMETRY 100011
+/* Easy to use with Terminal application or display like LCD - uses the 4 buttons are preconfigured to send 'A', 'B', 'C', 'D' */
+//#define LCD_TELEMETRY
 /* to enable automatic hopping between 4 telemetry pages uncomment this. */
 /* This may be useful if your LCD has no buttons or the sending is broken */
 /* hopping is activated and deactivated in unarmed mode with throttle=low & roll=left & pitch=forward */
-/* The value represents the hopping interval in cpu time (micro seconds) */
-//#define LCD_TELEMETRY_AUTO 2000123
+//#define LCD_TELEMETRY_AUTO
+/* Use this to trigger telemetry without a TX - only for debugging - do NOT fly with this activated */
+//#define LCD_TELEMETRY_DEBUG  //This form rolls between all screens, LCD_TELEMETRY_AUTO must also be defined.
+//#define LCD_TELEMETRY_DEBUG 6  //This form stays on the screen specified.
+
 /* on telemetry page B it gives a bar graph which shows how much voltage battery has left. Range from 0 to 12 Volt is not very informative */
 /* so we try do define a meaningful part. For a 3S battery we define full=12,6V and calculate how much it is above first warning level */
 /* Example: 12.6V - VBATLEVEL1_3S  (for me = 126 - 102 = 24) */
 #define VBATREF 24 
-/* Use this to trigger telemetry without a TX */
-//#define LCD_TELEMETRY_DEBUG
 
 /* to log values like max loop time and others to come */
 /* logging values are visible via LCD config */
-/* set to 2, if you want powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> 1) */
-#define LOG_VALUES 1
+/* set to 2, if you want powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> PM_SOFT) */
+//#define LOG_VALUES 1
 
 
 //****** end of advanced users settings *************

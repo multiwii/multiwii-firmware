@@ -104,7 +104,7 @@
   #define AUX3PIN                    6  //PIN 68 =  PIN A14
   #define AUX4PIN                    7  //PIN 69 =  PIN A15
   #define ISR_UART                   ISR(USART0_UDRE_vect)
-  #define V_BATPIN                   A0    // Analog PIN 3
+  #define V_BATPIN                   A0    // Analog PIN 0
   #define PSENSORPIN                 A2    // Analog PIN 2
 #endif
 
@@ -178,7 +178,7 @@
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X;  gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  -Y;  magADC[PITCH]  = X; magADC[YAW]  = Z;}
-  #define MPU6050_EN_I2C_BYPASS // HMC5883 connected to the AUX I2C bus of MPU6050
+  #define MPU6050_EN_I2C_BYPASS // MAG connected to the AUX I2C bus of MPU6050
   #undef INTERNAL_I2C_PULLUPS
 #endif
 
@@ -208,7 +208,7 @@
   #define ITG3200
   #define BMA180
   #define BMP085  // note, can be also #define MS561101BA  on some versions
-//  #define MS561101BA
+  //#define MS561101BA
   #define HMC5883
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
@@ -346,17 +346,6 @@
 #endif
 
 
-#if defined(POWERMETER)
-  #ifndef VBAT
-	#error "to use powermeter, you must also define and configure VBAT"
-  #endif
-#endif
-#ifdef LCD_TELEMETRY_AUTO
-  #ifndef LCD_TELEMETRY
-     #error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
-  #endif
-#endif
-
 #if defined(TRI)
   #define MULTITYPE 1
 #elif defined(QUADP)
@@ -385,10 +374,26 @@
   #define MULTITYPE 11      //the GUI is the same for all 8 motor configs
 #endif
 
+#if defined(POWERMETER_HARD) || defined(POWERMETER_SOFT)
+  #define POWERMETER
+#endif
+
 /**************************/
 /* Error Checking Section */
 /**************************/
 
-#if defined(LCD_CONF) && !defined(LCD_TYPE)
-  #error LCD_CONF requires LCD_TYPE definition
+#if (defined(LCD_CONF) || defined(LCD_TELEMETRY)) && !(defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_ETPP) || defined(LCD_LCD03))
+  #error "LCD_CONF or LCD_TELEMETRY defined, and choice of LCD not defined.  Uncomment one of LCD_SERIAL3W or LCD_TEXTSTAR or LCD_VT100 or LCD_ETPP or LCD_LCD03"
 #endif
+
+
+#if defined(POWERMETER) && !(defined(VBAT))
+  	#error "to use powermeter, you must also define and configure VBAT"
+#endif
+
+#if defined(LCD_TELEMETRY_AUTO) && !(defined(LCD_TELEMETRY))
+ 	#error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
+#endif
+
+
+

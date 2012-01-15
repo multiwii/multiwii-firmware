@@ -13,7 +13,6 @@ December  2011     V1.dev
 #include <avr/pgmspace.h>
 #define   VERSION  19
 
-
 /*********** RC alias *****************/
 #define ROLL       0
 #define PITCH      1
@@ -63,8 +62,7 @@ static uint8_t  GPSModeHold = 0;    // if GPS PH is activated
 static uint8_t  headFreeMode = 0;   // if head free mode is a activated
 static uint8_t  passThruMode = 0;   // if passthrough mode is activated
 static int16_t  headFreeModeHold;
-static int16_t  gyroADC[3],accADC[3],magADC[3];
-static int16_t  accSmooth[3];       // projection of smoothed and normalized gravitation force vector on x/y/z axis, as measured by accelerometer
+static int16_t  gyroADC[3],accADC[3],accSmooth[3],magADC[3];
 static int16_t  accTrim[2] = {0, 0};
 static int16_t  heading,magHold;
 static uint8_t  calibratedACC = 0;
@@ -72,10 +70,10 @@ static uint8_t  vbat;               // battery voltage in 0.1V steps
 static uint8_t  okToArm = 0;
 static uint8_t  rcOptions1,rcOptions2;
 static int32_t  pressure;
-static int32_t  BaroAlt;
-static int32_t  EstVelocity;
-static int32_t  EstAlt;             // in cm
+static int16_t  BaroAlt;
+static int16_t  EstAlt;             // in cm
 static uint8_t  buzzerState = 0;
+static int16_t  debug1,debug2,debug3,debug4;
   
 //for log
 static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
@@ -176,14 +174,14 @@ void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
 
 void annexCode() { //this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
   static uint32_t buzzerTime,calibratedAccTime;
-#if defined(LCD_TELEMETRY)
-  static uint16_t telemetryTimer = 0, telemetryAutoTimer = 0, psensorTimer = 0;
-#endif
+  #if defined(LCD_TELEMETRY)
+    static uint16_t telemetryTimer = 0, telemetryAutoTimer = 0, psensorTimer = 0;
+  #endif
   static uint8_t  buzzerFreq;         //delay between buzzer ring
   uint8_t axis,prop1,prop2;
-#if (POWERMETER == 2)
-  uint16_t pMeterRaw;     //used for current reading
-#endif
+  #if defined(POWERMETER_HARD)
+    uint16_t pMeterRaw;     //used for current reading
+  #endif
 
   //PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
   if      (rcData[THROTTLE]<1500) prop2 = 100;
@@ -220,8 +218,8 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     rcCommand[PITCH] = rcCommand_PITCH;
   }
 
-  #if (POWERMETER == 2)
-    if (! (++psensorTimer % PSENSORFREQ)) { 
+  #if defined(POWERMETER_HARD)
+    if (! (++psensorTimer % PSENSORFREQ)) {
      pMeterRaw =  analogRead(PSENSORPIN);
      powerValue = ( PSENSORNULL > pMeterRaw ? PSENSORNULL - pMeterRaw : pMeterRaw - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
      if ( powerValue < 333) {  // only accept reasonable values. 333 is empirical
@@ -239,6 +237,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     static uint8_t ind;
     uint16_t vbatRaw = 0;
     static uint16_t vbatRawArray[8];
+    ADCSRA |= _BV(ADPS2) ; ADCSRA &= ~_BV(ADPS1); ADCSRA &= ~_BV(ADPS0); //this speeds up analogRead without loosing too much resolution: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1208715493/11
     vbatRawArray[(ind++)%8] = analogRead(V_BATPIN);
     for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
     vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
@@ -306,11 +305,14 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   #ifdef LCD_TELEMETRY_AUTO
     if ( (telemetry_auto) && (! (++telemetryAutoTimer % LCD_TELEMETRY_AUTO_FREQ) )  ){
       telemetry++;
-      if ( (telemetry < 1 ) || (telemetry > 5 ) ) telemetry = 1;
+      if ( (telemetry < 1 ) || (telemetry > 6 ) ) telemetry = 1;
     }
   #endif  
   #ifdef LCD_TELEMETRY
     if (! (++telemetryTimer % LCD_TELEMETRY_FREQ)) {
+      #if (LCD_TELEMETRY_DEBUG+0 > 0)
+        telemetry = LCD_TELEMETRY_DEBUG;
+      #endif
       if (telemetry) lcd_telemetry();
     }
   #endif
@@ -349,7 +351,9 @@ void setup() {
   #if defined(GPS)
     SerialOpen(GPS_SERIAL,GPS_BAUD);
   #endif
-  #if (LCD_TYPE == 3) //ETPP)
+  #if defined(LCD_ETPP)
+    initLCD();
+  #elif defined(LCD_LCD03)
     initLCD();
   #endif
   #ifdef LCD_TELEMETRY_DEBUG
@@ -505,7 +509,7 @@ void loop () {
           initialThrottleHold = rcCommand[THROTTLE];
           errorAltitudeI = 0;
           lastVelError = 0;
-          EstVelocity = 0;
+//          EstVelocity = 0;
         }
       } else baroMode = 0;
     }
@@ -554,24 +558,16 @@ void loop () {
         errorAltitudeI = 0;
       }
       //**** Alt. Set Point stabilization PID ****
-      error = constrain( AltHold - EstAlt, -1000, 1000); //  +/-10m,  1 decimeter accuracy
+      error = constrain( AltHold - EstAlt, -100, 100); //  +/-10m,  1 decimeter accuracy
       errorAltitudeI += error;
-      errorAltitudeI = constrain(errorAltitudeI,-30000,30000);
+      errorAltitudeI = constrain(errorAltitudeI,-3000,3000);
       
-      PTerm = P8[PIDALT]*error/100;                     // 16 bits is ok here
-      ITerm = (int32_t)I8[PIDALT]*errorAltitudeI/40000;
+      PTerm = P8[PIDALT]*error/10;                     // 16 bits is ok here
+      ITerm = (int32_t)I8[PIDALT]*errorAltitudeI/4000;
       
       AltPID = PTerm + ITerm ;
-
-      //**** Velocity stabilization PD ****        
-      error = constrain(EstVelocity*2, -30000, 30000);
-      delta = error - lastVelError;
-      lastVelError = error;
-
-      PTerm = (int32_t)error * P8[PIDVEL]/800;
-      DTerm = (int32_t)delta * D8[PIDVEL]/16;
       
-      rcCommand[THROTTLE] = initialThrottleHold + constrain(AltPID - (PTerm - DTerm),-100,+100);
+      rcCommand[THROTTLE] = initialThrottleHold + constrain(AltPID ,-100,+100);
     }
   }
 
