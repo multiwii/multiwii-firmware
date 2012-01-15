@@ -584,7 +584,6 @@ void LCDbar(uint8_t n,uint8_t v) {
 void lcd_telemetry() {
   uint16_t intPowerMeterSum;   
 
-  LCDclear();
   switch (telemetry) { // output telemetry data, if one of four modes is set
     case 3: // button C on Textstar LCD -> cycle time
       strcpy_P(line1,PSTR("Cycle    -----us")); //uin16_t cycleTime
