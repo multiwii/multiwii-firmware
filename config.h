@@ -256,7 +256,7 @@
 #define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
 /* serial (wired or wireless via BT etc.) */
 //#define LCD_TEXTSTAR    // Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
-//#define LCD_VT100		  // vt100 compatible terminal emulation (blueterm, putty, etc.)
+//#define LCD_VT100		  // vt100 compatible terminal emulation (blueterm, putty, etc.) http://ascii-table.com/ansi-escape-sequences-vt-100.php
 /* i2c devices */
 //#define LCD_ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
 //#define LCD_LCD03       // LCD03, which is i2c
