@@ -86,7 +86,7 @@ void serialCom() {
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
       for(i=0;i<3;i++) serialize16(gyroData[i]);
       for(i=0;i<3;i++) serialize16(magADC[i]);
-      serialize16(EstAlt/10);
+      serialize16(EstAlt);
       serialize16(heading); // compass
       for(i=0;i<4;i++) serialize16(servo[i]);
       for(i=0;i<8;i++) serialize16(motor[i]);
@@ -116,10 +116,10 @@ void serialCom() {
       serialize16(intPowerMeterSum);
       serialize16(intPowerTrigger1);
       serialize8(vbat);
-      serialize16(BaroAlt/10);        // 4 variables are here for general monitoring purpose
+      serialize16(BaroAlt);        // 4 variables are here for general monitoring purpose
       serialize16(i2c_errors_count);  // debug2
       serialize16(annex650_overrun_count);// debug3
-      serialize16(armed);             // debug4
+      serialize16(debug1);             // debug4
       serialize8('M');
       UartSendData();
       break;
@@ -137,6 +137,7 @@ void serialCom() {
       serialize8(vbat);     // Vbatt 47
       serialize8(VERSION);  // MultiWii Firmware version
       serialize8('O'); //49
+      UartSendData();
       break;
     case 'W': //GUI write params to eeprom @ arduino
       while (SerialAvailable(0)<(7+3*PIDITEMS+2*CHECKBOXITEMS)) {}

@@ -5,9 +5,9 @@
 /* Set the minimum throttle command sent to the ESC (Electronic Speed Controller)
    This is the minimum value that allow motors to run at a idle speed  */
 //#define MINTHROTTLE 1300 // for Turnigy Plush ESCs 10A
-#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
+//#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
 //#define MINTHROTTLE 1220
-//#define MINTHROTTLE 1150 
+#define MINTHROTTLE 1150 
 
 /* The type of multicopter */
 //#define GIMBAL
@@ -39,7 +39,8 @@
 //#define LED_RING
 
 /* This option should be uncommented if ACC Z is accurate enough when motors are running*/
-//#define TRUSTED_ACCZ
+/* should now be ok with BMA020 and BMA180 ACC */
+#define TRUSTED_ACCZ
 
 /* PIN A0 and A1 instead of PIN D5 & D6 for 6 motors config and promini config
    This mod allow the use of a standard receiver on a pro mini
@@ -87,6 +88,7 @@
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
 //#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
 //#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
+//#define FREEIMUv04      // FreeIMU v0.4 with MPU6050, HMC5883L, MS561101BA                  <- confirmed by Alex
 //#define PIPO            // 9DOF board from erazz
 //#define QUADRINO        // full FC board 9DOF+baro board from witespy  with BMP085 baro     <- confirmed by Alex
 //#define QUADRINO_ZOOM   // full FC board 9DOF+baro board from witespy  second edition       <- confirmed by Alex
@@ -137,6 +139,18 @@
 //#define ITG3200_LPF_42HZ
 //#define ITG3200_LPF_20HZ
 //#define ITG3200_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
+
+/* MPU6050 Low pass filter setting. In case you cannot eliminate all vibrations to the Gyro, you can try
+   to decrease the LPF frequency, only one step per try. As soon as twitching gone, stick with that setting.
+   It will not help on feedback wobbles, so change only when copter is randomly twiching and all dampening and
+   balancing options ran out. Uncomment only one option!
+   IMPORTANT! Change low pass filter setting changes PID behaviour, so retune your PID's after changing LPF.*/
+//#define MPU6050_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
+//#define MPU6050_LPF_188HZ
+//#define MPU6050_LPF_98HZ
+//#define MPU6050_LPF_42HZ
+//#define MPU6050_LPF_20HZ
+//#define MPU6050_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
 
 /* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
    IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
@@ -232,14 +246,14 @@
 
 /* In order to save space, it's possibile to desactivate the LCD configuration functions
    comment this line only if you don't plan to used a LCD */
-//#define LCD_CONF
+#define LCD_CONF
 /* to include setting the aux switches for AUX1 and AUX2 via LCD */
 //#define LCD_CONF_AUX_12
 /* Use this to trigger LCD configuration without a TX - only for debugging - do NOT fly with this activated */
 //#define LCD_CONF_DEBUG
 
 /* choice of LCD attached for configuration and telemetry, see notes below */
-//#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
+#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
 /* serial (wired or wireless via BT etc.) */
 //#define LCD_TEXTSTAR    // Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
 //#define LCD_VT100		  // vt100 compatible terminal emulation (blueterm, putty, etc.)
