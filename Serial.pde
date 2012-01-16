@@ -57,6 +57,9 @@ void serialCom() {
       if (telemetry==5) telemetry = 0; else { telemetry = 5; LCDclear(); }
       break;
     case '6':
+      if (telemetry==6) telemetry = 0; else { telemetry = 6; LCDclear(); }
+      break;
+    case '7':
       {    
           extern unsigned int __bss_end;
           extern unsigned int __heap_start;
@@ -71,7 +74,8 @@ void serialCom() {
           line1[7] = '0' + free_memory / 100  - (free_memory/1000)  * 10;
           line1[8] = '0' + free_memory / 10   - (free_memory/100)   * 10;
           line1[9] = '0' + free_memory        - (free_memory/10)    * 10;
-          LCDprintChar(line1);
+          LCDclear(); 
+          LCDsetLine(1); LCDprintChar(line1);
           break;
       }
     case 'a': // button A release

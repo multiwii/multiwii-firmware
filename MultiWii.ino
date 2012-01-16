@@ -305,6 +305,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   #ifdef LCD_TELEMETRY_AUTO
     if ( (telemetry_auto) && (! (++telemetryAutoTimer % LCD_TELEMETRY_AUTO_FREQ) )  ){
       telemetry++;
+      LCDclear(); // make sure to clear away 
       if ( (telemetry < 1 ) || (telemetry > 6 ) ) telemetry = 1;
     }
   #endif  

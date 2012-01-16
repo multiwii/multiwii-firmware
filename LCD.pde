@@ -747,6 +747,8 @@ void lcd_telemetry() {
       LCDsetLine(1);LCDprintChar(line1);
       LCDsetLine(2);LCDprintChar(line2);
       break;
+
+   // WARNING: if you add another case here, you should also add a case: in Serial.pde, so users can access your case via terminal input
   } // end switch (telemetry) 
 } // end function
 #endif //  LCD_TELEMETRY
