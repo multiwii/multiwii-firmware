@@ -604,7 +604,7 @@ void configurationLoop() {
 #endif // LCD_CONF
 
 
-// -------------------- telemtry output to LCD over serial/i2c ----------------------------------
+// -------------------- telemetry output to LCD over serial/i2c ----------------------------------
 
 #ifdef LCD_TELEMETRY
 
@@ -613,7 +613,7 @@ void LCDbar(uint8_t n,uint8_t v) {
 	#if defined(LCD_SERIAL3W)
      for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
    #elif defined(LCD_TEXTSTAR)
-     LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(constrain(v,0,100));
+     LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v);
    #elif defined(LCD_VT100)
      for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
   #elif defined(LCD_ETPP)
@@ -705,8 +705,9 @@ void lcd_telemetry() {
 		 #ifdef POWERMETER
 		  //     intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
 		  //   pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
+		  intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
 		  if (powerTrigger1)
-			  LCDbar(8, (intPowerMeterSum/powerTrigger1 *2) ); // bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
+			  LCDbar(8, (intPowerMeterSum/(uint16_t)powerTrigger1) *2 ); // bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
 		 #endif
 	  }
 	  break;
