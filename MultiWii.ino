@@ -175,7 +175,14 @@ void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
 void annexCode() { //this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
   static uint32_t buzzerTime,calibratedAccTime;
   #if defined(LCD_TELEMETRY)
-    static uint16_t telemetryTimer = 0, telemetryAutoTimer = 0, psensorTimer = 0;
+   static uint16_t telemetryTimer = 0, telemetryAutoTimer = 0, psensorTimer = 0;
+  #endif
+  #if defined(LCD_TELEMETRY)
+   static uint8_t telemetryAutoIndex = 0;
+   static char telemetryAutoSequence []  = LCD_TELEMETRY_AUTO;
+  #endif
+  #ifdef VBAT
+    static uint8_t vbatTimer = 0;
   #endif
   static uint8_t  buzzerFreq;         //delay between buzzer ring
   uint8_t axis,prop1,prop2;
@@ -234,14 +241,15 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   #endif
 
   #if defined(VBAT)
-    static uint8_t ind;
+    static uint8_t ind = 0;
     uint16_t vbatRaw = 0;
     static uint16_t vbatRawArray[8];
-    ADCSRA |= _BV(ADPS2) ; ADCSRA &= ~_BV(ADPS1); ADCSRA &= ~_BV(ADPS0); //this speeds up analogRead without loosing too much resolution: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1208715493/11
-    vbatRawArray[(ind++)%8] = analogRead(V_BATPIN);
-    for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
-    vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
-
+    if (! (++vbatTimer % VBATFREQ)) {
+    	ADCSRA |= _BV(ADPS2) ; ADCSRA &= ~_BV(ADPS1); ADCSRA &= ~_BV(ADPS0); //this speeds up analogRead without loosing too much resolution: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1208715493/11
+    	vbatRawArray[(ind++)%8] = analogRead(V_BATPIN);
+    	for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
+    	vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
+    }
     if ( (rcOptions1 & activate1[BOXBEEPERON]) || (rcOptions2 & activate2[BOXBEEPERON]) ){ // unconditional beeper on via AUXn switch 
        buzzerFreq = 7;
     } else  if ( ( (vbat>VBATLEVEL1_3S) 
@@ -304,9 +312,8 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
 
   #ifdef LCD_TELEMETRY_AUTO
     if ( (telemetry_auto) && (! (++telemetryAutoTimer % LCD_TELEMETRY_AUTO_FREQ) )  ){
-      telemetry++;
-      LCDclear(); // make sure to clear away 
-      if ( (telemetry < 1 ) || (telemetry > 6 ) ) telemetry = 1;
+      telemetry = telemetryAutoSequence[++telemetryAutoIndex % strlen(telemetryAutoSequence)];
+      LCDclear(); // make sure to clear away remnants
     }
   #endif  
   #ifdef LCD_TELEMETRY
