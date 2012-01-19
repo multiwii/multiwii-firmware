@@ -108,11 +108,6 @@ static char line1[17],line2[17];
       i2c_LCD03_send_cmd(row+1);
       i2c_LCD03_send_cmd(col+1);   
     }
-    void LCD03_barGraph(byte num, int val) { // more to come...
-      for (int8_t i = 0; i < num; i++) {
-        i2c_LCD03_send_char('x');
-      }
-    }
 #endif // LCD_LCD03
 /* ------------------------------------------------------------------ */
 void LCDprint(uint8_t i) {
@@ -619,7 +614,7 @@ void LCDbar(uint8_t n,uint8_t v) {
   #elif defined(LCD_ETPP)
      ETPP_barGraph(n,v);
    #elif defined(LCD_LCD03)
-     LCD03_barGraph(n,v);
+     for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
    #endif
 }
 
