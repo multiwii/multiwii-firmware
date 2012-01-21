@@ -84,6 +84,14 @@ static int16_t  i2c_errors_count = 0;
 static int16_t  annex650_overrun_count = 0;
 
 // **********************
+//Automatic ACC Offset Calibration
+// **********************
+static uint16_t InflightcalibratingA = 0;
+static int16_t AccInflightCalibrationArmed;
+static uint16_t AccInflightCalibrationMeasurementDone = 0;
+static uint16_t AccInflightCalibrationSavetoEEProm = 0;
+
+// **********************
 // power meter
 // **********************
 #define PMOTOR_SUM 8                     // index into pMeter[] for sum
@@ -431,7 +439,21 @@ void loop () {
           #endif
           previousTime = micros();
         }
-      } else if ((activate1[BOXARM] > 0) || (activate2[BOXARM] > 0)) {
+      }
+      #if defined(InflightAccCalibration)  
+        else if (armed == 0 && rcData[YAW] < MINCHECK && rcData[PITCH] > MAXCHECK && rcData[ROLL] > MAXCHECK){
+          if (rcDelayCommand == 20){
+            if (AccInflightCalibrationMeasurementDone){                //trigger saving into eeprom after landing
+              AccInflightCalibrationMeasurementDone = 0;
+              AccInflightCalibrationSavetoEEProm = 1;
+            }else{ 
+              AccInflightCalibrationArmed = !AccInflightCalibrationArmed; 
+              if (AccInflightCalibrationArmed){blinkLED(10,1,2);}else{blinkLED(10,10,3);} 
+            }
+          }
+       } 
+     #endif
+      else if ((activate1[BOXARM] > 0) || (activate2[BOXARM] > 0)) {
         if ( ((rcOptions1 & activate1[BOXARM]) || (rcOptions2 & activate2[BOXARM])) && okToArm ) {
           armed = 1;
           headFreeModeHold = heading;
@@ -491,6 +513,23 @@ void loop () {
     if (cycleTime > cycleTimeMax) cycleTimeMax = cycleTime; // remember highscore
     if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
    #endif
+
+    #if defined(InflightAccCalibration)  
+      if (AccInflightCalibrationArmed && armed == 1 && rcData[THROTTLE] > MINCHECK && !((rcOptions1 & activate1[BOXARM]) || (rcOptions2 & activate2[BOXARM])) ){              // Copter is airborne and you are turning it off via boxarm : start measurement
+        InflightcalibratingA = 50;
+        AccInflightCalibrationArmed = 0;  
+      }  
+      if ((rcOptions1 & activate1[BOXPASSTHRU]) || (rcOptions2 & activate2[BOXPASSTHRU])) {      //Use the Passthru Option to activate : Passthru = TRUE Meausrement started, Land and passtrhu = 0 measurement stored
+        if (!AccInflightCalibrationArmed){
+          AccInflightCalibrationArmed = 1;
+          InflightcalibratingA = 50;
+        }
+      }else if(AccInflightCalibrationMeasurementDone && armed == 0){
+        AccInflightCalibrationArmed = 0;
+        AccInflightCalibrationMeasurementDone = 0;
+        AccInflightCalibrationSavetoEEProm = 1;
+      }
+    #endif
 
     rcOptions1 = (rcData[AUX1]<1300)   + (1300<rcData[AUX1] && rcData[AUX1]<1700)*2  + (rcData[AUX1]>1700)*4
                +(rcData[AUX2]<1300)*8 + (1300<rcData[AUX2] && rcData[AUX2]<1700)*16 + (rcData[AUX2]>1700)*32;

@@ -248,6 +248,52 @@ void ACC_Common() {
     }
     calibratingA--;
   }
+  #if defined(InflightAccCalibration)
+      static int32_t b[3];
+      static int16_t accZero_saved[3]  = {0,0,0};
+      static int16_t  accTrim_saved[2] = {0, 0};
+      //Saving old zeropoints before measurement
+      if (InflightcalibratingA==50) {
+         accZero_saved[ROLL]  = accZero[ROLL] ;
+         accZero_saved[PITCH] = accZero[PITCH];
+         accZero_saved[YAW]   = accZero[YAW] ;
+         accTrim_saved[ROLL] = accTrim[ROLL] ;
+         accTrim_saved[PITCH] = accTrim[PITCH] ;
+      }
+      if (InflightcalibratingA>0) {
+        for (uint8_t axis = 0; axis < 3; axis++) {
+          // Reset a[axis] at start of calibration
+          if (InflightcalibratingA == 50) b[axis]=0;
+          // Sum up 50 readings
+          b[axis] +=accADC[axis];
+          // Clear global variables for next reading
+          accADC[axis]=0;
+          accZero[axis]=0;
+        }
+        //all values are measured
+        if (InflightcalibratingA == 1) {
+          AccInflightCalibrationMeasurementDone = 1;
+          blinkLED(10,10,2);      //buzzer for indicatiing the start inflight
+        // recover saved values to maintain current flight behavior until new values are transferred
+         accZero[ROLL]  = accZero_saved[ROLL] ;
+         accZero[PITCH] = accZero_saved[PITCH];
+         accZero[YAW]   = accZero_saved[YAW] ;
+         accTrim[ROLL] = accTrim_saved[ROLL] ;
+         accTrim[PITCH] = accTrim_saved[PITCH] ;
+        }
+        InflightcalibratingA--;
+      }
+      // Calculate average, shift Z down by acc_1G and store values in EEPROM at end of calibration
+      if (AccInflightCalibrationSavetoEEProm == 1){  //the copter is landed, disarmed and the combo has been done again
+        AccInflightCalibrationSavetoEEProm = 0;
+        accZero[ROLL]  = b[ROLL]/50;
+        accZero[PITCH] = b[PITCH]/50;
+        accZero[YAW]   = b[YAW]/50-acc_1G; // for nunchuk 200=1G
+        accTrim[ROLL]   = 0;
+        accTrim[PITCH]  = 0;
+        writeParams(); // write accZero in EEPROM
+      }
+    #endif
   accADC[ROLL]  -=  accZero[ROLL] ;
   accADC[PITCH] -=  accZero[PITCH];
   accADC[YAW]   -=  accZero[YAW] ;

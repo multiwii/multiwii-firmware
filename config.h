@@ -42,6 +42,9 @@
 /* should now be ok with BMA020 and BMA180 ACC */
 #define TRUSTED_ACCZ
 
+/* This will activate the ACC-Inflight calibration if unchecked */  
+#define InflightAccCalibration
+
 /* PIN A0 and A1 instead of PIN D5 & D6 for 6 motors config and promini config
    This mod allow the use of a standard receiver on a pro mini
    (no need to use a PPM sum receiver)
