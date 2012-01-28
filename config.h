@@ -31,7 +31,7 @@
 //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
 
 //enable internal I2C pull ups
-//#define INTERNAL_I2C_PULLUPS
+#define INTERNAL_I2C_PULLUPS
 
 
 //****** advanced users settings   *************
@@ -41,6 +41,9 @@
 /* This option should be uncommented if ACC Z is accurate enough when motors are running*/
 /* should now be ok with BMA020 and BMA180 ACC */
 #define TRUSTED_ACCZ
+
+/* This will activate the ACC-Inflight calibration if unchecked */  
+//#define InflightAccCalibration
 
 /* PIN A0 and A1 instead of PIN D5 & D6 for 6 motors config and promini config
    This mod allow the use of a standard receiver on a pro mini
@@ -249,6 +252,8 @@
 #define LCD_CONF
 /* to include setting the aux switches for AUX1 and AUX2 via LCD */
 //#define LCD_CONF_AUX_12
+/* to include setting the aux switches for AUX1, AUX2, AUX3 and AUX4 via LCD */
+//#define LCD_CONF_AUX_1234
 /* Use this to trigger LCD configuration without a TX - only for debugging - do NOT fly with this activated */
 //#define LCD_CONF_DEBUG
 
@@ -376,10 +381,12 @@
 /* The active page on the LCD does get updated automatically */
 /* Easy to use with Terminal application or display like LCD - uses the 4 buttons are preconfigured to send 'A', 'B', 'C', 'D' */
 //#define LCD_TELEMETRY
-/* to enable automatic hopping between 4 telemetry pages uncomment this. */
+/* to enable automatic hopping between a choice of telemetry pages uncomment this. */
 /* This may be useful if your LCD has no buttons or the sending is broken */
 /* hopping is activated and deactivated in unarmed mode with throttle=low & roll=left & pitch=forward */
-//#define LCD_TELEMETRY_AUTO
+/* set it to the sequence of telemetry pages you want to see */
+//#define LCD_TELEMETRY_AUTO "12345267" // pages 1 to 7 in ascending order
+//#define LCD_TELEMETRY_AUTO  "2122324252627" // strong emphasis on page 2
 /* Use this to trigger telemetry without a TX - only for debugging - do NOT fly with this activated */
 //#define LCD_TELEMETRY_DEBUG  //This form rolls between all screens, LCD_TELEMETRY_AUTO must also be defined.
 //#define LCD_TELEMETRY_DEBUG 6  //This form stays on the screen specified.
@@ -394,6 +401,10 @@
 /* set to 2, if you want powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> PM_SOFT) */
 //#define LOG_VALUES 1
 
+/* to add debugging code */
+/* not needed and not recommended for normal operation */
+/* will add extra code that may slow down the main loop or make copter non-flyable */
+//#define DEBUG
 
 //****** end of advanced users settings *************
 
@@ -407,9 +418,10 @@
 /* time base is main loop cycle time - a value of 6 means to trigger the action every 6th run through the main loop */
 /* example: with cycle time of approx 3ms, do action every 6*3ms=18ms */
 /* value must be [1; 65535] */
-#define LCD_TELEMETRY_FREQ 43       // to send telemetry data over serial 43 <=> 120ms <=> 8Hz
+#define LCD_TELEMETRY_FREQ 23       // to send telemetry data over serial 23 <=> 60ms <=> 16Hz (only sending interlaced, so 8Hz update rate)
 #define LCD_TELEMETRY_AUTO_FREQ 667 // to step to next telemetry page 667 <=> 2s
-#define PSENSORFREQ 6               //  to read hardware powermeter sensor 6 <=> 18ms
+#define PSENSORFREQ 6               // to read hardware powermeter sensor 6 <=> 18ms
+#define VBATFREQ PSENSORFREQ        // to read battery voltage - keep equal to PSENSORFREQ unless you know what you are doing
 /**************************************/
 /****END OF CONFIGURABLE PARAMETERS****/
 /**************************************/

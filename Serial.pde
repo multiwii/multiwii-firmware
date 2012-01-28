@@ -24,56 +24,57 @@ void serialCom() {
     switch (SerialRead(0)) {
     #ifdef BTSERIAL
     case 'K': //receive RC data from Bluetooth Serial adapter as a remote
-      rcData[THROTTLE] = (SerialRead(0) * 4) + 1000;
-      rcData[ROLL]     = (SerialRead(0) * 4) + 1000;
-      rcData[PITCH]    = (SerialRead(0) * 4) + 1000;
-      rcData[YAW]      = (SerialRead(0) * 4) + 1000;
-      rcData[AUX1]     = (SerialRead(0) * 4) + 1000;
-      break;
+    	rcData[THROTTLE] = (SerialRead(0) * 4) + 1000;
+    	rcData[ROLL]     = (SerialRead(0) * 4) + 1000;
+    	rcData[PITCH]    = (SerialRead(0) * 4) + 1000;
+    	rcData[YAW]      = (SerialRead(0) * 4) + 1000;
+    	rcData[AUX1]     = (SerialRead(0) * 4) + 1000;
+    	break;
     #endif
     #ifdef LCD_TELEMETRY
     case 'A': // button A press
     case '1':
-      if (telemetry==1) telemetry = 0; else { telemetry = 1; LCDclear(); }
-      break;    
+    	if (telemetry==1) telemetry = 0; else { telemetry = 1; LCDclear(); }
+    	break;
     case 'B': // button B press
     case '2':
-      if (telemetry==2) telemetry = 0; else { telemetry = 2; LCDclear(); }
-      break;    
+    	if (telemetry==2) telemetry = 0; else { telemetry = 2; LCDclear(); }
+    	break;
     case 'C': // button C press
     case '3':
-           if (telemetry==3) { telemetry = 0; 
-              #ifdef LOG_VALUES
-                 cycleTimeMax = 0; // reset min/max on transition on->off
-                 cycleTimeMin = 65535;
-              #endif
-           }else { telemetry = 3; LCDclear(); }
-      break;    
+    	if (telemetry==3) telemetry = 0; else { telemetry = 3; LCDclear();
+       #if defined(LOG_VALUES) && defined(DEBUG)
+    	cycleTimeMax = 0; // reset min/max on transition on->off
+    	cycleTimeMin = 65535;
+       #endif
+    	}
+    	break;
     case 'D': // button D press
     case '4':
-      if (telemetry==4) telemetry = 0; else { telemetry = 4; LCDclear(); }
-      break;
+    	if (telemetry==4) telemetry = 0; else { telemetry = 4; LCDclear(); }
+    	break;
     case '5':
-      if (telemetry==5) telemetry = 0; else { telemetry = 5; LCDclear(); }
-      break;
+    	if (telemetry==5) telemetry = 0; else { telemetry = 5; LCDclear(); }
+    	break;
     case '6':
-      {    
-          extern unsigned int __bss_end;
-          extern unsigned int __heap_start;
-          extern void *__brkval;
-          int free_memory;
-          if((int)__brkval == 0)
-            free_memory = ((int)&free_memory) - ((int)&__bss_end);
-          else
-            free_memory = ((int)&free_memory) - ((int)__brkval);
-          strcpy_P(line1,PSTR(" Free ----")); // uint8_t free_memory
-          line1[6] = '0' + free_memory / 1000 - (free_memory/10000) * 10;
-          line1[7] = '0' + free_memory / 100  - (free_memory/1000)  * 10;
-          line1[8] = '0' + free_memory / 10   - (free_memory/100)   * 10;
-          line1[9] = '0' + free_memory        - (free_memory/10)    * 10;
-          LCDprintChar(line1);
-          break;
+    	if (telemetry==6) telemetry = 0; else { telemetry = 6; LCDclear(); }
+    	break;
+    case '7':
+    	if (telemetry==7) telemetry = 0; else { telemetry = 7; LCDclear(); }
+    	break;
+     #if defined(LOG_VALUES) && defined(DEBUG)
+    case 'R':
+    	//Reset logvalues
+    	if (telemetry=='R') telemetry = 0; else { telemetry = 'R'; LCDclear(); }
+    	break;
+     #endif
+     #ifdef DEBUG
+    case 'F':
+      {
+    	if (telemetry=='F') telemetry = 0; else { telemetry = 'F'; LCDclear(); }
+    	break;
       }
+   #endif
     case 'a': // button A release
     case 'b': // button B release
     case 'c': // button C release
@@ -88,7 +89,7 @@ void serialCom() {
       for(i=0;i<3;i++) serialize16(magADC[i]);
       serialize16(EstAlt);
       serialize16(heading); // compass
-      for(i=0;i<4;i++) serialize16(servo[i]);
+      for(i=0;i<8;i++) serialize16(servo[i]);
       for(i=0;i<8;i++) serialize16(motor[i]);
       for(i=0;i<8;i++) serialize16(rcData[i]);
       serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3|GPSPRESENT<<4);
@@ -116,10 +117,10 @@ void serialCom() {
       serialize16(intPowerMeterSum);
       serialize16(intPowerTrigger1);
       serialize8(vbat);
-      serialize16(BaroAlt);        // 4 variables are here for general monitoring purpose
-      serialize16(i2c_errors_count);  // debug2
-      serialize16(annex650_overrun_count);// debug3
-      serialize16(debug1);             // debug4
+      serialize16(BaroAlt);            // 4 variables are here for general monitoring purpose
+      serialize16(i2c_errors_count);   // debug2
+      serialize16(debug3);             // debug3
+      serialize16(debug4);             // debug4
       serialize8('M');
       UartSendData();
       break;
