@@ -293,7 +293,7 @@ void ACC_Common() {
         accTrim[PITCH]  = 0;
         writeParams(); // write accZero in EEPROM
       }
-    #endif
+  #endif
   accADC[ROLL]  -=  accZero[ROLL] ;
   accADC[PITCH] -=  accZero[PITCH];
   accADC[YAW]   -=  accZero[YAW] ;
@@ -499,7 +499,7 @@ void i2c_MS561101BA_readCalibration(){
 void  Baro_init() {
   delay(10);
   i2c_MS561101BA_reset();
-  delay(10);
+  delay(100);
   i2c_MS561101BA_readCalibration();
 }
 
@@ -850,6 +850,9 @@ void Gyro_getADC () {
 // I2C Compass common function
 // ************************************************************************************************************
 #if MAG
+static float   magCal[3] = {1.0,1.0,1.0};  // gain for each axis, populated at sensor init
+static uint8_t magInit = 0;
+
 void Mag_getADC() {
   static uint32_t t,tCal = 0;
   static int16_t magZeroTempMin[3];
@@ -864,9 +867,15 @@ void Mag_getADC() {
     for(axis=0;axis<3;axis++) {magZero[axis] = 0;magZeroTempMin[axis] = 0; magZeroTempMax[axis] = 0;}
     calibratingM = 0;
   }
-  magADC[ROLL]  -= magZero[ROLL];
-  magADC[PITCH] -= magZero[PITCH];
-  magADC[YAW]   -= magZero[YAW];
+  magADC[ROLL]  = magADC[ROLL]  * magCal[ROLL];
+  magADC[PITCH] = magADC[PITCH] * magCal[PITCH];
+  magADC[YAW]   = magADC[YAW]   * magCal[YAW];
+  if (magInit) { // we apply offset only once mag calibration is done
+    magADC[ROLL]  -= magZero[ROLL];
+    magADC[PITCH] -= magZero[PITCH];
+    magADC[YAW]   -= magZero[YAW];
+  }
+ 
   if (tCal != 0) {
     if ((t - tCal) < 30000000) { // 30s: you have 30s to turn the multi in all directions
       LEDPIN_TOGGLE;
@@ -895,24 +904,50 @@ void Mag_getADC() {
   
   void Mag_init() { 
     delay(100);
-    i2c_writeReg(MAG_ADDRESS ,0x02 ,0x00 ); //register: Mode register  --  value: Continuous-Conversion Mode
+    // force positiveBias
+    i2c_writeReg(MAG_ADDRESS ,0x00 ,0x71 ); //Configuration Register A  -- 0 11 100 01  num samples: 8 ; output rate: 15Hz ; positive bias
+    delay(50);
+    // set gains for calibration
+    i2c_writeReg(MAG_ADDRESS ,0x01 ,0x60 ); //Configuration Register B  -- 011 00000    configuration gain 2.5Ga
+    i2c_writeReg(MAG_ADDRESS ,0x02 ,0x01 ); //Mode register             -- 000000 01    single Conversion Mode
+
+    // read values from the compass -  self test operation
+    // by placing the mode register into single-measurement mode (0x01), two data acquisition cycles will be made on each magnetic vector.
+    // The first acquisition values will be subtracted from the second acquisition, and the net measurement will be placed into the data output registers
+    delay(100);
+      getADC();
+    delay(10);
+    magCal[ROLL]  =   1000.0 / magADC[ROLL];
+    magCal[PITCH] =   1000.0 / magADC[PITCH];
+    magCal[YAW]   = - 1000.0 / magADC[YAW];
+
+    // leave test mode
+    i2c_writeReg(MAG_ADDRESS ,0x00 ,0x70 ); //Configuration Register A  -- 0 11 100 00  num samples: 8 ; output rate: 15Hz ; normal measurement mode
+    i2c_writeReg(MAG_ADDRESS ,0x01 ,0x20 ); //Configuration Register B  -- 001 00000    configuration gain 1.3Ga
+    i2c_writeReg(MAG_ADDRESS ,0x02 ,0x00 ); //Mode register             -- 000000 00    continuous Conversion Mode
+
+    magInit = 1;
   }
 
-  #if not defined(MPU6050_EN_I2C_BYPASS)
-    void Device_Mag_getADC() {
-      i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
-      #if defined(HMC5843)
-        MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
-                         ((rawADC[2]<<8) | rawADC[3]) ,
-                        -((rawADC[4]<<8) | rawADC[5]) );
-      #endif
-      #if defined (HMC5883)
-        MAG_ORIENTATION( ((rawADC[4]<<8) | rawADC[5]) ,
-                        -((rawADC[0]<<8) | rawADC[1]) ,
-                        -((rawADC[2]<<8) | rawADC[3]) );
-      #endif
-    }
+void getADC() {
+  i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
+  #if defined(HMC5843)
+    MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
+                     ((rawADC[2]<<8) | rawADC[3]) ,
+                    -((rawADC[4]<<8) | rawADC[5]) );
   #endif
+  #if defined (HMC5883)
+    MAG_ORIENTATION( ((rawADC[4]<<8) | rawADC[5]) ,
+                    -((rawADC[0]<<8) | rawADC[1]) ,
+                    -((rawADC[2]<<8) | rawADC[3]) );
+  #endif
+}
+
+#if not defined(MPU6050_EN_I2C_BYPASS)
+void Device_Mag_getADC() {
+  getADC();
+}
+#endif
 #endif
 
 // ************************************************************************************************************
@@ -928,6 +963,7 @@ void Mag_getADC() {
     delay(100);
     i2c_writeReg(MAG_ADDRESS,0x0a,0x01);  //Start the first conversion
     delay(100);
+    magInit = 1;
   }
   
   #if not defined(MPU6050_EN_I2C_BYPASS)

@@ -264,9 +264,9 @@ int32_t isq(int32_t x){return x * x;}
 
 #define UPDATE_INTERVAL 25000    // 40hz update rate (20hz LPF on acc)
 #define INIT_DELAY      4000000  // 4 sec initialization delay
-#define Kp1 5.5f                // PI observer velocity gain 
-#define Kp2 10.0f                 // PI observer position gain
-#define Ki  0.001f               // PI observer integral gain (bias cancellation)
+#define Kp1 5.5f                 // PI observer velocity gain 
+#define Kp2 10.0f                // PI observer position gain
+#define Ki  0.01f               // PI observer integral gain (bias cancellation)
 #define dt  (UPDATE_INTERVAL / 1000000.0f)
 
 void getEstimatedAltitude(){
@@ -276,10 +276,10 @@ void getEstimatedAltitude(){
   static uint32_t deadLine = INIT_DELAY;
   int16_t AltError;
   int16_t InstAcc;
-
-
   static int32_t tmpAlt;
-  static int16_t  EstVelocity=0;
+  static int16_t EstVelocity=0;
+  static uint32_t velTimer;
+  static int16_t lastAlt;
   
   if (currentTime < deadLine) return;
   deadLine = currentTime + UPDATE_INTERVAL; 
@@ -306,8 +306,14 @@ void getEstimatedAltitude(){
   // Integrators
   tmpAlt += EstVelocity*(dt*dt) + (Kp2 *dt) * AltError;
   EstVelocity += InstAcc + Kp1 * AltError;
-  EstVelocity = constrain(EstVelocity,-25000,+25000);
-  //EstVelocity *= 0.99;
-
+  EstVelocity = constrain(EstVelocity,-10000,+10000);
+  
   EstAlt = tmpAlt/10;
+
+  if (currentTime < velTimer) return;
+  velTimer = currentTime + 500000;
+  zVelocity = tmpAlt - lastAlt;
+  lastAlt = tmpAlt;
+
+debug4 = zVelocity;
 }

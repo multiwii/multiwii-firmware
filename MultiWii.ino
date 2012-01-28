@@ -72,6 +72,7 @@ static uint8_t  rcOptions1,rcOptions2;
 static int32_t  pressure;
 static int16_t  BaroAlt;
 static int16_t  EstAlt;             // in cm
+static int16_t  zVelocity;
 static uint8_t  buzzerState = 0;
 static int16_t  debug1,debug2,debug3,debug4;
   
@@ -139,7 +140,7 @@ static int8_t  smallAngle25 = 1;
 // *************************
 static int16_t axisPID[3];
 static int16_t motor[8];
-static int16_t servo[4] = {1500,1500,1500,1500};
+static int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1500};
 static uint16_t wing_left_mid  = WING_LEFT_MID; 
 static uint16_t wing_right_mid = WING_RIGHT_MID; 
 static uint16_t tri_yaw_middle = TRI_YAW_MIDDLE; 
@@ -147,7 +148,7 @@ static uint16_t tri_yaw_middle = TRI_YAW_MIDDLE;
 // **********************
 // EEPROM & LCD functions
 // **********************
-static uint8_t P8[8], I8[9], D8[8]; //8 bits is much faster and the code is much shorter
+static uint8_t P8[8], I8[8], D8[8]; //8 bits is much faster and the code is much shorter
 static uint8_t dynP8[3], dynI8[3], dynD8[3];
 static uint8_t rollPitchRate;
 static uint8_t yawRate;
@@ -393,13 +394,11 @@ void loop () {
   static int16_t delta1[3],delta2[3];
   static int16_t errorGyroI[3] = {0,0,0};
   static int16_t errorAngleI[2] = {0,0};
-
   static uint32_t rcTime  = 0;
   static int16_t initialThrottleHold;
   static int16_t errorAltitudeI = 0;
   int16_t AltPID = 0;
-  static int16_t lastVelError = 0;
-  static int32_t AltHold;
+  static int16_t AltHold;
  
   #if defined(SPEKTRUM)
     if (rcFrameComplete) computeRC();
@@ -555,8 +554,6 @@ void loop () {
           AltHold = EstAlt;
           initialThrottleHold = rcCommand[THROTTLE];
           errorAltitudeI = 0;
-          lastVelError = 0;
-//          EstVelocity = 0;
         }
       } else baroMode = 0;
     }
@@ -601,23 +598,31 @@ void loop () {
   if(BARO) {
     if (baroMode) {
       if (abs(rcCommand[THROTTLE]-initialThrottleHold)>20) {
-        baroMode = 0;
+        AltHold = EstAlt;
+        initialThrottleHold = rcCommand[THROTTLE];
         errorAltitudeI = 0;
       }
       //**** Alt. Set Point stabilization PID ****
-      error = constrain( AltHold - EstAlt, -100, 100); //  +/-10m,  1 decimeter accuracy
+      error = constrain( AltHold - EstAlt, -100, 100);   //  +/-10m,  1 decimeter accuracy
       errorAltitudeI += error;
-      errorAltitudeI = constrain(errorAltitudeI,-3000,3000);
+      errorAltitudeI = constrain(errorAltitudeI,-5000,5000);
       
-      PTerm = P8[PIDALT]*error/10;                     // 16 bits is ok here
-      ITerm = (int32_t)I8[PIDALT]*errorAltitudeI/4000;
+      PTerm = P8[PIDALT]*error/10;                       // 16 bits is ok here
+
+      if (abs(error)>5)                                  // under 50cm error, we neutralize Iterm 
+        ITerm = (int32_t)I8[PIDALT]*errorAltitudeI/4000;
+      else 
+        ITerm = 0;
       
       AltPID = PTerm + ITerm ;
       
+      //AltPID is reduced, depending of the zVelocity magnitude
+      AltPID = AltPID *(D8[PIDALT]-min(abs(zVelocity),D8[PIDALT]*4/5))/(D8[PIDALT]+1);
+      debug3 = AltPID;
+
       rcCommand[THROTTLE] = initialThrottleHold + constrain(AltPID ,-100,+100);
     }
   }
-
 
   #if defined(GPS)
     if ( (GPSModeHome == 1)) {
@@ -640,6 +645,7 @@ void loop () {
       #else  
         PTerm      = (int32_t)errorAngle*P8[PIDLEVEL]/100 ;                          //32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
       #endif
+      PTerm = constrain(PTerm,-D8[PIDLEVEL],+D8[PIDLEVEL]);
 
       errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);    //WindUp     //16 bits is ok here
       ITerm              = ((int32_t)errorAngleI[axis]*I8[PIDLEVEL])>>12;            //32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
@@ -677,10 +683,10 @@ void loop () {
     while (SerialAvailable(GPS_SERIAL)) {
      if (GPS_newFrame(SerialRead(GPS_SERIAL))) {
         if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;
-        if (GPS_fix == 1) {
+        if (GPS_fix == 1 && GPS_numSat == 4) {
           if (GPS_fix_home == 0) {
             GPS_fix_home = 1;
-            GPS_latitude_home = GPS_latitude;
+            GPS_latitude_home  = GPS_latitude;
             GPS_longitude_home = GPS_longitude;
           }
           GPS_distance(GPS_latitude_home,GPS_longitude_home,GPS_latitude,GPS_longitude, &GPS_distanceToHome, &GPS_directionToHome);

@@ -872,8 +872,3 @@ void lcd_telemetry() {
 } // end function
 #endif //  LCD_TELEMETRY
 
-
-
-
-
-

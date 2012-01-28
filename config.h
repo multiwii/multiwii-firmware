@@ -31,7 +31,7 @@
 //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
 
 //enable internal I2C pull ups
-//#define INTERNAL_I2C_PULLUPS
+#define INTERNAL_I2C_PULLUPS
 
 
 //****** advanced users settings   *************
@@ -43,7 +43,7 @@
 #define TRUSTED_ACCZ
 
 /* This will activate the ACC-Inflight calibration if unchecked */  
-#define InflightAccCalibration
+//#define InflightAccCalibration
 
 /* PIN A0 and A1 instead of PIN D5 & D6 for 6 motors config and promini config
    This mod allow the use of a standard receiver on a pro mini
@@ -113,7 +113,7 @@
 
 /* I2C accelerometer */
 //#define ADXL345
-#define BMA020
+//#define BMA020
 //#define BMA180
 //#define NUNCHACK  // if you want to use the nunckuk as a standalone I2C ACC without WMP
 //#define LIS3LV02
@@ -251,20 +251,20 @@
    comment this line only if you don't plan to used a LCD */
 #define LCD_CONF
 /* to include setting the aux switches for AUX1 and AUX2 via LCD */
-#define LCD_CONF_AUX_12
+//#define LCD_CONF_AUX_12
 /* to include setting the aux switches for AUX1, AUX2, AUX3 and AUX4 via LCD */
 //#define LCD_CONF_AUX_1234
 /* Use this to trigger LCD configuration without a TX - only for debugging - do NOT fly with this activated */
 //#define LCD_CONF_DEBUG
 
 /* choice of LCD attached for configuration and telemetry, see notes below */
-//#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
+#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
 /* serial (wired or wireless via BT etc.) */
 //#define LCD_TEXTSTAR    // Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
-//#define LCD_VT100		  // vt100 compatible terminal emulation (blueterm, putty, etc.) http://ascii-table.com/ansi-escape-sequences-vt-100.php
+//#define LCD_VT100		  // vt100 compatible terminal emulation (blueterm, putty, etc.)
 /* i2c devices */
 //#define LCD_ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
-#define LCD_LCD03       // LCD03, which is i2c
+//#define LCD_LCD03       // LCD03, which is i2c
 
 /* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
 #define LCD_MENU_PREV 'a'
@@ -380,12 +380,12 @@
 /* Buttons toggle request for page on/off */
 /* The active page on the LCD does get updated automatically */
 /* Easy to use with Terminal application or display like LCD - uses the 4 buttons are preconfigured to send 'A', 'B', 'C', 'D' */
-#define LCD_TELEMETRY
+//#define LCD_TELEMETRY
 /* to enable automatic hopping between a choice of telemetry pages uncomment this. */
 /* This may be useful if your LCD has no buttons or the sending is broken */
 /* hopping is activated and deactivated in unarmed mode with throttle=low & roll=left & pitch=forward */
 /* set it to the sequence of telemetry pages you want to see */
-#define LCD_TELEMETRY_AUTO "12345267" // pages 1 to 7 in ascending order
+//#define LCD_TELEMETRY_AUTO "12345267" // pages 1 to 7 in ascending order
 //#define LCD_TELEMETRY_AUTO  "2122324252627" // strong emphasis on page 2
 /* Use this to trigger telemetry without a TX - only for debugging - do NOT fly with this activated */
 //#define LCD_TELEMETRY_DEBUG  //This form rolls between all screens, LCD_TELEMETRY_AUTO must also be defined.
@@ -399,7 +399,7 @@
 /* to log values like max loop time and others to come */
 /* logging values are visible via LCD config */
 /* set to 2, if you want powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> PM_SOFT) */
-#define LOG_VALUES 1
+//#define LOG_VALUES 1
 
 /* to add debugging code */
 /* not needed and not recommended for normal operation */

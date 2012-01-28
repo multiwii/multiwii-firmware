@@ -22,7 +22,7 @@ void serialCom() {
   
   if (SerialAvailable(0)) {
     switch (SerialRead(0)) {
-   #ifdef BTSERIAL
+    #ifdef BTSERIAL
     case 'K': //receive RC data from Bluetooth Serial adapter as a remote
     	rcData[THROTTLE] = (SerialRead(0) * 4) + 1000;
     	rcData[ROLL]     = (SerialRead(0) * 4) + 1000;
@@ -30,8 +30,8 @@ void serialCom() {
     	rcData[YAW]      = (SerialRead(0) * 4) + 1000;
     	rcData[AUX1]     = (SerialRead(0) * 4) + 1000;
     	break;
-   #endif
-   #ifdef LCD_TELEMETRY
+    #endif
+    #ifdef LCD_TELEMETRY
     case 'A': // button A press
     case '1':
     	if (telemetry==1) telemetry = 0; else { telemetry = 1; LCDclear(); }
@@ -62,18 +62,18 @@ void serialCom() {
     case '7':
     	if (telemetry==7) telemetry = 0; else { telemetry = 7; LCDclear(); }
     	break;
-   #if defined(LOG_VALUES) && defined(DEBUG)
+     #if defined(LOG_VALUES) && defined(DEBUG)
     case 'R':
     	//Reset logvalues
     	if (telemetry=='R') telemetry = 0; else { telemetry = 'R'; LCDclear(); }
     	break;
-   #endif
-   #ifdef DEBUG
+     #endif
+     #ifdef DEBUG
     case 'F':
-    {
+      {
     	if (telemetry=='F') telemetry = 0; else { telemetry = 'F'; LCDclear(); }
     	break;
-    }
+      }
    #endif
     case 'a': // button A release
     case 'b': // button B release
@@ -89,7 +89,7 @@ void serialCom() {
       for(i=0;i<3;i++) serialize16(magADC[i]);
       serialize16(EstAlt);
       serialize16(heading); // compass
-      for(i=0;i<4;i++) serialize16(servo[i]);
+      for(i=0;i<8;i++) serialize16(servo[i]);
       for(i=0;i<8;i++) serialize16(motor[i]);
       for(i=0;i<8;i++) serialize16(rcData[i]);
       serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3|GPSPRESENT<<4);
@@ -117,10 +117,10 @@ void serialCom() {
       serialize16(intPowerMeterSum);
       serialize16(intPowerTrigger1);
       serialize8(vbat);
-      serialize16(BaroAlt);        // 4 variables are here for general monitoring purpose
-      serialize16(i2c_errors_count);  // debug2
-      serialize16(annex650_overrun_count);// debug3
-      serialize16(armed);             // debug4
+      serialize16(BaroAlt);            // 4 variables are here for general monitoring purpose
+      serialize16(i2c_errors_count);   // debug2
+      serialize16(debug3);             // debug3
+      serialize16(debug4);             // debug4
       serialize8('M');
       UartSendData();
       break;
