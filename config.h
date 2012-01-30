@@ -14,7 +14,7 @@
 //#define BI
 //#define TRI
 //#define QUADP
-#define QUADX
+//#define QUADX
 //#define Y4
 //#define Y6
 //#define HEX6
@@ -23,6 +23,7 @@
 //#define OCTOFLATP
 //#define OCTOFLATX
 //#define FLYING_WING //experimental
+#define VTAIL4
 
 #define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
 //#define YAW_DIRECTION -1
@@ -68,8 +69,9 @@
    the GPS must be configured to output NMEA sentences (which is generally the default conf for most GPS devices)
 */
 //#define GPS
-#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
-#define GPS_BAUD   115200
+#define GPS_SERIAL 3 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
+//#define GPS_BAUD   115200
+#define GPS_BAUD   57600
 //#define GPS_BAUD   9600
 
 /* Pseudo-derivative conrtroller for level mode (experimental)

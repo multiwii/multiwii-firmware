@@ -19,7 +19,7 @@
   #define NUMBER_MOTOR 3
   #define PRI_SERVO_FROM   5 // use only servo 5
   #define PRI_SERVO_TO     5
-#elif defined(QUADP) || defined(QUADX) || defined(Y4)
+#elif defined(QUADP) || defined(QUADX) || defined(Y4)|| defined(VTAIL4)
   #define NUMBER_MOTOR 4
 #elif defined(Y6) || defined(HEX6) || defined(HEX6X)
   #define NUMBER_MOTOR 6
@@ -474,7 +474,7 @@ void mixTable() {
     motor[0] = PIDMIX( 0,+4/3, 0); //REAR
     motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
     motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
-    servo[4] = constrain(TRI_YAW_MIDDLE + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
+    servo[4] = constrain(tri_yaw_middle + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
   #endif
   #ifdef QUADP
     motor[0] = PIDMIX( 0,+1,-1); //REAR
@@ -548,7 +548,12 @@ void mixTable() {
     motor[6] = PIDMIX(-1/2,+1  ,-1); //REAR_R
     motor[7] = PIDMIX(+1  ,+1/2,-1); //MIDREAR_L 
   #endif
-
+  #ifdef VTAIL4
+    motor[0] = PIDMIX(+0,+1, -1/2);      //REAR_R 
+    motor[1] = PIDMIX(-1, -1, +2/10); //FRONT_R 
+    motor[2] = PIDMIX(+0,+1, +1/2);      //REAR_L 
+    motor[3] = PIDMIX(+1, -1, -2/10); //FRONT_L
+  #endif
   #ifdef SERVO_TILT
     if ((rcOptions1 & activate1[BOXCAMSTAB]) || (rcOptions2 & activate2[BOXCAMSTAB])) {
       servo[0] = constrain(TILT_PITCH_MIDDLE + TILT_PITCH_PROP * angle[PITCH] /16 + rcData[AUX3]-1500 , TILT_PITCH_MIN, TILT_PITCH_MAX);

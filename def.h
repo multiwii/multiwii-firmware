@@ -457,6 +457,8 @@
   #define MULTITYPE 11      //the GUI is the same for all 8 motor configs
 #elif defined(OCTOFLATX)
   #define MULTITYPE 11      //the GUI is the same for all 8 motor configs
+#elif defined(VTAIL4)
+ #define MULTITYPE 15
 #endif
 
 #if defined(POWERMETER_HARD) || defined(POWERMETER_SOFT)
