@@ -133,19 +133,15 @@ void writeMotors() { // [1000;2000] => [125;250]
       #endif
     #endif
     #if (NUMBER_MOTOR > 4)
-//      atomicPWM_PIN5_highState = ((motor[5]-1000)/4.08)+5;
-      atomicPWM_PIN5_highState = motor[5]/8;
+      atomicPWM_PIN5_highState = ((motor[5]-1000)/4.08)+5;
       atomicPWM_PIN5_lowState = 255-atomicPWM_PIN5_highState;
-//      atomicPWM_PIN6_highState = ((motor[4]-1000)/4.08)+5;
-      atomicPWM_PIN6_highState = motor[4]/8;
+      atomicPWM_PIN6_highState = ((motor[4]-1000)/4.08)+5;
       atomicPWM_PIN6_lowState = 255-atomicPWM_PIN6_highState;
     #endif
     #if (NUMBER_MOTOR > 6)
-//      atomicPWM_PINA2_highState = ((motor[6]-1000)/4.08)+5;
-      atomicPWM_PINA2_highState = motor[6]/8;
+      atomicPWM_PINA2_highState = ((motor[6]-1000)/4.08)+5;
       atomicPWM_PINA2_lowState = 255-atomicPWM_PINA2_highState;
-//      atomicPWM_PIN12_highState = ((motor[7]-1000)/4.08)+5;
-      atomicPWM_PIN12_highState = motor[7]/8;
+      atomicPWM_PIN12_highState = ((motor[7]-1000)/4.08)+5;
       atomicPWM_PIN12_lowState = 255-atomicPWM_PIN12_highState;
     #endif
   #endif
@@ -569,15 +565,13 @@ void mixTable() {
     servo[1] = constrain(TILT_ROLL_MIDDLE + TILT_ROLL_PROP   * angle[ROLL]  /16 + rcCommand[ROLL], TILT_ROLL_MIN, TILT_ROLL_MAX);
   #endif
   #ifdef FLYING_WING
-   motor[0] = rcCommand[THROTTLE];
-    //if (passthroughMode) {// use raw stick values to drive output 
-    // follow aux1 as being three way switch **NOTE: better to implement via check boxes in GUI 
-    if (rcData[AUX1]<1300) { // passthrough
-       servo[0]  = constrain(WING_LEFT_MID  + PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC), WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
-       servo[1]  = constrain(WING_RIGHT_MID + PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC), WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+    motor[0] = rcCommand[THROTTLE];
+    if (passThruMode) {// use raw stick values to drive output 
+       servo[0]  = constrain(wing_left_mid  + PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC), WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
+       servo[1]  = constrain(wing_right_mid + PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC), WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
     } else { // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration
-       servo[0]  = constrain(WING_LEFT_MID  + PITCH_DIRECTION_L * axisPID[PITCH]        + ROLL_DIRECTION_L * axisPID[ROLL], WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
-       servo[1]  = constrain(WING_RIGHT_MID + PITCH_DIRECTION_R * axisPID[PITCH]        + ROLL_DIRECTION_R * axisPID[ROLL], WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+       servo[0]  = constrain(wing_left_mid  + PITCH_DIRECTION_L * axisPID[PITCH]        + ROLL_DIRECTION_L * axisPID[ROLL], WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
+       servo[1]  = constrain(wing_right_mid + PITCH_DIRECTION_R * axisPID[PITCH]        + ROLL_DIRECTION_R * axisPID[ROLL], WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
     }
   #endif
   #if defined(CAMTRIG)
