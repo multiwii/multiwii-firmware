@@ -1,51 +1,4 @@
 
-#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(CAMTRIG)
-  #define SERVO
-#endif
-
-#if defined(GIMBAL)
-  #define NUMBER_MOTOR 0
-  #define PRI_SERVO_FROM   1 // use servo from 1 to 2
-  #define PRI_SERVO_TO     2
-#elif defined(FLYING_WING)
-  #define NUMBER_MOTOR 1
-  #define PRI_SERVO_FROM   1 // use servo from 1 to 2
-  #define PRI_SERVO_TO     2
-#elif defined(BI)
-  #define NUMBER_MOTOR 2
-  #define PRI_SERVO_FROM   5 // use servo from 5 to 6
-  #define PRI_SERVO_TO     6
-#elif defined(TRI)
-  #define NUMBER_MOTOR 3
-  #define PRI_SERVO_FROM   5 // use only servo 5
-  #define PRI_SERVO_TO     5
-#elif defined(QUADP) || defined(QUADX) || defined(Y4)|| defined(VTAIL4)
-  #define NUMBER_MOTOR 4
-#elif defined(Y6) || defined(HEX6) || defined(HEX6X)
-  #define NUMBER_MOTOR 6
-#elif defined(OCTOX8) || defined(OCTOFLATP) || defined(OCTOFLATX)
-  #define NUMBER_MOTOR 8
-#endif
-
-#if defined(SERVO_TILT) && defined(CAMTRIG)
-  #define SEC_SERVO_FROM   1 // use servo from 1 to 3
-  #define SEC_SERVO_TO     3
-#else
-  #if defined(SERVO_TILT)
-    // if A0 and A1 is taken by motors, we can use A2 and 12 for Servo tilt
-    #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
-      #define SEC_SERVO_FROM   3 // use servo from 3 to 4
-      #define SEC_SERVO_TO     4    
-    #else
-      #define SEC_SERVO_FROM   1 // use servo from 1 to 2
-      #define SEC_SERVO_TO     2
-    #endif
-  #endif
-  #if defined(CAMTRIG)
-    #define SEC_SERVO_FROM   3 // use servo 3
-    #define SEC_SERVO_TO     3
-  #endif
-#endif
 
 
 uint8_t PWM_PIN[8] = {MOTOR_ORDER};
@@ -133,16 +86,16 @@ void writeMotors() { // [1000;2000] => [125;250]
       #endif
     #endif
     #if (NUMBER_MOTOR > 4)
-      atomicPWM_PIN5_highState = ((motor[5]-1000)/4.08)+5;
-      atomicPWM_PIN5_lowState = 255-atomicPWM_PIN5_highState;
-      atomicPWM_PIN6_highState = ((motor[4]-1000)/4.08)+5;
-      atomicPWM_PIN6_lowState = 255-atomicPWM_PIN6_highState;
-    #endif
-    #if (NUMBER_MOTOR > 6)
-      atomicPWM_PINA2_highState = ((motor[6]-1000)/4.08)+5;
-      atomicPWM_PINA2_lowState = 255-atomicPWM_PINA2_highState;
-      atomicPWM_PIN12_highState = ((motor[7]-1000)/4.08)+5;
-      atomicPWM_PIN12_lowState = 255-atomicPWM_PIN12_highState;
+        atomicPWM_PIN5_highState = ((motor[5]-1000)/4.08)+5;
+        atomicPWM_PIN5_lowState = 255-atomicPWM_PIN5_highState;
+        atomicPWM_PIN6_highState = ((motor[4]-1000)/4.08)+5;
+        atomicPWM_PIN6_lowState = 255-atomicPWM_PIN6_highState;
+      #endif
+      #if (NUMBER_MOTOR > 6)
+        atomicPWM_PINA2_highState = ((motor[6]-1000)/4.08)+5;
+        atomicPWM_PINA2_lowState = 255-atomicPWM_PINA2_highState;
+        atomicPWM_PIN12_highState = ((motor[7]-1000)/4.08)+5;
+        atomicPWM_PIN12_lowState = 255-atomicPWM_PIN12_highState;
     #endif
   #endif
 }
@@ -571,7 +524,7 @@ void mixTable() {
   #endif
   #ifdef FLYING_WING
     motor[0] = rcCommand[THROTTLE];
-    if (passThruMode) {// use raw stick values to drive output 
+    if (passThruMode) {// do not use sensors for correction, simple 2 channel mixing
        servo[0]  = constrain(wing_left_mid  + PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC), WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
        servo[1]  = constrain(wing_right_mid + PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC), WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
     } else { // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration
@@ -632,7 +585,7 @@ void mixTable() {
                                      44507,46890,49358,51910,54549,57276,60093,63000};
   
     if (vbat) { // by all means - must avoid division by zero 
-      for (uint8_t i =0;i<NUMBER_MOTOR;i++) {
+      for (i =0;i<NUMBER_MOTOR;i++) {
         amp = amperes[ ((motor[i] - 1000)>>4) ] / vbat; // range mapped from [1000:2000] => [0:1000]; then break that up into 64 ranges; lookup amp
   	  #if (LOG_VALUES == 2)
            pMeter[i]+= amp; // sum up over time the mapped ESC input 
