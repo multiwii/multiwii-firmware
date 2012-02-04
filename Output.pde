@@ -1,4 +1,50 @@
+#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(CAMTRIG)
+  #define SERVO
+#endif
 
+#if defined(GIMBAL)
+  #define NUMBER_MOTOR 0
+  #define PRI_SERVO_FROM   1 // use servo from 1 to 2
+  #define PRI_SERVO_TO     2
+#elif defined(FLYING_WING)
+  #define NUMBER_MOTOR 1
+  #define PRI_SERVO_FROM   1 // use servo from 1 to 2
+  #define PRI_SERVO_TO     2
+#elif defined(BI)
+  #define NUMBER_MOTOR 2
+  #define PRI_SERVO_FROM   5 // use servo from 5 to 6
+  #define PRI_SERVO_TO     6
+#elif defined(TRI)
+  #define NUMBER_MOTOR 3
+  #define PRI_SERVO_FROM   5 // use only servo 5
+  #define PRI_SERVO_TO     5
+#elif defined(QUADP) || defined(QUADX) || defined(Y4) || defined(VTAIL4)
+  #define NUMBER_MOTOR 4
+#elif defined(Y6) || defined(HEX6) || defined(HEX6X)
+  #define NUMBER_MOTOR 6
+#elif defined(OCTOX8) || defined(OCTOFLATP) || defined(OCTOFLATX)
+  #define NUMBER_MOTOR 8
+#endif
+
+#if defined(SERVO_TILT) && defined(CAMTRIG)
+  #define SEC_SERVO_FROM   1 // use servo from 1 to 3
+  #define SEC_SERVO_TO     3
+#else
+  #if defined(SERVO_TILT)
+    // if A0 and A1 is taken by motors, we can use A2 and 12 for Servo tilt
+    #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
+      #define SEC_SERVO_FROM   3 // use servo from 3 to 4
+      #define SEC_SERVO_TO     4    
+    #else
+      #define SEC_SERVO_FROM   1 // use servo from 1 to 2
+      #define SEC_SERVO_TO     2
+    #endif
+  #endif
+  #if defined(CAMTRIG)
+    #define SEC_SERVO_FROM   3 // use servo 3
+    #define SEC_SERVO_TO     3
+  #endif
+#endif
 
 
 uint8_t PWM_PIN[8] = {MOTOR_ORDER};
