@@ -91,6 +91,7 @@ static uint16_t InflightcalibratingA = 0;
 static int16_t AccInflightCalibrationArmed;
 static uint16_t AccInflightCalibrationMeasurementDone = 0;
 static uint16_t AccInflightCalibrationSavetoEEProm = 0;
+static uint16_t AccInflightCalibrationActive = 0;
 
 // **********************
 // power meter
@@ -519,12 +520,10 @@ void loop () {
         AccInflightCalibrationArmed = 0;  
       }  
       if ((rcOptions1 & activate1[BOXPASSTHRU]) || (rcOptions2 & activate2[BOXPASSTHRU])) {      //Use the Passthru Option to activate : Passthru = TRUE Meausrement started, Land and passtrhu = 0 measurement stored
-        if (!AccInflightCalibrationArmed){
-          AccInflightCalibrationArmed = 1;
+        if (!AccInflightCalibrationActive && !AccInflightCalibrationMeasurementDone){
           InflightcalibratingA = 50;
         }
       }else if(AccInflightCalibrationMeasurementDone && armed == 0){
-        AccInflightCalibrationArmed = 0;
         AccInflightCalibrationMeasurementDone = 0;
         AccInflightCalibrationSavetoEEProm = 1;
       }
