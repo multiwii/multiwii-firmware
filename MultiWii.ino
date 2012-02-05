@@ -91,6 +91,7 @@ static uint16_t InflightcalibratingA = 0;
 static int16_t AccInflightCalibrationArmed;
 static uint16_t AccInflightCalibrationMeasurementDone = 0;
 static uint16_t AccInflightCalibrationSavetoEEProm = 0;
+static uint16_t AccInflightCalibrationActive = 0;
 
 // **********************
 // power meter
@@ -379,8 +380,6 @@ void setup() {
   #ifdef LCD_CONF_DEBUG
     configurationLoop();
   #endif
-  
-
 }
 
 // ******** Main Loop *********
@@ -519,12 +518,10 @@ void loop () {
         AccInflightCalibrationArmed = 0;  
       }  
       if ((rcOptions1 & activate1[BOXPASSTHRU]) || (rcOptions2 & activate2[BOXPASSTHRU])) {      //Use the Passthru Option to activate : Passthru = TRUE Meausrement started, Land and passtrhu = 0 measurement stored
-        if (!AccInflightCalibrationArmed){
-          AccInflightCalibrationArmed = 1;
+        if (!AccInflightCalibrationActive && !AccInflightCalibrationMeasurementDone){
           InflightcalibratingA = 50;
         }
       }else if(AccInflightCalibrationMeasurementDone && armed == 0){
-        AccInflightCalibrationArmed = 0;
         AccInflightCalibrationMeasurementDone = 0;
         AccInflightCalibrationSavetoEEProm = 1;
       }
@@ -545,7 +542,7 @@ void loop () {
     } else accMode = 0;  // modified by MIS for failsave support
 
     if ((rcOptions1 & activate1[BOXARM]) == 0 || (rcOptions2 & activate2[BOXARM]) == 0) okToArm = 1;
-    if (accMode == 1) STABLEPIN_ON else STABLEPIN_OFF;
+    if (accMode == 1) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
 
     if(BARO) {
       if ((rcOptions1 & activate1[BOXBARO]) || (rcOptions2 & activate2[BOXBARO])) {
@@ -645,9 +642,11 @@ void loop () {
       #else  
         PTerm      = (int32_t)errorAngle*P8[PIDLEVEL]/100 ;                          //32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
       #endif
-      PTerm = constrain(PTerm,-D8[PIDLEVEL],+D8[PIDLEVEL]);
+      PTerm = constrain(PTerm,-D8[PIDLEVEL]*5,+D8[PIDLEVEL]*5);
 
       errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);    //WindUp     //16 bits is ok here
+      if (errorAngle>0 && errorAngleI[axis]>0 ) errorAngleI[axis] = 0;               //To prevent Windup exaggerating overshoot
+      if (errorAngle<0 && errorAngleI[axis]<0 ) errorAngleI[axis] = 0;               //To prevent Windup exaggerating overshoot
       ITerm              = ((int32_t)errorAngleI[axis]*I8[PIDLEVEL])>>12;            //32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
     } else { //ACRO MODE or YAW axis
       if (abs(rcCommand[axis])<350) error =          rcCommand[axis]*10*8/P8[axis] ; //16 bits is needed for calculation: 350*10*8 = 28000      16 bits is ok for result if P8>2 (P>0.2)

@@ -10,13 +10,27 @@
   #define LEDPIN_TOGGLE              PINB |= 1<<5;     //switch LEDPIN state (digital PIN 13)
   #define LEDPIN_OFF                 PORTB &= ~(1<<5);
   #define LEDPIN_ON                  PORTB |= (1<<5);
-  #define BUZZERPIN_PINMODE          pinMode (8, OUTPUT);
-  #define BUZZERPIN_ON               PORTB |= 1;
-  #define BUZZERPIN_OFF              PORTB &= ~1;
-  #define POWERPIN_PINMODE           pinMode (12, OUTPUT);
-  #define POWERPIN_ON                PORTB |= 1<<4;
-  #define POWERPIN_OFF               PORTB &= ~(1<<4); //switch OFF WMP, digital PIN 12
-  #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5;   // PIN A4&A5 (SDA&SCL)
+  #if !defined(RCAUXPIN8)
+    #define BUZZERPIN_PINMODE          pinMode (8, OUTPUT);
+    #define BUZZERPIN_ON               PORTB |= 1;
+    #define BUZZERPIN_OFF              PORTB &= ~1;
+  #else
+    #define BUZZERPIN_PINMODE          ;
+    #define BUZZERPIN_ON               ;
+    #define BUZZERPIN_OFF              ;
+    #define RCAUXPIN
+  #endif
+  #if !defined(RCAUXPIN12)
+    #define POWERPIN_PINMODE           pinMode (12, OUTPUT);
+    #define POWERPIN_ON                PORTB |= 1<<4;
+    #define POWERPIN_OFF               PORTB &= ~(1<<4); //switch OFF WMP, digital PIN 12
+    #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5;   // PIN A4&A5 (SDA&SCL)
+  #else
+    #define POWERPIN_PINMODE           ;
+    #define POWERPIN_ON                ;
+    #define POWERPIN_OFF               ;
+    #define RCAUXPIN
+  #endif
   #define I2C_PULLUPS_DISABLE        PORTC &= ~(1<<4); PORTC &= ~(1<<5);
   #define PINMODE_LCD                pinMode(0, OUTPUT);
   #define LCDPIN_OFF                 PORTD &= ~1;
@@ -386,7 +400,7 @@
   #define ITG3200_ADDRESS 0XD2
 #endif
 
-#if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(ADCACC) || defined(LSM303DLx_ACC) || defined(MPU6050)
+#if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LSM303DLx_ACC) || defined(MPU6050)
   #define ACC 1
 #else
   #define ACC 0
@@ -416,21 +430,6 @@
   #define GPSPRESENT 0
 #endif
 
-
-#if defined(RCAUXPIN8)
-  #define BUZZERPIN_PINMODE          ;
-  #define BUZZERPIN_ON               ;
-  #define BUZZERPIN_OFF              ;
-  #define RCAUXPIN
-#endif
-#if defined(RCAUXPIN12)
-  #define POWERPIN_PINMODE           ;
-  #define POWERPIN_ON                ;
-  #define POWERPIN_OFF               ;
-  #define RCAUXPIN
-#endif
-
-
 #if defined(TRI)
   #define MULTITYPE 1
 #elif defined(QUADP)
@@ -457,10 +456,62 @@
   #define MULTITYPE 11      //the GUI is the same for all 8 motor configs
 #elif defined(OCTOFLATX)
   #define MULTITYPE 11      //the GUI is the same for all 8 motor configs
+#elif defined(VTAIL4)
+ #define MULTITYPE 15
 #endif
 
 #if defined(POWERMETER_HARD) || defined(POWERMETER_SOFT)
   #define POWERMETER
+#endif
+
+/* motor and servo numbers */
+
+#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(CAMTRIG)
+  #define SERVO
+#endif
+
+#if defined(GIMBAL)
+  #define NUMBER_MOTOR 0
+  #define PRI_SERVO_FROM   1 // use servo from 1 to 2
+  #define PRI_SERVO_TO     2
+#elif defined(FLYING_WING)
+  #define NUMBER_MOTOR 1
+  #define PRI_SERVO_FROM   1 // use servo from 1 to 2
+  #define PRI_SERVO_TO     2
+#elif defined(BI)
+  #define NUMBER_MOTOR 2
+  #define PRI_SERVO_FROM   5 // use servo from 5 to 6
+  #define PRI_SERVO_TO     6
+#elif defined(TRI)
+  #define NUMBER_MOTOR 3
+  #define PRI_SERVO_FROM   5 // use only servo 5
+  #define PRI_SERVO_TO     5
+#elif defined(QUADP) || defined(QUADX) || defined(Y4)|| defined(VTAIL4)
+  #define NUMBER_MOTOR 4
+#elif defined(Y6) || defined(HEX6) || defined(HEX6X)
+  #define NUMBER_MOTOR 6
+#elif defined(OCTOX8) || defined(OCTOFLATP) || defined(OCTOFLATX)
+  #define NUMBER_MOTOR 8
+#endif
+
+#if defined(SERVO_TILT) && defined(CAMTRIG)
+  #define SEC_SERVO_FROM   1 // use servo from 1 to 3
+  #define SEC_SERVO_TO     3
+#else
+  #if defined(SERVO_TILT)
+    // if A0 and A1 is taken by motors, we can use A2 and 12 for Servo tilt
+    #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
+      #define SEC_SERVO_FROM   3 // use servo from 3 to 4
+      #define SEC_SERVO_TO     4
+    #else
+      #define SEC_SERVO_FROM   1 // use servo from 1 to 2
+      #define SEC_SERVO_TO     2
+    #endif
+  #endif
+  #if defined(CAMTRIG)
+    #define SEC_SERVO_FROM   3 // use servo 3
+    #define SEC_SERVO_TO     3
+  #endif
 #endif
 
 /**************************/

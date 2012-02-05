@@ -141,7 +141,7 @@ typedef union {
 } t_fp_vector;
 
 int16_t _atan2(float y, float x){
-  #define fp_is_neg(val) ((((byte*)&val)[3] & 0x80) != 0)
+  #define fp_is_neg(val) ((((uint8_t*)&val)[3] & 0x80) != 0)
   float z = y / x;
   int16_t zi = abs(int16_t(z * 100)); 
   int8_t y_neg = fp_is_neg(y);
@@ -228,7 +228,7 @@ void getEstimatedAttitude(){
   if ( ( 36 < accMag && accMag < 196 ) || smallAngle25 )
     for (axis = 0; axis < 3; axis++) {
       int16_t acc = ACC_VALUE;
-      #if not defined(TRUSTED_ACCZ)
+      #if !defined(TRUSTED_ACCZ)
         if (smallAngle25 && axis == YAW)
           //We consider ACCZ = acc_1G when the acc on other axis is small.
           //It's a tweak to deal with some configs where ACC_Z tends to a value < acc_1G when high throttle is applied.

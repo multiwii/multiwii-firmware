@@ -17,7 +17,6 @@ void UartSendData() {         // Data transmission acivated when the ring is not
 }
 
 void serialCom() {
-  int16_t a;
   uint8_t i;
   
   if (SerialAvailable(0)) {
@@ -62,6 +61,9 @@ void serialCom() {
     case '7':
     	if (telemetry==7) telemetry = 0; else { telemetry = 7; LCDclear(); }
     	break;
+    case '9':
+     	if (telemetry==9) telemetry = 0; else { telemetry = 9; LCDclear(); }
+     	break;
      #if defined(LOG_VALUES) && defined(DEBUG)
     case 'R':
     	//Reset logvalues
@@ -108,7 +110,10 @@ void serialCom() {
       serialize8(rollPitchRate);
       serialize8(yawRate);
       serialize8(dynThrPID);
-      for(i=0;i<CHECKBOXITEMS;i++) {serialize8(activate1[i]);serialize8(activate2[i]);}
+      for(i=0;i<CHECKBOXITEMS;i++) {
+    	  serialize8(activate1[i]);
+    	  serialize8(activate2[i] | ( ( (rcOptions1 & activate1[i]) || (rcOptions2 & activate2[i]) )<<7) ); // use highest bit to transport state in mwc
+      }
       serialize16(GPS_distanceToHome);
       serialize16(GPS_directionToHome);
       serialize8(GPS_numSat);

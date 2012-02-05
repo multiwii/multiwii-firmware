@@ -13,6 +13,10 @@
 #endif
 
 /*** I2C address ***/
+#if !defined(MMA7455_ADDRESS)
+  #define MMA7455_ADDRESS 0x3A
+#endif
+
 #if !defined(ADXL345_ADDRESS) 
   #define ADXL345_ADDRESS 0x3A
   //#define ADXL345_ADDRESS 0xA6   //WARNING: Conflicts with a Wii Motion plus!
@@ -272,6 +276,7 @@ void ACC_Common() {
         }
         //all values are measured
         if (InflightcalibratingA == 1) {
+          AccInflightCalibrationActive = 0;
           AccInflightCalibrationMeasurementDone = 1;
           blinkLED(10,10,2);      //buzzer for indicatiing the start inflight
         // recover saved values to maintain current flight behavior until new values are transferred
@@ -485,11 +490,12 @@ void i2c_MS561101BA_reset(){
 
 void i2c_MS561101BA_readCalibration(){
   union {uint16_t val; uint8_t raw[2]; } data;
-  delay(10);
   for(uint8_t i=0;i<6;i++) {
     i2c_rep_start(MS561101BA_ADDRESS + 0);
     i2c_write(0xA2+2*i);
+    delay(10);
     i2c_rep_start(MS561101BA_ADDRESS + 1);//I2C read direction => 1
+    delay(10);
     data.raw[1] = i2c_readAck();  // read a 16 bit register
     data.raw[0] = i2c_readNak();
     ms561101ba_ctx.c[i+1] = data.val;
@@ -571,6 +577,26 @@ void Baro_update() {
 }
 #endif
 
+// ************************************************************************************************************
+// I2C Accelerometer MMA7455 
+// ************************************************************************************************************
+#if defined(MMA7455)
+void ACC_init () {
+  delay(10);
+  i2c_writeReg(MMA7455_ADDRESS,0x16,0x21);
+  acc_1G = 64;
+}
+
+void ACC_getADC () {
+  TWBR = ((16000000L / 400000L) - 16) / 2;
+  i2c_getSixRawADC(MMA7455_ADDRESS,0x00);
+
+  ACC_ORIENTATION(   ((int8_t(rawADC[3])<<8) | int8_t(rawADC[2])) ,
+                    -((int8_t(rawADC[1])<<8) | int8_t(rawADC[0])) ,
+                     ((int8_t(rawADC[5])<<8) | int8_t(rawADC[4])) );
+  ACC_Common();
+}
+#endif
 
 // ************************************************************************************************************
 // I2C Accelerometer ADXL345 
@@ -917,9 +943,9 @@ void Mag_getADC() {
     delay(100);
       getADC();
     delay(10);
-    magCal[ROLL]  =   1000.0 / magADC[ROLL];
-    magCal[PITCH] =   1000.0 / magADC[PITCH];
-    magCal[YAW]   = - 1000.0 / magADC[YAW];
+    magCal[ROLL]  =  1000.0 / abs(magADC[ROLL]);
+    magCal[PITCH] =  1000.0 / abs(magADC[PITCH]);
+    magCal[YAW]   =  1000.0 / abs(magADC[YAW]);
 
     // leave test mode
     i2c_writeReg(MAG_ADDRESS ,0x00 ,0x70 ); //Configuration Register A  -- 0 11 100 00  num samples: 8 ; output rate: 15Hz ; normal measurement mode

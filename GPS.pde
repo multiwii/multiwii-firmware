@@ -33,7 +33,8 @@ uint32_t GPS_coord_to_degrees(char* s) {
     if (*p == '.') d=p;
   }
   m=10000;
-  min = *--d-'0' + (*--d-'0')*10;
+  min = *--d-'0';
+  min += (*--d-'0')*10;
   sec = (m*min+dec)/6;
   while (d != s) { m*=10; *--d-='0'; sec+=*d*m; }
   return sec ;

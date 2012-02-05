@@ -22,7 +22,8 @@
 //#define OCTOX8
 //#define OCTOFLATP
 //#define OCTOFLATX
-//#define FLYING_WING //experimental
+//#define FLYING_WING
+//#define VTAIL4
 
 #define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
 //#define YAW_DIRECTION -1
@@ -85,7 +86,7 @@
      Note from Alex: I only own some boards
                      for other boards, I'm not sure, the info was gathered via rc forums, be cautious */
 //#define FFIMUv1         // first 9DOF+baro board from Jussi, with HMC5843                   <- confirmed by Alex
-//#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883       <- confirmed by Alex
+#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883       <- confirmed by Alex
 //#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
 //#define FREEIMUv03      // FreeIMU v0.3 and v0.3.1
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
@@ -112,6 +113,7 @@
 //#define L3G4200D
 
 /* I2C accelerometer */
+//#define MMA745
 //#define ADXL345
 //#define BMA020
 //#define BMA180
@@ -204,7 +206,6 @@
 //#define BTSERIAL
 
 /* The following lines apply only for a pitch/roll tilt stabilization system
-   On promini board, it is not compatible with config with 6 motors or more
    Uncomment the first line to activate it */
 //#define SERVO_TILT
 #define TILT_PITCH_MIN    1020    //servo travel min, don't set it below 1020
