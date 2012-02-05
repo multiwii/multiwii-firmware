@@ -208,6 +208,61 @@
 #endif
 
 
+/******************************************************************/
+// http://www.fuzzydrone.org/
+#if defined(MONGOOSE1_0)
+  #define LEDPIN_PINMODE             pinMode (4, OUTPUT);
+  #define LEDPIN_TOGGLE              PIND |= 1<<4;     //switch LEDPIN state (digital PIN 13)
+  #define LEDPIN_OFF                 PORTD &= ~(1<<4);
+  #define LEDPIN_ON                  PORTD |= (1<<4);
+/*
+  #define DIGITAL_SERVO_TRI_PINMODE  pinMode(3,OUTPUT); //also right servo for BI COPTER
+  #define DIGITAL_SERVO_TRI_HIGH     PORTD |= 1<<3;
+  #define DIGITAL_SERVO_TRI_LOW      PORTD &= ~(1<<3);
+  #define DIGITAL_TILT_PITCH_PINMODE pinMode(A0,OUTPUT);
+  #define DIGITAL_TILT_PITCH_HIGH    PORTC |= 1<<0;
+  #define DIGITAL_TILT_PITCH_LOW     PORTC &= ~(1<<0);
+
+  #define DIGITAL_BI_LEFT_PINMODE    pinMode(11,OUTPUT); 
+  #define DIGITAL_BI_LEFT_HIGH       PORTB |= 1<<3;
+  #define DIGITAL_BI_LEFT_LOW        PORTB &= ~(1<<3);
+*/
+  #define PPM_PIN_INTERRUPT          attachInterrupt(0, rxInt, RISING); //PIN 0
+  #define SPEK_SERIAL_VECT           USART_RX_vect
+  #define SPEK_BAUD_SET              UCSR0A  = (1<<U2X0); UBRR0H = ((F_CPU  / 4 / 115200 -1) / 2) >> 8; UBRR0L = ((F_CPU  / 4 / 115200 -1) / 2);
+  #define SPEK_SERIAL_INTERRUPT      UCSR0B |= (1<<RXEN0)|(1<<RXCIE0);
+  #define SPEK_DATA_REG              UDR0
+//  #define MOTOR_ORDER                9,10,11,3,6,5  //for a quad+: rear,right,left,front
+  #define MOTOR_ORDER                11,10,9,3 //for a quad+: RRight ,FRight ,RLeft, FLeft, n, n
+
+  #define DIGITAL_TILT_PITCH_PINMODE pinMode(6,OUTPUT);
+  #define DIGITAL_TILT_PITCH_HIGH    PORTD |= 1<<6;
+  #define DIGITAL_TILT_PITCH_LOW     PORTD &= ~(1<<6);
+
+  #define DIGITAL_TILT_ROLL_PINMODE  pinMode(A1,OUTPUT); //unused
+  #define DIGITAL_TILT_ROLL_HIGH     PORTC |= 1<<1; //unused
+  #define DIGITAL_TILT_ROLL_LOW      PORTC &= ~(1<<1); //unused
+
+  //#define DIGITAL_CAM_PINMODE        pinMode(6,OUTPUT);
+  //#define DIGITAL_CAM_HIGH           PORTC |= 1<<6;
+  //#define DIGITAL_CAM_LOW            PORTC &= ~(1<<6);
+
+//RX PIN assignment inside the port //for PORTD
+  #define THROTTLEPIN                2
+  #define ROLLPIN                    4
+  #define PITCHPIN                   5
+  #define YAWPIN                     6
+  #define AUX1PIN                    7
+  #define AUX2PIN                    0 // optional PIN 8 or PIN 12
+  //#define CAM1PIN                    1 // unused 
+  //#define CAM2PIN                    3 // unused 
+  #define ISR_UART                   ISR(USART_UDRE_vect)
+  #define V_BATPIN                   A3    // Analog PIN 3
+  #define PSENSORPIN                 A2    // Analog PIN 2
+#endif
+
+/******************************************************************/
+
 //please submit any correction to this list.
 #if defined(FFIMUv1)
   #define ITG3200
@@ -398,6 +453,19 @@
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y; magADC[PITCH]  = X; magADC[YAW]  = Z;}
   #define ITG3200_ADDRESS 0XD2
+#endif
+
+#if defined(MONGOOSE1_0)
+  #define ITG3200
+  #define ADXL345
+  #define BMP085
+  #define HMC5883
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  -X; gyroADC[PITCH] = -Y; gyroADC[YAW] = Z;}
+  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = -Y; accADC[YAW]  = Z;}
+  #define MAG_ORIENTATION(Y, X, Z)  {magADC[ROLL]  = X;  magADC[PITCH] = -Y; magADC[YAW]  = Z;}
+  #define ADXL345_ADDRESS  0xA6
+  #define ITG3200_ADDRESS 0XD0
+  #define BMP085_ADDRESS 0xEE
 #endif
 
 #if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LSM303DLx_ACC) || defined(MPU6050)

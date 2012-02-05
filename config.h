@@ -86,7 +86,7 @@
      Note from Alex: I only own some boards
                      for other boards, I'm not sure, the info was gathered via rc forums, be cautious */
 //#define FFIMUv1         // first 9DOF+baro board from Jussi, with HMC5843                   <- confirmed by Alex
-#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883       <- confirmed by Alex
+//#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883       <- confirmed by Alex
 //#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
 //#define FREEIMUv03      // FreeIMU v0.3 and v0.3.1
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
@@ -104,6 +104,7 @@
 //#define MINIWII         // Jussi's MiniWii Flight Controller
 //#define CITRUSv1_0      // CITRUSv1 from qcrc.ca
 //#define DROTEK_IMU10DOF
+//#define MONGOOSE1_0       //mongoose 1.0  To be verified by matbogdan  http://www.fuzzydrone.org/
 
 
 //if you use independent sensors
