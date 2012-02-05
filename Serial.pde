@@ -17,7 +17,6 @@ void UartSendData() {         // Data transmission acivated when the ring is not
 }
 
 void serialCom() {
-  int16_t a;
   uint8_t i;
   
   if (SerialAvailable(0)) {

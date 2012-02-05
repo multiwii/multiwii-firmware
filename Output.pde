@@ -1,52 +1,3 @@
-#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(CAMTRIG)
-  #define SERVO
-#endif
-
-#if defined(GIMBAL)
-  #define NUMBER_MOTOR 0
-  #define PRI_SERVO_FROM   1 // use servo from 1 to 2
-  #define PRI_SERVO_TO     2
-#elif defined(FLYING_WING)
-  #define NUMBER_MOTOR 1
-  #define PRI_SERVO_FROM   1 // use servo from 1 to 2
-  #define PRI_SERVO_TO     2
-#elif defined(BI)
-  #define NUMBER_MOTOR 2
-  #define PRI_SERVO_FROM   5 // use servo from 5 to 6
-  #define PRI_SERVO_TO     6
-#elif defined(TRI)
-  #define NUMBER_MOTOR 3
-  #define PRI_SERVO_FROM   5 // use only servo 5
-  #define PRI_SERVO_TO     5
-#elif defined(QUADP) || defined(QUADX) || defined(Y4) || defined(VTAIL4)
-  #define NUMBER_MOTOR 4
-#elif defined(Y6) || defined(HEX6) || defined(HEX6X)
-  #define NUMBER_MOTOR 6
-#elif defined(OCTOX8) || defined(OCTOFLATP) || defined(OCTOFLATX)
-  #define NUMBER_MOTOR 8
-#endif
-
-#if defined(SERVO_TILT) && defined(CAMTRIG)
-  #define SEC_SERVO_FROM   1 // use servo from 1 to 3
-  #define SEC_SERVO_TO     3
-#else
-  #if defined(SERVO_TILT)
-    // if A0 and A1 is taken by motors, we can use A2 and 12 for Servo tilt
-    #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
-      #define SEC_SERVO_FROM   3 // use servo from 3 to 4
-      #define SEC_SERVO_TO     4    
-    #else
-      #define SEC_SERVO_FROM   1 // use servo from 1 to 2
-      #define SEC_SERVO_TO     2
-    #endif
-  #endif
-  #if defined(CAMTRIG)
-    #define SEC_SERVO_FROM   3 // use servo 3
-    #define SEC_SERVO_TO     3
-  #endif
-#endif
-
-
 uint8_t PWM_PIN[8] = {MOTOR_ORDER};
 // so we need a servo pin array
 volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
@@ -132,16 +83,16 @@ void writeMotors() { // [1000;2000] => [125;250]
       #endif
     #endif
     #if (NUMBER_MOTOR > 4)
-        atomicPWM_PIN5_highState = ((motor[5]-1000)/4.08)+5;
-        atomicPWM_PIN5_lowState = 255-atomicPWM_PIN5_highState;
-        atomicPWM_PIN6_highState = ((motor[4]-1000)/4.08)+5;
-        atomicPWM_PIN6_lowState = 255-atomicPWM_PIN6_highState;
-      #endif
-      #if (NUMBER_MOTOR > 6)
-        atomicPWM_PINA2_highState = ((motor[6]-1000)/4.08)+5;
-        atomicPWM_PINA2_lowState = 255-atomicPWM_PINA2_highState;
-        atomicPWM_PIN12_highState = ((motor[7]-1000)/4.08)+5;
-        atomicPWM_PIN12_lowState = 255-atomicPWM_PIN12_highState;
+      atomicPWM_PIN5_highState = ((motor[5]-1000)/4.08)+5;
+      atomicPWM_PIN5_lowState = 255-atomicPWM_PIN5_highState;
+      atomicPWM_PIN6_highState = ((motor[4]-1000)/4.08)+5;
+      atomicPWM_PIN6_lowState = 255-atomicPWM_PIN6_highState;
+    #endif
+    #if (NUMBER_MOTOR > 6)
+      atomicPWM_PINA2_highState = ((motor[6]-1000)/4.08)+5;
+      atomicPWM_PINA2_lowState = 255-atomicPWM_PINA2_highState;
+      atomicPWM_PIN12_highState = ((motor[7]-1000)/4.08)+5;
+      atomicPWM_PIN12_lowState = 255-atomicPWM_PIN12_highState;
     #endif
   #endif
 }
@@ -448,11 +399,8 @@ ISR(TIMER0_COMPA_vect) {
 
 void mixTable() {
   int16_t maxMotor;
-  uint8_t i,axis;
-  static uint8_t camCycle = 0;
-  static uint8_t camState = 0;
-  static uint32_t camTime = 0;
-  
+  uint8_t i;
+
   #define PIDMIX(X,Y,Z) rcCommand[THROTTLE] + axisPID[ROLL]*X + axisPID[PITCH]*Y + YAW_DIRECTION * axisPID[YAW]*Z
 
   #if NUMBER_MOTOR > 3
@@ -549,20 +497,23 @@ void mixTable() {
     motor[2] = PIDMIX(+0,+1, +1/2);      //REAR_L 
     motor[3] = PIDMIX(+1, -1, -2/10); //FRONT_L
   #endif
+
   #ifdef SERVO_TILT
+    #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
+      #define S_PITCH servo[0]
+      #define S_ROLL  servo[1]
+    #else
+      #define S_PITCH servo[2]
+      #define S_ROLL  servo[3]
+    #endif
+    S_PITCH = TILT_PITCH_MIDDLE + rcData[AUX3]-1500;
+    S_ROLL  = TILT_ROLL_MIDDLE  + rcData[AUX4]-1500;
     if ((rcOptions1 & activate1[BOXCAMSTAB]) || (rcOptions2 & activate2[BOXCAMSTAB])) {
-      servo[0] = constrain(TILT_PITCH_MIDDLE + TILT_PITCH_PROP * angle[PITCH] /16 + rcData[AUX3]-1500 , TILT_PITCH_MIN, TILT_PITCH_MAX);
-      servo[1] = constrain(TILT_ROLL_MIDDLE  + TILT_ROLL_PROP  * angle[ROLL]  /16 + rcData[AUX4]-1500, TILT_ROLL_MIN, TILT_ROLL_MAX);
-    } else {
-      // to use it with A0_A1_PIN_HEX
-      #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
-        servo[2] = constrain(TILT_PITCH_MIDDLE  + rcData[AUX3]-1500 , TILT_PITCH_MIN, TILT_PITCH_MAX);
-        servo[3] = constrain(TILT_ROLL_MIDDLE   + rcData[AUX4]-1500,  TILT_ROLL_MIN, TILT_ROLL_MAX);     
-      #else
-        servo[0] = constrain(TILT_PITCH_MIDDLE  + rcData[AUX3]-1500 , TILT_PITCH_MIN, TILT_PITCH_MAX);
-        servo[1] = constrain(TILT_ROLL_MIDDLE   + rcData[AUX4]-1500,  TILT_ROLL_MIN, TILT_ROLL_MAX);
-      #endif
+      S_PITCH += TILT_PITCH_PROP * angle[PITCH] /16 ;
+      S_ROLL  += TILT_ROLL_PROP  * angle[ROLL]  /16 ;
     }
+    S_PITCH = constrain(S_PITCH, TILT_PITCH_MIN, TILT_PITCH_MAX);
+    S_ROLL  = constrain(S_ROLL , TILT_ROLL_MIN, TILT_ROLL_MAX  );   
   #endif
   #ifdef GIMBAL
     servo[0] = constrain(TILT_PITCH_MIDDLE + TILT_PITCH_PROP * angle[PITCH] /16 + rcCommand[PITCH], TILT_PITCH_MIN, TILT_PITCH_MAX);
@@ -571,14 +522,19 @@ void mixTable() {
   #ifdef FLYING_WING
     motor[0] = rcCommand[THROTTLE];
     if (passThruMode) {// do not use sensors for correction, simple 2 channel mixing
-       servo[0]  = constrain(wing_left_mid  + PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC), WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
-       servo[1]  = constrain(wing_right_mid + PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC), WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+       servo[0]  = wing_left_mid  + PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC);
+       servo[1]  = wing_right_mid + PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC);
     } else { // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration
-       servo[0]  = constrain(wing_left_mid  + PITCH_DIRECTION_L * axisPID[PITCH]        + ROLL_DIRECTION_L * axisPID[ROLL], WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
-       servo[1]  = constrain(wing_right_mid + PITCH_DIRECTION_R * axisPID[PITCH]        + ROLL_DIRECTION_R * axisPID[ROLL], WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+       servo[0]  = wing_left_mid  + PITCH_DIRECTION_L * axisPID[PITCH]        + ROLL_DIRECTION_L * axisPID[ROLL];
+       servo[1]  = wing_right_mid + PITCH_DIRECTION_R * axisPID[PITCH]        + ROLL_DIRECTION_R * axisPID[ROLL];
     }
+    servo[0]  = constrain(servo[0], WING_LEFT_MIN,  WING_LEFT_MAX );
+    servo[1]  = constrain(servo[1], WING_RIGHT_MIN, WING_RIGHT_MAX);
   #endif
   #if defined(CAMTRIG)
+    static uint8_t camCycle = 0;
+    static uint8_t camState = 0;
+    static uint32_t camTime = 0;
     if (camCycle==1) {
       if (camState == 0) {
         servo[2] = CAM_SERVO_HIGH;

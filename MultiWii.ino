@@ -45,7 +45,7 @@ December  2011     V1.dev
 #define PIDITEMS 8
 
 static uint32_t currentTime = 0;
-static uint32_t previousTime = 0;
+static uint16_t previousTime = 0;
 static uint16_t cycleTime = 0;     // this is the number in micro second to achieve a full loop, it can differ a little and is taken into account in the PID loop
 static uint16_t calibratingA = 0;  // the calibration is done is the main loop. Calibrating decreases at each cycle down to 0, then we enter in a normal mode.
 static uint8_t  calibratingM = 0;
@@ -380,8 +380,6 @@ void setup() {
   #ifdef LCD_CONF_DEBUG
     configurationLoop();
   #endif
-  
-
 }
 
 // ******** Main Loop *********
@@ -644,9 +642,11 @@ void loop () {
       #else  
         PTerm      = (int32_t)errorAngle*P8[PIDLEVEL]/100 ;                          //32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
       #endif
-      PTerm = constrain(PTerm,-D8[PIDLEVEL],+D8[PIDLEVEL]);
+      PTerm = constrain(PTerm,-D8[PIDLEVEL]*5,+D8[PIDLEVEL]*5);
 
       errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);    //WindUp     //16 bits is ok here
+      if (errorAngle>0 && errorAngleI[axis]>0 ) errorAngleI[axis] = 0;               //To prevent Windup exaggerating overshoot
+      if (errorAngle<0 && errorAngleI[axis]<0 ) errorAngleI[axis] = 0;               //To prevent Windup exaggerating overshoot
       ITerm              = ((int32_t)errorAngleI[axis]*I8[PIDLEVEL])>>12;            //32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
     } else { //ACRO MODE or YAW axis
       if (abs(rcCommand[axis])<350) error =          rcCommand[axis]*10*8/P8[axis] ; //16 bits is needed for calculation: 350*10*8 = 28000      16 bits is ok for result if P8>2 (P>0.2)

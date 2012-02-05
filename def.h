@@ -10,13 +10,27 @@
   #define LEDPIN_TOGGLE              PINB |= 1<<5;     //switch LEDPIN state (digital PIN 13)
   #define LEDPIN_OFF                 PORTB &= ~(1<<5);
   #define LEDPIN_ON                  PORTB |= (1<<5);
-  #define BUZZERPIN_PINMODE          pinMode (8, OUTPUT);
-  #define BUZZERPIN_ON               PORTB |= 1;
-  #define BUZZERPIN_OFF              PORTB &= ~1;
-  #define POWERPIN_PINMODE           pinMode (12, OUTPUT);
-  #define POWERPIN_ON                PORTB |= 1<<4;
-  #define POWERPIN_OFF               PORTB &= ~(1<<4); //switch OFF WMP, digital PIN 12
-  #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5;   // PIN A4&A5 (SDA&SCL)
+  #if !defined(RCAUXPIN8)
+    #define BUZZERPIN_PINMODE          pinMode (8, OUTPUT);
+    #define BUZZERPIN_ON               PORTB |= 1;
+    #define BUZZERPIN_OFF              PORTB &= ~1;
+  #else
+    #define BUZZERPIN_PINMODE          ;
+    #define BUZZERPIN_ON               ;
+    #define BUZZERPIN_OFF              ;
+    #define RCAUXPIN
+  #endif
+  #if !defined(RCAUXPIN12)
+    #define POWERPIN_PINMODE           pinMode (12, OUTPUT);
+    #define POWERPIN_ON                PORTB |= 1<<4;
+    #define POWERPIN_OFF               PORTB &= ~(1<<4); //switch OFF WMP, digital PIN 12
+    #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5;   // PIN A4&A5 (SDA&SCL)
+  #else
+    #define POWERPIN_PINMODE           ;
+    #define POWERPIN_ON                ;
+    #define POWERPIN_OFF               ;
+    #define RCAUXPIN
+  #endif
   #define I2C_PULLUPS_DISABLE        PORTC &= ~(1<<4); PORTC &= ~(1<<5);
   #define PINMODE_LCD                pinMode(0, OUTPUT);
   #define LCDPIN_OFF                 PORTD &= ~1;
@@ -386,7 +400,7 @@
   #define ITG3200_ADDRESS 0XD2
 #endif
 
-#if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(ADCACC) || defined(LSM303DLx_ACC) || defined(MPU6050)
+#if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LSM303DLx_ACC) || defined(MPU6050)
   #define ACC 1
 #else
   #define ACC 0
@@ -415,21 +429,6 @@
 #else
   #define GPSPRESENT 0
 #endif
-
-
-#if defined(RCAUXPIN8)
-  #define BUZZERPIN_PINMODE          ;
-  #define BUZZERPIN_ON               ;
-  #define BUZZERPIN_OFF              ;
-  #define RCAUXPIN
-#endif
-#if defined(RCAUXPIN12)
-  #define POWERPIN_PINMODE           ;
-  #define POWERPIN_ON                ;
-  #define POWERPIN_OFF               ;
-  #define RCAUXPIN
-#endif
-
 
 #if defined(TRI)
   #define MULTITYPE 1
@@ -514,9 +513,6 @@
     #define SEC_SERVO_TO     3
   #endif
 #endif
-
-
-
 
 /**************************/
 /* Error Checking Section */
