@@ -9,8 +9,12 @@ void computeIMU () {
     static int16_t gyroYawSmooth = 0;
   #endif
 
-  if (MAG)  Mag_getADC();
-  if (BARO) Baro_update();
+  #if MAG
+    Mag_getADC();
+  #endif
+  #if BARO
+    Baro_update();
+  #endif
 
   //we separate the 2 situations because reading gyro values with a gyro only setup can be acchieved at a higher rate
   //gyro+nunchuk: we must wait for a quite high delay betwwen 2 reads to get both WM+ and Nunchuk data. It works with 3ms
@@ -40,7 +44,11 @@ void computeIMU () {
       getEstimatedAttitude();
       if (BARO) getEstimatedAltitude();
     }
-    if (GYRO) Gyro_getADC(); else WMP_getRawADC();
+    #if GYRO
+      Gyro_getADC();
+    #else
+      WMP_getRawADC();
+    #endif
     for (axis = 0; axis < 3; axis++)
       gyroADCp[axis] =  gyroADC[axis];
     timeInterleave=micros();
@@ -50,7 +58,11 @@ void computeIMU () {
     } else {
        while((micros()-timeInterleave)<650) ; //empirical, interleaving delay between 2 consecutive reads
     }
-    if (GYRO) Gyro_getADC(); else WMP_getRawADC();
+    #if GYRO
+      Gyro_getADC();
+    #else
+      WMP_getRawADC();
+    #endif
     for (axis = 0; axis < 3; axis++) {
       gyroADCinter[axis] =  gyroADC[axis]+gyroADCp[axis];
       // empirical, we take a weighted value of the current and the previous values
@@ -315,5 +327,5 @@ void getEstimatedAltitude(){
   zVelocity = tmpAlt - lastAlt;
   lastAlt = tmpAlt;
 
-debug4 = zVelocity;
+  debug4 = zVelocity;
 }

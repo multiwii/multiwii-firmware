@@ -94,7 +94,7 @@ void serialCom() {
       for(i=0;i<8;i++) serialize16(servo[i]);
       for(i=0;i<8;i++) serialize16(motor[i]);
       for(i=0;i<8;i++) serialize16(rcData[i]);
-      serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3|GPSPRESENT<<4);
+      serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3|GPS<<4);
       serialize8(accMode|baroMode<<1|magMode<<2|(GPSModeHome|GPSModeHold)<<3);
       #if defined(LOG_VALUES)
          serialize16(cycleTimeMax);

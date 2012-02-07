@@ -83,15 +83,15 @@ void writeMotors() { // [1000;2000] => [125;250]
       #endif
     #endif
     #if (NUMBER_MOTOR > 4)
-      atomicPWM_PIN5_highState = ((motor[5]-1000)/4.08)+5;
+      atomicPWM_PIN5_highState = ((motor[5]-1000)>>2)+2;
       atomicPWM_PIN5_lowState = 255-atomicPWM_PIN5_highState;
-      atomicPWM_PIN6_highState = ((motor[4]-1000)/4.08)+5;
+      atomicPWM_PIN6_highState = ((motor[4]-1000)>>2)+2;
       atomicPWM_PIN6_lowState = 255-atomicPWM_PIN6_highState;
     #endif
     #if (NUMBER_MOTOR > 6)
-      atomicPWM_PINA2_highState = ((motor[6]-1000)/4.08)+5;
+      atomicPWM_PINA2_highState = ((motor[6]-1000)>>2)+2;
       atomicPWM_PINA2_lowState = 255-atomicPWM_PINA2_highState;
-      atomicPWM_PIN12_highState = ((motor[7]-1000)/4.08)+5;
+      atomicPWM_PIN12_highState = ((motor[7]-1000)>>2)+2;
       atomicPWM_PIN12_lowState = 255-atomicPWM_PIN12_highState;
     #endif
   #endif
