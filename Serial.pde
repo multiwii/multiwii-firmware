@@ -171,7 +171,7 @@ void serialCom() {
 
 #define SERIAL_RX_BUFFER_SIZE 64
 
-#if defined(PROMINI) 
+#if defined(PROMINI) || defined(MONGOOSE1_0)
 uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][1];
 volatile uint8_t serialHeadRX[1],serialTailRX[1];
 #endif
@@ -217,7 +217,7 @@ void SerialEnd(uint8_t port) {
   }
 }
 
-#if defined(PROMINI) && !(defined(SPEKTRUM))
+#if  (defined(PROMINI) || defined(MONGOOSE1_0)) && !(defined(SPEKTRUM))
 SIGNAL(USART_RX_vect){
   uint8_t d = UDR0;
   uint8_t i = (serialHeadRX[0] + 1) % SERIAL_RX_BUFFER_SIZE;

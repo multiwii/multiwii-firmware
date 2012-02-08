@@ -104,7 +104,7 @@
 //#define MINIWII         // Jussi's MiniWii Flight Controller
 //#define CITRUSv1_0      // CITRUSv1 from qcrc.ca
 //#define DROTEK_IMU10DOF
-//#define MONGOOSE1_0       //mongoose 1.0  To be verified by matbogdan  http://www.fuzzydrone.org/
+//#define MONGOOSE1_0     // mongoose 1.0    http://www.fuzzydrone.org/                      <- verified by matbogdan
 
 
 //if you use independent sensors

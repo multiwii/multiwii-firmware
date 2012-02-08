@@ -53,7 +53,7 @@ void writeMotors() { // [1000;2000] => [125;250]
       OCR2A = motor[7]>>3; //  pin 10
     #endif
   #endif
-  #if defined(PROMINI)
+   #if defined(PROMINI) || defined(MONGOOSE1_0)
     #if (NUMBER_MOTOR > 0)
       #ifndef EXT_MOTOR_RANGE 
         OCR1A = motor[0]>>3; //  pin 9
@@ -128,7 +128,7 @@ void initOutput() {
       TCCR2A |= _BV(COM2A1); // connect pin 10 to timer 2 channel A
     #endif
   #endif
-  #if defined(PROMINI)
+   #if defined(PROMINI) || defined(MONGOOSE1_0)
     for(uint8_t i=0;i<min(NUMBER_MOTOR,4);i++)
       pinMode(PWM_PIN[i],OUTPUT);
     #if (NUMBER_MOTOR > 0)
@@ -150,13 +150,13 @@ void initOutput() {
   #if defined(SERVO)
     initializeServo();
   #endif
-  #if (NUMBER_MOTOR == 6) && defined(PROMINI)
+  #if (NUMBER_MOTOR == 6) && (defined(PROMINI) || defined(MONGOOSE1_0))
     initializeSoftPWM();
     #if defined(A0_A1_PIN_HEX)
       pinMode(5,INPUT);pinMode(6,INPUT);     // we reactivate the INPUT affectation for these two PINs
       pinMode(A0,OUTPUT);pinMode(A1,OUTPUT);
     #endif
-  #elif (NUMBER_MOTOR == 8) && defined(PROMINI)
+  #elif (NUMBER_MOTOR == 8) && (defined(PROMINI) || defined(MONGOOSE1_0))
     initializeSoftPWM();
     #if defined(A0_A1_PIN_HEX)
       pinMode(5,INPUT);pinMode(6,INPUT);     // we reactivate the INPUT affectation for these two PINs
@@ -196,7 +196,7 @@ void initializeServo() {
   TIMSK0 |= (1<<OCIE0A); // Enable CTC interrupt
   
   // timer 0B for hex with servo tilt
-  #if (NUMBER_MOTOR == 6) && defined(PROMINI)
+  #if (NUMBER_MOTOR == 6) && (defined(PROMINI) || defined(MONGOOSE1_0))
     TIMSK0 |= (1<<OCIE0B); 
   #endif
 }
@@ -318,7 +318,7 @@ ISR(TIMER0_COMPA_vect) {
 }
 #endif
 
-#if (NUMBER_MOTOR > 4) && defined(PROMINI)
+#if (NUMBER_MOTOR > 4) && (defined(PROMINI) || defined(MONGOOSE1_0))
   void initializeSoftPWM() {
     // if there are servos its alredy done
     #if (NUMBER_MOTOR == 6) && not defined(SERVO)
@@ -499,7 +499,7 @@ void mixTable() {
   #endif
 
   #ifdef SERVO_TILT
-    #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
+    #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && (defined(PROMINI) || defined(MONGOOSE1_0))
       #define S_PITCH servo[0]
       #define S_ROLL  servo[1]
     #else
