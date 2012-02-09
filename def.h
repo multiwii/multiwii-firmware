@@ -38,25 +38,9 @@
   #define STABLEPIN_PINMODE          ;
   #define STABLEPIN_ON               ;
   #define STABLEPIN_OFF              ;
-  #define DIGITAL_SERVO_TRI_PINMODE  pinMode(3,OUTPUT); //also right servo for BI COPTER
-  #define DIGITAL_SERVO_TRI_HIGH     PORTD |= 1<<3;
-  #define DIGITAL_SERVO_TRI_LOW      PORTD &= ~(1<<3);
-  #define DIGITAL_TILT_PITCH_PINMODE pinMode(A0,OUTPUT);
-  #define DIGITAL_TILT_PITCH_HIGH    PORTC |= 1<<0;
-  #define DIGITAL_TILT_PITCH_LOW     PORTC &= ~(1<<0);
-  #define DIGITAL_TILT_ROLL_PINMODE  pinMode(A1,OUTPUT);
-  #define DIGITAL_TILT_ROLL_HIGH     PORTC |= 1<<1;
-  #define DIGITAL_TILT_ROLL_LOW      PORTC &= ~(1<<1);
-  #define DIGITAL_BI_LEFT_PINMODE    pinMode(11,OUTPUT); 
-  #define DIGITAL_BI_LEFT_HIGH       PORTB |= 1<<3;
-  #define DIGITAL_BI_LEFT_LOW        PORTB &= ~(1<<3);
   #define PPM_PIN_INTERRUPT          attachInterrupt(0, rxInt, RISING); //PIN 0
   #define SPEK_SERIAL_VECT           USART_RX_vect
   #define SPEK_DATA_REG              UDR0
-//  #define MOTOR_ORDER                9,10,11,3,6,5  //for a quad+: rear,right,left,front
-  #define DIGITAL_CAM_PINMODE        pinMode(A2,OUTPUT);
-  #define DIGITAL_CAM_HIGH           PORTC |= 1<<2;
-  #define DIGITAL_CAM_LOW            PORTC &= ~(1<<2);
   //RX PIN assignment inside the port //for PORTD
   #define THROTTLEPIN                2
   #define ROLLPIN                    4
@@ -69,50 +53,31 @@
   #define ISR_UART                   ISR(USART_UDRE_vect)
   #define V_BATPIN                   A3    // Analog PIN 3
   #define PSENSORPIN                 A2    // Analog PIN 2
-
-  //motor order changes because of possible octo
-  #define MOTOR_ORDER       9,10,11,3,6,5,A2,12  //for a quad+: rear,right,left,front
   
-  // TILT_PITCH
-  #define SERVO_1_PINMODE   pinMode(A0,OUTPUT);
-  #define SERVO_1_PIN_HIGH  PORTC |= 1<<0;
-  #define SERVO_1_PIN_LOW   PORTC &= ~(1<<0);
-  
-  // TILT_ROLL
-  #define SERVO_2_PINMODE   pinMode(A1,OUTPUT);
-  #define SERVO_2_PIN_HIGH  PORTC |= 1<<1;
-  #define SERVO_2_PIN_LOW   PORTC &= ~(1<<1);
-  
-  // CAM TRIG
-  #define SERVO_3_PINMODE   pinMode(A2,OUTPUT);
-  #define SERVO_3_PIN_HIGH  PORTC |= 1<<2;
-  #define SERVO_3_PIN_LOW   PORTC &= ~(1<<2);
-  
-  // new
-  #define SERVO_4_PINMODE   pinMode(12,OUTPUT);
-  #define SERVO_4_PIN_HIGH  PORTB |= 1<<4;
-  #define SERVO_4_PIN_LOW   PORTB &= ~(1<<4);
-  
-  // BI LEFT
-  #define SERVO_5_PINMODE   pinMode(3,OUTPUT);
-  #define SERVO_5_PIN_HIGH  PORTD|= 1<<3;
-  #define SERVO_5_PIN_LOW   PORTD &= ~(1<<3);
-  
-  // TRI REAR
-  #define SERVO_6_PINMODE   pinMode(11,OUTPUT);
-  #define SERVO_6_PIN_HIGH  PORTB |= 1<<3;
-  #define SERVO_6_PIN_LOW   PORTB &= ~(1<<3);
-  
-  // new motor pin 10
-  #define SERVO_7_PINMODE   pinMode(10,OUTPUT);
-  #define SERVO_7_PIN_HIGH  PORTB |= 1<<2;
-  #define SERVO_7_PIN_LOW   PORTB &= ~(1<<2);
-  
-  //new motor pin 9
-  #define SERVO_8_PINMODE   pinMode(9,OUTPUT);
-  #define SERVO_8_PIN_HIGH  PORTB |= 1<<1;
-  #define SERVO_8_PIN_LOW   PORTB &= ~(1<<1);
-
+  #define SERVO_1_PINMODE            pinMode(A0,OUTPUT); // TILT_PITCH - WING left
+  #define SERVO_1_PIN_HIGH           PORTC |= 1<<0;
+  #define SERVO_1_PIN_LOW            PORTC &= ~(1<<0);
+  #define SERVO_2_PINMODE            pinMode(A1,OUTPUT); // TILT_ROLL  - WING right
+  #define SERVO_2_PIN_HIGH           PORTC |= 1<<1;
+  #define SERVO_2_PIN_LOW            PORTC &= ~(1<<1);
+  #define SERVO_3_PINMODE            pinMode(A2,OUTPUT); // CAM TRIG  - alt TILT_PITCH
+  #define SERVO_3_PIN_HIGH           PORTC |= 1<<2;
+  #define SERVO_3_PIN_LOW            PORTC &= ~(1<<2);
+  #define SERVO_4_PINMODE            pinMode(12,OUTPUT); // new       - alt TILT_ROLL
+  #define SERVO_4_PIN_HIGH           PORTB |= 1<<4;
+  #define SERVO_4_PIN_LOW            PORTB &= ~(1<<4);
+  #define SERVO_5_PINMODE            pinMode(11,OUTPUT); // BI LEFT
+  #define SERVO_5_PIN_HIGH           PORTB |= 1<<3;
+  #define SERVO_5_PIN_LOW            PORTB &= ~(1<<3);
+  #define SERVO_6_PINMODE            pinMode(3,OUTPUT);  // TRI REAR - BI RIGHT
+  #define SERVO_6_PIN_HIGH           PORTD|= 1<<3;
+  #define SERVO_6_PIN_LOW            PORTD &= ~(1<<3);
+  #define SERVO_7_PINMODE            pinMode(10,OUTPUT); // new
+  #define SERVO_7_PIN_HIGH           PORTB |= 1<<2;
+  #define SERVO_7_PIN_LOW            PORTB &= ~(1<<2);
+  #define SERVO_8_PINMODE            pinMode(9,OUTPUT); // new
+  #define SERVO_8_PIN_HIGH           PORTB |= 1<<1;
+  #define SERVO_8_PIN_LOW            PORTB &= ~(1<<1);
 #endif
 #if defined(MEGA)
   #define LEDPIN_PINMODE             pinMode (13, OUTPUT);pinMode (30, OUTPUT);
@@ -128,29 +93,15 @@
   #define I2C_PULLUPS_ENABLE         PORTD |= 1<<0; PORTD |= 1<<1;       // PIN 20&21 (SDA&SCL)
   #define I2C_PULLUPS_DISABLE        PORTD &= ~(1<<0); PORTD &= ~(1<<1);
   #define PINMODE_LCD                pinMode(0, OUTPUT);
-  #define LCDPIN_OFF                 PORTE &= ~1;      //switch OFF digital PIN 0
-  #define LCDPIN_ON                  PORTE |= 1;       //switch OFF digital PIN 0
+  #define LCDPIN_OFF                 PORTE &= ~1;
+  #define LCDPIN_ON                  PORTE |= 1;
   #define STABLEPIN_PINMODE          pinMode (31, OUTPUT);
   #define STABLEPIN_ON               PORTC |= 1<<6;
   #define STABLEPIN_OFF              PORTC &= ~(1<<6);
-  #define DIGITAL_SERVO_TRI_PINMODE  pinMode(2,OUTPUT); //PIN 2 //also right servo for BI COPTER
-  #define DIGITAL_SERVO_TRI_HIGH     PORTE |= 1<<4;
-  #define DIGITAL_SERVO_TRI_LOW      PORTE &= ~(1<<4);
-  #define DIGITAL_TILT_PITCH_PINMODE pinMode(34,OUTPUT);pinMode(44,OUTPUT); // 34 + 44
-  #define DIGITAL_TILT_PITCH_HIGH    PORTC |= 1<<3;PORTL |= 1<<5;
-  #define DIGITAL_TILT_PITCH_LOW     PORTC &= ~(1<<3);PORTL &= ~(1<<5);
-  #define DIGITAL_TILT_ROLL_PINMODE  pinMode(35,OUTPUT);pinMode(45,OUTPUT); // 35 + 45
-  #define DIGITAL_TILT_ROLL_HIGH     PORTC |= 1<<2;PORTL |= 1<<4;
-  #define DIGITAL_TILT_ROLL_LOW      PORTC &= ~(1<<2);PORTL &= ~(1<<4);
-  #define DIGITAL_BI_LEFT_PINMODE    pinMode(6,OUTPUT); 
-  #define DIGITAL_BI_LEFT_HIGH       PORTH |= 1<<3;
-  #define DIGITAL_BI_LEFT_LOW        PORTH &= ~(1<<3);
+
   #define PPM_PIN_INTERRUPT          attachInterrupt(4, rxInt, RISING);  //PIN 19, also used for Spektrum satellite option
   #define SPEK_SERIAL_VECT           USART1_RX_vect
   #define SPEK_DATA_REG              UDR1
-  #define DIGITAL_CAM_PINMODE        pinMode(33,OUTPUT); pinMode(46,OUTPUT); // 33 + 46
-  #define DIGITAL_CAM_HIGH           PORTC |= 1<<4;PORTL |= 1<<3;
-  #define DIGITAL_CAM_LOW            PORTC &= ~(1<<4);PORTL &= ~(1<<3);
   //RX PIN assignment inside the port //for PORTK
   #define THROTTLEPIN                0  //PIN 62 =  PIN A8
   #define ROLLPIN                    1  //PIN 63 =  PIN A9
@@ -163,48 +114,31 @@
   #define ISR_UART                   ISR(USART0_UDRE_vect)
   #define V_BATPIN                   A0    // Analog PIN 0
   #define PSENSORPIN                 A2    // Analog PIN 2
-
-  #define MOTOR_ORDER                3,5,6,2,7,8,9,10   //for a quad+: rear,right,left,front   //+ for y6: 7:under right  8:under left
   
-  // TILT_PITCH
-  #define SERVO_1_PINMODE   pinMode(34,OUTPUT);pinMode(44,OUTPUT);
-  #define SERVO_1_PIN_HIGH  PORTC |= 1<<3;PORTL |= 1<<5;
-  #define SERVO_1_PIN_LOW   PORTC &= ~(1<<3);PORTL &= ~(1<<5);
-  
-  // TILT_ROLL
-  #define SERVO_2_PINMODE   pinMode(35,OUTPUT);pinMode(45,OUTPUT);
-  #define SERVO_2_PIN_HIGH  PORTC |= 1<<2;PORTL |= 1<<4;
-  #define SERVO_2_PIN_LOW   PORTC &= ~(1<<2);PORTL &= ~(1<<4);
-  
-  // CAM TRIG
-  #define SERVO_3_PINMODE   pinMode(33,OUTPUT); pinMode(46,OUTPUT);
-  #define SERVO_3_PIN_HIGH  PORTC |= 1<<4;PORTL |= 1<<3;
-  #define SERVO_3_PIN_LOW   PORTC &= ~(1<<4);PORTL &= ~(1<<3);
-  
-  // new ?
-  #define SERVO_4_PINMODE   pinMode (37, OUTPUT);
-  #define SERVO_4_PIN_HIGH  PORTC |= 1<<0;
-  #define SERVO_4_PIN_LOW   PORTC &= ~(1<<0);
-  
-  // BI LEFT
-  #define SERVO_5_PINMODE   pinMode(6,OUTPUT);
-  #define SERVO_5_PIN_HIGH  PORTH |= 1<<3;
-  #define SERVO_5_PIN_LOW   PORTH &= ~(1<<3);
-  
-  // TRI REAR
-  #define SERVO_6_PINMODE   pinMode(2,OUTPUT);
-  #define SERVO_6_PIN_HIGH  PORTE |= 1<<4;
-  #define SERVO_6_PIN_LOW   PORTE &= ~(1<<4);
-  
-  //new motor pin 5 
-  #define SERVO_7_PINMODE   pinMode(5,OUTPUT);
-  #define SERVO_7_PIN_HIGH  PORTE |= 1<<3;
-  #define SERVO_7_PIN_LOW   PORTE &= ~(1<<3);
-  
-  //new motor pin 3 
-  #define SERVO_8_PINMODE   pinMode(3,OUTPUT);
-  #define SERVO_8_PIN_HIGH  PORTE |= 1<<5;
-  #define SERVO_8_PIN_LOW   PORTE &= ~(1<<5);
+  #define SERVO_1_PINMODE            pinMode(34,OUTPUT);pinMode(44,OUTPUT); // TILT_PITCH - WING left
+  #define SERVO_1_PIN_HIGH           PORTC |= 1<<3;PORTL |= 1<<5;
+  #define SERVO_1_PIN_LOW            PORTC &= ~(1<<3);PORTL &= ~(1<<5);
+  #define SERVO_2_PINMODE            pinMode(35,OUTPUT);pinMode(45,OUTPUT); // TILT_ROLL  - WING right
+  #define SERVO_2_PIN_HIGH           PORTC |= 1<<2;PORTL |= 1<<4;
+  #define SERVO_2_PIN_LOW            PORTC &= ~(1<<2);PORTL &= ~(1<<4);
+  #define SERVO_3_PINMODE            pinMode(33,OUTPUT); pinMode(46,OUTPUT); // CAM TRIG  - alt TILT_PITCH
+  #define SERVO_3_PIN_HIGH           PORTC |= 1<<4;PORTL |= 1<<3;
+  #define SERVO_3_PIN_LOW            PORTC &= ~(1<<4);PORTL &= ~(1<<3);
+  #define SERVO_4_PINMODE            pinMode (37, OUTPUT);                   // new       - alt TILT_ROLL
+  #define SERVO_4_PIN_HIGH           PORTC |= 1<<0;
+  #define SERVO_4_PIN_LOW            PORTC &= ~(1<<0);
+  #define SERVO_5_PINMODE            pinMode(6,OUTPUT);                      // BI LEFT
+  #define SERVO_5_PIN_HIGH           PORTH |= 1<<3;
+  #define SERVO_5_PIN_LOW            PORTH &= ~(1<<3);
+  #define SERVO_6_PINMODE            pinMode(2,OUTPUT);                      // TRI REAR - BI RIGHT
+  #define SERVO_6_PIN_HIGH           PORTE |= 1<<4;
+  #define SERVO_6_PIN_LOW            PORTE &= ~(1<<4);
+  #define SERVO_7_PINMODE            pinMode(5,OUTPUT);                      // new
+  #define SERVO_7_PIN_HIGH           PORTE |= 1<<3;
+  #define SERVO_7_PIN_LOW            PORTE &= ~(1<<3);
+  #define SERVO_8_PINMODE            pinMode(3,OUTPUT);                      // new
+  #define SERVO_8_PIN_HIGH           PORTE |= 1<<5;
+  #define SERVO_8_PIN_LOW            PORTE &= ~(1<<5);
 #endif
 
 
@@ -484,8 +418,8 @@
   #define PRI_SERVO_TO     6
 #elif defined(TRI)
   #define NUMBER_MOTOR 3
-  #define PRI_SERVO_FROM   5 // use only servo 5
-  #define PRI_SERVO_TO     5
+  #define PRI_SERVO_FROM   6 // use only servo 6
+  #define PRI_SERVO_TO     6
 #elif defined(QUADP) || defined(QUADX) || defined(Y4)|| defined(VTAIL4)
   #define NUMBER_MOTOR 4
 #elif defined(Y6) || defined(HEX6) || defined(HEX6X)
