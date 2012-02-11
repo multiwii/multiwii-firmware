@@ -5,7 +5,7 @@
   #define MEGA
 #endif
 
-#if defined(PROMINI)
+#if defined(PROMINI) && !defined(MONGOOSE1_0)
   #define LEDPIN_PINMODE             pinMode (13, OUTPUT);
   #define LEDPIN_TOGGLE              PINB |= 1<<5;     //switch LEDPIN state (digital PIN 13)
   #define LEDPIN_OFF                 PORTB &= ~(1<<5);
@@ -33,7 +33,7 @@
   #endif
   #define I2C_PULLUPS_DISABLE        PORTC &= ~(1<<4); PORTC &= ~(1<<5);
   #define PINMODE_LCD                pinMode(0, OUTPUT);
-  #define LCDPIN_OFF                 PORTD &= ~1;
+  #define LCDPIN_OFF                 PORTD &= ~1; //switch OFF digital PIN 0
   #define LCDPIN_ON                  PORTD |= 1;
   #define STABLEPIN_PINMODE          ;
   #define STABLEPIN_ON               ;
@@ -93,7 +93,7 @@
   #define I2C_PULLUPS_ENABLE         PORTD |= 1<<0; PORTD |= 1<<1;       // PIN 20&21 (SDA&SCL)
   #define I2C_PULLUPS_DISABLE        PORTD &= ~(1<<0); PORTD &= ~(1<<1);
   #define PINMODE_LCD                pinMode(0, OUTPUT);
-  #define LCDPIN_OFF                 PORTE &= ~1;
+  #define LCDPIN_OFF                 PORTE &= ~1; //switch OFF digital PIN 0
   #define LCDPIN_ON                  PORTE |= 1;
   #define STABLEPIN_PINMODE          pinMode (31, OUTPUT);
   #define STABLEPIN_ON               PORTC |= 1<<6;
@@ -141,6 +141,71 @@
   #define SERVO_8_PIN_LOW            PORTE &= ~(1<<5);
 #endif
 
+#if defined(MONGOOSE1_0)  // basically it's a PROMINI without some PINS => same code as a PROMINI board except PIN definition
+  // http://www.fuzzydrone.org/ 
+  // http://www.multiwii.com/forum/viewtopic.php?f=6&t=627
+  
+  #define LEDPIN_PINMODE             pinMode (4, OUTPUT);
+  #define LEDPIN_TOGGLE              PIND |= 1<<4;     //switch LEDPIN state (digital PIN 13)
+  #define LEDPIN_OFF                 PORTD &= ~(1<<4);  
+  #define LEDPIN_ON                  PORTD |= (1<<4);     
+  #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5; 
+  #define I2C_PULLUPS_DISABLE        PORTC &= ~(1<<4); PORTC &= ~(1<<5);  
+  #define PPM_PIN_INTERRUPT          attachInterrupt(0, rxInt, RISING); //PIN 0
+  #define SPEK_SERIAL_VECT           USART_RX_vect
+  #define SPEK_BAUD_SET              UCSR0A  = (1<<U2X0); UBRR0H = ((F_CPU  / 4 / 115200 -1) / 2) >> 8; UBRR0L = ((F_CPU  / 4 / 115200 -1) / 2);
+  #define SPEK_SERIAL_INTERRUPT      UCSR0B |= (1<<RXEN0)|(1<<RXCIE0);
+  #define SPEK_DATA_REG              UDR0
+
+  /* Unavailable pins on MONGOOSE1_0 */
+  #define BUZZERPIN_PINMODE          ; // D8
+  #define BUZZERPIN_ON               ;
+  #define BUZZERPIN_OFF              ;
+  #define POWERPIN_PINMODE           ; // D12
+  #define POWERPIN_ON                ;
+  #define POWERPIN_OFF               ;
+  #define STABLEPIN_PINMODE          ; //
+  #define STABLEPIN_ON               ;
+  #define STABLEPIN_OFF              ; 
+  #define PINMODE_LCD                ; //
+  #define LCDPIN_OFF                 ;
+  #define LCDPIN_ON                  ; 
+  
+  //RX PIN assignment inside the port //for PORTD
+  #define THROTTLEPIN                2
+  #define ROLLPIN                    4
+  #define PITCHPIN                   5
+  #define YAWPIN                     6
+  #define AUX1PIN                    7
+  #define AUX2PIN                    0 // optional PIN 8 or PIN 12
+  #define AUX3PIN                    1 // unused 
+  #define AUX4PIN                    3 // unused 
+  #define ISR_UART                   ISR(USART_UDRE_vect)
+  #define V_BATPIN                   A3    // Analog PIN 3
+  #define PSENSORPIN                 A2    // Analog PIN 2
+
+  #define SERVO_1_PINMODE            pinMode(A0,OUTPUT); // TILT_PITCH
+  #define SERVO_1_PIN_HIGH           PORTC |= 1<<0;
+  #define SERVO_1_PIN_LOW            PORTC &= ~(1<<0);
+  #define SERVO_2_PINMODE            pinMode(A1,OUTPUT); // TILT_ROLL
+  #define SERVO_2_PIN_HIGH           PORTC |= 1<<1;
+  #define SERVO_2_PIN_LOW            PORTC &= ~(1<<1);
+  #define SERVO_3_PINMODE            pinMode(A2,OUTPUT); // CAM TRIG
+  #define SERVO_3_PIN_HIGH           PORTC |= 1<<2;
+  #define SERVO_3_PIN_LOW            PORTC &= ~(1<<2); 
+  #define SERVO_5_PINMODE            pinMode(3,OUTPUT); // BI LEFT
+  #define SERVO_5_PIN_HIGH           PORTD|= 1<<3;
+  #define SERVO_5_PIN_LOW            PORTD &= ~(1<<3);
+  #define SERVO_6_PINMODE            pinMode(11,OUTPUT); // TRI REAR
+  #define SERVO_6_PIN_HIGH           PORTB |= 1<<3;
+  #define SERVO_6_PIN_LOW            PORTB &= ~(1<<3);
+  #define SERVO_7_PINMODE            pinMode(10,OUTPUT); // new motor pin 10
+  #define SERVO_7_PIN_HIGH           PORTB |= 1<<2;
+  #define SERVO_7_PIN_LOW            PORTB &= ~(1<<2);
+  #define SERVO_8_PINMODE            pinMode(9,OUTPUT); //new motor pin 9
+  #define SERVO_8_PIN_HIGH           PORTB |= 1<<1;
+  #define SERVO_8_PIN_LOW            PORTB &= ~(1<<1);
+#endif
 
 //please submit any correction to this list.
 #if defined(FFIMUv1)
@@ -319,7 +384,7 @@
   #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  =  -X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
   #define MAG_ORIENTATION(Y, X, Z)  {magADC[ROLL]  = Y;  magADC[PITCH] = X; magADC[YAW]  = Z;}
-  #define ADXL345_ADDRESS  0xA6
+  #define ADXL345_ADDRESS 0xA6
   #define ITG3200_ADDRESS 0XD0
 #endif
 
@@ -332,6 +397,20 @@
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y; magADC[PITCH]  = X; magADC[YAW]  = Z;}
   #define ITG3200_ADDRESS 0XD2
+#endif
+
+#if defined(MONGOOSE1_0)
+  #define ITG3200
+  #define ADXL345
+  #define BMP085
+  #define HMC5883
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  -X; gyroADC[PITCH] = -Y; gyroADC[YAW] = Z;}
+  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = -Y; accADC[YAW]  = Z;}
+  #define MAG_ORIENTATION(Y, X, Z)  {magADC[ROLL]  = X;  magADC[PITCH] = -Y; magADC[YAW]  = Z;}
+  #define ADXL345_ADDRESS 0xA6
+  #define ITG3200_ADDRESS 0XD0
+  #define BMP085_ADDRESS 0xEE
+  #undef INTERNAL_I2C_PULLUPS
 #endif
 
 #if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LSM303DLx_ACC) || defined(MPU6050)

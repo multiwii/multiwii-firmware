@@ -348,7 +348,7 @@ ISR(TIMER0_COMPA_vect) {
   ISR(TIMER0_COMPB_vect) { 
     static uint8_t state = 0;
     if(state == 0){
-      #if ! defined(A0_A1_PIN_HEX)
+      #if !defined(A0_A1_PIN_HEX)
         PORTD |= 1<<5; //digital PIN 5 high
       #else
         PORTC |= 1<<0;//PIN A0
@@ -356,7 +356,7 @@ ISR(TIMER0_COMPA_vect) {
       OCR0B += atomicPWM_PIN5_highState;
       state = 1;
     }else if(state == 1){
-      #if ! defined(A0_A1_PIN_HEX)
+      #if !defined(A0_A1_PIN_HEX)
         PORTD &= ~(1<<6);
       #else
         PORTC &= ~(1<<1);
@@ -364,7 +364,7 @@ ISR(TIMER0_COMPA_vect) {
       OCR0B += atomicPWM_PIN6_lowState;
       state = 2;
     }else if(state == 2){
-      #if ! defined(A0_A1_PIN_HEX)
+      #if !defined(A0_A1_PIN_HEX)
         PORTD |= 1<<6;
       #else
         PORTC |= 1<<1;//PIN A1
@@ -372,7 +372,7 @@ ISR(TIMER0_COMPA_vect) {
       OCR0B += atomicPWM_PIN6_highState;
       state = 3;  
     }else if(state == 3){
-      #if ! defined(A0_A1_PIN_HEX)
+      #if !defined(A0_A1_PIN_HEX)
         PORTD &= ~(1<<5); //digital PIN 5 low
       #else
         PORTC &= ~(1<<0);
@@ -518,7 +518,7 @@ void mixTable() {
     #endif
     S_PITCH = TILT_PITCH_MIDDLE + rcData[AUX3]-1500;
     S_ROLL  = TILT_ROLL_MIDDLE  + rcData[AUX4]-1500;
-    if ((rcOptions1 & activate1[BOXCAMSTAB]) || (rcOptions2 & activate2[BOXCAMSTAB])) {
+    if (rcOptions[BOXCAMSTAB]) {
       S_PITCH += TILT_PITCH_PROP * angle[PITCH] /16 ;
       S_ROLL  += TILT_ROLL_PROP  * angle[ROLL]  /16 ;
     }
@@ -563,7 +563,7 @@ void mixTable() {
        }
       }
     }
-    if ((rcOptions1 & activate1[BOXCAMTRIG]) || (rcOptions1 & activate2[BOXCAMTRIG])) camCycle=1;
+    if (rcOptions[BOXCAMTRIG]) camCycle=1;
   #endif
 
   maxMotor=motor[0];

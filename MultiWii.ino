@@ -68,11 +68,11 @@ static int16_t  heading,magHold;
 static uint8_t  calibratedACC = 0;
 static uint8_t  vbat;               // battery voltage in 0.1V steps
 static uint8_t  okToArm = 0;
-static uint8_t  rcOptions1,rcOptions2;
+static uint8_t  rcOptions[CHECKBOXITEMS];
 static int32_t  pressure;
 static int16_t  BaroAlt;
 static int16_t  EstAlt;             // in cm
-static int16_t  zVelocity;
+static int32_t  EstVelocity;
 static uint8_t  buzzerState = 0;
 static int16_t  debug1,debug2,debug3,debug4;
   
@@ -260,7 +260,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     	for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
     	vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
     }
-    if ( (rcOptions1 & activate1[BOXBEEPERON]) || (rcOptions2 & activate2[BOXBEEPERON]) ){ // unconditional beeper on via AUXn switch 
+    if ( rcOptions[BOXBEEPERON] ){ // unconditional beeper on via AUXn switch 
        buzzerFreq = 7;
     } else  if ( ( (vbat>VBATLEVEL1_3S) 
     #if defined(POWERMETER)
@@ -397,6 +397,7 @@ void loop () {
   static int16_t initialThrottleHold;
   static int16_t errorAltitudeI = 0;
   int16_t AltPID = 0;
+  static int16_t lastVelError = 0;
   static int16_t AltHold;
  
   #if defined(SPEKTRUM)
@@ -452,7 +453,7 @@ void loop () {
        } 
      #endif
       else if ((activate1[BOXARM] > 0) || (activate2[BOXARM] > 0)) {
-        if ( ((rcOptions1 & activate1[BOXARM]) || (rcOptions2 & activate2[BOXARM])) && okToArm ) {
+        if ( rcOptions[BOXARM] && okToArm ) {
           armed = 1;
           headFreeModeHold = heading;
         } else if (armed) armed = 0;
@@ -513,11 +514,11 @@ void loop () {
    #endif
 
     #if defined(InflightAccCalibration)  
-      if (AccInflightCalibrationArmed && armed == 1 && rcData[THROTTLE] > MINCHECK && !((rcOptions1 & activate1[BOXARM]) || (rcOptions2 & activate2[BOXARM])) ){              // Copter is airborne and you are turning it off via boxarm : start measurement
+      if (AccInflightCalibrationArmed && armed == 1 && rcData[THROTTLE] > MINCHECK && !rcOptions[BOXARM] ){              // Copter is airborne and you are turning it off via boxarm : start measurement
         InflightcalibratingA = 50;
         AccInflightCalibrationArmed = 0;  
       }  
-      if ((rcOptions1 & activate1[BOXPASSTHRU]) || (rcOptions2 & activate2[BOXPASSTHRU])) {      //Use the Passthru Option to activate : Passthru = TRUE Meausrement started, Land and passtrhu = 0 measurement stored
+      if (rcOptions[BOXPASSTHRU]) {      //Use the Passthru Option to activate : Passthru = TRUE Meausrement started, Land and passtrhu = 0 measurement stored
         if (!AccInflightCalibrationActive && !AccInflightCalibrationMeasurementDone){
           InflightcalibratingA = 50;
         }
@@ -527,13 +528,17 @@ void loop () {
       }
     #endif
 
-    rcOptions1 = (rcData[AUX1]<1300)   + (1300<rcData[AUX1] && rcData[AUX1]<1700)*2  + (rcData[AUX1]>1700)*4
-               +(rcData[AUX2]<1300)*8 + (1300<rcData[AUX2] && rcData[AUX2]<1700)*16 + (rcData[AUX2]>1700)*32;
-    rcOptions2 = (rcData[AUX3]<1300)   + (1300<rcData[AUX3] && rcData[AUX3]<1700)*2  + (rcData[AUX3]>1700)*4
-               +(rcData[AUX4]<1300)*8 + (1300<rcData[AUX4] && rcData[AUX4]<1700)*16 + (rcData[AUX4]>1700)*32;
+    for(i=0;i<CHECKBOXITEMS;i++) {
+      rcOptions[i] = (
+      ( (rcData[AUX1]<1300)    | (1300<rcData[AUX1] && rcData[AUX1]<1700)<<1 | (rcData[AUX1]>1700)<<2
+       |(rcData[AUX2]<1300)<<3 | (1300<rcData[AUX2] && rcData[AUX2]<1700)<<4 | (rcData[AUX2]>1700)<<5) & activate1[i]
+      )||(
+      ( (rcData[AUX3]<1300)    | (1300<rcData[AUX3] && rcData[AUX3]<1700)<<1 | (rcData[AUX3]>1700)<<2
+       |(rcData[AUX4]<1300)<<3 | (1300<rcData[AUX4] && rcData[AUX4]<1700)<<4 | (rcData[AUX4]>1700)<<5) & activate2[i]);
+    }
     
     //note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAVE_DELAY is always false
-    if (( (rcOptions1 & activate1[BOXACC]) || (rcOptions2 & activate2[BOXACC]) || (failsafeCnt > 5*FAILSAVE_DELAY) ) && (ACC || nunchuk)) { 
+    if (( rcOptions[BOXACC] || (failsafeCnt > 5*FAILSAVE_DELAY) ) && (ACC || nunchuk)) { 
       // bumpless transfer to Level mode
       if (!accMode) {
         errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
@@ -541,39 +546,41 @@ void loop () {
       }  
     } else accMode = 0;  // modified by MIS for failsave support
 
-    if ((rcOptions1 & activate1[BOXARM]) == 0 || (rcOptions2 & activate2[BOXARM]) == 0) okToArm = 1;
+    if (rcOptions[BOXARM] == 0) okToArm = 1;
     if (accMode == 1) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
 
     #if BARO
-      if ((rcOptions1 & activate1[BOXBARO]) || (rcOptions2 & activate2[BOXBARO])) {
+      if (rcOptions[BOXBARO]) {
         if (baroMode == 0) {
           baroMode = 1;
           AltHold = EstAlt;
           initialThrottleHold = rcCommand[THROTTLE];
           errorAltitudeI = 0;
+          lastVelError = 0;
+          EstVelocity = 0;
         }
       } else baroMode = 0;
     #endif
     #if MAG
-      if ((rcOptions1 & activate1[BOXMAG]) || (rcOptions2 & activate2[BOXMAG])) {
+      if (rcOptions[BOXMAG]) {
         if (magMode == 0) {
           magMode = 1;
           magHold = heading;
         }
       } else magMode = 0;
-      if ((rcOptions1 & activate1[BOXHEADFREE]) || (rcOptions2 & activate2[BOXHEADFREE])) {
+      if (rcOptions[BOXHEADFREE]) {
         if (headFreeMode == 0) {
           headFreeMode = 1;
         }
       } else headFreeMode = 0;
     #endif
     #if GPS
-      if ((rcOptions1 & activate1[BOXGPSHOME]) || (rcOptions2 & activate2[BOXGPSHOME])) {GPSModeHome = 1;}
+      if (rcOptions[BOXGPSHOME]) {GPSModeHome = 1;}
       else GPSModeHome = 0;
-      if ((rcOptions1 & activate1[BOXGPSHOLD]) || (rcOptions2 & activate2[BOXGPSHOLD])) {GPSModeHold = 1;}
+      if (rcOptions[BOXGPSHOLD]) {GPSModeHold = 1;}
       else GPSModeHold = 0;
     #endif
-    if ((rcOptions1 & activate1[BOXPASSTHRU]) || (rcOptions2 & activate2[BOXPASSTHRU])) {passThruMode = 1;}
+    if (rcOptions[BOXPASSTHRU]) {passThruMode = 1;}
     else passThruMode = 0;
   }
   
@@ -598,6 +605,8 @@ void loop () {
         AltHold = EstAlt;
         initialThrottleHold = rcCommand[THROTTLE];
         errorAltitudeI = 0;
+        lastVelError = 0;
+        EstVelocity = 0;
       }
       //**** Alt. Set Point stabilization PID ****
       error = constrain( AltHold - EstAlt, -100, 100);   //  +/-10m,  1 decimeter accuracy
@@ -612,12 +621,16 @@ void loop () {
         ITerm = 0;
       
       AltPID = PTerm + ITerm ;
-      
-      //AltPID is reduced, depending of the zVelocity magnitude
-      AltPID = AltPID *(D8[PIDALT]-min(abs(zVelocity),D8[PIDALT]*4/5))/(D8[PIDALT]+1);
-      debug3 = AltPID;
 
-      rcCommand[THROTTLE] = initialThrottleHold + constrain(AltPID ,-100,+100);
+      //**** Velocity stabilization PD ****        
+      error = constrain(EstVelocity*2, -30000, 30000);
+      delta = error - lastVelError;
+      lastVelError = error;
+      
+      PTerm = (int32_t)error * P8[PIDVEL]/800;
+      DTerm = (int32_t)delta * D8[PIDVEL]/16;
+      
+      rcCommand[THROTTLE] = initialThrottleHold + constrain(AltPID - (PTerm - DTerm) ,-100,+100);
     }
   #endif
   

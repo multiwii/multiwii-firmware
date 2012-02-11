@@ -1,21 +1,3 @@
-// *******************************************************
-// Interrupt driven UART transmitter - using a ring buffer
-// *******************************************************
-static uint8_t head,tail;
-static uint8_t buf[256];      // 256 is choosen to avoid modulo operations on 8 bits pointers
-void serialize16(int16_t a) {buf[head++]  = a; buf[head++]  = a>>8&0xff;}
-void serialize8(uint8_t a)  {buf[head++]  = a;}
-
-ISR_UART {
-  UDR0 = buf[tail++];         // Transmit next byte in the ring
-  if ( tail == head )         // Check if all data is transmitted
-    UCSR0B &= ~(1<<UDRIE0);   // Disable transmitter UDRE interrupt
-}
-
-void UartSendData() {         // Data transmission acivated when the ring is not empty
-  UCSR0B |= (1<<UDRIE0);      // Enable transmitter UDRE interrupt
-}
-
 void serialCom() {
   uint8_t i;
   
@@ -23,60 +5,53 @@ void serialCom() {
     switch (SerialRead(0)) {
     #ifdef BTSERIAL
     case 'K': //receive RC data from Bluetooth Serial adapter as a remote
-    	rcData[THROTTLE] = (SerialRead(0) * 4) + 1000;
-    	rcData[ROLL]     = (SerialRead(0) * 4) + 1000;
-    	rcData[PITCH]    = (SerialRead(0) * 4) + 1000;
-    	rcData[YAW]      = (SerialRead(0) * 4) + 1000;
-    	rcData[AUX1]     = (SerialRead(0) * 4) + 1000;
-    	break;
+      rcData[THROTTLE] = (SerialRead(0) * 4) + 1000;
+      rcData[ROLL]     = (SerialRead(0) * 4) + 1000;
+      rcData[PITCH]    = (SerialRead(0) * 4) + 1000;
+      rcData[YAW]      = (SerialRead(0) * 4) + 1000;
+      rcData[AUX1]     = (SerialRead(0) * 4) + 1000;
+      break;
     #endif
     #ifdef LCD_TELEMETRY
     case 'A': // button A press
     case '1':
-    	if (telemetry==1) telemetry = 0; else { telemetry = 1; LCDclear(); }
-    	break;
+      if (telemetry==1) telemetry = 0; else telemetry = 1;
+      break;
     case 'B': // button B press
     case '2':
-    	if (telemetry==2) telemetry = 0; else { telemetry = 2; LCDclear(); }
-    	break;
+      if (telemetry==2) telemetry = 0; else telemetry = 2;
+      break;
     case 'C': // button C press
     case '3':
-    	if (telemetry==3) telemetry = 0; else { telemetry = 3; LCDclear();
-       #if defined(LOG_VALUES) && defined(DEBUG)
-    	cycleTimeMax = 0; // reset min/max on transition on->off
-    	cycleTimeMin = 65535;
-       #endif
-    	}
-    	break;
+      if (telemetry==3) telemetry = 0; else telemetry = 3;
+      break;
     case 'D': // button D press
     case '4':
-    	if (telemetry==4) telemetry = 0; else { telemetry = 4; LCDclear(); }
-    	break;
+      if (telemetry==4) telemetry = 0; else telemetry = 4;
+      break;
     case '5':
-    	if (telemetry==5) telemetry = 0; else { telemetry = 5; LCDclear(); }
-    	break;
+      if (telemetry==5) telemetry = 0; else telemetry = 5;
+      break;
     case '6':
-    	if (telemetry==6) telemetry = 0; else { telemetry = 6; LCDclear(); }
-    	break;
+      if (telemetry==6) telemetry = 0; else telemetry = 6;
+      break;
     case '7':
-    	if (telemetry==7) telemetry = 0; else { telemetry = 7; LCDclear(); }
-    	break;
+      if (telemetry==7) telemetry = 0; else telemetry = 7;
+      break;
     case '9':
-     	if (telemetry==9) telemetry = 0; else { telemetry = 9; LCDclear(); }
-     	break;
+      if (telemetry==9) telemetry = 0; else telemetry = 9;
+      break;
      #if defined(LOG_VALUES) && defined(DEBUG)
     case 'R':
-    	//Reset logvalues
-    	if (telemetry=='R') telemetry = 0; else { telemetry = 'R'; LCDclear(); }
-    	break;
+      //Reset logvalues
+      if (telemetry=='R') telemetry = 0; else telemetry = 'R';
+      break;
      #endif
      #ifdef DEBUG
     case 'F':
-      {
-    	if (telemetry=='F') telemetry = 0; else { telemetry = 'F'; LCDclear(); }
-    	break;
-      }
-   #endif
+      if (telemetry=='F') telemetry = 0; else telemetry = 'F';
+      break;
+     #endif
     case 'a': // button A release
     case 'b': // button B release
     case 'c': // button C release
@@ -85,12 +60,12 @@ void serialCom() {
     #endif
     case 'M': // Multiwii @ arduino to GUI all data
       serialize8('M');
-      serialize8(VERSION);  // MultiWii Firmware version
+      serialize8(VERSION);
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
       for(i=0;i<3;i++) serialize16(gyroData[i]);
       for(i=0;i<3;i++) serialize16(magADC[i]);
       serialize16(EstAlt);
-      serialize16(heading); // compass
+      serialize16(heading);
       for(i=0;i<8;i++) serialize16(servo[i]);
       for(i=0;i<8;i++) serialize16(motor[i]);
       for(i=0;i<8;i++) serialize16(rcData[i]);
@@ -102,6 +77,7 @@ void serialCom() {
       #else
          serialize16(cycleTime);
       #endif
+      serialize16(i2c_errors_count);
       for(i=0;i<2;i++) serialize16(angle[i]);
       serialize8(MULTITYPE);
       for(i=0;i<PIDITEMS;i++) {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);}
@@ -112,7 +88,7 @@ void serialCom() {
       serialize8(dynThrPID);
       for(i=0;i<CHECKBOXITEMS;i++) {
     	  serialize8(activate1[i]);
-    	  serialize8(activate2[i] | ( ( (rcOptions1 & activate1[i]) || (rcOptions2 & activate2[i]) )<<7) ); // use highest bit to transport state in mwc
+    	  serialize8(activate2[i] | (rcOptions[i]<<7) ); // use highest bit to transport state in mwc
       }
       serialize16(GPS_distanceToHome);
       serialize16(GPS_directionToHome);
@@ -123,7 +99,7 @@ void serialCom() {
       serialize16(intPowerTrigger1);
       serialize8(vbat);
       serialize16(BaroAlt);            // 4 variables are here for general monitoring purpose
-      serialize16(i2c_errors_count);   // debug2
+      serialize16(0);                  // debug2
       serialize16(debug3);             // debug3
       serialize16(debug4);             // debug4
       serialize8('M');
@@ -169,29 +145,34 @@ void serialCom() {
   }
 }
 
+// *******************************************************
+// Interrupt driven UART transmitter - using a ring buffer
+// *******************************************************
+static uint8_t headTX,tailTX;
+static uint8_t bufTX[256];      // 256 is choosen to avoid modulo operations on 8 bits pointers
+void serialize16(int16_t a) {bufTX[headTX++]  = a; bufTX[headTX++]  = a>>8&0xff;}
+void serialize8(uint8_t a)  {bufTX[headTX++]  = a;}
+
+ISR_UART {
+  UDR0 = bufTX[tailTX++];         // Transmit next byte in the ring
+  if ( tailTX == headTX )         // Check if all data is transmitted
+    UCSR0B &= ~(1<<UDRIE0);       // Disable transmitter UDRE interrupt
+}
+
+void UartSendData() {         // Data transmission acivated when the ring is not empty
+  UCSR0B |= (1<<UDRIE0);      // Enable transmitter UDRE interrupt
+}
+
 #define SERIAL_RX_BUFFER_SIZE 64
 
 #if defined(PROMINI) 
-uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][1];
-volatile uint8_t serialHeadRX[1],serialTailRX[1];
+  uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][1];
+  volatile uint8_t serialHeadRX[1],serialTailRX[1];
 #endif
 #if defined(MEGA)
-uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][4];
-volatile uint8_t serialHeadRX[4],serialTailRX[4];
+  uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][4];
+  volatile uint8_t serialHeadRX[4],serialTailRX[4];
 #endif
-
-//#if defined(PROMINI) 
-//uint8_t serialBufferRX0[SERIAL_RX_BUFFER_SIZE];
-//volatile uint8_t serialHeadRX0,serialTailRX0;
-//#endif
-//#if defined(MEGA)
-//uint8_t serialBufferRX1[SERIAL_RX_BUFFER_SIZE];
-//volatile uint8_t serialHeadRX1,serialTailRX1;
-//uint8_t serialBufferRX2[SERIAL_RX_BUFFER_SIZE];
-//volatile uint8_t serialHeadRX2,serialTailRX2;
-//uint8_t serialBufferRX3[SERIAL_RX_BUFFER_SIZE];
-//volatile uint8_t serialHeadRX3,serialTailRX3;
-//#endif
 
 void SerialOpen(uint8_t port, uint32_t baud) {
   uint8_t h = ((F_CPU  / 4 / baud -1) / 2) >> 8;
@@ -249,82 +230,15 @@ SIGNAL(USART3_RX_vect){
 }
 #endif
 
-//#if defined(PROMINI) && !(defined(SPEKTRUM))
-//SIGNAL(USART_RX_vect){
-//  uint8_t d = UDR0;
-//  uint8_t i = (serialHeadRX0 + 1) % SERIAL_RX_BUFFER_SIZE;
-//  if (i != serialTailRX0) {serialBufferRX0[serialHeadRX0] = d; serialHeadRX0 = i;}
-//}
-//#endif
-//#if defined(MEGA)
-//SIGNAL(USART0_RX_vect){
-//  uint8_t d = UDR0;
-//  uint8_t i = (serialHeadRX0 + 1) % SERIAL_RX_BUFFER_SIZE;
-//  if (i != serialTailRX0) {serialBufferRX0[serialHeadRX0] = d; serialHeadRX0 = i;}
-//}
-//#if !(defined(SPEKTRUM))
-//SIGNAL(USART1_RX_vect){
-//  uint8_t d = UDR1;
-//  uint8_t i = (serialHeadRX1 + 1) % SERIAL_RX_BUFFER_SIZE;
-//  if (i != serialTailRX1) {serialBufferRX1[serialHeadRX1] = d; serialHeadRX1 = i;}
-//}
-//#endif
-//SIGNAL(USART2_RX_vect){
-//  uint8_t d = UDR2;
-//  uint8_t i = (serialHeadRX2 + 1) % SERIAL_RX_BUFFER_SIZE;
-//  if (i != serialTailRX2) {serialBufferRX2[serialHeadRX2] = d; serialHeadRX2 = i;}
-//}
-//SIGNAL(USART3_RX_vect){
-//  uint8_t d = UDR3;
-//  uint8_t i = (serialHeadRX3 + 1) % SERIAL_RX_BUFFER_SIZE;
-//  if (i != serialTailRX3) {serialBufferRX3[serialHeadRX3] = d; serialHeadRX3 = i;}
-//}
-//#endif
-
 uint8_t SerialRead(uint8_t port) {
     uint8_t c = serialBufferRX[serialTailRX[port]][port];
     if ((serialHeadRX[port] != serialTailRX[port])) serialTailRX[port] = (serialTailRX[port] + 1) % SERIAL_RX_BUFFER_SIZE;
     return c;
 }
 
-//void SerialRead(uint8_t port,uint8_t c){
-//  switch (port) {
-//    case 0: 
-//      uint8_t c = serialBufferRX0[serialTailRX0];
-//      if ((serialHeadRX0 != serialTailRX0)) serialTailRX0 = (serialTailRX0 + 1) % SERIAL_RX_BUFFER_SIZE;
-//      break;
-//    #if defined(MEGA)
-//    case 1: 
-//      uint8_t c = serialBufferRX1[serialTailRX1];
-//      if ((serialHeadRX1 != serialTailRX1)) serialTailRX1 = (serialTailRX1 + 1) % SERIAL_RX_BUFFER_SIZE;
-//      break;
-//    case 2: 
-//      uint8_t c = serialBufferRX2[serialTailRX2];
-//      if ((serialHeadRX2 != serialTailRX2)) serialTailRX2 = (serialTailRX2 + 1) % SERIAL_RX_BUFFER_SIZE;
-//      break;
-//    case 3: 
-//      uint8_t c = serialBufferRX3[serialTailRX3];
-//      if ((serialHeadRX3 != serialTailRX3)) serialTailRX3 = (serialTailRX3 + 1) % SERIAL_RX_BUFFER_SIZE;
-//      break;
-//    #endif
-//  }
-//  return c;
-//}
-
 uint8_t SerialAvailable(uint8_t port) {
   return (SERIAL_RX_BUFFER_SIZE + serialHeadRX[port] - serialTailRX[port]) % SERIAL_RX_BUFFER_SIZE;
 }
-
-//void SerialAvailable(uint8_t port,uint8_t c){
-//  switch (port) {
-//    case 0: return (SERIAL_RX_BUFFER_SIZE + serialHeadRX0 - serialTailRX0) % SERIAL_RX_BUFFER_SIZE;
-//    #if defined(MEGA)
-//    case 1: return (SERIAL_RX_BUFFER_SIZE + serialHeadRX1 - serialTailRX1) % SERIAL_RX_BUFFER_SIZE;
-//    case 2: return (SERIAL_RX_BUFFER_SIZE + serialHeadRX2 - serialTailRX2) % SERIAL_RX_BUFFER_SIZE;
-//    case 3: return (SERIAL_RX_BUFFER_SIZE + serialHeadRX3 - serialTailRX3) % SERIAL_RX_BUFFER_SIZE;
-//    #endif
-//  }
-//}
 
 void SerialWrite(uint8_t port,uint8_t c){
   switch (port) {

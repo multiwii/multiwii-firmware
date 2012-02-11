@@ -734,6 +734,7 @@ void fill_line2_fails_values() {
 void lcd_telemetry() {
   static uint8_t linenr = 0;
   switch (telemetry) { // output telemetry data
+  if (telemetry>0) LCDclear();
   uint16_t unit;
   uint8_t i;
   case 1: // button A on Textstar LCD -> angles
@@ -806,6 +807,10 @@ void lcd_telemetry() {
 
   case 3: // button C on Textstar LCD -> cycle time
   case '3':
+          #if defined(LOG_VALUES) && defined(DEBUG)
+            cycleTimeMax = 0; // reset min/max on transition on->off
+    	    cycleTimeMin = 65535;
+          #endif
 	  if (linenr++ % 2) {
 		  fill_line1_cycle();
 		  LCDsetLine(1);
