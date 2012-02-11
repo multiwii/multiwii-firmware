@@ -25,7 +25,7 @@ volatile uint16_t rcValue[18] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502,
 // Configure each rc pin for PCINT
 void configureReceiver() {
   #if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(BTSERIAL)
-    #if defined(PROMINI)  || defined(MONGOOSE1_0)
+    #if defined(PROMINI)
       // PCINT activated only for specific pin inside [D0-D7]  , [D2 D4 D5 D6 D7] for this multicopter
       PORTD   = (1<<2) | (1<<4) | (1<<5) | (1<<6) | (1<<7); //enable internal pull ups on the PINs of PORTD (no high impedence PINs)
       PCMSK2 |= (1<<2) | (1<<4) | (1<<5) | (1<<6) | (1<<7); 
@@ -67,7 +67,7 @@ void configureReceiver() {
     static uint16_t edgeTime[8];
     static uint8_t PCintLast;
   
-    #if defined(PROMINI)  || defined(MONGOOSE1_0)
+    #if defined(PROMINI)
       pin = PIND;             // PIND indicates the state of each PIN for the arduino port dealing with [D0-D7] digital pins (8 bits variable)
     #endif
     #if defined(MEGA)

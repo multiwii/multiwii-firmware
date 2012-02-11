@@ -62,16 +62,20 @@
    It's just to have some feedback. This will be removed in the future */
 //#define STAB_OLD_17
 
-/* GPS
+/* GPS using a SERIAL port
    only available on MEGA boards (this might be possible on 328 based boards in the future)
    if enabled, define here the Arduino Serial port number and the UART speed
    note: only the RX PIN is used, the GPS is not configured by multiwii
    the GPS must be configured to output NMEA sentences (which is generally the default conf for most GPS devices)
-*/
-//#define GPS
-#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
+   uncomment the first line to select the GPS serial port of the arduino */
+//#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
 #define GPS_BAUD   115200
-//#define GPS_BAUD   9600
+
+/* I2C GPS device made with an independant arduino + GPS device
+   including some navigation functions
+   contribution from EOSBandi
+   http://code.google.com/p/i2c-gps-nav/ */
+//#define I2C_GPS
 
 /* Pseudo-derivative conrtroller for level mode (experimental)
    Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
@@ -104,8 +108,7 @@
 //#define MINIWII         // Jussi's MiniWii Flight Controller
 //#define CITRUSv1_0      // CITRUSv1 from qcrc.ca
 //#define DROTEK_IMU10DOF
-//#define MONGOOSE1_0     // mongoose 1.0    http://www.fuzzydrone.org/                      <- verified by matbogdan
-
+//#define MONGOOSE1_0     // mongoose 1.0    http://www.fuzzydrone.org/
 
 //if you use independent sensors
 //leave it commented it you already checked a specific board above

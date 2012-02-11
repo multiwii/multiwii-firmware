@@ -1,3 +1,4 @@
+#if GPS
 /* this is an equirectangular approximation to calculate distance and bearing between 2 GPS points (lat/long)
    it's much more faster than an exact calculation
    the error is neglectible for few kilometers assuming a constant R for earth
@@ -86,3 +87,4 @@ bool GPS_newFrame(char c) {
   }
   return frameOK && GPGGA_frame;
 }
+#endif
