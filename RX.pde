@@ -40,6 +40,28 @@ void configureReceiver() {
         #endif
       #endif
     #endif
+    #if defined(PROMICRO)
+      PORTB   = (1<<1) | (1<<2) | (1<<3) | (1<<4);
+      PCMSK0 |= (1<<1) | (1<<2) | (1<<3) | (1<<4); 
+      #if defined(RCAUX2PIND17)
+        PORTB  |= (1<<0);
+        PCMSK0 |= (1<<0);       
+      #endif
+      PCICR   = (1<<0) ; // bit 0 PCINT activated only for the port dealing with PINs on port B
+      //attachinterrupt dosent works with atmega32u4 ATM.
+      //Trottle on pin 7
+      pinMode(7,INPUT); // set to input
+      PORTE |= (1 << 6); // enable pullups
+      EIMSK |= (1 << INT6); // enable interuppt
+      EICRB |= (1 << ISC60);
+      #if defined(RCAUX2PINRXO)
+        //AUX2 on RX pin
+        pinMode(0,INPUT); // set to input
+        PORTD |= (1 << 2); // enable pullups
+        EIMSK |= (1 << INT2); // enable interuppt
+        EICRA |= (1 << ISC20);
+      #endif
+    #endif
     #if defined(MEGA)
       // PCINT activated only for specific pin inside [A8-A15]
       DDRK = 0;  // defined PORTK as a digital port ([A8-A15] are consired as digital PINs and not analogical)
@@ -49,7 +71,14 @@ void configureReceiver() {
     #endif
   #endif
   #if defined(SERIAL_SUM_PPM)
-    PPM_PIN_INTERRUPT;
+    #if !defined(PROMICRO)
+      PPM_PIN_INTERRUPT;
+    #else
+      pinMode(7,INPUT); // set to input
+      PORTE |= (1 << 6); // enable pullups
+      EIMSK |= (1 << INT6); // enable interuppt
+      EICRB |= (1 << ISC61)|(1 << ISC60); // rising
+    #endif
   #endif
   #if defined (SPEKTRUM)
     SerialOpen(1,115200);
@@ -60,7 +89,11 @@ void configureReceiver() {
 }
 
 #if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(BTSERIAL)
-  ISR(PCINT2_vect) { //this ISR is common to every receiver channel, it is call everytime a change state occurs on a digital pin [D2-D7]
+  #if !defined(PROMICRO)
+    ISR(PCINT2_vect) { //this ISR is common to every receiver channel, it is call everytime a change state occurs on a digital pin [D2-D7]
+  #else
+    ISR(PCINT0_vect) { //this ISR is common to every receiver channel, it is call everytime a change state occurs on a digital pin [B1-B4]
+  #endif
     uint8_t mask;
     uint8_t pin;
     uint16_t cTime,dTime;
@@ -70,6 +103,9 @@ void configureReceiver() {
     #if defined(PROMINI)
       pin = PIND;             // PIND indicates the state of each PIN for the arduino port dealing with [D0-D7] digital pins (8 bits variable)
     #endif
+    #if defined(PROMICRO)
+      pin = PINB;             // PINB indicates the state of each PIN for the arduino port dealing with [B1-B4] digital pins (8 bits variable)
+    #endif
     #if defined(MEGA)
       pin = PINK;             // PINK indicates the state of each PIN for the arduino port dealing with [A8-A15] digital pins (8 bits variable)
     #endif
@@ -78,7 +114,31 @@ void configureReceiver() {
     PCintLast = pin;          // we memorize the current state of all PINs [D0-D7]
   
     cTime = micros();         // micros() return a uint32_t, but it is not usefull to keep the whole bits => we keep only 16 bits
-    
+    #if defined(PROMICRO)
+      if (mask & 1<<2)        //indicates the bit 1 of the arduino port [B1-B4], that is to say digital pin 15, if 1 => this pin has just changed
+        if (!(pin & 1<<2)) {     //indicates if the bit 1 of the arduino port [B1-B4] is not at a high state (so that we match here only descending PPM pulse)
+          dTime = cTime-edgeTime[4]; if (900<dTime && dTime<2200) rcValue[4] = dTime; // just a verification: the value must be in the range [1000;2000] + some margin
+        } else edgeTime[4] = cTime;    // if the bit 1 of the arduino port [B1-B4] is at a high state (ascending PPM pulse), we memorize the time
+      if (mask & 1<<3)   //same principle for other channels   // avoiding a for() is more than twice faster, and it's important to minimize execution time in ISR
+        if (!(pin & 1<<3)) {
+          dTime = cTime-edgeTime[5]; if (900<dTime && dTime<2200) rcValue[5] = dTime;
+        } else edgeTime[5] = cTime;
+      if (mask & 1<<1)
+        if (!(pin & 1<<1)) {
+          dTime = cTime-edgeTime[6]; if (900<dTime && dTime<2200) rcValue[6] = dTime;
+        } else edgeTime[6] = cTime;
+      if (mask & 1<<4)
+        if (!(pin & 1<<4)) {
+          dTime = cTime-edgeTime[7]; if (900<dTime && dTime<2200) rcValue[7] = dTime;
+        } else edgeTime[7] = cTime;  
+      #if defined(RCAUX2PIND17)
+        if (mask & 1<<0)
+          if (!(pin & 1<<0)) {
+            dTime = cTime-edgeTime[0]; if (900<dTime && dTime<2200) rcValue[0] = dTime;
+          } else edgeTime[0] = cTime;       
+      #endif 
+    #endif
+    #if defined(PROMINI) || defined(MEGA)      
     // mask is pins [D0-D7] that have changed // the principle is the same on the MEGA for PORTK and [A8-A15] PINs
     // chan = pin sequence of the port. chan begins at D2 and ends at D7
     if (mask & 1<<2) {         //indicates the bit 2 of the arduino port [D0-D7], that is to say digital pin 2, if 1 => this pin has just changed
@@ -106,6 +166,7 @@ void configureReceiver() {
         dTime = cTime-edgeTime[7]; if (900<dTime && dTime<2200) rcValue[7] = dTime;
       } else edgeTime[7] = cTime;
     }
+    #endif
     #if defined(MEGA)
       if (mask & 1<<0) {
         if (!(pin & 1<<0)) {
@@ -123,7 +184,7 @@ void configureReceiver() {
         } else edgeTime[3] = cTime;
       }
     #endif
-    #if defined(FAILSAFE)
+    #if defined(FAILSAFE) && !defined(PROMICRO)
       if (mask & 1<<THROTTLEPIN) {    // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
         if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
     #endif
@@ -155,8 +216,40 @@ void configureReceiver() {
   #endif
 #endif
 
+#if defined(PROMICRO) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(BTSERIAL) && !defined(SERIAL_SUM_PPM)
+  // trottle
+  ISR(INT6_vect){ 
+    static uint16_t now,diff;
+    static uint16_t last = 0;
+    now = micros();  
+    diff = now - last;
+    last = now;
+    if(900<diff && diff<2200){ 
+      rcValue[2] = diff;
+      #if defined(FAILSAFE)
+        if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
+      #endif 
+    }  
+  }
+  // Aux 2
+  #if defined(RCAUX2PINRXO)
+    ISR(INT2_vect){
+      static uint16_t now,diff;
+      static uint16_t last = 0; 
+      now = micros();  
+      diff = now - last;
+      last = now;
+      if(900<diff && diff<2200) rcValue[0] = diff;
+    }
+  #endif
+#endif
+
 #if defined(SERIAL_SUM_PPM)
-void rxInt() {
+  #if !defined(PROMICRO)
+    void rxInt() {
+  #else
+    ISR(INT6_vect){
+  #endif
   uint16_t now,diff;
   static uint16_t last = 0;
   static uint8_t chan = 0;
