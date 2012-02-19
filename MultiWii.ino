@@ -1,7 +1,7 @@
 /*
 MultiWiiCopter by Alexandre Dubus
 www.multiwii.com
-December  2011     V1.dev
+February  2012     V1.dev
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -70,8 +70,11 @@ static uint8_t  vbat;               // battery voltage in 0.1V steps
 static uint8_t  okToArm = 0;
 static uint8_t  rcOptions[CHECKBOXITEMS];
 static int32_t  pressure;
-static int16_t  BaroAlt;
-static int16_t  EstAlt;             // in cm
+static int32_t  BaroAlt;
+static int32_t  EstAlt;             // in cm
+static int16_t  BaroPID = 0;
+static int32_t  AltHold;
+static int16_t  errorAltitudeI = 0;
 static int32_t  EstVelocity;
 static uint8_t  buzzerState = 0;
 static int16_t  debug1,debug2,debug3,debug4;
@@ -395,10 +398,10 @@ void loop () {
   static int16_t errorAngleI[2] = {0,0};
   static uint32_t rcTime  = 0;
   static int16_t initialThrottleHold;
-  static int16_t errorAltitudeI = 0;
+//  static int16_t errorAltitudeI = 0;
   int16_t AltPID = 0;
   static int16_t lastVelError = 0;
-  static int16_t AltHold;
+//  static int16_t AltHold;
  
   #if defined(SPEKTRUM)
     if (rcFrameComplete) computeRC();
@@ -558,6 +561,7 @@ void loop () {
           errorAltitudeI = 0;
           lastVelError = 0;
           EstVelocity = 0;
+          BaroPID=0;
         }
       } else baroMode = 0;
     #endif
@@ -582,8 +586,33 @@ void loop () {
     #endif
     if (rcOptions[BOXPASSTHRU]) {passThruMode = 1;}
     else passThruMode = 0;
+  } else { //not in rc loop
+    static int8_t taskOrder=0; //never call all function in the same loop
+    switch (taskOrder) {
+      case 0:
+        taskOrder++;    
+        #if MAG
+          Mag_getADC();
+          break;
+        #endif
+      case 1:
+        taskOrder++; 
+        #if BARO
+          Baro_update();     
+          break;
+        #endif
+      case 2:
+        taskOrder++; 
+        #if BARO
+          getEstimatedAltitude();
+        break;
+        #endif
+      default:
+        taskOrder=0;
+        break;
+    }
   }
-  
+
   computeIMU();
   // Measure loop rate just afer reading the sensors
   currentTime = micros();
@@ -602,12 +631,15 @@ void loop () {
   #if BARO
     if (baroMode) {
       if (abs(rcCommand[THROTTLE]-initialThrottleHold)>20) {
-        AltHold = EstAlt;
-        initialThrottleHold = rcCommand[THROTTLE];
-        errorAltitudeI = 0;
-        lastVelError = 0;
-        EstVelocity = 0;
+         AltHold = EstAlt;
+         initialThrottleHold = rcCommand[THROTTLE];
+         errorAltitudeI = 0;
+         lastVelError = 0;
+         EstVelocity = 0;
+         BaroPID=0;
       }
+      rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
+/*
       //**** Alt. Set Point stabilization PID ****
       error = constrain( AltHold - EstAlt, -100, 100);   //  +/-10m,  1 decimeter accuracy
       errorAltitudeI += error;
@@ -631,6 +663,7 @@ void loop () {
       DTerm = (int32_t)delta * D8[PIDVEL]/16;
       
       rcCommand[THROTTLE] = initialThrottleHold + constrain(AltPID - (PTerm - DTerm) ,-100,+100);
+*/
     }
   #endif
   

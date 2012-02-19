@@ -38,28 +38,28 @@ void writeMotors() { // [1000;2000] => [125;250]
       #ifndef EXT_MOTOR_RANGE 
         OCR3C = motor[0]>>3; //  pin 3
       #else
-        OCR3C = ((motor[0]>>2) - 250) + 2);
+        OCR3C = ((motor[0]>>2) - 250) + 2;
       #endif
     #endif
     #if (NUMBER_MOTOR > 1)
       #ifndef EXT_MOTOR_RANGE 
         OCR3A = motor[1]>>3; //  pin 5
       #else
-        OCR3A = ((motor[1]>>2) - 250) + 2);
+        OCR3A = ((motor[1]>>2) - 250) + 2;
       #endif
     #endif
     #if (NUMBER_MOTOR > 2)
       #ifndef EXT_MOTOR_RANGE 
         OCR4A = motor[2]>>3; //  pin 6
       #else
-        OCR4A = ((motor[2]>>2) - 250) + 2);
+        OCR4A = ((motor[2]>>2) - 250) + 2;
       #endif
     #endif
     #if (NUMBER_MOTOR > 3)
       #ifndef EXT_MOTOR_RANGE 
         OCR3B = motor[3]>>3; //  pin 2
       #else
-        OCR3B = ((motor[3]>>2) - 250) + 2);
+        OCR3B = ((motor[3]>>2) - 250) + 2;
       #endif
     #endif
     #if (NUMBER_MOTOR > 4)
@@ -67,8 +67,8 @@ void writeMotors() { // [1000;2000] => [125;250]
         OCR4B = motor[4]>>3; //  pin 7
         OCR4C = motor[5]>>3; //  pin 8
       #else
-        OCR4B = ((motor[4]>>2) - 250) + 2);
-        OCR4C = ((motor[5]>>2) - 250) + 2);
+        OCR4B = ((motor[4]>>2) - 250) + 2;
+        OCR4C = ((motor[5]>>2) - 250) + 2;
       #endif
     #endif
     #if (NUMBER_MOTOR > 6)
@@ -76,8 +76,8 @@ void writeMotors() { // [1000;2000] => [125;250]
         OCR2B = motor[6]>>3; //  pin 9
         OCR2A = motor[7]>>3; //  pin 10
       #else
-        OCR2B = ((motor[6]>>2) - 250) + 2);
-        OCR2A = ((motor[7]>>2) - 250) + 2);
+        OCR2B = ((motor[6]>>2) - 250) + 2;
+        OCR2A = ((motor[7]>>2) - 250) + 2;
       #endif
     #endif
   #endif
@@ -86,28 +86,28 @@ void writeMotors() { // [1000;2000] => [125;250]
       #ifndef EXT_MOTOR_RANGE 
         OCR1A = motor[0]>>3; //  pin 9
       #else
-        OCR1A = ((motor[0]>>2) - 250) + 2);
+        OCR1A = ((motor[0]>>2) - 250) + 2;
       #endif
     #endif
     #if (NUMBER_MOTOR > 1)
       #ifndef EXT_MOTOR_RANGE 
         OCR1B = motor[1]>>3; //  pin 10
       #else
-        OCR1B = ((motor[1]>>2) - 250) + 2);
+        OCR1B = ((motor[1]>>2) - 250) + 2;
       #endif
     #endif
     #if (NUMBER_MOTOR > 2)
       #ifndef EXT_MOTOR_RANGE 
         OCR2A = motor[2]>>3; //  pin 11
       #else
-        OCR2A = ((motor[2]>>2) - 250) + 2);
+        OCR2A = ((motor[2]>>2) - 250) + 2;
       #endif
     #endif
     #if (NUMBER_MOTOR > 3)
       #ifndef EXT_MOTOR_RANGE 
         OCR2B = motor[3]>>3; //  pin 3
       #else
-        OCR2B = ((motor[3]>>2) - 250) + 2);
+        OCR2B = ((motor[3]>>2) - 250) + 2;
       #endif
     #endif
     #if (NUMBER_MOTOR > 4) //note: EXT_MOTOR_RANGE not possible here
@@ -171,7 +171,7 @@ void initOutput() {
     #endif
     #if (NUMBER_MOTOR == 6)  // PIN 5 & 6 or A0 & A1
       initializeSoftPWM();
-      #if defined(A0_A1_PIN_HEX)
+      #if defined(A0_A1_PIN_HEX) || (NUMBER_MOTOR > 6)
         pinMode(5,INPUT);pinMode(6,INPUT);     // we reactivate the INPUT affectation for these two PINs
         pinMode(A0,OUTPUT);pinMode(A1,OUTPUT);
       #endif
@@ -348,7 +348,7 @@ ISR(TIMER0_COMPA_vect) {
   ISR(TIMER0_COMPB_vect) { 
     static uint8_t state = 0;
     if(state == 0){
-      #if !defined(A0_A1_PIN_HEX)
+      #if !defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR < 8)
         PORTD |= 1<<5; //digital PIN 5 high
       #else
         PORTC |= 1<<0;//PIN A0
@@ -356,7 +356,7 @@ ISR(TIMER0_COMPA_vect) {
       OCR0B += atomicPWM_PIN5_highState;
       state = 1;
     }else if(state == 1){
-      #if !defined(A0_A1_PIN_HEX)
+      #if !defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR < 8)
         PORTD &= ~(1<<6);
       #else
         PORTC &= ~(1<<1);
@@ -364,7 +364,7 @@ ISR(TIMER0_COMPA_vect) {
       OCR0B += atomicPWM_PIN6_lowState;
       state = 2;
     }else if(state == 2){
-      #if !defined(A0_A1_PIN_HEX)
+      #if !defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR < 8)
         PORTD |= 1<<6;
       #else
         PORTC |= 1<<1;//PIN A1
@@ -372,7 +372,7 @@ ISR(TIMER0_COMPA_vect) {
       OCR0B += atomicPWM_PIN6_highState;
       state = 3;  
     }else if(state == 3){
-      #if !defined(A0_A1_PIN_HEX)
+      #if !defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR < 8)
         PORTD &= ~(1<<5); //digital PIN 5 low
       #else
         PORTC &= ~(1<<0);
