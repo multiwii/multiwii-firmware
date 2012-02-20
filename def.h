@@ -523,6 +523,13 @@
   #undef INTERNAL_I2C_PULLUPS
 #endif
 
+#if defined(CRIUS_LITE_0_2)
+  #define ITG3200
+  #define ADXL345
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = X; gyroADC[PITCH] =  Y; gyroADC[YAW] = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  -Y; accADC[PITCH]  = X; accADC[YAW]  = Z;}
+#endif
+
 #if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LSM303DLx_ACC) || defined(MPU6050)
   #define ACC 1
 #else

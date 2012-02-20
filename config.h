@@ -140,6 +140,7 @@
 //#define CITRUSv1_0      // CITRUSv1 from qcrc.ca
 //#define DROTEK_IMU10DOF
 //#define MONGOOSE1_0     // mongoose 1.0    http://www.fuzzydrone.org/
+//#define CRIUS_LITE_0_2 // Crius MultiWii V0.2
 
 //if you use independent sensors
 //leave it commented it you already checked a specific board above
