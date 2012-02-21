@@ -734,7 +734,7 @@ void fill_line2_fails_values() {
 void lcd_telemetry() {
   static uint8_t linenr = 0;
   switch (telemetry) { // output telemetry data
-  if (telemetry>0) LCDclear();
+  //if (telemetry>0) LCDclear(); // this disturbs display on most LCDs more than it helps.
   uint16_t unit;
   uint8_t i;
   case 1: // button A on Textstar LCD -> angles
