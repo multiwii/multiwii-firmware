@@ -13,7 +13,7 @@
 #endif
 #if !defined(PROMICRO) || defined(HWPWM6)
   volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
-  //for HEX Y6 and HEX6/HEX6X flat and for promini
+  //for HEX Y6 and HEX6/HEX6X flat for promini
   volatile uint8_t atomicPWM_PIN5_lowState;
   volatile uint8_t atomicPWM_PIN5_highState;
   volatile uint8_t atomicPWM_PIN6_lowState;
@@ -25,7 +25,7 @@
   volatile uint8_t atomicPWM_PIN12_highState;
 #else
   volatile uint16_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,8000};
-  //for HEX Y6 and HEX6/HEX6X flat and for Promicro
+  //for HEX Y6 and HEX6/HEX6X flat for Promicro
   volatile uint16_t atomicPWM_PIN5_lowState;
   volatile uint16_t atomicPWM_PIN5_highState;
   volatile uint16_t atomicPWM_PIN6_lowState;
@@ -144,11 +144,11 @@ void writeMotors() { // [1000;2000] => [125;250]
       TC4H = pwm4_HBD; OCR4D = pwm4_LBD; //  pin 6
     #endif    
     #if (NUMBER_MOTOR > 4)
-      #if !defined(HWPWM6)
-        atomicPWM_PIN5_highState = ((motor[4]-1000)<<4)+200;
-        atomicPWM_PIN5_lowState = 15934-atomicPWM_PIN5_highState;
-        atomicPWM_PIN6_highState = ((motor[5]-1000)<<4)+200;
-        atomicPWM_PIN6_lowState = 15934-atomicPWM_PIN6_highState;
+      #if !defined(HWPWM6)64
+        atomicPWM_PIN5_highState = ((motor[4]-1000)<<4)+320;
+        atomicPWM_PIN5_lowState = 15743-atomicPWM_PIN5_highState;
+        atomicPWM_PIN6_highState = ((motor[5]-1000)<<4)+320;
+        atomicPWM_PIN6_lowState = 15743-atomicPWM_PIN6_highState;
       #else
         OCR1C = motor[4]<<3; //  pin 11
         static uint8_t pwm4_HBA;
@@ -163,15 +163,15 @@ void writeMotors() { // [1000;2000] => [125;250]
     #endif
     #if (NUMBER_MOTOR > 6)
       #if !defined(HWPWM6)
-        atomicPWM_PINA2_highState = ((motor[6]-1000)<<4)+200;
-        atomicPWM_PINA2_lowState = 15934-atomicPWM_PINA2_highState;
-        atomicPWM_PIN12_highState = ((motor[7]-1000)<<4)+200;
-        atomicPWM_PIN12_lowState = 15934-atomicPWM_PIN12_highState;
+        atomicPWM_PINA2_highState = ((motor[6]-1000)<<4)+320;
+        atomicPWM_PINA2_lowState = 15743-atomicPWM_PINA2_highState;
+        atomicPWM_PIN12_highState = ((motor[7]-1000)<<4)+320;
+        atomicPWM_PIN12_lowState = 15743-atomicPWM_PIN12_highState;
       #else
-        atomicPWM_PINA2_highState = ((motor[6]-1000)>>2)+2;
-        atomicPWM_PINA2_lowState = 248-atomicPWM_PINA2_highState;
-        atomicPWM_PIN12_highState = ((motor[7]-1000)>>2)+2;
-        atomicPWM_PIN12_lowState = 248-atomicPWM_PIN12_highState;     
+        atomicPWM_PINA2_highState = ((motor[6]-1000)>>2)+5;
+        atomicPWM_PINA2_lowState = 245-atomicPWM_PINA2_highState;
+        atomicPWM_PIN12_highState = ((motor[7]-1000)>>2)+5;
+        atomicPWM_PIN12_lowState = 245-atomicPWM_PIN12_highState;     
       #endif
     #endif
   #endif
@@ -205,16 +205,16 @@ void writeMotors() { // [1000;2000] => [125;250]
       #endif
     #endif
     #if (NUMBER_MOTOR > 4) //note: EXT_MOTOR_RANGE not possible here
-      atomicPWM_PIN6_highState = ((motor[4]-1000)>>2)+2;
-      atomicPWM_PIN6_lowState  = 248-atomicPWM_PIN6_highState;
-      atomicPWM_PIN5_highState = ((motor[5]-1000)>>2)+2;
-      atomicPWM_PIN5_lowState  = 248-atomicPWM_PIN5_highState;
+      atomicPWM_PIN6_highState = ((motor[4]-1000)>>2)+5;
+      atomicPWM_PIN6_lowState  = 245-atomicPWM_PIN6_highState;
+      atomicPWM_PIN5_highState = ((motor[5]-1000)>>2)+5;
+      atomicPWM_PIN5_lowState  = 245-atomicPWM_PIN5_highState;
     #endif
     #if (NUMBER_MOTOR > 6) //note: EXT_MOTOR_RANGE not possible here
-      atomicPWM_PINA2_highState = ((motor[6]-1000)>>2)+2;
-      atomicPWM_PINA2_lowState  = 248-atomicPWM_PINA2_highState;
-      atomicPWM_PIN12_highState = ((motor[7]-1000)>>2)+2;
-      atomicPWM_PIN12_lowState  = 248-atomicPWM_PIN12_highState;
+      atomicPWM_PINA2_highState = ((motor[6]-1000)>>2)+5;
+      atomicPWM_PINA2_lowState  = 245-atomicPWM_PINA2_highState;
+      atomicPWM_PIN12_highState = ((motor[7]-1000)>>2)+5;
+      atomicPWM_PIN12_lowState  = 245-atomicPWM_PIN12_highState;
     #endif
   #endif
 }

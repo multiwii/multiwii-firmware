@@ -85,6 +85,9 @@
 // this moves the Buzzer pin from TXO to D8 for use with ppm sum or spectrum sat. RX (not needed if A32U4ALLPINS is active)
 //#define D8BUZZER
 
+// Inverted status LED for Promicro ver 10.
+//#define PROMICRO10
+
 /* end of Settings for ProMicro, Leonardo and other Atmega32u4 Boards */
 
 
