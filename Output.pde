@@ -144,7 +144,7 @@ void writeMotors() { // [1000;2000] => [125;250]
       TC4H = pwm4_HBD; OCR4D = pwm4_LBD; //  pin 6
     #endif    
     #if (NUMBER_MOTOR > 4)
-      #if !defined(HWPWM6)64
+      #if !defined(HWPWM6)
         atomicPWM_PIN5_highState = ((motor[4]-1000)<<4)+320;
         atomicPWM_PIN5_lowState = 15743-atomicPWM_PIN5_highState;
         atomicPWM_PIN6_highState = ((motor[5]-1000)<<4)+320;
