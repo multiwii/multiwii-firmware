@@ -377,7 +377,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #endif
 &lcd_param_text17,   &P8[PIDLEVEL],         &__P,
 &lcd_param_text18,   &I8[PIDLEVEL],         &__I,
-&lcd_param_text188,  &I8[PIDLEVEL],         &__I,
+&lcd_param_text188,  &D8[PIDLEVEL],         &__I,
 #if MAG
 &lcd_param_text19,   &P8[PIDMAG],           &__P,
 #endif
