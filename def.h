@@ -298,7 +298,16 @@
   #define ISR_UART                   ISR(USART_UDRE_vect)
   #define V_BATPIN                   A3    // Analog PIN 3
   #define PSENSORPIN                 A2    // Analog PIN 2
-
+  
+  #define SOFT_PWM_1_PIN_HIGH        PORTD |= 1<<5;
+  #define SOFT_PWM_1_PIN_LOW         PORTD &= ~(1<<5);
+  #define SOFT_PWM_2_PIN_HIGH        PORTD |= 1<<6;
+  #define SOFT_PWM_2_PIN_LOW         PORTD &= ~(1<<6);
+  #define SOFT_PWM_3_PIN_HIGH        PORTC |= 1<<2;
+  #define SOFT_PWM_3_PIN_LOW         PORTC &= ~(1<<2);
+  #define SOFT_PWM_4_PIN_HIGH        PORTB |= 1<<4;
+  #define SOFT_PWM_4_PIN_LOW         PORTB &= ~(1<<4);
+  
   #define SERVO_1_PINMODE            pinMode(A0,OUTPUT); // TILT_PITCH
   #define SERVO_1_PIN_HIGH           PORTC |= 1<<0;
   #define SERVO_1_PIN_LOW            PORTC &= ~(1<<0);
@@ -328,9 +337,9 @@
   #define BMA180
   #define BMP085
   #define HMC5843
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define BMA180_ADDRESS 0x80
   #define ITG3200_ADDRESS 0XD0
 #endif
@@ -340,9 +349,9 @@
   #define BMA180
   #define BMP085
   #define HMC5883
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  Y; magADC[PITCH]  = -X; magADC[YAW]  = -Z;}
   #define BMA180_ADDRESS 0x80
   #define ITG3200_ADDRESS 0XD0
 #endif
@@ -351,9 +360,9 @@
   #define ITG3200
   #define ADXL345
   #define HMC5843
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  -Y; accADC[PITCH]  = X; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X;  gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X;  magADC[PITCH]  = Y; magADC[YAW]  = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X;  magADC[PITCH] =  Y; magADC[YAW]  = -Z;}
   #define ADXL345_ADDRESS 0xA6
   #undef INTERNAL_I2C_PULLUPS
 #endif
@@ -362,9 +371,9 @@
   #define ITG3200
   #define ADXL345 // this is actually an ADXL346 but that's just the same as ADXL345
   #define HMC5883
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  -Y; accADC[PITCH]  = X; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X;  gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  -Y;  magADC[PITCH]  = X; magADC[YAW]  = Z;} 
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define ADXL345_ADDRESS 0xA6
   #undef INTERNAL_I2C_PULLUPS
 #endif
@@ -373,9 +382,9 @@
   #define ITG3200
   #define BMA180
   #define HMC5883
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X;  gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  -Y;  magADC[PITCH]  = X; magADC[YAW]  = Z;} 
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #undef INTERNAL_I2C_PULLUPS
   #if defined(FREEIMUv035_MS)
     #define MS561101BA
@@ -388,9 +397,9 @@
   #define MPU6050
   #define HMC5883
   #define MS561101BA
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X;  gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  -Y;  magADC[PITCH]  = X; magADC[YAW]  = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define MPU6050_EN_I2C_BYPASS // MAG connected to the AUX I2C bus of MPU6050
   #undef INTERNAL_I2C_PULLUPS
 #endif
@@ -399,9 +408,9 @@
   #define L3G4200D
   #define ADXL345
   #define HMC5883
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  = X; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] =  Y; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  Y; magADC[PITCH]  = -X; magADC[YAW]  =  Z;}
   #define ADXL345_ADDRESS 0xA6
 #endif
 
@@ -410,9 +419,9 @@
   #define BMA180
   #define BMP085
   #define HMC5883
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y; magADC[PITCH]  = X; magADC[YAW]  = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define BMA180_ADDRESS 0x80
   #define ITG3200_ADDRESS 0XD0
 #endif
@@ -423,9 +432,9 @@
   #define BMP085  // note, can be also #define MS561101BA  on some versions
   //#define MS561101BA
   #define HMC5883
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y; magADC[PITCH]  = X; magADC[YAW]  = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define BMA180_ADDRESS 0x80
   #define ITG3200_ADDRESS 0XD0
   #define STABLEPIN_PINMODE pinMode (A2, OUTPUT);
@@ -438,9 +447,9 @@
   #define BMA180
   #define BMP085
   #define HMC5883
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y; magADC[PITCH]  = X; magADC[YAW]  = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
 #endif
 
 #if defined(AEROQUADSHIELDv2) // to confirm
@@ -448,9 +457,9 @@
   #define BMA180
   #define BMP085
   #define HMC5843
-  #define ACC_ORIENTATION(X, Y, Z) {accADC[ROLL] = -Y; accADC[PITCH] = X; accADC[YAW] = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] = X; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z) {magADC[ROLL] = -Y; magADC[PITCH] = X; magADC[YAW] = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] =  Y; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define ITG3200_ADDRESS 0XD2
 #endif
 
@@ -458,9 +467,9 @@
   #define ITG3200
   #define BMA020        //Actually it's a BMA150, but this is a drop in replacement for the discountinued BMA020
   #define AK8975
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  = -X; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -X; magADC[PITCH]  = -Y; magADC[YAW]  = -Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  = -X; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] =  Y; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y; magADC[PITCH]  = -X; magADC[YAW]  =  Z;}
 #endif
 
 #if defined(SIRIUS)
@@ -468,9 +477,9 @@
   #define BMA180
   #define BMP085
   #define HMC5883
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y;  magADC[PITCH] = X; magADC[YAW]  = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define BMA180_ADDRESS 0x80
   #define ITG3200_ADDRESS 0XD0
 #endif
@@ -479,16 +488,16 @@
   #define BMA180
   #define BMP085
   #define HMC5883
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y;  magADC[PITCH] = X; magADC[YAW]  = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define BMA180_ADDRESS 0x80
 #endif
 
 #if defined(MINIWII)
   #define ITG3200
   #define BMA180
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = -Y; accADC[YAW]  = -Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -X; gyroADC[PITCH] =  Y; gyroADC[YAW] =  Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  =  Y; accADC[YAW]  = -Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
 #endif
 
 #if defined(CITRUSv1_0)
@@ -496,21 +505,33 @@
   #define ADXL345
   #define BMP085
   #define HMC5883
-  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  =  -X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(Y, X, Z)  {magADC[ROLL]  = Y;  magADC[PITCH] = X; magADC[YAW]  = Z;}
+  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define ADXL345_ADDRESS 0xA6
   #define ITG3200_ADDRESS 0XD0
 #endif
 
-#if defined(DROTEK_IMU10DOF)
+#if defined(DROTEK_IMU10DOF) || defined(DROTEK_IMU10DOF_MS)
   #define ITG3200
   #define BMA180
-  #define BMP085
   #define HMC5883
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y; magADC[PITCH]  = X; magADC[YAW]  = Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
+  #define ITG3200_ADDRESS 0XD2
+  #if defined(DROTEK_IMU10DOF_MS)
+    #define MS561101BA
+  #elif defined(DROTEK_IMU10DOF)
+    #define BMP085
+  #endif
+#endif
+
+#if defined(DROTEK_IMU6DOFv2)
+  #define ITG3200
+  #define BMA180
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -X; gyroADC[PITCH] = -Y; gyroADC[YAW] = -Z;}
   #define ITG3200_ADDRESS 0XD2
 #endif
 
@@ -519,9 +540,9 @@
   #define ADXL345
   #define BMP085
   #define HMC5883
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  -X; gyroADC[PITCH] = -Y; gyroADC[YAW] = Z;}
-  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = -Y; accADC[YAW]  = Z;}
-  #define MAG_ORIENTATION(Y, X, Z)  {magADC[ROLL]  = X;  magADC[PITCH] = -Y; magADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = -Z;}
+  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y; magADC[PITCH]  = -X; magADC[YAW]  = -Z;}
   #define ADXL345_ADDRESS 0xA6
   #define ITG3200_ADDRESS 0XD0
   #define BMP085_ADDRESS 0xEE
@@ -531,8 +552,8 @@
 #if defined(CRIUS_LITE)
   #define ITG3200
   #define ADXL345
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = X; gyroADC[PITCH] =  Y; gyroADC[YAW] = Z;}
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  -Y; accADC[PITCH]  = X; accADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
 #endif
 
 #if defined(CRIUS_SE)
@@ -540,12 +561,12 @@
   #define BMA180
   #define HMC5883
   #define BMP085
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X;  gyroADC[PITCH] = Y; gyroADC[YAW] = Z;}
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  -Y;  magADC[PITCH]  = X; magADC[YAW]  = Z;} 
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
 #endif
 
-#if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LSM303DLx_ACC) || defined(MPU6050)
+#if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LIS3LV02) || defined(LSM303DLx_ACC) || defined(MPU6050)
   #define ACC 1
 #else
   #define ACC 0
@@ -574,12 +595,6 @@
 #else
   #define GPS 0
 #endif
-
-
-
-
-
-
 
 
 #if defined(TRI)

@@ -259,7 +259,7 @@ static lcd_param_def_t __PT  = {&LTU8,  0, 1, 1};
 static lcd_param_def_t __VB  = {&LTU8,  1, 1, 0};
 static lcd_param_def_t __L   = {&LTU8,  0, 1, 0};
 static lcd_param_def_t __FS  = {&LTU8,  1, 1, 0};
-static lcd_param_def_t __SE  = {&LTU16,  0, 1, 10};
+static lcd_param_def_t __SE  = {&LTU16, 0, 1, 10};
 static lcd_param_def_t __AUX = {&LAUX,  0, 1, 1};
 
 // Program Space Strings - These sit in program flash, not SRAM.
@@ -285,6 +285,7 @@ PROGMEM prog_char lcd_param_text16 []  = "Vel D";
 #endif
 PROGMEM prog_char lcd_param_text17 []  = "Level P";
 PROGMEM prog_char lcd_param_text18 []  = "Level I";
+PROGMEM prog_char lcd_param_text188[]  = "Level D";
 #if MAG
 PROGMEM prog_char lcd_param_text19 []  = "Mag P";
 #endif
@@ -376,6 +377,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #endif
 &lcd_param_text17,   &P8[PIDLEVEL],         &__P,
 &lcd_param_text18,   &I8[PIDLEVEL],         &__I,
+&lcd_param_text188,  &I8[PIDLEVEL],         &__I,
 #if MAG
 &lcd_param_text19,   &P8[PIDMAG],           &__P,
 #endif
@@ -734,7 +736,6 @@ void fill_line2_fails_values() {
 void lcd_telemetry() {
   static uint8_t linenr = 0;
   switch (telemetry) { // output telemetry data
-  //if (telemetry>0) LCDclear(); // this disturbs display on most LCDs more than it helps.
   uint16_t unit;
   uint8_t i;
   case 1: // button A on Textstar LCD -> angles

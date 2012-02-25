@@ -5,16 +5,6 @@ void computeIMU () {
   int16_t gyroADCp[3];
   int16_t gyroADCinter[3];
   static uint32_t timeInterleave = 0;
-  #if defined(TRI)
-    static int16_t gyroYawSmooth = 0;
-  #endif
-
-  #if MAG
-    Mag_getADC();
-  #endif
-  #if BARO
-    Baro_update();
-  #endif
 
   //we separate the 2 situations because reading gyro values with a gyro only setup can be acchieved at a higher rate
   //gyro+nunchuk: we must wait for a quite high delay betwwen 2 reads to get both WM+ and Nunchuk data. It works with 3ms
@@ -25,9 +15,6 @@ void computeIMU () {
     timeInterleave=micros();
     WMP_getRawADC();
     getEstimatedAttitude(); // computation time must last less than one interleaving delay
-    #if BARO
-      getEstimatedAltitude();
-    #endif 
     while((micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
     timeInterleave=micros();
     while(WMP_getRawADC() != 1) ; // For this interleaving reading, we must have a gyro update at this point (less delay)
@@ -39,11 +26,10 @@ void computeIMU () {
       gyroADCprevious[axis] = gyroADC[axis];
     }
   } else {
-    if (ACC) {
+    #if ACC
       ACC_getADC();
       getEstimatedAttitude();
-      if (BARO) getEstimatedAltitude();
-    }
+    #endif
     #if GYRO
       Gyro_getADC();
     #else
@@ -72,6 +58,7 @@ void computeIMU () {
     }
   }
   #if defined(TRI)
+    static int16_t gyroYawSmooth = 0;
     gyroData[YAW] = (gyroYawSmooth*2+gyroData[YAW]+1)/3;
     gyroYawSmooth = gyroData[YAW];
   #endif
@@ -263,57 +250,58 @@ void getEstimatedAttitude(){
   #endif
 }
 
-float InvSqrt (float x){ 
-  union{  
-    int32_t i;  
-    float   f; 
-  } conv; 
-  conv.f = x; 
-  conv.i = 0x5f3759df - (conv.i >> 1); 
-  return 0.5f * conv.f * (3.0f - x * conv.f * conv.f);
-} 
-int32_t isq(int32_t x){return x * x;}
-
 #define UPDATE_INTERVAL 25000    // 40hz update rate (20hz LPF on acc)
 #define INIT_DELAY      4000000  // 4 sec initialization delay
-#define Kp1 5.5f                 // PI observer velocity gain 
-#define Kp2 10.0f                // PI observer position gain
-#define Ki  0.01f               // PI observer integral gain (bias cancellation)
-#define dt  (UPDATE_INTERVAL / 1000000.0f)
+#define BARO_TAB_SIZE   40
 
 void getEstimatedAltitude(){
   static uint8_t inited = 0;
-  static int16_t AltErrorI = 0;
-  static float AccScale;
   static uint32_t deadLine = INIT_DELAY;
-  int16_t AltError;
-  int16_t InstAcc;
-  static int32_t tmpAlt;
+
+  static int16_t BaroHistTab[BARO_TAB_SIZE];
+  static int8_t BaroHistIdx=0;
+  int32_t BaroHigh,BaroLow;
+  int32_t temp32;
   
   if (currentTime < deadLine) return;
   deadLine = currentTime + UPDATE_INTERVAL; 
 
   if (!inited) {
     inited = 1;
-    tmpAlt = BaroAlt*10;
-    AccScale = 100 * 9.80665f / acc_1G;
+    EstAlt = BaroAlt;
   }
 
-  // Estimation Error
-  AltError = BaroAlt - EstAlt; 
-  AltErrorI += AltError;
-  AltErrorI=constrain(AltErrorI,-2500,+2500);
-  // Gravity vector correction and projection to the local Z
-  #if defined(TRUSTED_ACCZ)
-    InstAcc = (accADC[YAW] * (1 - acc_1G * InvSqrt(isq(accADC[ROLL]) + isq(accADC[PITCH]) + isq(accADC[YAW])))) * AccScale +  AltErrorI / 100; // Ki = 1/100
-  #else
-    InstAcc = AltErrorI / 100;
-  #endif
-
-  // Integrators
-  tmpAlt += EstVelocity*(dt*dt) + (Kp2 *dt) * AltError;
-  EstVelocity += InstAcc + Kp1 * AltError;
-  EstVelocity = constrain(EstVelocity,-10000,+10000);
+  //**** Alt. Set Point stabilization PID ****
+  //calculate speed for D calculation
+  BaroHistTab[BaroHistIdx] = BaroAlt;  
+  BaroHigh = 0;
+  BaroLow = 0;
+  BaroPID = 0;
+  for (temp32=0;temp32 < BARO_TAB_SIZE/2; temp32++) {
+    BaroHigh+=BaroHistTab[(BaroHistIdx - temp32 + BARO_TAB_SIZE)%BARO_TAB_SIZE]; //sum last half samples
+    BaroLow+=BaroHistTab[(BaroHistIdx + temp32 + BARO_TAB_SIZE)%BARO_TAB_SIZE];  //sum older samples
+  }
+  BaroHistIdx++;
+  if (BaroHistIdx >= BARO_TAB_SIZE)
+    BaroHistIdx = 0;
+ 
+  //D
+  temp32 = D8[PIDALT]*(BaroHigh - BaroLow) / 400;
+  BaroPID-=temp32;
   
-  EstAlt = tmpAlt/10;
+  //EstAlt = EstAlt*0.8 + BaroAlt*0.2;
+  EstAlt = BaroHigh/(BARO_TAB_SIZE/2);
+  
+  temp32 = constrain( AltHold - EstAlt, -1000, 1000);
+  if (abs(temp32) < 10 && BaroPID < 10)
+    BaroPID = 0;  //remove small D parametr to reduce noise near zoro position
+  //P
+  BaroPID += P8[PIDALT]*constrain(temp32,(-2)*P8[PIDALT],2*P8[PIDALT])/100;   
+  BaroPID = constrain(BaroPID,-150,+150); //sum of P and D should be in range 150
+  
+  //I
+  errorAltitudeI += temp32*I8[PIDALT]/50;
+  errorAltitudeI = constrain(errorAltitudeI,-30000,30000);
+  temp32 = errorAltitudeI / 500; //I in range +/-60
+  BaroPID+=temp32;
 }

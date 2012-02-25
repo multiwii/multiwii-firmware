@@ -128,7 +128,7 @@
 //#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
 //#define FREEIMUv03      // FreeIMU v0.3 and v0.3.1
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
-//#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
+#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
 //#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
 //#define FREEIMUv04      // FreeIMU v0.4 with MPU6050, HMC5883L, MS561101BA                  <- confirmed by Alex
 //#define PIPO            // 9DOF board from erazz
@@ -142,6 +142,8 @@
 //#define MINIWII         // Jussi's MiniWii Flight Controller
 //#define CITRUSv1_0      // CITRUSv1 from qcrc.ca
 //#define DROTEK_IMU10DOF
+//#define DROTEK_IMU10DOF_MS
+//#define DROTEK_IMU6DOFv2
 //#define MONGOOSE1_0     // mongoose 1.0    http://www.fuzzydrone.org/
 //#define CRIUS_LITE      // Crius MultiWii Lite
 //#define CRIUS_SE        // Crius MultiWii SE

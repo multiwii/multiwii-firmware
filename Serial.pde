@@ -14,8 +14,6 @@
   volatile uint8_t serialHeadRX[4],serialTailRX[4];
 #endif
 
-
-
 void serialCom() {
   uint8_t i;
   
@@ -82,13 +80,13 @@ void serialCom() {
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
       for(i=0;i<3;i++) serialize16(gyroData[i]);
       for(i=0;i<3;i++) serialize16(magADC[i]);
-      serialize16(EstAlt);
+      serialize16(EstAlt/10);
       serialize16(heading);
       for(i=0;i<8;i++) serialize16(servo[i]);
       for(i=0;i<8;i++) serialize16(motor[i]);
       for(i=0;i<8;i++) serialize16(rcData[i]);
       serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3|GPS<<4);
-      serialize8(accMode|baroMode<<1|magMode<<2|(GPSModeHome|GPSModeHold)<<3);
+      serialize8(accMode|baroMode<<1|magMode<<2|GPSModeHome<<3|GPSModeHold<<4|armed<<5);
       #if defined(LOG_VALUES)
          serialize16(cycleTimeMax);
          cycleTimeMax = 0;
@@ -109,15 +107,15 @@ void serialCom() {
     	  serialize8(activate2[i] | (rcOptions[i]<<7) ); // use highest bit to transport state in mwc
       }
       serialize16(GPS_distanceToHome);
-      serialize16(GPS_directionToHome);
+      serialize16(-GPS_directionToHome);
       serialize8(GPS_numSat);
       serialize8(GPS_fix);
       serialize8(GPS_update);
       serialize16(intPowerMeterSum);
       serialize16(intPowerTrigger1);
       serialize8(vbat);
-      serialize16(BaroAlt);            // 4 variables are here for general monitoring purpose
-      serialize16(0);                  // debug2
+      serialize16(BaroAlt/10);         // 4 variables are here for general monitoring purpose
+      serialize16(debug2);             // debug2
       serialize16(debug3);             // debug3
       serialize16(debug4);             // debug4
       serialize8('M');
