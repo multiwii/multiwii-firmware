@@ -319,6 +319,8 @@ void ACC_Common() {
 
 #if defined(BMP085)
 #define BMP085_ADDRESS 0xEE
+static int32_t  pressure;
+
 static struct {
   // sensor registers from the BOSCH BMP085 datasheet
   int16_t  ac1, ac2, ac3, b1, b2, mb, mc, md;
@@ -474,6 +476,7 @@ void Baro_update() {
 #define MS561101BA_OSR_4096 0x08
 
 #define OSR MS561101BA_OSR_4096
+static int32_t  pressure;
 
 static struct {
   // sensor registers from the MS561101BA datasheet
@@ -544,29 +547,27 @@ void i2c_MS561101BA_UT_Read() {
 }
 
 void i2c_MS561101BA_Calculate() {
-  int64_t off2=0,sens2=0,temperature=0,t2=0;
+  int32_t temperature,off2,sens2,delt;
+
   int64_t dT   = ms561101ba_ctx.ut.val - ((uint32_t)ms561101ba_ctx.c[5] << 8);  //int32_t according to the spec, but int64_t here to avoid cast after
   int64_t off  = ((uint32_t)ms561101ba_ctx.c[2] <<16) + ((dT * ms561101ba_ctx.c[4]) >> 7);
   int64_t sens = ((uint32_t)ms561101ba_ctx.c[1] <<15) + ((dT * ms561101ba_ctx.c[3]) >> 8);
-  pressure     = (( (ms561101ba_ctx.up.val * sens ) >> 21) - off) >> 15;
-  temperature = (2000 + dT * (uint32_t)ms561101ba_ctx.c[5] / pow(2, 23)); 
-  if (temperature < 2000) 
-  { 
-    // temperature lower than 20st.C 
-    t2 = (dT*dT)/pow(2,31); 
-    off2 = 5 * (((int32_t)temperature-2000)*((int32_t)temperature-2000))/2; 
-    sens2 = 5 * (((int32_t)temperature-2000)*((int32_t)temperature-2000))/4; 
-    if (temperature < -1500) 
-    { 
-      // temperature lower than -15st.C 
-      off2 = off2 + 7 * (((int32_t)temperature+1500)*((int32_t)temperature+1500)); 
-      sens2 = sens2 + 11 * (((int32_t)temperature+1500)*((int32_t)temperature+1500))/2; 
-    } 
+  temperature  = 2000 + ((dT * ms561101ba_ctx.c[6])>>23);
+  if (temperature < 2000) { // temperature lower than 20st.C 
+    delt = temperature-2000;
+    delt  = delt*delt;
+    off2  = (5 * delt)>>1; 
+    sens2 = (5 * delt)>>2; 
+    if (temperature < -1500) { // temperature lower than -15st.C
+      delt  = temperature+1500;
+      delt  = delt*delt;
+      off2  += 7 * delt; 
+      sens2 += (11 * delt)>>1; 
+    }
   } 
-  temperature = temperature - t2; 
-  off = off - off2; 
-  sens = sens - sens2; 
-  pressure     = (( (ms561101ba_ctx.up.val * sens ) / pow(2,21)) - off) / pow(2,15);
+  off  -= off2; 
+  sens -= sens2;
+  pressure     = (( (ms561101ba_ctx.up.val * sens ) >> 21) - off) >> 15;
 }
 
 void Baro_update() {
@@ -610,9 +611,9 @@ void ACC_getADC () {
   TWBR = ((16000000L / 400000L) - 16) / 2;
   i2c_getSixRawADC(MMA7455_ADDRESS,0x00);
 
-  ACC_ORIENTATION(   ((int8_t(rawADC[3])<<8) | int8_t(rawADC[2])) ,
-                    -((int8_t(rawADC[1])<<8) | int8_t(rawADC[0])) ,
-                     ((int8_t(rawADC[5])<<8) | int8_t(rawADC[4])) );
+  ACC_ORIENTATION( ((int8_t(rawADC[1])<<8) | int8_t(rawADC[0])) ,
+                   ((int8_t(rawADC[3])<<8) | int8_t(rawADC[2])) ,
+                   ((int8_t(rawADC[5])<<8) | int8_t(rawADC[4])) );
   ACC_Common();
 }
 #endif
@@ -641,9 +642,9 @@ void ACC_getADC () {
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, ADXL435 is ok with this speed
   i2c_getSixRawADC(ADXL345_ADDRESS,0x32);
 
-  ACC_ORIENTATION( - ((rawADC[3]<<8) | rawADC[2]) ,
-                     ((rawADC[1]<<8) | rawADC[0]) ,
-                     ((rawADC[5]<<8) | rawADC[4]) );
+  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,
+                   ((rawADC[3]<<8) | rawADC[2]) ,
+                   ((rawADC[5]<<8) | rawADC[4]) );
   ACC_Common();
 }
 #endif
@@ -697,9 +698,9 @@ void ACC_getADC () {
   TWBR = ((16000000L / 400000L) - 16) / 2;  // Optional line.  Sensor is good for it in the spec.
   i2c_getSixRawADC(BMA180_ADDRESS,0x02);
   //usefull info is on the 14 bits  [2-15] bits  /4 => [0-13] bits  /4 => 12 bit resolution
-  ACC_ORIENTATION(  - ((rawADC[1]<<8) | rawADC[0])/16 ,
-                    - ((rawADC[3]<<8) | rawADC[2])/16 ,
-                      ((rawADC[5]<<8) | rawADC[4])/16 );
+  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/16 ,
+                   ((rawADC[3]<<8) | rawADC[2])/16 ,
+                   ((rawADC[5]<<8) | rawADC[4])/16 );
   ACC_Common();
 }
 #endif
@@ -737,9 +738,9 @@ void ACC_init(){
 void ACC_getADC(){
   TWBR = ((16000000L / 400000L) - 16) / 2;
   i2c_getSixRawADC(0x70,0x02);
-  ACC_ORIENTATION(    ((rawADC[1]<<8) | rawADC[0])/64 ,
-                      ((rawADC[3]<<8) | rawADC[2])/64 ,
-                      ((rawADC[5]<<8) | rawADC[4])/64 );
+  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/64 ,
+                   ((rawADC[3]<<8) | rawADC[2])/64 ,
+                   ((rawADC[5]<<8) | rawADC[4])/64 );
   ACC_Common();
 }
 #endif
@@ -782,9 +783,9 @@ void i2c_ACC_init(){
 void i2c_ACC_getADC(){
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   i2c_getSixRawADC(LIS3A,0x28+0x80);
-  ACC_ORIENTATION(  (rawADC[3]<<8 | rawADC[2])/4 ,
-                   -(rawADC[1]<<8 | rawADC[0])/4 ,
-                   -(rawADC[5]<<8 | rawADC[4])/4);
+  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/4 ,
+                   ((rawADC[3]<<8) | rawADC[2])/4 ,
+                   ((rawADC[5]<<8) | rawADC[4])/4);
   ACC_Common();
 }
 #endif
@@ -807,9 +808,9 @@ void ACC_init () {
   TWBR = ((16000000L / 400000L) - 16) / 2;
   i2c_getSixRawADC(0x30,0xA8);
 
-  ACC_ORIENTATION( - ((rawADC[3]<<8) | rawADC[2])/16 ,
-                     ((rawADC[1]<<8) | rawADC[0])/16 ,
-                     ((rawADC[5]<<8) | rawADC[4])/16 );
+  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/16 ,
+                   ((rawADC[3]<<8) | rawADC[2])/16 ,
+                   ((rawADC[5]<<8) | rawADC[4])/16 );
   ACC_Common();
 }
 #endif
@@ -826,8 +827,8 @@ void ACC_init(){
 }
 
 void ACC_getADC() {
-  ACC_ORIENTATION( -analogRead(A1) ,
-                   -analogRead(A2) ,
+  ACC_ORIENTATION(  analogRead(A1) ,
+                    analogRead(A2) ,
                     analogRead(A3) );
   ACC_Common();
 }
@@ -849,9 +850,9 @@ void Gyro_getADC () {
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   i2c_getSixRawADC(0XD2,0x80|0x28);
 
-  GYRO_ORIENTATION(  ((rawADC[1]<<8) | rawADC[0])/20  ,
-                     ((rawADC[3]<<8) | rawADC[2])/20  ,
-                    -((rawADC[5]<<8) | rawADC[4])/20  );
+  GYRO_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/20  ,
+                    ((rawADC[3]<<8) | rawADC[2])/20  ,
+                    ((rawADC[5]<<8) | rawADC[4])/20  );
   GYRO_Common();
 }
 #endif
@@ -883,9 +884,9 @@ void Gyro_init() {
 void Gyro_getADC () {
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   i2c_getSixRawADC(ITG3200_ADDRESS,0X1D);
-  GYRO_ORIENTATION(  + ( ((rawADC[2]<<8) | rawADC[3])/4) , // range: +/- 8192; +/- 2000 deg/sec
-                     - ( ((rawADC[0]<<8) | rawADC[1])/4 ) ,
-                     - ( ((rawADC[4]<<8) | rawADC[5])/4 ) );
+  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/4 , // range: +/- 8192; +/- 2000 deg/sec
+                    ((rawADC[2]<<8) | rawADC[3])/4 ,
+                    ((rawADC[4]<<8) | rawADC[5])/4 );
   GYRO_Common();
 }
 #endif
@@ -979,12 +980,12 @@ void getADC() {
   #if defined(HMC5843)
     MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
                      ((rawADC[2]<<8) | rawADC[3]) ,
-                    -((rawADC[4]<<8) | rawADC[5]) );
+                     ((rawADC[4]<<8) | rawADC[5]) );
   #endif
-  #if defined (HMC5883)
-    MAG_ORIENTATION( ((rawADC[4]<<8) | rawADC[5]) ,
-                    -((rawADC[0]<<8) | rawADC[1]) ,
-                    -((rawADC[2]<<8) | rawADC[3]) );
+  #if defined (HMC5883)  
+    MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
+                     ((rawADC[4]<<8) | rawADC[5]) ,
+                     ((rawADC[2]<<8) | rawADC[3]) );
   #endif
 }
 
@@ -1014,9 +1015,9 @@ void Device_Mag_getADC() {
   #if not defined(MPU6050_EN_I2C_BYPASS)
     void Device_Mag_getADC() {
       i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
-      MAG_ORIENTATION( ((rawADC[3]<<8) | rawADC[2]) ,          
-                       ((rawADC[1]<<8) | rawADC[0]) ,     
-                      -((rawADC[5]<<8) | rawADC[4]) );
+      MAG_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,          
+                       ((rawADC[3]<<8) | rawADC[2]) ,     
+                       ((rawADC[5]<<8) | rawADC[4]) );
       //Start another meassurement
       i2c_writeReg(MAG_ADDRESS,0x0a,0x01);
     }
@@ -1045,9 +1046,9 @@ void Gyro_init() {
 
 void Gyro_getADC () {
   i2c_getSixRawADC(MPU6050_ADDRESS, 0x43);
-  GYRO_ORIENTATION(  + ( ((rawADC[2]<<8) | rawADC[3])/4 ) , // range: +/- 8192; +/- 2000 deg/sec
-	             - ( ((rawADC[0]<<8) | rawADC[1])/4 ) ,
-	             - ( ((rawADC[4]<<8) | rawADC[5])/4 ) );
+  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/4 , // range: +/- 8192; +/- 2000 deg/sec
+	            ((rawADC[2]<<8) | rawADC[3])/4 ,
+	            ((rawADC[4]<<8) | rawADC[5])/4 );
   GYRO_Common();
 }
 
@@ -1071,9 +1072,9 @@ void ACC_init () {
 
 void ACC_getADC () {
   i2c_getSixRawADC(MPU6050_ADDRESS, 0x3B);
-  ACC_ORIENTATION(  - ((rawADC[0]<<8) | rawADC[1])/8 ,
-                    - ((rawADC[2]<<8) | rawADC[3])/8 ,
-                      ((rawADC[4]<<8) | rawADC[5])/8 );
+  ACC_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/8 ,
+                   ((rawADC[2]<<8) | rawADC[3])/8 ,
+                   ((rawADC[4]<<8) | rawADC[5])/8 );
   ACC_Common();
 }
 
@@ -1084,17 +1085,17 @@ void ACC_getADC () {
       #if defined(HMC5843)
         MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
                          ((rawADC[2]<<8) | rawADC[3]) ,
-                        -((rawADC[4]<<8) | rawADC[5]) );
+                         ((rawADC[4]<<8) | rawADC[5]) );
       #endif
-      #if defined (HMC5883)
-        MAG_ORIENTATION( ((rawADC[4]<<8) | rawADC[5]) ,
-                        -((rawADC[0]<<8) | rawADC[1]) ,
-                        -((rawADC[2]<<8) | rawADC[3]) );
+      #if defined (HMC5883)  
+        MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
+                         ((rawADC[4]<<8) | rawADC[5]) ,
+                         ((rawADC[2]<<8) | rawADC[3]) );
       #endif
       #if defined (AK8975)
-        MAG_ORIENTATION( ((rawADC[3]<<8) | rawADC[2]) ,          
-                         ((rawADC[1]<<8) | rawADC[0]) ,     
-                        -((rawADC[5]<<8) | rawADC[4]) );
+        MAG_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,          
+                         ((rawADC[3]<<8) | rawADC[2]) ,     
+                         ((rawADC[5]<<8) | rawADC[4]) );
       #endif
     }
   #endif

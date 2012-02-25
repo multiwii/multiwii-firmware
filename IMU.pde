@@ -250,34 +250,14 @@ void getEstimatedAttitude(){
   #endif
 }
 
-float InvSqrt (float x){ 
-  union{  
-    int32_t i;  
-    float   f; 
-  } conv; 
-  conv.f = x; 
-  conv.i = 0x5f3759df - (conv.i >> 1); 
-  return 0.5f * conv.f * (3.0f - x * conv.f * conv.f);
-} 
-int32_t isq(int32_t x){return x * x;}
-
 #define UPDATE_INTERVAL 25000    // 40hz update rate (20hz LPF on acc)
 #define INIT_DELAY      4000000  // 4 sec initialization delay
 #define BARO_TAB_SIZE   40
-#define Kp1 5.5f                 // PI observer velocity gain 
-#define Kp2 10.0f                // PI observer position gain
-#define Ki  0.01f               // PI observer integral gain (bias cancellation)
-#define dt  (UPDATE_INTERVAL / 1000000.0f)
 
 void getEstimatedAltitude(){
   static uint8_t inited = 0;
-  static int16_t AltErrorI = 0;
-  static float AccScale;
   static uint32_t deadLine = INIT_DELAY;
-  int16_t AltError;
-  int16_t InstAcc;
-  static int32_t tmpAlt;
-  
+
   static int16_t BaroHistTab[BARO_TAB_SIZE];
   static int8_t BaroHistIdx=0;
   int32_t BaroHigh,BaroLow;
@@ -286,31 +266,6 @@ void getEstimatedAltitude(){
   if (currentTime < deadLine) return;
   deadLine = currentTime + UPDATE_INTERVAL; 
 
-/*
-  if (!inited) {
-    inited = 1;
-    tmpAlt = BaroAlt;
-    AccScale = 100 * 9.80665f / acc_1G;
-  }
-
-  // Estimation Error
-  AltError = BaroAlt - EstAlt; 
-  AltErrorI += AltError;
-  AltErrorI=constrain(AltErrorI,-2500,+2500);
-  // Gravity vector correction and projection to the local Z
-  #if defined(TRUSTED_ACCZ)
-    InstAcc = (accADC[YAW] * (1 - acc_1G * InvSqrt(isq(accADC[ROLL]) + isq(accADC[PITCH]) + isq(accADC[YAW])))) * AccScale +  AltErrorI / 100; // Ki = 1/100
-  #else
-    InstAcc = AltErrorI / 100;
-  #endif
-
-  // Integrators
-  tmpAlt += EstVelocity*(dt*dt) + (Kp2 *dt) * AltError;
-  EstVelocity += InstAcc + Kp1 * AltError;
-  EstVelocity = constrain(EstVelocity,-10000,+10000);
-  
-  EstAlt = tmpAlt/10;
-*/
   if (!inited) {
     inited = 1;
     EstAlt = BaroAlt;
@@ -322,15 +277,15 @@ void getEstimatedAltitude(){
   BaroHigh = 0;
   BaroLow = 0;
   BaroPID = 0;
-  for (temp32=0;temp32 < BARO_TAB_SIZE/2; temp32++)
-  {
-    BaroHigh+=BaroHistTab[(BaroHistIdx - temp32 + BARO_TAB_SIZE)%BARO_TAB_SIZE];  //sum last half samples
+  for (temp32=0;temp32 < BARO_TAB_SIZE/2; temp32++) {
+    BaroHigh+=BaroHistTab[(BaroHistIdx - temp32 + BARO_TAB_SIZE)%BARO_TAB_SIZE]; //sum last half samples
     BaroLow+=BaroHistTab[(BaroHistIdx + temp32 + BARO_TAB_SIZE)%BARO_TAB_SIZE];  //sum older samples
   }
   BaroHistIdx++;
   if (BaroHistIdx >= BARO_TAB_SIZE)
     BaroHistIdx = 0;
-
+ 
+  //D
   temp32 = D8[PIDALT]*(BaroHigh - BaroLow) / 400;
   BaroPID-=temp32;
   
