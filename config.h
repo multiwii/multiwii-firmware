@@ -149,7 +149,7 @@
 //#define CRIUS_SE        // Crius MultiWii SE
 
 //if you use independent sensors
-//leave it commented it you already checked a specific board above
+//leave it commented if you already checked a specific board above
 /* I2C gyroscope */
 //#define ITG3200
 //#define L3G4200D
