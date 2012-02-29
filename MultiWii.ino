@@ -188,7 +188,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   #if defined(LCD_TELEMETRY)
    static uint16_t telemetryTimer = 0, telemetryAutoTimer = 0, psensorTimer = 0;
   #endif
-  #if defined(LCD_TELEMETRY)
+  #if defined(LCD_TELEMETRY_AUTO)
    static uint8_t telemetryAutoIndex = 0;
    static char telemetryAutoSequence []  = LCD_TELEMETRY_AUTO;
   #endif

@@ -31,41 +31,41 @@ void serialCom() {
     #ifdef LCD_TELEMETRY
     case 'A': // button A press
     case '1':
-      if (telemetry==1) telemetry = 0; else telemetry = 1;
+      if (telemetry==1) telemetry = 0; else { telemetry = 1; LCDclear(); }
       break;
     case 'B': // button B press
     case '2':
-      if (telemetry==2) telemetry = 0; else telemetry = 2;
+      if (telemetry==2) telemetry = 0; else { telemetry = 2; LCDclear(); }
       break;
     case 'C': // button C press
     case '3':
-      if (telemetry==3) telemetry = 0; else telemetry = 3;
+      if (telemetry==3) telemetry = 0; else { telemetry = 3; LCDclear(); }
       break;
     case 'D': // button D press
     case '4':
-      if (telemetry==4) telemetry = 0; else telemetry = 4;
+      if (telemetry==4) telemetry = 0; else { telemetry = 4; LCDclear(); }
       break;
     case '5':
-      if (telemetry==5) telemetry = 0; else telemetry = 5;
+      if (telemetry==5) telemetry = 0; else { telemetry = 5; LCDclear(); }
       break;
     case '6':
-      if (telemetry==6) telemetry = 0; else telemetry = 6;
+      if (telemetry==6) telemetry = 0; else { telemetry = 6; LCDclear(); }
       break;
     case '7':
-      if (telemetry==7) telemetry = 0; else telemetry = 7;
+      if (telemetry==7) telemetry = 0; else { telemetry = 7; LCDclear(); }
       break;
     case '9':
-      if (telemetry==9) telemetry = 0; else telemetry = 9;
+      if (telemetry==9) telemetry = 0; else { telemetry = 9; LCDclear(); }
       break;
      #if defined(LOG_VALUES) && defined(DEBUG)
     case 'R':
       //Reset logvalues
-      if (telemetry=='R') telemetry = 0; else telemetry = 'R';
+      if (telemetry=='R') telemetry = 0; else { telemetry = 'R'; LCDclear(); }
       break;
      #endif
      #ifdef DEBUG
     case 'F':
-      if (telemetry=='F') telemetry = 0; else telemetry = 'F';
+      if (telemetry=='F') telemetry = 0; else { telemetry = 'F'; LCDclear(); }
       break;
      #endif
     case 'a': // button A release
@@ -104,7 +104,8 @@ void serialCom() {
       serialize8(dynThrPID);
       for(i=0;i<CHECKBOXITEMS;i++) {
     	  serialize8(activate1[i]);
-    	  serialize8(activate2[i] | (rcOptions[i]<<7) ); // use highest bit to transport state in mwc
+    	  serialize8(activate2[i] | (rcOptions[i]<<7) | ((i==BOXARM)&&(armed))<<7); // use highest bit to transport state in mwc
+    	  // with special case for armed, if not bound to auxN
       }
       serialize16(GPS_distanceToHome);
       serialize16(-GPS_directionToHome);

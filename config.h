@@ -199,6 +199,12 @@
 //#define MPU6050_LPF_20HZ
 //#define MPU6050_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
 
+/* GYRO_SMOOTHING. In case you cannot reduce vibrations _and_ _after_ you have tried the low pass filter options, you
+ * may try this gyro smoothing via averaging. Not suitable for multicopters!
+ * Good results for helicopter, airplanes and flying wings (faomies) with lots of vibrations.
+ */
+//#define GYRO_SMOOTHING {20, 20, 3}    // separate averaging ranges for roll, pitch, yaw
+
 /* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
    IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
    Select the right line depending on your radio brand. Feel free to modify the order in your PPM order is different */
