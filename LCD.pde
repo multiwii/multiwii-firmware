@@ -1085,6 +1085,9 @@ void lcd_telemetry() {
   } // end switch (telemetry) 
 } // end function lcd_telemetry
 
+void toggle_telemetry(uint8_t t) {
+  if (telemetry == t) telemetry = 0; else { telemetry = t; LCDclear(); }
+}
 
 #endif //  LCD_TELEMETRY
 
