@@ -317,6 +317,9 @@
   #define SERVO_3_PINMODE            pinMode(A2,OUTPUT); // CAM TRIG
   #define SERVO_3_PIN_HIGH           PORTC |= 1<<2;
   #define SERVO_3_PIN_LOW            PORTC &= ~(1<<2); 
+  #define SERVO_4_PINMODE            ;                   // Not available
+  #define SERVO_4_PIN_HIGH           ;
+  #define SERVO_4_PIN_LOW            ;
   #define SERVO_5_PINMODE            pinMode(3,OUTPUT); // BI LEFT
   #define SERVO_5_PIN_HIGH           PORTD|= 1<<3;
   #define SERVO_5_PIN_LOW            PORTD &= ~(1<<3);

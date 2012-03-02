@@ -62,6 +62,7 @@ void computeIMU () {
   static int16_t gyroSmooth[3] = {0,0,0};
 
   for (axis = 0; axis < 3; axis++) {
+      constrain(Smoothing[axis],1,100); // Avoid to divide with Zero
       gyroData[axis] = (gyroSmooth[axis]*(Smoothing[axis]-1)+gyroData[axis]+1)/Smoothing[axis];
       gyroSmooth[axis] = gyroData[axis];
   }
