@@ -49,13 +49,33 @@ void writeServos() {
       }
     #endif
     #if defined(SEC_SERVO_FROM)   // write secundary servos
-      for(uint8_t i = (SEC_SERVO_FROM-1); i < SEC_SERVO_TO; i++){
-        #if !defined(PROMICRO) || defined(HWPWM6)
-          atomicServo[i] = (servo[i]-1000)>>2;
-        #else
-          atomicServo[i] = (servo[i]-1000)<<4;
-        #endif
-      }
+      #if defined(SERVO_TILT) && defined(MMSERVOGIMBAL)
+        // Moving Average Servo Gimbal by Magnetron1
+        static int16_t mediaMobileServoGimbalADC[2][MMSERVOGIMBALVECTORLENGHT];
+        static int32_t mediaMobileServoGimbalADCSum[2];
+        static uint8_t mediaMobileServoGimbalIDX;
+        uint8_t axis;
+
+        mediaMobileServoGimbalIDX = ++mediaMobileServoGimbalIDX % MMSERVOGIMBALVECTORLENGHT;
+        for (axis=1; axis < 2; axis++) {
+          mediaMobileServoGimbalADCSum[axis] -= mediaMobileServoGimbalADC[axis][mediaMobileServoGimbalIDX];
+          mediaMobileServoGimbalADC[axis][mediaMobileServoGimbalIDX] = servo[axis];
+          mediaMobileServoGimbalADCSum[axis] += mediaMobileServoGimbalADC[axis][mediaMobileServoGimbalIDX];
+          #if !defined(PROMICRO) || defined(HWPWM6)
+            atomicServo[axis] = (mediaMobileServoGimbalADCSum[axis] / MMSERVOGIMBALVECTORLENGHT - 1000)>>2;
+          #else
+            atomicServo[axis] = (mediaMobileServoGimbalADCSum[axis] / MMSERVOGIMBALVECTORLENGHT - 1000)<<4;
+          #endif
+        }
+      #else
+        for(uint8_t i = (SEC_SERVO_FROM-1); i < SEC_SERVO_TO; i++){
+          #if !defined(PROMICRO) || defined(HWPWM6)
+            atomicServo[i] = (servo[i]-1000)>>2;
+          #else
+            atomicServo[i] = (servo[i]-1000)<<4;
+          #endif
+        }
+      #endif
     #endif
   #endif
 }
@@ -263,7 +283,7 @@ void initOutput() {
       TCCR2A |= _BV(COM2A1); // connect pin 10 to timer 2 channel A
     #endif
   #endif
-#if defined(PROMICRO)
+  #if defined(PROMICRO)
     #if (NUMBER_MOTOR > 0)
       TCCR1A |= (1<<WGM11); TCCR1A &= ~(1<<WGM10); TCCR1B |= (1<<WGM13);  // phase correct mode
       TCCR1B &= ~(1<<CS11); ICR1 |= 0x3FFF; // no prescaler & TOP to 16383;
@@ -319,14 +339,12 @@ void initOutput() {
     #if (NUMBER_MOTOR > 3)
       TCCR2A |= _BV(COM2B1); // connect pin 3 to timer 2 channel B
     #endif
-    #if (NUMBER_MOTOR == 6)  // PIN 5 & 6 or A0 & A1
+    #if (NUMBER_MOTOR > 5)  // PIN 5 & 6 or A0 & A1
       initializeSoftPWM();
       #if defined(A0_A1_PIN_HEX) || (NUMBER_MOTOR > 6)
         pinMode(5,INPUT);pinMode(6,INPUT);     // we reactivate the INPUT affectation for these two PINs
         pinMode(A0,OUTPUT);pinMode(A1,OUTPUT);
       #endif
-    #elif (NUMBER_MOTOR == 8) // PIN A2 & 12
-      initializeSoftPWM();
     #endif
   #endif
   

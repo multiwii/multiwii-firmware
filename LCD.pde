@@ -4,6 +4,12 @@
 #if defined(LCD_CONF) || defined(LCD_TELEMETRY)
 static char line1[17],line2[17];
 
+char digit10000(uint16_t v) {return '0' + v / 10000; }
+char digit1000(uint16_t v)  { return '0' + v / 1000 - (v/10000) * 10; }
+char digit100(uint16_t v)   { return '0' + v / 100  - (v/1000)  * 10; }
+char digit10(uint16_t v)    { return '0' + v / 10   - (v/100)   * 10; }
+char digit1(uint16_t v)     { return '0' + v       -  (v/10)    * 10; }
+
 #if defined(LCD_ETPP)
   // *********************
   // i2c Eagle Tree Power Panel primitives
@@ -141,39 +147,39 @@ void LCDcrlf() {
 }
 void LCDclear() {
    #if defined(LCD_SERIAL3W)
-   LCDprint(0xFE);LCDprint(0x01);delay(10);LCDprint(0xFE);LCDprint(0x02);delay(10); // clear screen, cursor line 1, pos 0 for serial LCD Sparkfun - contrib by flyman777
+     LCDprint(0xFE);LCDprint(0x01);delay(10);LCDprint(0xFE);LCDprint(0x02);delay(10); // clear screen, cursor line 1, pos 0 for serial LCD Sparkfun - contrib by flyman777
    #elif defined(LCD_TEXTSTAR)
-    LCDprint(0x0c);
+     LCDprint(0x0c);
    #elif defined(LCD_VT100)
-    LCDcrlf();
-    LCDprint(0x1B); LCDprint(0x5B); LCDprintChar("2J"); //ED2
-    LCDcrlf();
-    LCDprint(0x1B); LCDprint(0x5B); LCDprintChar("1;1H"); //cursor top left
-#elif defined(LCD_ETPP)
-    i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
-    for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
+     LCDcrlf();
+     LCDprint(0x1B); LCDprint(0x5B); LCDprintChar("2J"); //ED2
+     LCDcrlf();
+     LCDprint(0x1B); LCDprint(0x5B); LCDprintChar("1;1H"); //cursor top left
+   #elif defined(LCD_ETPP)
+     i2c_ETPP_send_cmd(0x01);                              // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
+     for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');  // Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
    #elif defined(LCD_LCD03)
-    i2c_LCD03_send_cmd(12); // clear screen
+     i2c_LCD03_send_cmd(12); // clear screen
    #endif
 }
 
 void LCDsetLine(byte line) {  // Line = 1 or 2 - vt100 has lines 1-99
-   #if defined(LCD_SERIAL3W)
+  #if defined(LCD_SERIAL3W)
     if (line==1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
-   #elif defined(LCD_TEXTSTAR)
+  #elif defined(LCD_TEXTSTAR)
     LCDcrlf(); LCDprint(0xfe);LCDprint('L');LCDprint(line);
-   #elif defined(LCD_VT100)
+  #elif defined(LCD_VT100)
     LCDcrlf();
     LCDprint(0x1b); LCDprint(0x5b);
-   	LCDprint( '0' + line / 10   - (line/100)   * 10);
-   	LCDprint( '0' + line       - (line/10)    * 10);
-   	LCDprintChar(";1H"); //pos line 1
-  	LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("2K"); //EL2
-   #elif defined(LCD_ETPP)
+    LCDprint( digit10(line) );
+    LCDprint( digit1(line) );
+    LCDprintChar(";1H"); //pos line 1
+    LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("2K"); //EL2
+  #elif defined(LCD_ETPP)
     i2c_ETPP_set_cursor(0,line-1);
-   #elif defined(LCD_LCD03)
+  #elif defined(LCD_LCD03)
     i2c_LCD03_set_cursor(0,line-1);
-   #endif
+  #endif
 }
 
 void initLCD() {
@@ -186,9 +192,9 @@ void initLCD() {
     // Cat's Whisker Technologies 'TextStar' Module CW-LCD-02
     // http://cats-whisker.com/resources/documents/cw-lcd-02_datasheet.pdf
     // Modified by Luca Brizzi aka gtrick90 @ RCG
-    //LCDprint(0xFE);LCDprint(0x43);LCDprint(0x02); //cursor blink mode	
-    LCDprint(0xFE);LCDprint('R'); //reset	
-   #elif defined(LCD_VT100)
+    //LCDprint(0xFE);LCDprint(0x43);LCDprint(0x02); //cursor blink mode 
+    LCDprint(0xFE);LCDprint('R'); //reset       
+  #elif defined(LCD_VT100)
     //LCDprint(0x1b); LCDprint('c'); //RIS
   #elif defined(LCD_ETPP)
     // Eagle Tree Power Panel - I2C & Daylight Readable LCD
@@ -203,8 +209,8 @@ void initLCD() {
   LCDclear();
   strcpy_P(line1,PSTR("MultiWii V1.9+")); LCDsetLine(1);   LCDprintChar(line1);
   #if defined(LCD_TEXTSTAR) || defined(LCD_VT100)
-     delay(2500);
-     LCDclear();
+    delay(2500);
+    LCDclear();
   #endif
   if (cycleTime == 0) {  //Called from Setup()
     strcpy_P(line1,PSTR("Ready to Fly")); LCDsetLine(2); LCDprintChar(line1);
@@ -377,7 +383,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #endif
 &lcd_param_text17,   &P8[PIDLEVEL],         &__P,
 &lcd_param_text18,   &I8[PIDLEVEL],         &__I,
-&lcd_param_text188,  &I8[PIDLEVEL],         &__I,
+&lcd_param_text188,  &D8[PIDLEVEL],         &__D,
 #if MAG
 &lcd_param_text19,   &P8[PIDMAG],           &__P,
 #endif
@@ -477,11 +483,11 @@ void __u8Fmt(void * var, uint8_t mul, uint8_t dec) {
 void __u16Fmt(void * var, uint8_t mul, uint8_t dec) {
   uint16_t unit = *(uint16_t*)var;
   unit *= mul; 
-  line2[4] = '0' + unit / 10000;
-  line2[5] = '0' + unit / 1000 - (unit/10000) * 10;
-  line2[6] = '0' + unit / 100  - (unit/1000)  * 10;
-  line2[7] = '0' + unit / 10   - (unit/100)   * 10;
-  line2[8] = '0' + unit        - (unit/10)    * 10;
+  line2[4] = digit10000(unit);
+  line2[5] = digit1000(unit);
+  line2[6] = digit100(unit);
+  line2[7] = digit10(unit);
+  line2[8] = digit1(unit);
 }  
 
 void __uAuxFmt(void * var, uint8_t mul, uint8_t dec) {
@@ -610,126 +616,150 @@ void configurationLoop() {
 
   // LCDbar(n,v) : draw a bar graph - n number of chars for width, v value in % to display
 void LCDbar(uint8_t n,uint8_t v) {
-	#if defined(LCD_SERIAL3W)
-     for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
-   #elif defined(LCD_TEXTSTAR)
-     LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v);
-   #elif defined(LCD_VT100)
-     for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
+  #if defined(LCD_SERIAL3W)
+    for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
+  #elif defined(LCD_TEXTSTAR)
+    LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v);
+  #elif defined(LCD_VT100)
+    uint8_t i, j = n*v/100;
+    for (i=0; i< j; i++) LCDprint( '=' );
+    for (i=j; i< n; i++) LCDprint( '.' );
   #elif defined(LCD_ETPP)
-     ETPP_barGraph(n,v);
-   #elif defined(LCD_LCD03)
-     for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
-   #endif
+    ETPP_barGraph(n,v);
+  #elif defined(LCD_LCD03)
+    for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
+  #endif
 }
 
 
 void fill_line1_deg() {
-	  uint16_t unit;
-	  strcpy_P(line1,PSTR("Deg ---.-  ---.-"));
-	  // 0123456789.12345
-	  if (angle[0] < 0 ) {
-		  unit = -angle[0];
-		  line1[3] = '-';
-	  } else
-		  unit = angle[0];
-	  line1[4] = '0' + unit / 1000;
-	  line1[5] = '0' + unit / 100  - (unit/1000)  * 10;
-	  line1[6] = '0' + unit / 10   - (unit/100)   * 10;
-	  line1[8] = '0' + unit       - (unit/10)    * 10;
-	  if (angle[1] < 0 ) {
-		  unit = -angle[1];
-		  line1[10] = '-';
-	  } else
-		  unit = angle[1];
-	  line1[11] = '0' + unit / 1000;
-	  line1[12] = '0' + unit / 100  - (unit/1000)  * 10;
-	  line1[13] = '0' + unit / 10   - (unit/100)   * 10;
-	  line1[15] = '0' + unit        - (unit/10)    * 10;
+          uint16_t unit;
+          strcpy_P(line1,PSTR("Deg ---.-  ---.-"));
+          // 0123456789.12345
+          if (angle[0] < 0 ) {
+                  unit = -angle[0];
+                  line1[3] = '-';
+          } else
+                  unit = angle[0];
+          line1[4] = digit1000(unit);
+          line1[5] = digit100(unit);
+          line1[6] = digit10(unit);
+          line1[8] = digit1(unit);
+          if (angle[1] < 0 ) {
+                  unit = -angle[1];
+                  line1[10] = '-';
+          } else
+                  unit = angle[1];
+          line1[11] = digit1000(unit);
+          line1[12] = digit100(unit);
+          line1[13] = digit10(unit);
+          line1[15] = digit1(unit);
 }
 void fill_line2_AmaxA() {
-	  uint16_t unit;
-	  strcpy_P(line2,PSTR("---,-A max---,-A"));
-	 #ifdef LOG_VALUES
-	  unit = powerValue * PINT2mA;
-	  line2[0] = '0' + unit / 10000;
-	  line2[1] = '0' + unit / 1000 - (unit/10000) * 10;
-	  line2[2] = '0' + unit / 100  - (unit/1000)  * 10;
-	  line2[4] = '0' + unit / 10   - (unit/100)   * 10;
-	  unit = powerMax * PINT2mA;
-	  line2[10] = '0' + unit / 10000;
-	  line2[11] = '0' + unit / 1000 - (unit/10000) * 10;
-	  line2[12] = '0' + unit / 100  - (unit/1000)  * 10;
-	  line2[14] = '0' + unit / 10   - (unit/100)   * 10;
-	 #endif
+          uint16_t unit;
+          strcpy_P(line2,PSTR("---,-A max---,-A"));
+         #ifdef LOG_VALUES
+          unit = powerValue * PINT2mA;
+          line2[0] = digit10000(unit);
+          line2[1] = digit1000(unit);
+          line2[2] = digit100(unit);
+          line2[4] = digit10(unit);
+          unit = powerMax * PINT2mA;
+          line2[10] = digit10000(unit);
+          line2[11] = digit1000(unit);
+          line2[12] = digit100(unit);
+          line2[14] = digit10(unit);
+         #endif
 }
 void fill_line1_VmA() {
-	  strcpy_P(line1,PSTR("--.-V   -----mAh")); // uint8_t vbat, intPowerMeterSum
-	  // 0123456789.12345
-	 #ifdef VBAT
-	  line1[0] = '0'+vbat/100;
-	  line1[1] = '0'+vbat/10-(vbat/100)*10;
-	  line1[3] = '0'+vbat-(vbat/10)*10;
-	 #endif
-	 #ifdef POWERMETER
-	  line1[8] = '0' + intPowerMeterSum / 10000;
-	  line1[9] = '0' + intPowerMeterSum / 1000 - (intPowerMeterSum/10000) * 10;
-	  line1[10] = '0' + intPowerMeterSum / 100  - (intPowerMeterSum/1000)  * 10;
-	  line1[11] = '0' + intPowerMeterSum / 10   - (intPowerMeterSum/100)   * 10;
-	  line1[12] = '0' + intPowerMeterSum        - (intPowerMeterSum/10)    * 10;
-	 #endif
-	  if (buzzerState) { // buzzer on? then add some blink for attention
-		  line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
-	  }
-	  // set mark, if we had i2c errors, failsafes or annex650 overruns
-	  if (i2c_errors_count || failsafeEvents || annex650_overrun_count) line1[6] = '!';
+          strcpy_P(line1,PSTR("--.-V   -----mAh")); // uint8_t vbat, intPowerMeterSum
+          // 0123456789.12345
+         #ifdef VBAT
+          line1[0] = digit100(vbat);
+          line1[1] = digit10(vbat);
+          line1[3] = digit1(vbat);
+         #endif
+         #ifdef POWERMETER
+          line1[8] =  digit10000(intPowerMeterSum);
+          line1[9] =  digit1000(intPowerMeterSum);
+          line1[10] = digit100(intPowerMeterSum);
+          line1[11] = digit10(intPowerMeterSum);
+          line1[12] = digit1(intPowerMeterSum);
+         #endif
+          if (buzzerState) { // buzzer on? then add some blink for attention
+                  line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
+          }
+          // set mark, if we had i2c errors, failsafes or annex650 overruns
+          if (i2c_errors_count || failsafeEvents || annex650_overrun_count) line1[6] = '!';
 }
 void output_VmAbars() {
-	 #ifdef VBAT
-	  LCDbar(7, (((vbat-VBATLEVEL1_3S)*100)/VBATREF) );
-	  LCDprint(' ');
-	 #else
-	  LCDprintChar("        ");
-	 #endif
-	 #ifdef POWERMETER
-	  //     intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
-	  //   pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
-	  if (powerTrigger1)
-		  LCDbar(8, (intPowerMeterSum/(uint16_t)powerTrigger1) *2 ); // bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
-	 #endif
+         #ifdef VBAT
+          LCDbar(7, (((vbat-VBATLEVEL1_3S)*100)/VBATREF) );
+          LCDprint(' ');
+         #else
+          LCDprintChar("        ");
+         #endif
+         #ifdef POWERMETER
+          //     intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
+          //   pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
+          if (powerTrigger1)
+                  LCDbar(8, (intPowerMeterSum/(uint16_t)powerTrigger1) *2 ); // bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
+         #endif
 }
 void fill_line1_cycle() {
-	strcpy_P(line1,PSTR("Cycle    -----us")); //uin16_t cycleTime
-	// 0123456789.12345*/
-	//strcpy_P(line2,PSTR("(-----, -----)us")); //uin16_t cycleTimeMax
-	line1[9] = '0' + cycleTime / 10000;
-	line1[10] = '0' + cycleTime / 1000 - (cycleTime/10000) * 10;
-	line1[11] = '0' + cycleTime / 100  - (cycleTime/1000)  * 10;
-	line1[12] = '0' + cycleTime / 10   - (cycleTime/100)   * 10;
-	line1[13] = '0' + cycleTime        - (cycleTime/10)    * 10;
+        strcpy_P(line1,PSTR("Cycle    -----us")); //uin16_t cycleTime
+        // 0123456789.12345*/
+        //strcpy_P(line2,PSTR("(-----, -----)us")); //uin16_t cycleTimeMax
+        line1[9] =  digit10000(cycleTime);
+        line1[10] = digit1000(cycleTime);
+        line1[11] = digit100(cycleTime);
+        line1[12] = digit10(cycleTime);
+        line1[13] = digit1(cycleTime);
+}
+void fill_line2_cycleMinMax() {
+  strcpy_P(line2,PSTR("(-----, -----)us")); //uin16_t cycleTimeMax
+  line2[1] = digit10000(cycleTimeMin );
+  line2[2] = digit1000(cycleTimeMin );
+  line2[3] = digit100(cycleTimeMin );
+  line2[4] = digit10(cycleTimeMin );
+  line2[5] = digit1(cycleTimeMin );
+  line2[8] =  digit10000(cycleTimeMax);
+  line2[9] =  digit1000(cycleTimeMax);
+  line2[10] = digit100(cycleTimeMax);
+  line2[11] = digit10(cycleTimeMax);
+  line2[12] = digit1(cycleTimeMax);
 }
 void fill_line1_fails() {
-	strcpy_P(line1,PSTR("Fails i2c t-errs"));
+  strcpy_P(line1,PSTR("Fails i2c t-errs"));
 }
 void fill_line2_fails_values() {
-	uint16_t unit;
-	// 0123456789012345
-	strcpy_P(line2,PSTR("  --   --     --"));
-	unit = failsafeEvents;
-	//line2[0] = '0' + unit / 1000 - (unit/10000) * 10;
-	//line2[1] = '0' + unit / 100  - (unit/1000)  * 10;
-	line2[2] = '0' + unit / 10   - (unit/100)   * 10;
-	line2[3] = '0' + unit        - (unit/10)    * 10;
-	unit = i2c_errors_count;
-	//line2[5] = '0' + unit / 1000 - (unit/10000) * 10;
-	//line2[6] = '0' + unit / 100  - (unit/1000)  * 10;
-	line2[7] = '0' + unit / 10   - (unit/100)   * 10;
-	line2[8] = '0' + unit        - (unit/10)    * 10;
-	unit = annex650_overrun_count;
-	//line2[12] = '0' + unit / 1000 - (unit/10000) * 10;
-	//line2[13] = '0' + unit / 100  - (unit/1000)  * 10;
-	line2[14] = '0' + unit / 10   - (unit/100)   * 10;
-	line2[15] = '0' + unit        - (unit/10)    * 10;
+  uint16_t unit;
+  // 0123456789012345
+  strcpy_P(line2,PSTR("  --   --     --"));
+  unit = failsafeEvents;
+  //line2[0] = '0' + unit / 1000 - (unit/10000) * 10;
+  //line2[1] = '0' + unit / 100  - (unit/1000)  * 10;
+  line2[2] = digit10(unit);
+  line2[3] = digit1(unit);
+  unit = i2c_errors_count;
+  //line2[5] = '0' + unit / 1000 - (unit/10000) * 10;
+  //line2[6] = '0' + unit / 100  - (unit/1000)  * 10;
+  line2[7] = digit10(unit);
+  line2[8] = digit1(unit);
+  unit = annex650_overrun_count;
+  //line2[12] = '0' + unit / 1000 - (unit/10000) * 10;
+  //line2[13] = '0' + unit / 100  - (unit/1000)  * 10;
+  line2[14] = digit10(unit);
+  line2[15] = digit1(unit);
+}
+static char checkboxitemNames[CHECKBOXITEMS][4] = {"Lvl", "Bar", "Mag", "CSt", "CTr", "Arm", "GHm", "GHd", "Pas", "HFr", "Bpp" };
+void output_checkboxitems() {
+  for (uint8_t i=0; i<CHECKBOXITEMS; i++ ) {
+    if (rcOptions[i] || ((i==BOXARM)&&(armed)) ) {
+      LCDprintChar(checkboxitemNames[i]);
+      LCDprint(' ');
+    }
+  }
 }
 /* ------------ */
 
@@ -741,321 +771,320 @@ void lcd_telemetry() {
   case 1: // button A on Textstar LCD -> angles
   case '1':
 #ifdef LCD_VT100
-		switch (linenr++ % 7) { // not really linenumbers
-		case 0: // Deg
-			LCDsetLine(1);
-			fill_line1_deg();
-			LCDprintChar(line1);
-			break;
+  switch (linenr++ % 8) { // not really linenumbers
+  case 0: // V, mAh
+          LCDsetLine(1);
+          fill_line1_VmA();
+          LCDprintChar(line1);
+          break;
+  case 1: // V, mAh bars
+          LCDsetLine(2);
+          output_VmAbars();
+          break;
+  case 2: // A, maxA
+          LCDsetLine(3);
+          fill_line2_AmaxA();
+          LCDprintChar(line2);
+          break;
+  case 3: // checkboxstatus
+          LCDsetLine(4);
+          output_checkboxitems();
+          break;
 
-		case 1: // V, mAh
-			LCDsetLine(2); // to clear the unused line
-			LCDsetLine(3);
-			fill_line1_VmA();
-			LCDprintChar(line1);
-			break;
-		case 2: // V, mAh bars
-			LCDsetLine(4);
-			output_VmAbars();
-			break;
-		case 3: // A, maxA
-			LCDsetLine(5);
-			fill_line2_AmaxA();
-			LCDprintChar(line2);
-			break;
-
-		case 4: // cycle
-			LCDsetLine(6); // to clear the unused line
-			LCDsetLine(7);
-			fill_line1_cycle();
-			LCDprintChar(line1);
-			break;
-		case 5: // Fails....
-			LCDsetLine(8);
-			fill_line1_fails();
-			LCDprintChar(line1);
-			break;
-		case 6: // Fails....
-			LCDsetLine(9);
-			fill_line2_fails_values();
-			LCDprintChar(line2);
-			break;
-		}
-	    LCDcrlf();
+  case 4: // cycle
+          LCDsetLine(5); // to clear the unused line
+          LCDsetLine(6);
+          fill_line1_cycle();
+          LCDprintChar(line1);
+          break;
+  case 5: // cycle min/max
+          LCDsetLine(7);
+          fill_line2_cycleMinMax();
+          LCDprintChar(line2);
+          break;
+  case 6: // Fails....
+          LCDsetLine(8);
+          fill_line1_fails();
+          LCDprintChar(line1);
+          break;
+  case 7: // Fails....
+          LCDsetLine(9);
+          fill_line2_fails_values();
+          LCDprintChar(line2);
+          break;
+  }
+  LCDcrlf();
 #else // all 2-line displays
-	  if (linenr++ % 2) {
-		  fill_line1_deg();
-		  LCDsetLine(1);
-		  LCDprintChar(line1);
-	  } else {
-		  fill_line2_AmaxA();
-		  LCDsetLine(2);LCDprintChar(line2);
-	  }
+  if (linenr++ % 2) {
+          fill_line1_deg();
+          LCDsetLine(1);
+          LCDprintChar(line1);
+  } else {
+          fill_line2_AmaxA();
+          LCDsetLine(2);LCDprintChar(line2);
+  }
 #endif // vt100
-	  break;
+  break;
 
+#ifdef LCD_VT100
+#else // all 2-line displays
   case 2: // button B on Textstar LCD -> Voltage, PowerSum and power alarm trigger value
   case '2':
-	  if (linenr++ % 2) {
-		  fill_line1_VmA();
-		  LCDsetLine(1);
-		  LCDprintChar(line1);
-	  } else {
-		  LCDsetLine(2);
-		  output_VmAbars();
-	  }
-	  break;
-
+          if (linenr++ % 2) {
+                  fill_line1_VmA();
+                  LCDsetLine(1);
+                  LCDprintChar(line1);
+          } else {
+                  LCDsetLine(2);
+                  output_VmAbars();
+          }
+          break;
+#endif // vt100
   case 3: // button C on Textstar LCD -> cycle time
   case '3':
-          #if defined(LOG_VALUES) && defined(DEBUG)
-            cycleTimeMax = 0; // reset min/max on transition on->off
-    	    cycleTimeMin = 65535;
-          #endif
-	  if (linenr++ % 2) {
-		  fill_line1_cycle();
-		  LCDsetLine(1);
-		  LCDprintChar(line1);
-	  } else {
+          if (linenr++ % 2) {
+                  fill_line1_cycle();
+                  LCDsetLine(1);
+                  LCDprintChar(line1);
+          } else {
          #ifdef LOG_VALUES
-		  strcpy_P(line2,PSTR("(-----, -----)us")); //uin16_t cycleTimeMax
-		  line2[1] = '0' + cycleTimeMin / 10000;
-		  line2[2] = '0' + cycleTimeMin / 1000 - (cycleTimeMin/10000) * 10;
-		  line2[3] = '0' + cycleTimeMin / 100  - (cycleTimeMin/1000)  * 10;
-		  line2[4] = '0' + cycleTimeMin / 10   - (cycleTimeMin/100)   * 10;
-		  line2[5] = '0' + cycleTimeMin        - (cycleTimeMin/10)    * 10;
-		  line2[8] = '0' + cycleTimeMax / 10000;
-		  line2[9] = '0' + cycleTimeMax / 1000 - (cycleTimeMax/10000) * 10;
-		  line2[10] = '0' + cycleTimeMax / 100  - (cycleTimeMax/1000)  * 10;
-		  line2[11] = '0' + cycleTimeMax / 10   - (cycleTimeMax/100)   * 10;
-		  line2[12] = '0' + cycleTimeMax        - (cycleTimeMax/10)    * 10;
-		  LCDsetLine(2);LCDprintChar(line2);
+              fill_line2_cycleMinMax();
+              LCDsetLine(2);
+              LCDprintChar(line2);
          #endif
-	  }
-	  break;
+          }
+          break;
 
-    case 4: // button D on Textstar LCD -> sensors
-    case '4':
+  case 4: // button D on Textstar LCD -> sensors
+  case '4':
         #define GYROLIMIT 30 // threshold: for larger values replace bar with dots
         #define ACCLIMIT 40 // threshold: for larger values replace bar with dots
 #ifdef LCD_VT100
-		static char sensorNames[6][3] = {"Gx", " y", " z", "Ax", " y", " z" };
-		i = linenr++ % 6;
-		LCDsetLine(i+1);
-		LCDprintChar(sensorNames[i]);
-		LCDprint(' ');
-		switch (i) {
-		case 0:
-			if (abs(gyroData[0]) < GYROLIMIT) { LCDbar(12,(GYROLIMIT+gyroData[0])*50/GYROLIMIT); } else LCDprintChar("....");
-			break;
-		case 1:
-			if (abs(gyroData[1]) < GYROLIMIT) { LCDbar(12,(GYROLIMIT+gyroData[1])*50/GYROLIMIT); } else LCDprintChar("....");
-			break;
-		case 2:
-			if (abs(gyroData[2]) < GYROLIMIT) { LCDbar(12,(GYROLIMIT+gyroData[2])*50/GYROLIMIT); } else LCDprintChar("....");
-			break;
-		case 3:
-			if (abs(accSmooth[0]) < ACCLIMIT) { LCDbar(12,(ACCLIMIT+accSmooth[0])*50/ACCLIMIT); } else LCDprintChar("....");
-			break;
-		case 4:
-			if (abs(accSmooth[1]) < ACCLIMIT) { LCDbar(12,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT); } else LCDprintChar("....");
-			break;
-		case 5:
-			if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCDbar(12,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT); } else LCDprintChar("....");
-			break;
-		}
-	    LCDcrlf();
+                static char sensorNames[6][3] = {"Gx", " y", " z", "Ax", " y", " z" };
+                i = linenr++ % 6;
+                LCDsetLine(i+1);
+                LCDprintChar(sensorNames[i]);
+                LCDprint(' ');
+                switch (i) {
+                case 0:
+                        if (abs(gyroData[0]) < GYROLIMIT) { LCDbar(12,(GYROLIMIT+gyroData[0])*50/GYROLIMIT); } else LCDprintChar("....");
+                        break;
+                case 1:
+                        if (abs(gyroData[1]) < GYROLIMIT) { LCDbar(12,(GYROLIMIT+gyroData[1])*50/GYROLIMIT); } else LCDprintChar("....");
+                        break;
+                case 2:
+                        if (abs(gyroData[2]) < GYROLIMIT) { LCDbar(12,(GYROLIMIT+gyroData[2])*50/GYROLIMIT); } else LCDprintChar("....");
+                        break;
+                case 3:
+                        if (abs(accSmooth[0]) < ACCLIMIT) { LCDbar(12,(ACCLIMIT+accSmooth[0])*50/ACCLIMIT); } else LCDprintChar("....");
+                        break;
+                case 4:
+                        if (abs(accSmooth[1]) < ACCLIMIT) { LCDbar(12,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT); } else LCDprintChar("....");
+                        break;
+                case 5:
+                        if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCDbar(12,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT); } else LCDprintChar("....");
+                        break;
+                }
+            LCDcrlf();
 #else // all 2-line displays
-    	if (linenr++ % 2) {
-    		LCDsetLine(1);LCDprintChar("G "); //refresh line 1 of LCD
-    		if (abs(gyroData[0]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[0])*50/GYROLIMIT); } else LCDprintChar("...."); LCDprint(' ');
-    		if (abs(gyroData[1]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[1])*50/GYROLIMIT); } else LCDprintChar("...."); LCDprint(' ');
-    		if (abs(gyroData[2]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[2])*50/GYROLIMIT); } else LCDprintChar("....");
-    	} else {
-    		LCDsetLine(2);LCDprintChar("A "); //refresh line 2 of LCD
-    		if (abs(accSmooth[0]) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[0])*50/ACCLIMIT); } else LCDprintChar("...."); LCDprint(' ');
-    		if (abs(accSmooth[1]) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT); } else LCDprintChar("...."); LCDprint(' ');
-    		if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT); } else LCDprintChar("....");
-    	}
+        if (linenr++ % 2) {
+                LCDsetLine(1);LCDprintChar("G "); //refresh line 1 of LCD
+                if (abs(gyroData[0]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[0])*50/GYROLIMIT); } else LCDprintChar("...."); LCDprint(' ');
+                if (abs(gyroData[1]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[1])*50/GYROLIMIT); } else LCDprintChar("...."); LCDprint(' ');
+                if (abs(gyroData[2]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[2])*50/GYROLIMIT); } else LCDprintChar("....");
+        } else {
+                LCDsetLine(2);LCDprintChar("A "); //refresh line 2 of LCD
+                if (abs(accSmooth[0]) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[0])*50/ACCLIMIT); } else LCDprintChar("...."); LCDprint(' ');
+                if (abs(accSmooth[1]) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT); } else LCDprintChar("...."); LCDprint(' ');
+                if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT); } else LCDprintChar("....");
+        }
 #endif  // vt100
-    	break;
+        break;
 
     case 5:
     case '5':
-    	if (linenr++ % 2) {
-    		fill_line1_fails();
-    		LCDsetLine(1);
-    		LCDprintChar(line1);
-    	} else {
-    		fill_line2_fails_values();
-    		LCDsetLine(2);
-    		LCDprintChar(line2);
-    	}
-    	break;
-
-    case 6:	// RX inputs
-    case '6':
 #ifdef LCD_VT100
-    	static char channelNames[8][4] = {"Ail", "Ele", "Yaw", "Thr", "Ax1", "Ax2", "Ax3", "Ax4" };
-    	i = linenr++ % 8; // 8 channels
-    	//strcpy_P(line1,PSTR("-Thr ---- "));
-    	//                   0123456789.12345
-    	LCDsetLine(i+1);
-    	LCDprint( '0' + i+1); // channel numbering [1;8]
-    	LCDprint(' ');
-    	LCDprintChar(channelNames[i]);
-    	LCDprint(' ');
-    	unit = rcData[i];
-    	LCDprint( '0' + unit / 1000);
-    	LCDprint( '0' + unit / 100  - (unit/1000)  * 10);
-    	LCDprint( '0' + unit / 10   - (unit/100)   * 10);
-    	LCDprint( '0' + unit        - (unit/10)    * 10);
-    	LCDprint(' ');
-    	LCDbar(12, (unit-1000)/10 );
+        i = linenr++ % CHECKBOXITEMS;
+        LCDsetLine(i+1);
+        LCDprintChar(checkboxitemNames[i]);
+        LCDprint(' ');
+        LCDprint( rcOptions[i] ? 'X' : '.');
         LCDcrlf();
 #else // all 2-line displays
-    	if (linenr++ % 2) {
-    		strcpy_P(line1,PSTR("Roll Pitch Throt"));
-    		if (armed) line2[14] = 'A'; else line2[14] = 'a';
-    		if (failsafeCnt > 5) line2[15] = 'F'; else line2[15] = 'f';
-    		LCDsetLine(1);LCDprintChar(line1);
-    	} else {
-    		// 0123456789012345
-    		strcpy_P(line2,PSTR("---- ---- ----xx"));
-    		line2[0] = '0' + rcData[ROLL] / 1000 - (rcData[ROLL]/10000) * 10;
-    		line2[1] = '0' + rcData[ROLL] / 100  - (rcData[ROLL]/1000)  * 10;
-    		line2[2] = '0' + rcData[ROLL] / 10   - (rcData[ROLL]/100)   * 10;
-    		line2[3] = '0' + rcData[ROLL]        - (rcData[ROLL]/10)    * 10;
-    		line2[5] = '0' + rcData[PITCH] / 1000 - (rcData[PITCH]/10000) * 10;
-    		line2[6] = '0' + rcData[PITCH] / 100  - (rcData[PITCH]/1000)  * 10;
-    		line2[7] = '0' + rcData[PITCH] / 10   - (rcData[PITCH]/100)   * 10;
-    		line2[8] = '0' + rcData[PITCH]        - (rcData[PITCH]/10)    * 10;
-    		line2[10] = '0' + rcData[THROTTLE] / 1000 - (rcData[THROTTLE]/10000) * 10;
-    		line2[11] = '0' + rcData[THROTTLE] / 100  - (rcData[THROTTLE]/1000)  * 10;
-    		line2[12] = '0' + rcData[THROTTLE] / 10   - (rcData[THROTTLE]/100)   * 10;
-    		line2[13] = '0' + rcData[THROTTLE]        - (rcData[THROTTLE]/10)    * 10;
-    		LCDsetLine(2);LCDprintChar(line2);
-    	}
+        if (linenr++ % 2) {
+                fill_line1_fails();
+                LCDsetLine(1);
+                LCDprintChar(line1);
+        } else {
+                fill_line2_fails_values();
+                LCDsetLine(2);
+                LCDprintChar(line2);
+        }
+#endif  // vt100
+        break;
+
+    case 6:     // RX inputs
+    case '6':
+#ifdef LCD_VT100
+        static char channelNames[8][4] = {"Ail", "Ele", "Yaw", "Thr", "Ax1", "Ax2", "Ax3", "Ax4" };
+        i = linenr++ % 8; // 8 channels
+        //strcpy_P(line1,PSTR("-Thr ---- "));
+        //                   0123456789.12345
+        LCDsetLine(i+1);
+        LCDprint( '0' + i+1); // channel numbering [1;8]
+        LCDprint(' ');
+        LCDprintChar(channelNames[i]);
+        LCDprint(' ');
+        unit = rcData[i];
+        LCDprint( digit1000(unit) );
+        LCDprint( digit100(unit) );
+        LCDprint( digit10(unit) );
+        LCDprint( digit1(unit) );
+        LCDprint(' ');
+        LCDbar(12, (unit-1000)/10 );
+        LCDcrlf();
+#else // all 2-line displays
+        if (linenr++ % 2) {
+                strcpy_P(line1,PSTR("Roll Pitch Throt"));
+                if (armed) line2[14] = 'A'; else line2[14] = 'a';
+                if (failsafeCnt > 5) line2[15] = 'F'; else line2[15] = 'f';
+                LCDsetLine(1);LCDprintChar(line1);
+        } else {
+                // 0123456789012345
+                strcpy_P(line2,PSTR("---- ---- ----xx"));
+                line2[0] = digit1000( rcData[ROLL] );
+                line2[1] = digit100( rcData[ROLL] );
+                line2[2] = digit10( rcData[ROLL] );
+                line2[3] = digit1( rcData[ROLL] );
+                line2[5] = '0' + rcData[PITCH] / 1000 - (rcData[PITCH]/10000) * 10;
+                line2[6] = '0' + rcData[PITCH] / 100  - (rcData[PITCH]/1000)  * 10;
+                line2[7] = '0' + rcData[PITCH] / 10   - (rcData[PITCH]/100)   * 10;
+                line2[8] = '0' + rcData[PITCH]        - (rcData[PITCH]/10)    * 10;
+                line2[10] = '0' + rcData[THROTTLE] / 1000 - (rcData[THROTTLE]/10000) * 10;
+                line2[11] = '0' + rcData[THROTTLE] / 100  - (rcData[THROTTLE]/1000)  * 10;
+                line2[12] = '0' + rcData[THROTTLE] / 10   - (rcData[THROTTLE]/100)   * 10;
+                line2[13] = '0' + rcData[THROTTLE]        - (rcData[THROTTLE]/10)    * 10;
+                LCDsetLine(2);LCDprintChar(line2);
+        }
 #endif // vt100
-    	break;
+        break;
 
     case 7:
-    case '7': 	// contributed by PatrikE
-		#ifdef GPS
-    	if (linenr++ % 2) {
-    		strcpy_P(line1,PSTR("Lat      Lon --"));
-    		// 0123456789012345
-    		if (armed) line1[14] = 'A'; else line1[14] = 'a';
-    		if (failsafeCnt > 5) line1[15] = 'F'; else line1[15] = 'f';
-    		LCDsetLine(1);LCDprintChar(line1);
-    	} else {
-    		strcpy_P(line2,PSTR("-------  -------"));
-    		line2[0] = '0' + GPS_latitude / 1000000 - (GPS_latitude/10000000) * 10;
-    		line2[1] = '0' + GPS_latitude / 100000  - (GPS_latitude/1000000)  * 10;
-    		line2[2] = '0' + GPS_latitude / 10000   - (GPS_latitude/100000)   * 10;
-    		line2[3] = '0' + GPS_latitude / 1000 -    (GPS_latitude/10000) * 10;
-    		line2[4] = '0' + GPS_latitude / 100  -    (GPS_latitude/1000)  * 10;
-    		line2[5] = '0' + GPS_latitude / 10   -    (GPS_latitude/100)   * 10;
-    		line2[6] = '0' + GPS_latitude        -    (GPS_latitude/10)    * 10;
-    		line2[9] = '0' + GPS_longitude /  1000000 - (GPS_longitude/10000000) * 10;
-    		line2[10] = '0' + GPS_longitude / 100000  - (GPS_longitude/1000000)  * 10;
-    		line2[11] = '0' + GPS_longitude / 10000   - (GPS_longitude/100000)   * 10;
-    		line2[12] = '0' + GPS_longitude / 1000    - (GPS_longitude/10000) * 10;
-    		line2[13] = '0' + GPS_longitude / 100     - (GPS_longitude/1000)  * 10;
-    		line2[14] = '0' + GPS_longitude / 10      - (GPS_longitude/100)   * 10;
-    		line2[15] = '0' + GPS_longitude           - (GPS_longitude/10)    * 10;
-    		LCDsetLine(2);LCDprintChar(line2);
-    	}
-		#endif // case 7 : GPS
-    	break;
+    case '7':   // contributed by PatrikE
+                #if GPS
+        if (linenr++ % 2) {
+                strcpy_P(line1,PSTR("Lat      Lon --"));
+                // 0123456789012345
+                if (armed) line1[14] = 'A'; else line1[14] = 'a';
+                if (failsafeCnt > 5) line1[15] = 'F'; else line1[15] = 'f';
+                LCDsetLine(1);LCDprintChar(line1);
+        } else {
+                strcpy_P(line2,PSTR("-------  -------"));
+                line2[0] = '0' + GPS_latitude / 1000000 - (GPS_latitude/10000000) * 10;
+                line2[1] = '0' + GPS_latitude / 100000  - (GPS_latitude/1000000)  * 10;
+                line2[2] = '0' + GPS_latitude / 10000   - (GPS_latitude/100000)   * 10;
+                line2[3] = '0' + GPS_latitude / 1000 -    (GPS_latitude/10000) * 10;
+                line2[4] = '0' + GPS_latitude / 100  -    (GPS_latitude/1000)  * 10;
+                line2[5] = '0' + GPS_latitude / 10   -    (GPS_latitude/100)   * 10;
+                line2[6] = '0' + GPS_latitude        -    (GPS_latitude/10)    * 10;
+                line2[9] = '0' + GPS_longitude /  1000000 - (GPS_longitude/10000000) * 10;
+                line2[10] = '0' + GPS_longitude / 100000  - (GPS_longitude/1000000)  * 10;
+                line2[11] = '0' + GPS_longitude / 10000   - (GPS_longitude/100000)   * 10;
+                line2[12] = '0' + GPS_longitude / 1000    - (GPS_longitude/10000) * 10;
+                line2[13] = '0' + GPS_longitude / 100     - (GPS_longitude/1000)  * 10;
+                line2[14] = '0' + GPS_longitude / 10      - (GPS_longitude/100)   * 10;
+                line2[15] = '0' + GPS_longitude           - (GPS_longitude/10)    * 10;
+                LCDsetLine(2);LCDprintChar(line2);
+        }
+                #endif // case 7 : GPS
+        break;
 
 #ifdef LCD_VT100
     case 9: // outputs motors+sensors
     case '9':
-    	static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
-    			"S1", "S2","S3", "S4", "S5", "S6", "S7", "S8", };
-    	static uint8_t index = 0;
-    	i = index++ % 16;
-    	if (i == 0) linenr = 1; //vt100 starts linenumbering @1
-    	LCDsetLine(linenr);
-    	if (i < 8) {
-    		if (i < NUMBER_MOTOR) {
-    	    	LCDprintChar(outputNames[i]);
-    	    	LCDprint(' ');
-    	    	unit = motor[i]; // [1000 ; 2000]
-    			LCDprint( '0' + unit / 1000);
-    			LCDprint( '0' + unit / 100  - (unit/1000)  * 10);
-    			LCDprint( '0' + unit / 10   - (unit/100)   * 10);
-    			LCDprint( '0' + unit        - (unit/10)    * 10);
-    			LCDprint(' ');
-    			LCDbar(12, (unit-1000)/10 );
-    		    LCDcrlf();
-    			linenr++;
-    		} else {
-    			index = 8;
-    		}
-    	} else {
-    		uint8_t j = i-7; // [8;15] -> [1;8]
-			#ifdef SEC_SERVO_FROM
-    		if (PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j) || (SEC_SERVO_FROM  <= j && SEC_SERVO_TO  >= j)
-			#else
-			if (j < PRI_SERVO_FROM) index = 7 + PRI_SERVO_FROM;
-			else if (j > PRI_SERVO_TO) index = 16;
-			else // (PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j)
-			#endif
-			{
-				LCDprintChar(outputNames[i]);
-				LCDprint(' ');
-				unit = servo[j-1]; // [1000 ; 2000]
-				LCDprint( '0' + unit / 1000);
-				LCDprint( '0' + unit / 100  - (unit/1000)  * 10);
-				LCDprint( '0' + unit / 10   - (unit/100)   * 10);
-				LCDprint( '0' + unit        - (unit/10)    * 10);
-				LCDprint(' ');
-				LCDbar(12, (unit-1000)/10 );
-			    LCDcrlf();
-				linenr++;
-				break;
-			}
-    	}
-    	break;
+        static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
+                        "S1", "S2","S3", "S4", "S5", "S6", "S7", "S8", };
+        static uint8_t index = 0;
+        i = index++ % 16;
+        if (i == 0) linenr = 1; //vt100 starts linenumbering @1
+        LCDsetLine(linenr);
+        if (i < 8) {
+                if (i < NUMBER_MOTOR) {
+                LCDprintChar(outputNames[i]);
+                LCDprint(' ');
+                unit = motor[i]; // [1000 ; 2000]
+                        LCDprint( digit1000(unit) );
+                        LCDprint( digit100(unit) );
+                        LCDprint( digit10(unit) );
+                        LCDprint( digit1(unit) );
+                        LCDprint(' ');
+                        LCDbar(12, (unit-1000)/10 );
+                    LCDcrlf();
+                        linenr++;
+                } else {
+                        index = 8;
+                }
+        } else {
+                uint8_t j = i-7; // [8;15] -> [1;8]
+                        #ifdef SEC_SERVO_FROM
+                if (PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j) || (SEC_SERVO_FROM  <= j && SEC_SERVO_TO  >= j)
+                        #else
+                        if (j < PRI_SERVO_FROM) index = 7 + PRI_SERVO_FROM;
+                        else if (j > PRI_SERVO_TO) index = 16;
+                        else // (PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j)
+                        #endif
+                        {
+                                LCDprintChar(outputNames[i]);
+                                LCDprint(' ');
+                                unit = servo[j-1]; // [1000 ; 2000]
+                                LCDprint( digit1000(unit) );
+                                LCDprint( digit100(unit) );
+                                LCDprint( digit10(unit) );
+                                LCDprint( digit1(unit) );
+                                LCDprint(' ');
+                                LCDbar(12, (unit-1000)/10 );
+                            LCDcrlf();
+                                linenr++;
+                                break;
+                        }
+        }
+        break;
 
 #endif // vt100 case 9
 
-	#if defined(LOG_VALUES) && defined(DEBUG)
+        #if defined(LOG_VALUES) && defined(DEBUG)
     case 'R':
-    	//Reset logvalues
-       #if defined(LOG_VALUES) && defined(DEBUG)
-    	cycleTimeMax = 0; // reset min/max on transition on->off
-    	cycleTimeMin = 65535;
-       #endif
-    	telemetry = 0; // no use to repeat this forever
-    	break;
+        //Reset logvalues
+        cycleTimeMax = 0; // reset min/max on transition on->off
+        cycleTimeMin = 65535;
+        telemetry = 0; // no use to repeat this forever
+        break;
     #endif // case R
 
    #ifdef DEBUG
     case 'F':
-    	extern unsigned int __bss_end;
-    	extern unsigned int __heap_start;
-    	extern void *__brkval;
-    	int free_memory;
-    	if((int)__brkval == 0)
-    		free_memory = ((int)&free_memory) - ((int)&__bss_end);
-    	else
-    		free_memory = ((int)&free_memory) - ((int)__brkval);
-    	strcpy_P(line1,PSTR(" Free ----")); // uint8_t free_memory
-    	line1[6] = '0' + free_memory / 1000 - (free_memory/10000) * 10;
-    	line1[7] = '0' + free_memory / 100  - (free_memory/1000)  * 10;
-    	line1[8] = '0' + free_memory / 10   - (free_memory/100)   * 10;
-    	line1[9] = '0' + free_memory        - (free_memory/10)    * 10;
-    	LCDsetLine(1); LCDprintChar(line1);
-    	break;
+        extern unsigned int __bss_end;
+        extern unsigned int __heap_start;
+        extern void *__brkval;
+        int free_memory;
+        if((int)__brkval == 0)
+                free_memory = ((int)&free_memory) - ((int)&__bss_end);
+        else
+                free_memory = ((int)&free_memory) - ((int)__brkval);
+        strcpy_P(line1,PSTR(" Free ----")); // uint8_t free_memory
+        line1[6] = digit1000( free_memory );
+        line1[7] = digit100( free_memory );
+        line1[8] = digit10( free_memory );
+        line1[9] = digit1( free_memory );
+        LCDsetLine(1); LCDprintChar(line1);
+        break;
    #endif // DEBUG
 
     // WARNING: if you add another case here, you should also add a case: in Serial.pde, so users can access your case via terminal input
   } // end switch (telemetry) 
 } // end function lcd_telemetry
 
-
+void toggle_telemetry(uint8_t t) {
+  if (telemetry == t) telemetry = 0; else { telemetry = t; LCDclear(); }
+}
 #endif //  LCD_TELEMETRY
-

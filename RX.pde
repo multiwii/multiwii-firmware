@@ -191,8 +191,8 @@ void configureReceiver() {
   }
   
   #if defined(RCAUXPIN)
-  /* this ISR is a simplication of the previous one for PROMINI on port D
-     it's simplier because we know the interruption deals only with on PIN:
+  /* this ISR is a simplification of the previous one for PROMINI on port D
+     it's simplier because we know the interruption deals only with one PIN:
      bit 0 of PORT B, ie Arduino PIN 8
      or bit 4 of PORTB, ie Arduino PIN 12
    => no need to check which PIN has changed */

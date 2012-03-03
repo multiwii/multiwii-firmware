@@ -1,7 +1,7 @@
 /*
 MultiWiiCopter by Alexandre Dubus
 www.multiwii.com
-February  2012     V1.dev
+March  2012     V2.0_pre_version_1
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -11,7 +11,7 @@ February  2012     V1.dev
 #include "config.h"
 #include "def.h"
 #include <avr/pgmspace.h>
-#define   VERSION  19
+#define  VERSION  201
 
 /*********** RC alias *****************/
 #define ROLL       0
@@ -29,16 +29,16 @@ February  2012     V1.dev
 #define PIDLEVEL   6
 #define PIDMAG     7
 
-#define BOXACC      0
-#define BOXBARO     1
-#define BOXMAG      2
-#define BOXCAMSTAB  3
-#define BOXCAMTRIG  4
-#define BOXARM      5
-#define BOXGPSHOME  6
-#define BOXGPSHOLD  7
-#define BOXPASSTHRU 8
-#define BOXHEADFREE 9
+#define BOXACC       0
+#define BOXBARO      1
+#define BOXMAG       2
+#define BOXCAMSTAB   3
+#define BOXCAMTRIG   4
+#define BOXARM       5
+#define BOXGPSHOME   6
+#define BOXGPSHOLD   7
+#define BOXPASSTHRU  8
+#define BOXHEADFREE  9
 #define BOXBEEPERON  10
 
 #define CHECKBOXITEMS 11
@@ -163,10 +163,11 @@ static uint8_t activate2[CHECKBOXITEMS];
 // **********************
 static int32_t  GPS_latitude,GPS_longitude;
 static int32_t  GPS_latitude_home,GPS_longitude_home;
+static int32_t  GPS_latitude_hold,GPS_longitude_hold;
 static uint8_t  GPS_fix , GPS_fix_home = 0;
 static uint8_t  GPS_numSat;
-static uint16_t GPS_distanceToHome;      // in meters
-static int16_t  GPS_directionToHome = 0; // in degrees
+static uint16_t GPS_distanceToHome,GPS_distanceToHold;       // distance to home or hold point in meters
+static int16_t  GPS_directionToHome,GPS_directionToHold;     // direction to home or hol point in degrees
 static uint8_t  GPS_update = 0;          // it's a binary toogle to distinct a GPS position update
 static int16_t  GPS_angle[2];            // it's the angles that must be applied for GPS correction
 
@@ -188,7 +189,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   #if defined(LCD_TELEMETRY)
    static uint16_t telemetryTimer = 0, telemetryAutoTimer = 0, psensorTimer = 0;
   #endif
-  #if defined(LCD_TELEMETRY)
+  #if defined(LCD_TELEMETRY_AUTO)
    static uint8_t telemetryAutoIndex = 0;
    static char telemetryAutoSequence []  = LCD_TELEMETRY_AUTO;
   #endif
@@ -573,13 +574,20 @@ void loop () {
     #if GPS
       if (rcOptions[BOXGPSHOME]) {GPSModeHome = 1;}
       else GPSModeHome = 0;
-      if (rcOptions[BOXGPSHOLD]) {GPSModeHold = 1;}
-      else GPSModeHold = 0;
+      if (rcOptions[BOXGPSHOLD]) {
+        if (GPSModeHold == 0) {
+          GPSModeHold = 1;
+          GPS_latitude_hold = GPS_latitude;
+          GPS_longitude_hold = GPS_longitude;
+        }
+      } else {
+        GPSModeHold = 0;
+      }
     #endif
     if (rcOptions[BOXPASSTHRU]) {passThruMode = 1;}
     else passThruMode = 0;
   } else { //not in rc loop
-    static int8_t taskOrder=0; //never call all function in the same loop
+    static int8_t taskOrder=0; //never call all functions in the same loop, to avoid high delay spikes
     switch (taskOrder) {
       case 0:
         taskOrder++;    
@@ -597,7 +605,13 @@ void loop () {
         taskOrder++; 
         #if BARO
           getEstimatedAltitude();
-        break;
+          break;
+        #endif
+      case 3:
+        taskOrder++; 
+        #if GPS
+          GPS_NewData();
+          break;
         #endif
       default:
         taskOrder=0;
@@ -623,21 +637,31 @@ void loop () {
   #if BARO
     if (baroMode) {
       if (abs(rcCommand[THROTTLE]-initialThrottleHold)>20) {
-         baroMode = 0; // so that a new althold reference occurs
+         baroMode = 0; // so that a new althold reference is defined
       }
       rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
     }
   #endif
   
-
   #if GPS
-    if ( (GPSModeHome == 1)) {
-      float radDiff = (GPS_directionToHome-heading) * 0.0174533f;
-      GPS_angle[ROLL]  = constrain(P8[PIDGPS] * sin(radDiff) * GPS_distanceToHome / 10,-D8[PIDGPS]*10,+D8[PIDGPS]*10); // with P=5, 1 meter = 0.5deg inclination
-      GPS_angle[PITCH] = constrain(P8[PIDGPS] * cos(radDiff) * GPS_distanceToHome / 10,-D8[PIDGPS]*10,+D8[PIDGPS]*10); // max inclination = D deg
-    } else {
+    uint16_t GPS_dist;
+    int16_t  GPS_dir;
+
+    if ( (GPSModeHome == 0 && GPSModeHold == 0) || (GPS_fix_home == 0) ) {
       GPS_angle[ROLL]  = 0;
       GPS_angle[PITCH] = 0;
+    } else {
+      if (GPSModeHome == 1) {
+        GPS_dist = GPS_distanceToHome;
+        GPS_dir = GPS_directionToHome;
+      }
+      if (GPSModeHold == 1) {
+        GPS_dist = GPS_distanceToHold;
+        GPS_dir = GPS_directionToHold;
+      }
+      float radDiff = (GPS_dir-heading) * 0.0174533f;
+      GPS_angle[ROLL]  = constrain(P8[PIDGPS] * sin(radDiff) * GPS_dist / 10,-D8[PIDGPS]*10,+D8[PIDGPS]*10); // with P=5.0, a distance of 1 meter = 0.5deg inclination
+      GPS_angle[PITCH] = constrain(P8[PIDGPS] * cos(radDiff) * GPS_dist / 10,-D8[PIDGPS]*10,+D8[PIDGPS]*10); // max inclination = D deg
     }
   #endif
 
@@ -684,62 +708,4 @@ void loop () {
   mixTable();
   writeServos();
   writeMotors();
-
-
-  #if defined(I2C_GPS)
-    static uint8_t _i2c_gps_status;
-  
-    //Do not use i2c_writereg, since writing a register does not work if an i2c_stop command is issued at the end
-    //Still investigating, however with separated i2c_repstart and i2c_write commands works... and did not caused i2c errors on a long term test.
-  
-    _i2c_gps_status = i2c_readReg(I2C_GPS_ADDRESS,I2C_GPS_STATUS);                    //Get status register 
-    if (_i2c_gps_status & I2C_GPS_STATUS_3DFIX) {                                     //Check is we have a good 3d fix (numsats>5)
-       GPS_fix = 1;                                                                   //Set fix
-       GPS_numSat = (_i2c_gps_status & 0xf0) >> 4;                                    //Num of sats is stored the upmost 4 bits of status
-       if (!GPS_fix_home) {        //if home is not set set home position to WP#0 and activate it
-          i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_SET_WP);//Store current position to WP#0 (this is used for RTH)
-          i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_ACTIVATE_WP);//Set WP#0 as the active WP
-          GPS_fix_home = 1;                                                           //Now we have a home   
-       }
-       if (_i2c_gps_status & I2C_GPS_STATUS_NEW_DATA) {                               //Check about new data
-          if (GPS_update) { GPS_update = 0;} else { GPS_update = 1;}                  //Fancy flash on GUI :D
-          //Read GPS data for distance and heading
-          i2c_rep_start(I2C_GPS_ADDRESS);
-          i2c_write(I2C_GPS_DISTANCE);                                                //Start read from here 2x2 bytes distance and direction
-          i2c_rep_start(I2C_GPS_ADDRESS+1);
-          uint8_t *varptr = (uint8_t *)&GPS_distanceToHome;
-          *varptr++ = i2c_readAck();
-          *varptr   = i2c_readAck();
-          varptr = (uint8_t *)&GPS_directionToHome;
-          *varptr++ = i2c_readAck();
-          *varptr   = i2c_readNak();
-        }
-  
-    } else {                                                                          //We don't have a fix zero out distance and bearing (for safety reasons)
-      GPS_distanceToHome = 0;
-      GPS_directionToHome = 0;
-      GPS_numSat = 0;
-    }  
-
-    if (rcData[AUX4]>1800) {
-      i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_SET_WP);//Store current position to WP#0 (this is used for RTH)
-      i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_ACTIVATE_WP);//Set WP#0 as the active WP
-    }
-  #endif     
-
-  #if defined(GPS_SERIAL)
-    while (SerialAvailable(GPS_SERIAL)) {
-     if (GPS_newFrame(SerialRead(GPS_SERIAL))) {
-        if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;
-        if (GPS_fix == 1 && GPS_numSat == 4) {
-          if (GPS_fix_home == 0) {
-            GPS_fix_home = 1;
-            GPS_latitude_home  = GPS_latitude;
-            GPS_longitude_home = GPS_longitude;
-          }
-          GPS_distance(GPS_latitude_home,GPS_longitude_home,GPS_latitude,GPS_longitude, &GPS_distanceToHome, &GPS_directionToHome);
-        }
-      }
-    }
-  #endif
 }

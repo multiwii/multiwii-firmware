@@ -57,7 +57,15 @@ void computeIMU () {
       if (!ACC) accADC[axis]=0;
     }
   }
-  #if defined(TRI)
+  #if defined(GYRO_SMOOTHING)
+    static uint8_t Smoothing[3]  = GYRO_SMOOTHING; // How much to smoothen with per axis
+    static int16_t gyroSmooth[3] = {0,0,0};
+    for (axis = 0; axis < 3; axis++) {
+      constrain(Smoothing[axis],1,100); // Avoid to divide with Zero
+      gyroData[axis] = (gyroSmooth[axis]*(Smoothing[axis]-1)+gyroData[axis]+1)/Smoothing[axis];
+      gyroSmooth[axis] = gyroData[axis];
+    }
+  #elif defined(TRI)
     static int16_t gyroYawSmooth = 0;
     gyroData[YAW] = (gyroYawSmooth*2+gyroData[YAW]+1)/3;
     gyroYawSmooth = gyroData[YAW];
@@ -82,7 +90,7 @@ void computeIMU () {
 // Modified: 19/04/2011  by ziss_dm
 // Version: V1.1
 //
-// code size deduction and tmp vector intermediate step for vector rotation computation: October 2011 by Alex
+// code size reduction and tmp vector intermediate step for vector rotation computation: October 2011 by Alex
 // **************************************************
 
 //******  advanced users settings *******************
@@ -255,50 +263,45 @@ void getEstimatedAttitude(){
 #define BARO_TAB_SIZE   40
 
 void getEstimatedAltitude(){
-  static uint8_t inited = 0;
+  uint8_t index;
   static uint32_t deadLine = INIT_DELAY;
 
   static int16_t BaroHistTab[BARO_TAB_SIZE];
-  static int8_t BaroHistIdx=0;
-  int32_t BaroHigh,BaroLow;
+  static int8_t BaroHistIdx;
+  static int32_t BaroHigh,BaroLow;
   int32_t temp32;
+  int16_t last;
   
   if (currentTime < deadLine) return;
   deadLine = currentTime + UPDATE_INTERVAL; 
 
-  if (!inited) {
-    inited = 1;
-    EstAlt = BaroAlt;
-  }
-
   //**** Alt. Set Point stabilization PID ****
   //calculate speed for D calculation
-  BaroHistTab[BaroHistIdx] = BaroAlt;  
-  BaroHigh = 0;
-  BaroLow = 0;
-  BaroPID = 0;
-  for (temp32=0;temp32 < BARO_TAB_SIZE/2; temp32++) {
-    BaroHigh+=BaroHistTab[(BaroHistIdx - temp32 + BARO_TAB_SIZE)%BARO_TAB_SIZE]; //sum last half samples
-    BaroLow+=BaroHistTab[(BaroHistIdx + temp32 + BARO_TAB_SIZE)%BARO_TAB_SIZE];  //sum older samples
-  }
+  last = BaroHistTab[BaroHistIdx];
+  BaroHistTab[BaroHistIdx] = BaroAlt/10;
+  BaroHigh += BaroHistTab[BaroHistIdx];
+  index = (BaroHistIdx + (BARO_TAB_SIZE/2))%BARO_TAB_SIZE;
+  BaroHigh -= BaroHistTab[index];
+  BaroLow  += BaroHistTab[index];
+  BaroLow  -= last;
+
   BaroHistIdx++;
-  if (BaroHistIdx >= BARO_TAB_SIZE)
-    BaroHistIdx = 0;
- 
+  if (BaroHistIdx == BARO_TAB_SIZE) BaroHistIdx = 0;
+
+  BaroPID = 0;
   //D
-  temp32 = D8[PIDALT]*(BaroHigh - BaroLow) / 400;
+  temp32 = D8[PIDALT]*(BaroHigh - BaroLow) / 40;
   BaroPID-=temp32;
+
+  EstAlt = BaroHigh*10/(BARO_TAB_SIZE/2);
   
-  //EstAlt = EstAlt*0.8 + BaroAlt*0.2;
-  EstAlt = BaroHigh/(BARO_TAB_SIZE/2);
+  temp32 = AltHold - EstAlt;
+  if (abs(temp32) < 10 && BaroPID < 10) BaroPID = 0;  //remove small D parametr to reduce noise near zoro position
   
-  temp32 = constrain( AltHold - EstAlt, -1000, 1000);
-  if (abs(temp32) < 10 && BaroPID < 10)
-    BaroPID = 0;  //remove small D parametr to reduce noise near zoro position
   //P
   BaroPID += P8[PIDALT]*constrain(temp32,(-2)*P8[PIDALT],2*P8[PIDALT])/100;   
   BaroPID = constrain(BaroPID,-150,+150); //sum of P and D should be in range 150
-  
+
   //I
   errorAltitudeI += temp32*I8[PIDALT]/50;
   errorAltitudeI = constrain(errorAltitudeI,-30000,30000);

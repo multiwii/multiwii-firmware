@@ -31,41 +31,41 @@ void serialCom() {
     #ifdef LCD_TELEMETRY
     case 'A': // button A press
     case '1':
-      if (telemetry==1) telemetry = 0; else telemetry = 1;
+      toggle_telemetry(1);
       break;
     case 'B': // button B press
     case '2':
-      if (telemetry==2) telemetry = 0; else telemetry = 2;
+      toggle_telemetry(2);
       break;
     case 'C': // button C press
     case '3':
-      if (telemetry==3) telemetry = 0; else telemetry = 3;
+      toggle_telemetry(3);
       break;
     case 'D': // button D press
     case '4':
-      if (telemetry==4) telemetry = 0; else telemetry = 4;
+      toggle_telemetry(4);
       break;
     case '5':
-      if (telemetry==5) telemetry = 0; else telemetry = 5;
+      toggle_telemetry(5);
       break;
     case '6':
-      if (telemetry==6) telemetry = 0; else telemetry = 6;
+      toggle_telemetry(6);
       break;
     case '7':
-      if (telemetry==7) telemetry = 0; else telemetry = 7;
+      toggle_telemetry(7);
       break;
     case '9':
-      if (telemetry==9) telemetry = 0; else telemetry = 9;
+      toggle_telemetry(9);
       break;
      #if defined(LOG_VALUES) && defined(DEBUG)
     case 'R':
       //Reset logvalues
-      if (telemetry=='R') telemetry = 0; else telemetry = 'R';
+      toggle_telemetry('R');
       break;
      #endif
      #ifdef DEBUG
     case 'F':
-      if (telemetry=='F') telemetry = 0; else telemetry = 'F';
+      toggle_telemetry('F');
       break;
      #endif
     case 'a': // button A release
@@ -88,10 +88,10 @@ void serialCom() {
       serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3|GPS<<4);
       serialize8(accMode|baroMode<<1|magMode<<2|GPSModeHome<<3|GPSModeHold<<4|armed<<5);
       #if defined(LOG_VALUES)
-         serialize16(cycleTimeMax);
-         cycleTimeMax = 0;
+        serialize16(cycleTimeMax);
+        cycleTimeMax = 0;
       #else
-         serialize16(cycleTime);
+        serialize16(cycleTime);
       #endif
       serialize16(i2c_errors_count);
       for(i=0;i<2;i++) serialize16(angle[i]);
@@ -103,21 +103,21 @@ void serialCom() {
       serialize8(yawRate);
       serialize8(dynThrPID);
       for(i=0;i<CHECKBOXITEMS;i++) {
-    	  serialize8(activate1[i]);
-    	  serialize8(activate2[i] | (rcOptions[i]<<7) ); // use highest bit to transport state in mwc
+        serialize8(activate1[i]);
+        serialize8(activate2[i] | (rcOptions[i]<<7) ); // use highest bit to transport state in mwc
       }
       serialize16(GPS_distanceToHome);
-      serialize16(-GPS_directionToHome);
+      serialize16(GPS_directionToHome);
       serialize8(GPS_numSat);
       serialize8(GPS_fix);
       serialize8(GPS_update);
       serialize16(intPowerMeterSum);
       serialize16(intPowerTrigger1);
       serialize8(vbat);
-      serialize16(BaroAlt/10);         // 4 variables are here for general monitoring purpose
-      serialize16(debug2);             // debug2
-      serialize16(debug3);             // debug3
-      serialize16(debug4);             // debug4
+      serialize16(BaroAlt/10);             // 4 variables are here for general monitoring purpose
+      serialize16(debug2);
+      serialize16(debug3);
+      serialize16(debug4);
       serialize8('M');
       UartSendData();
       break;
