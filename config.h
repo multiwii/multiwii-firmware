@@ -91,11 +91,6 @@
 /* end of Settings for ProMicro, Leonardo and other Atmega32u4 Boards */
 
 
-
-/* This option is here if you want to use the old level code from the verison 1.7
-   It's just to have some feedback. This will be removed in the future */
-//#define STAB_OLD_17
-
 /* GPS using a SERIAL port
    only available on MEGA boards (this might be possible on 328 based boards in the future)
    if enabled, define here the Arduino Serial port number and the UART speed
@@ -128,7 +123,7 @@
 //#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
 //#define FREEIMUv03      // FreeIMU v0.3 and v0.3.1
 //#define FREEIMUv035     // FreeIMU v0.3.5 no baro
-#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
+//#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
 //#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
 //#define FREEIMUv04      // FreeIMU v0.4 with MPU6050, HMC5883L, MS561101BA                  <- confirmed by Alex
 //#define PIPO            // 9DOF board from erazz
@@ -200,10 +195,16 @@
 //#define MPU6050_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
 
 /* GYRO_SMOOTHING. In case you cannot reduce vibrations _and_ _after_ you have tried the low pass filter options, you
- * may try this gyro smoothing via averaging. Not suitable for multicopters!
- * Good results for helicopter, airplanes and flying wings (faomies) with lots of vibrations.
- */
+   may try this gyro smoothing via averaging. Not suitable for multicopters!
+   Good results for helicopter, airplanes and flying wings (foamies) with lots of vibrations.*/
 //#define GYRO_SMOOTHING {20, 20, 3}    // separate averaging ranges for roll, pitch, yaw
+
+// Moving Average Gyros by Magnetron1 (Michele Ardito) ########## beta
+//#define MMGYRO                         // Active Moving Average Function for Gyros
+//#define MMGYROVECTORLENGHT 10          // Lenght of Moving Average Vector
+// Moving Average ServoGimbal Signal Output
+//#define MMSERVOGIMBAL                  // Active Output Moving Average Function for Servos Gimbal
+//#define MMSERVOGIMBALVECTORLENGHT 32   // Lenght of Moving Average Vector
 
 /* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
    IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini

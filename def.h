@@ -499,8 +499,8 @@
 #if defined(MINIWII)
   #define ITG3200
   #define BMA180
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  =  Y; accADC[YAW]  = -Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = -Y; accADC[YAW]  = -Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
 #endif
 
 #if defined(CITRUSv1_0)
@@ -656,11 +656,6 @@
   #define NUMBER_MOTOR 1
   #define PRI_SERVO_FROM   1 // use servo from 1 to 2
   #define PRI_SERVO_TO     2
-
-
-
-
-
 #elif defined(BI)
   #define NUMBER_MOTOR 2
   #define PRI_SERVO_FROM   5 // use servo from 5 to 6
@@ -696,11 +691,6 @@
     #define SEC_SERVO_FROM   3 // use servo 3
     #define SEC_SERVO_TO     3
   #endif
-
-
-
-
-
 #endif
 
 

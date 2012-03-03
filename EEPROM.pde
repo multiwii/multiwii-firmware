@@ -1,6 +1,6 @@
 #include <avr/eeprom.h>
 
-static uint8_t checkNewConf = 151;
+static uint8_t checkNewConf = 152;
 
 struct eep_entry_t{
   void *  var;
@@ -72,7 +72,7 @@ void checkFirstTime() {
   P8[PITCH] = 40; I8[PITCH] = 30; D8[PITCH] = 23;
   P8[YAW]  = 85; I8[YAW]  = 0;  D8[YAW]  = 0;
   P8[PIDALT]   = 16; I8[PIDALT]   = 15;  D8[PIDALT]   = 7;
-  P8[PIDGPS]   = 10; I8[PIDGPS]   = 0;  D8[PIDGPS]   = 0;
+  P8[PIDGPS]   = 50; I8[PIDGPS]   = 0;  D8[PIDGPS]   = 15;
   P8[PIDVEL]   =  0; I8[PIDVEL]   = 0;  D8[PIDVEL]   = 0;
   P8[PIDLEVEL] = 90; I8[PIDLEVEL] = 45; D8[PIDLEVEL] = 100;
   P8[PIDMAG] = 40;

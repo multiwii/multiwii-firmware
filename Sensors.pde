@@ -201,6 +201,15 @@ void GYRO_Common() {
   static int32_t g[3];
   uint8_t axis;
   
+#if defined MMGYRO       
+  // Moving Average Gyros by Magnetron1
+  //---------------------------------------------------
+  static int16_t mediaMobileGyroADC[3][MMGYROVECTORLENGHT];
+  static int32_t mediaMobileGyroADCSum[3];
+  static uint8_t mediaMobileGyroIDX;
+  //---------------------------------------------------
+#endif
+
   if (calibratingG>0) {
     for (axis = 0; axis < 3; axis++) {
       // Reset g[axis] at start of calibration
@@ -217,10 +226,22 @@ void GYRO_Common() {
     }
     calibratingG--;
   }
+
+#ifdef MMGYRO       
+  mediaMobileGyroIDX = ++mediaMobileGyroIDX % MMGYROVECTORLENGHT;
+  for (axis = 0; axis < 3; axis++) {
+    gyroADC[axis]  -= gyroZero[axis];
+    mediaMobileGyroADCSum[axis] -= mediaMobileGyroADC[axis][mediaMobileGyroIDX];
+    //anti gyro glitch, limit the variation between two consecutive readings
+    mediaMobileGyroADC[axis][mediaMobileGyroIDX] = constrain(gyroADC[axis],previousGyroADC[axis]-800,previousGyroADC[axis]+800);
+    mediaMobileGyroADCSum[axis] += mediaMobileGyroADC[axis][mediaMobileGyroIDX];
+    gyroADC[axis] = mediaMobileGyroADCSum[axis] / MMGYROVECTORLENGHT;
+#else 
   for (axis = 0; axis < 3; axis++) {
     gyroADC[axis]  -= gyroZero[axis];
     //anti gyro glitch, limit the variation between two consecutive readings
     gyroADC[axis] = constrain(gyroADC[axis],previousGyroADC[axis]-800,previousGyroADC[axis]+800);
+#endif    
     previousGyroADC[axis] = gyroADC[axis];
   }
 }
@@ -547,12 +568,13 @@ void i2c_MS561101BA_UT_Read() {
 }
 
 void i2c_MS561101BA_Calculate() {
-  int32_t temperature,off2,sens2,delt;
+  int32_t temperature,off2=0,sens2=0,delt;
 
-  int64_t dT   = ms561101ba_ctx.ut.val - ((uint32_t)ms561101ba_ctx.c[5] << 8);  //int32_t according to the spec, but int64_t here to avoid cast after
-  int64_t off  = ((uint32_t)ms561101ba_ctx.c[2] <<16) + ((dT * ms561101ba_ctx.c[4]) >> 7);
-  int64_t sens = ((uint32_t)ms561101ba_ctx.c[1] <<15) + ((dT * ms561101ba_ctx.c[3]) >> 8);
-  temperature  = 2000 + ((dT * ms561101ba_ctx.c[6])>>23);
+  int32_t dT   = ms561101ba_ctx.ut.val - ((uint32_t)ms561101ba_ctx.c[5] << 8);
+  int64_t off  = ((uint32_t)ms561101ba_ctx.c[2] <<16) + (((int64_t)dT * ms561101ba_ctx.c[4]) >> 7);
+  int64_t sens = ((uint32_t)ms561101ba_ctx.c[1] <<15) + (((int64_t)dT * ms561101ba_ctx.c[3]) >> 8);
+  temperature  = 2000 + (((int64_t)dT * ms561101ba_ctx.c[6])>>23);
+
   if (temperature < 2000) { // temperature lower than 20st.C 
     delt = temperature-2000;
     delt  = delt*delt;

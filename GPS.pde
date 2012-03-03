@@ -1,4 +1,67 @@
 #if GPS
+
+void GPS_NewData() {
+  #if defined(I2C_GPS)
+    static uint8_t _i2c_gps_status;
+  
+    //Do not use i2c_writereg, since writing a register does not work if an i2c_stop command is issued at the end
+    //Still investigating, however with separated i2c_repstart and i2c_write commands works... and did not caused i2c errors on a long term test.
+  
+    _i2c_gps_status = i2c_readReg(I2C_GPS_ADDRESS,I2C_GPS_STATUS);                    //Get status register 
+    if (_i2c_gps_status & I2C_GPS_STATUS_3DFIX) {                                     //Check is we have a good 3d fix (numsats>5)
+       GPS_fix = 1;                                                                   //Set fix
+       GPS_numSat = (_i2c_gps_status & 0xf0) >> 4;                                    //Num of sats is stored the upmost 4 bits of status
+       if (!GPS_fix_home) {        //if home is not set set home position to WP#0 and activate it
+          i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_SET_WP);//Store current position to WP#0 (this is used for RTH)
+          i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_ACTIVATE_WP);//Set WP#0 as the active WP
+          GPS_fix_home = 1;                                                           //Now we have a home   
+       }
+       if (_i2c_gps_status & I2C_GPS_STATUS_NEW_DATA) {                               //Check about new data
+          if (GPS_update) { GPS_update = 0;} else { GPS_update = 1;}                  //Fancy flash on GUI :D
+          //Read GPS data for distance and heading
+          i2c_rep_start(I2C_GPS_ADDRESS);
+          i2c_write(I2C_GPS_DISTANCE);                                                //Start read from here 2x2 bytes distance and direction
+          i2c_rep_start(I2C_GPS_ADDRESS+1);
+          uint8_t *varptr = (uint8_t *)&GPS_distanceToHome;
+          *varptr++ = i2c_readAck();
+          *varptr   = i2c_readAck();
+          varptr = (uint8_t *)&GPS_directionToHome;
+          *varptr++ = i2c_readAck();
+          *varptr   = i2c_readNak();
+        }
+  
+    } else {                                                                          //We don't have a fix zero out distance and bearing (for safety reasons)
+      GPS_distanceToHome = 0;
+      GPS_directionToHome = 0;
+      GPS_numSat = 0;
+    }  
+
+    if (rcData[AUX4]>1800 || GPS_fix_home == 0) {
+      i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_SET_WP);//Store current position to WP#0 (this is used for RTH)
+      i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_ACTIVATE_WP);//Set WP#0 as the active WP
+    }
+  #endif     
+
+  #if defined(GPS_SERIAL)
+    while (SerialAvailable(GPS_SERIAL)) {
+     if (GPS_newFrame(SerialRead(GPS_SERIAL))) {
+        if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;
+        if (GPS_fix == 1 && GPS_numSat > 3) {
+          if (GPS_fix_home == 0) {
+            GPS_fix_home = 1;
+            GPS_latitude_home  = GPS_latitude;
+            GPS_longitude_home = GPS_longitude;
+          }
+          if (GPSModeHold == 1)
+            GPS_distance(GPS_latitude_hold,GPS_longitude_hold,GPS_latitude,GPS_longitude, &GPS_distanceToHold, &GPS_directionToHold);
+          else
+            GPS_distance(GPS_latitude_home,GPS_longitude_home,GPS_latitude,GPS_longitude, &GPS_distanceToHome, &GPS_directionToHome);
+        }
+      }
+    }
+  #endif
+}
+
 /* this is an equirectangular approximation to calculate distance and bearing between 2 GPS points (lat/long)
    it's much more faster than an exact calculation
    the error is neglectible for few kilometers assuming a constant R for earth
