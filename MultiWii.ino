@@ -262,15 +262,13 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     	for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
     	vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
     }
-    if ( rcOptions[BOXBEEPERON] ){ // unconditional beeper on via AUXn switch 
-       buzzerFreq = 7;
-    } else  if ( ( (vbat>VBATLEVEL1_3S) 
+    if ( ( (vbat>VBATLEVEL1_3S) 
     #if defined(POWERMETER)
                          && ( (pMeter[PMOTOR_SUM] < pAlarm) || (pAlarm == 0) )
     #endif
                        )  || (NO_VBAT>vbat)                              ) // ToLuSe
     {                                          //VBAT ok AND powermeter ok, buzzer off
-      buzzerFreq = 0; buzzerState = 0; BUZZERPIN_OFF;
+      buzzerFreq = 0; buzzerState = 0;
     #if defined(POWERMETER)
     } else if (pMeter[PMOTOR_SUM] > pAlarm) {                             // sound alarm for powermeter
       buzzerFreq = 4;
@@ -278,19 +276,9 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     } else if (vbat>VBATLEVEL2_3S) buzzerFreq = 1;
     else if (vbat>VBATLEVEL3_3S)   buzzerFreq = 2;
     else                           buzzerFreq = 4;
-    if (buzzerFreq) {
-      if (buzzerState && (currentTime > buzzerTime + 250000) ) {
-        buzzerState = 0;
-        BUZZERPIN_OFF;
-        buzzerTime = currentTime;
-      } else if ( !buzzerState && (currentTime > (buzzerTime + (2000000>>buzzerFreq))) ) {
-        buzzerState = 1;
-        BUZZERPIN_ON;
-        buzzerTime = currentTime;
-      }
-    }
   #endif
-
+  buzzer(buzzerFreq);//external buzzer routine that handles buzzer events globally now
+  
   if ( (calibratingA>0 && (ACC || nunchuk) ) || (calibratingG>0) ) {  // Calibration phasis
     LEDPIN_TOGGLE;
   } else {
