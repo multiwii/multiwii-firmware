@@ -1010,43 +1010,46 @@ void lcd_telemetry() {
         LCDsetLine(linenr);
         if (i < 8) {
                 if (i < NUMBER_MOTOR) {
-                LCDprintChar(outputNames[i]);
-                LCDprint(' ');
-                unit = motor[i]; // [1000 ; 2000]
-                        LCDprint( digit1000(unit) );
-                        LCDprint( digit100(unit) );
-                        LCDprint( digit10(unit) );
-                        LCDprint( digit1(unit) );
-                        LCDprint(' ');
-                        LCDbar(12, (unit-1000)/10 );
-                    LCDcrlf();
-                        linenr++;
+                   LCDprintChar(outputNames[i]);
+                   LCDprint(' ');
+                   unit = motor[i]; // [1000 ; 2000]
+                   LCDprint( digit1000(unit) );
+                   LCDprint( digit100(unit) );
+                   LCDprint( digit10(unit) );
+                   LCDprint( digit1(unit) );
+                   LCDprint(' ');
+                   LCDbar(12, (unit-1000)/10 );
+                   LCDcrlf();
+                   linenr++;
                 } else {
-                        index = 8;
+                   index = 8;
                 }
         } else {
-                uint8_t j = i-7; // [8;15] -> [1;8]
-                        #ifdef SEC_SERVO_FROM
-                if (PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j) || (SEC_SERVO_FROM  <= j && SEC_SERVO_TO  >= j)
-                        #else
-                        if (j < PRI_SERVO_FROM) index = 7 + PRI_SERVO_FROM;
-                        else if (j > PRI_SERVO_TO) index = 16;
-                        else // (PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j)
-                        #endif
-                        {
-                                LCDprintChar(outputNames[i]);
-                                LCDprint(' ');
-                                unit = servo[j-1]; // [1000 ; 2000]
-                                LCDprint( digit1000(unit) );
-                                LCDprint( digit100(unit) );
-                                LCDprint( digit10(unit) );
-                                LCDprint( digit1(unit) );
-                                LCDprint(' ');
-                                LCDbar(12, (unit-1000)/10 );
-                            LCDcrlf();
-                                linenr++;
-                                break;
-                        }
+    		uint8_t j = i-7; // [8;15] -> [1;8]
+		#if defined(PRI_SERVO_FROM) && defined(SEC_SERVO_FROM)
+    		if ((PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j) || (SEC_SERVO_FROM  <= j && SEC_SERVO_TO  >= j))
+    		#elif defined(PRI_SERVO_FROM)
+		if (j < PRI_SERVO_FROM) index = 7 + PRI_SERVO_FROM;
+		else if (j > PRI_SERVO_TO) index = 16;
+		else // (PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j)
+		#endif
+		#if defined(PRI_SERVO_FROM) || defined(SEC_SERVO_FROM)
+		{
+			LCDprintChar(outputNames[i]);
+			LCDprint(' ');
+			unit = servo[j-1]; // [1000 ; 2000]
+			LCDprint( digit1000(unit) );
+			LCDprint( digit100(unit) );
+			LCDprint( digit10(unit) );
+			LCDprint( digit1(unit) );
+			LCDprint(' ');
+			LCDbar(12, (unit-1000)/10 );
+			LCDcrlf();
+			linenr++;
+			break;
+		}
+		#endif
+
         }
         break;
 
