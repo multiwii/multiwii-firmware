@@ -336,7 +336,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
 
 
 void setup() {
-  SerialOpen(0,115200);
+  SerialOpen(0,SERIAL_COM_SPEED);
   LEDPIN_PINMODE;
   POWERPIN_PINMODE;
   BUZZERPIN_PINMODE;
@@ -417,8 +417,10 @@ void loop () {
         if (rcDelayCommand == 20) calibratingG=400;
       } else if (rcData[YAW] > MAXCHECK && rcData[PITCH] > MAXCHECK && armed == 0) {
         if (rcDelayCommand == 20) {
-          servo[0] = 1500; //we center the yaw gyro in conf mode
+          #ifdef TRI
+          servo[5] = 1500; //we center the yaw servo in conf mode
           writeServos();
+          #endif
           #if defined(LCD_CONF)
             configurationLoop(); //beginning LCD configuration
           #endif
