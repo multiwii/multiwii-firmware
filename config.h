@@ -84,6 +84,7 @@
 
 // this moves the Buzzer pin from TXO to D8 for use with ppm sum or spectrum sat. RX (not needed if A32U4ALLPINS is active)
 //#define D8BUZZER
+#define RCOPTIONSBEEP        //uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
 
 // Inverted status LED for Promicro ver 10.
 //#define PROMICRO10

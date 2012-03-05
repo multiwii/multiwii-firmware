@@ -75,6 +75,7 @@ static int16_t  BaroPID = 0;
 static int32_t  AltHold;
 static int16_t  errorAltitudeI = 0;
 static uint8_t  buzzerState = 0;
+static uint8_t  toggleBeep = 0;
 static int16_t  debug1,debug2,debug3,debug4;
   
 //for log
@@ -114,8 +115,8 @@ static uint8_t telemetry_auto = 0;
 // ******************
 // rc functions
 // ******************
-#define MINCHECK 1100
-#define MAXCHECK 1900
+#define MINCHECK 1160
+#define MAXCHECK 1850
 
 volatile int16_t failsafeCnt = 0;
 static int16_t failsafeEvents = 0;
@@ -435,7 +436,11 @@ void loop () {
               AccInflightCalibrationSavetoEEProm = 1;
             }else{ 
               AccInflightCalibrationArmed = !AccInflightCalibrationArmed; 
-              if (AccInflightCalibrationArmed){blinkLED(10,1,2);}else{blinkLED(10,10,3);} 
+              if (AccInflightCalibrationArmed){
+                toggleBeep = 2;
+              }else{
+                toggleBeep = 3;
+              } 
             }
           }
        } 
