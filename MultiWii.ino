@@ -115,8 +115,8 @@ static uint8_t telemetry_auto = 0;
 // ******************
 // rc functions
 // ******************
-#define MINCHECK 1160
-#define MAXCHECK 1850
+#define MINCHECK 1100
+#define MAXCHECK 1900
 
 volatile int16_t failsafeCnt = 0;
 static int16_t failsafeEvents = 0;
