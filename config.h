@@ -142,6 +142,7 @@
 //#define DROTEK_IMU6DOFv2
 //#define MONGOOSE1_0     // mongoose 1.0    http://www.fuzzydrone.org/
 //#define CRIUS_LITE      // Crius MultiWii Lite
+//#define CRIUS_SE        // Crius MultiWii SE
 
 //if you use independent sensors
 //leave it commented if you already checked a specific board above
