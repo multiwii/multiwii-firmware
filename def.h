@@ -743,6 +743,14 @@
           #define I2C_GPS_WP_NAV_PAR1_REACH_LIMIT 0x0F      //lover 4 bit, waypoint reached distance
 #endif
 
+#if !(defined(DISPLAY_2LINES)) && !(defined(DISPLAY_MULTILINE))
+  #if (defined(LCD_VT100))
+    #define DISPLAY_MULTILINE
+  #else
+    #define DISPLAY_2LINES
+  #endif
+#endif
+
 /**************************/
 /* Error Checking Section */
 /**************************/

@@ -1,6 +1,6 @@
-/*******************************/
-/****CONFIGURABLE PARAMETERS****/
-/*******************************/
+/*************************************************************************************************/
+/****           CONFIGURABLE PARAMETERS                                                       ****/
+/*************************************************************************************************/
 
 /* Set the minimum throttle command sent to the ESC (Electronic Speed Controller)
    This is the minimum value that allow motors to run at a idle speed  */
@@ -35,7 +35,9 @@
 #define INTERNAL_I2C_PULLUPS
 
 
-//****** advanced users settings   *************
+//****** advanced users settings   ****************************************
+/* ===================================================================== */
+
 /* I2C DFRobot LED RING communication */
 //#define LED_RING
 
@@ -114,6 +116,10 @@
 /* introduce a deadband around the stick center
    Must be greater than zero, comment if you dont want a deadband on roll, pitch and yaw */
 //#define DEADBAND 6
+
+/********************************************************************/
+/****           boards and sensor definitions                    ****/
+/********************************************************************/
 
 /* if you use a specific sensor board:
    please submit any correction to this list.
@@ -207,6 +213,10 @@
 //#define MMSERVOGIMBAL                  // Active Output Moving Average Function for Servos Gimbal
 //#define MMSERVOGIMBALVECTORLENGHT 32   // Lenght of Moving Average Vector
 
+/********************************************************************/
+/****           special receiver types                           ****/
+/********************************************************************/
+
 /* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
    IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
    Select the right line depending on your radio brand. Feel free to modify the order in your PPM order is different */
@@ -298,6 +308,9 @@
 /* This is the speed of the serial interface. 115200 kbit/s is the best option for a USB connection.*/
 #define SERIAL_COM_SPEED 115200
 
+/********************************************************************/
+/****           LCD - display and telemetry settings             ****/
+/********************************************************************/
 /* In order to save space, it's possibile to desactivate the LCD configuration functions
    comment this line only if you don't plan to used a LCD */
 #define LCD_CONF
@@ -305,8 +318,7 @@
 //#define LCD_CONF_AUX_12
 /* to include setting the aux switches for AUX1, AUX2, AUX3 and AUX4 via LCD */
 //#define LCD_CONF_AUX_1234
-/* Use this to trigger LCD configuration without a TX - only for debugging - do NOT fly with this activated */
-//#define LCD_CONF_DEBUG
+
 
 /* choice of LCD attached for configuration and telemetry, see notes below */
 #define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
@@ -316,6 +328,10 @@
 /* i2c devices */
 //#define LCD_ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
 //#define LCD_LCD03       // LCD03, which is i2c
+
+/* style of display - autodetected by LCD_ setting - only activate to overwrite defaults */
+//#define DISPLAY_2LINES
+//#define DISPLAY_MULTILINE
 
 /* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
 #define LCD_MENU_PREV 'a'
@@ -342,9 +358,35 @@
 /* Cat's whisker LCD_TEXTSTAR LCD
    Pleae note this display needs a full 4 wire connection to (+5V, Gnd, RXD, TXD )
    Configure display as follows: 115K baud, and TTL levels for RXD and TXD, terminal mode
-   NO rx / tx line reconfiguration, use natural pins */
+   NO rx / tx line reconfiguration, use natural pins.
+   The four buttons sending 'A', 'B', 'C', 'D' are supported for configuration navigation and request of telemetry pages 1-4 */
 
+/********************************************************************/
+/****           telemetry                                      ****/
+/********************************************************************/
 
+/* to monitor system values (battery level, loop time etc. with LCD enable this */
+/* note: for now you must send single characters to request  different pages */
+/* Buttons toggle request for page on/off */
+/* The active page on the LCD does get updated automatically */
+/* Easy to use with Terminal application or display like LCD - if available uses the 4 preconfigured buttons  to send 'A', 'B', 'C', 'D' */
+//#define LCD_TELEMETRY
+/* to enable automatic hopping between a choice of telemetry pages uncomment this. */
+/* This may be useful if your LCD has no buttons or the sending is broken */
+/* hopping is activated and deactivated in unarmed mode with throttle=low & roll=left & pitch=forward */
+/* set it to the sequence of telemetry pages you want to see */
+/* 2 line displays support pages 1-9 */
+/* multiline displays support pages 1-4 */
+//#define LCD_TELEMETRY_AUTO "123452679" // pages 1 to 7 in ascending order
+//#define LCD_TELEMETRY_AUTO  "212232425262729" // strong emphasis on page 2
+
+/* on telemetry page B (2) it gives a bar graph which shows how much voltage battery has left. Range from 0 to 12 Volt is not very informative */
+/* so we try do define a meaningful part. For a 3S battery we define full=12,6V and calculate how much it is above first warning level */
+/* Example: 12.6V - VBATLEVEL1_3S  (for me = 126 - 102 = 24) */
+#define VBATREF 24
+/********************************************************************/
+/****           motor, servo and other presets                   ****/
+/********************************************************************/
 /* motors will not spin when the throttle command is in low position
    this is an alternative method to stop immediately the motors */
 //#define MOTOR_STOP
@@ -378,6 +420,10 @@
 #define WING_LEFT_MAX  2000 // limit servo travel range must be inside [1020;2000]
 #define WING_RIGHT_MIN 1020 // limit servo travel range must be inside [1020;2000]
 #define WING_RIGHT_MAX 2000 // limit servo travel range must be inside [1020;2000]
+
+/********************************************************************/
+/****           powermeter                                       ****/
+/********************************************************************/
 
 /* enable monitoring of the power consumption from battery (think of mAh) */
 /* allows to set alarm value in GUI or via LCD */
@@ -426,26 +472,10 @@
 
 
 
-/* to monitor system values (battery level, loop time etc. with LCD enable this */
-/* note: for now you must send single characters 'A', 'B', 'C', 'D' to request 4 different pages */
-/* Buttons toggle request for page on/off */
-/* The active page on the LCD does get updated automatically */
-/* Easy to use with Terminal application or display like LCD - uses the 4 buttons are preconfigured to send 'A', 'B', 'C', 'D' */
-//#define LCD_TELEMETRY
-/* to enable automatic hopping between a choice of telemetry pages uncomment this. */
-/* This may be useful if your LCD has no buttons or the sending is broken */
-/* hopping is activated and deactivated in unarmed mode with throttle=low & roll=left & pitch=forward */
-/* set it to the sequence of telemetry pages you want to see */
-//#define LCD_TELEMETRY_AUTO "12345267" // pages 1 to 7 in ascending order
-//#define LCD_TELEMETRY_AUTO  "2122324252627" // strong emphasis on page 2
-/* Use this to trigger telemetry without a TX - only for debugging - do NOT fly with this activated */
-//#define LCD_TELEMETRY_DEBUG  //This form rolls between all screens, LCD_TELEMETRY_AUTO must also be defined.
-//#define LCD_TELEMETRY_DEBUG 6  //This form stays on the screen specified.
 
-/* on telemetry page B it gives a bar graph which shows how much voltage battery has left. Range from 0 to 12 Volt is not very informative */
-/* so we try do define a meaningful part. For a 3S battery we define full=12,6V and calculate how much it is above first warning level */
-/* Example: 12.6V - VBATLEVEL1_3S  (for me = 126 - 102 = 24) */
-#define VBATREF 24 
+/********************************************************************/
+/****           diagnostics                                      ****/
+/********************************************************************/
 
 /* to log values like max loop time and others to come */
 /* logging values are visible via LCD config */
@@ -457,7 +487,16 @@
 /* will add extra code that may slow down the main loop or make copter non-flyable */
 //#define DEBUG
 
-//****** end of advanced users settings *************
+/* Use this to trigger LCD configuration without a TX - only for debugging - do NOT fly with this activated */
+//#define LCD_CONF_DEBUG
+
+/* Use this to trigger telemetry without a TX - only for debugging - do NOT fly with this activated */
+//#define LCD_TELEMETRY_DEBUG  //This form rolls between all screens, LCD_TELEMETRY_AUTO must also be defined.
+//#define LCD_TELEMETRY_DEBUG 6  //This form stays on the screen specified.
+
+
+//****** end of advanced users settings ***********************************
+/* ===================================================================== */
 
 //if you want to change to orientation of individual sensor
 //#define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  = -X; accADC[YAW]  = Z;}
@@ -473,6 +512,6 @@
 #define LCD_TELEMETRY_AUTO_FREQ 667 // to step to next telemetry page 667 <=> 2s
 #define PSENSORFREQ 6               // to read hardware powermeter sensor 6 <=> 18ms
 #define VBATFREQ PSENSORFREQ        // to read battery voltage - keep equal to PSENSORFREQ unless you know what you are doing
-/**************************************/
-/****END OF CONFIGURABLE PARAMETERS****/
-/**************************************/
+/*************************************************************************************************/
+/****           END OF CONFIGURABLE PARAMETERS                                                ****/
+/*************************************************************************************************/
