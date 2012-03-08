@@ -15,10 +15,10 @@
 #endif
 
 void serialCom() {
-  uint8_t i;
+  uint8_t i, sr;
   
   if (SerialAvailable(0)) {
-    switch (SerialRead(0)) {
+    switch (sr = SerialRead(0)) {
     #ifdef BTSERIAL
     case 'K': //receive RC data from Bluetooth Serial adapter as a remote
       rcData[THROTTLE] = (SerialRead(0) * 4) + 1000;
@@ -30,50 +30,40 @@ void serialCom() {
     #endif
     #ifdef LCD_TELEMETRY
     case 'A': // button A press
-    case '1':
       toggle_telemetry(1);
       break;
     case 'B': // button B press
-    case '2':
       toggle_telemetry(2);
       break;
     case 'C': // button C press
-    case '3':
       toggle_telemetry(3);
       break;
     case 'D': // button D press
-    case '4':
       toggle_telemetry(4);
       break;
+    case '1':
+    case '2':
+    case '3':
+    case '4':
     case '5':
-      toggle_telemetry(5);
-      break;
     case '6':
-      toggle_telemetry(6);
-      break;
     case '7':
-      toggle_telemetry(7);
-      break;
+    case '8':
     case '9':
-      toggle_telemetry(9);
-      break;
-     #if defined(LOG_VALUES) && defined(DEBUG)
+    #if defined(LOG_VALUES) && defined(DEBUG)
     case 'R':
-      //Reset logvalues
-      toggle_telemetry('R');
-      break;
-     #endif
-     #ifdef DEBUG
+    #endif
+    #ifdef DEBUG
     case 'F':
-      toggle_telemetry('F');
+    #endif
+      toggle_telemetry(sr);
       break;
-     #endif
     case 'a': // button A release
     case 'b': // button B release
     case 'c': // button C release
     case 'd': // button D release
       break;      
-    #endif
+    #endif // LCD_TELEMETRY
     case 'M': // Multiwii @ arduino to GUI all data
       serialize8('M');
       serialize8(VERSION);
@@ -86,7 +76,7 @@ void serialCom() {
       for(i=0;i<8;i++) serialize16(motor[i]);
       for(i=0;i<8;i++) serialize16(rcData[i]);
       serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3|GPS<<4);
-      serialize8(accMode|baroMode<<1|magMode<<2|GPSModeHome<<3|GPSModeHold<<4|armed<<5);
+      serialize8(accMode<<BOXACC|baroMode<<BOXBARO|magMode<<BOXMAG|GPSModeHome<<BOXGPSHOME|GPSModeHold<<BOXGPSHOLD|armed<<BOXARM); // if bosxitem >7 then need to send 16 bit and in Processing make mode 16bit
       #if defined(LOG_VALUES)
         serialize16(cycleTimeMax);
         cycleTimeMax = 0;
