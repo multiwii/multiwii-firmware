@@ -422,6 +422,11 @@ void loop () {
           servo[5] = 1500; //we center the yaw servo in conf mode
           writeServos();
           #endif
+          #ifdef FLYING_WING
+          servo[0]  = wing_left_mid;
+          servo[1]  = wing_right_mid;
+          writeServos();
+          #endif
           #if defined(LCD_CONF)
             configurationLoop(); //beginning LCD configuration
           #endif

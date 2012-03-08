@@ -456,7 +456,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 &lcd_param_text38,   &tri_yaw_middle,       &__SE,
 #endif
 #ifdef LOG_VALUES
-&lcd_param_text39,   &failsafeEvents,       &__FS,
+&lcd_param_text39,   &failsafeEvents,       &__L,
 &lcd_param_text40,   &i2c_errors_count,     &__L,
 &lcd_param_text41,   &annex650_overrun_count, &__L
 #endif
@@ -616,12 +616,14 @@ void configurationLoop() {
 
   // LCDbar(n,v) : draw a bar graph - n number of chars for width, v value in % to display
 void LCDbar(uint8_t n,uint8_t v) {
+  if (v > 100) v = 100;
+  else if (v < 0) v = 0;
   #if defined(LCD_SERIAL3W)
     for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
   #elif defined(LCD_TEXTSTAR)
     LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v);
   #elif defined(LCD_VT100)
-    uint8_t i, j = n*v/100;
+    uint8_t i, j = (n*v)/100;
     for (i=0; i< j; i++) LCDprint( '=' );
     for (i=j; i< n; i++) LCDprint( '.' );
   #elif defined(LCD_ETPP)
@@ -762,6 +764,14 @@ void output_checkboxitems() {
   }
 }
 
+#define GYROLIMIT 30 // threshold: for larger values replace bar with dots
+#define ACCLIMIT 40 // threshold: for larger values replace bar with dots
+void outputSensor(uint8_t num, int16_t data, int16_t limit) {
+        if (data < -limit) { LCDprintChar("<<<"); }
+        else if (data > limit) { LCDprintChar(">>>>"); }
+        else  LCDbar(num, limit + data *50/limit);
+}
+
 /* ------------ DISPLAY_2LINES ------------------------------------*/
 #ifdef DISPLAY_2LINES
 void lcd_telemetry() {
@@ -810,18 +820,16 @@ void lcd_telemetry() {
 
   case 4: // button D on Textstar LCD -> sensors
   case '4':
-        #define GYROLIMIT 30 // threshold: for larger values replace bar with dots
-        #define ACCLIMIT 40 // threshold: for larger values replace bar with dots
         if (linenr++ % 2) {
                 LCDsetLine(1);LCDprintChar("G "); //refresh line 1 of LCD
-                if (abs(gyroData[0]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[0])*50/GYROLIMIT); } else LCDprintChar("...."); LCDprint(' ');
-                if (abs(gyroData[1]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[1])*50/GYROLIMIT); } else LCDprintChar("...."); LCDprint(' ');
-                if (abs(gyroData[2]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[2])*50/GYROLIMIT); } else LCDprintChar("....");
+                outputSensor(4, gyroData[0], GYROLIMIT); LCDprint(' ');
+                outputSensor(4, gyroData[1], GYROLIMIT); LCDprint(' ');
+                outputSensor(4, gyroData[2], GYROLIMIT);
         } else {
                 LCDsetLine(2);LCDprintChar("A "); //refresh line 2 of LCD
-                if (abs(accSmooth[0]) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[0])*50/ACCLIMIT); } else LCDprintChar("...."); LCDprint(' ');
-                if (abs(accSmooth[1]) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT); } else LCDprintChar("...."); LCDprint(' ');
-                if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT); } else LCDprintChar("....");
+                outputSensor(4, accSmooth[0], ACCLIMIT); LCDprint(' ');
+                outputSensor(4, accSmooth[1], ACCLIMIT); LCDprint(' ');
+                outputSensor(4, accSmooth[2] - acc_1G, ACCLIMIT);
         }
         break;
 
@@ -852,14 +860,14 @@ void lcd_telemetry() {
                 line2[1] = digit100( rcData[ROLL] );
                 line2[2] = digit10( rcData[ROLL] );
                 line2[3] = digit1( rcData[ROLL] );
-                line2[5] = '0' + rcData[PITCH] / 1000 - (rcData[PITCH]/10000) * 10;
-                line2[6] = '0' + rcData[PITCH] / 100  - (rcData[PITCH]/1000)  * 10;
-                line2[7] = '0' + rcData[PITCH] / 10   - (rcData[PITCH]/100)   * 10;
-                line2[8] = '0' + rcData[PITCH]        - (rcData[PITCH]/10)    * 10;
-                line2[10] = '0' + rcData[THROTTLE] / 1000 - (rcData[THROTTLE]/10000) * 10;
-                line2[11] = '0' + rcData[THROTTLE] / 100  - (rcData[THROTTLE]/1000)  * 10;
-                line2[12] = '0' + rcData[THROTTLE] / 10   - (rcData[THROTTLE]/100)   * 10;
-                line2[13] = '0' + rcData[THROTTLE]        - (rcData[THROTTLE]/10)    * 10;
+                line2[5] = digit1000( rcData[PITCH] );
+                line2[6] = digit100( rcData[PITCH] );
+                line2[7] = digit10( rcData[PITCH] );
+                line2[8] = digit1( rcData[PITCH] );
+                line2[10] = digit1000( rcData[THROTTLE] );
+                line2[11] = digit100( rcData[THROTTLE] );
+                line2[12] = digit10( rcData[THROTTLE] );
+                line2[13] = digit1( rcData[THROTTLE] );
                 LCDsetLine(2);LCDprintChar(line2);
         }
         break;
@@ -985,8 +993,6 @@ void lcd_telemetry() {
 
     case 2: // sensor readings
     case '2':
-      #define GYROLIMIT 30 // threshold: for larger values replace bar with dots
-      #define ACCLIMIT 40 // threshold: for larger values replace bar with dots
       static char sensorNames[6][3] = {"Gx", " y", " z", "Ax", " y", " z" };
       i = linenr++ % 6;
       LCDsetLine(i+1);
@@ -994,22 +1000,22 @@ void lcd_telemetry() {
       LCDprint(' ');
       switch (i) {
       case 0:
-        if (abs(gyroData[0]) < GYROLIMIT) { LCDbar(12,(GYROLIMIT+gyroData[0])*50/GYROLIMIT); } else LCDprintChar("....");
+        outputSensor(12, gyroData[0], GYROLIMIT);
         break;
       case 1:
-        if (abs(gyroData[1]) < GYROLIMIT) { LCDbar(12,(GYROLIMIT+gyroData[1])*50/GYROLIMIT); } else LCDprintChar("....");
+        outputSensor(12, gyroData[1], GYROLIMIT);
         break;
       case 2:
-        if (abs(gyroData[2]) < GYROLIMIT) { LCDbar(12,(GYROLIMIT+gyroData[2])*50/GYROLIMIT); } else LCDprintChar("....");
+        outputSensor(12, gyroData[2], GYROLIMIT);
         break;
       case 3:
-        if (abs(accSmooth[0]) < ACCLIMIT) { LCDbar(12,(ACCLIMIT+accSmooth[0])*50/ACCLIMIT); } else LCDprintChar("....");
+        outputSensor(12, accSmooth[0], ACCLIMIT);
         break;
       case 4:
-        if (abs(accSmooth[1]) < ACCLIMIT) { LCDbar(12,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT); } else LCDprintChar("....");
+        outputSensor(12, accSmooth[1], ACCLIMIT);
         break;
       case 5:
-        if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCDbar(12,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT); } else LCDprintChar("....");
+        outputSensor(12, accSmooth[2] - acc_1G, ACCLIMIT);
         break;
       }
       LCDcrlf();
