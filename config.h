@@ -46,7 +46,7 @@
 #define TRUSTED_ACCZ
 
 /* This will activate the ACC-Inflight calibration if unchecked */  
-//#define InflightAccCalibration
+#define InflightAccCalibration
 
 /* PIN A0 and A1 instead of PIN D5 & D6 for 6 motors config and promini config
    This mod allow the use of a standard receiver on a pro mini
@@ -59,6 +59,7 @@
 */
 //#define RCAUXPIN8
 //#define RCAUXPIN12
+#define RCOPTIONSBEEP        //uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
 
 
 
@@ -86,7 +87,6 @@
 
 // this moves the Buzzer pin from TXO to D8 for use with ppm sum or spectrum sat. RX (not needed if A32U4ALLPINS is active)
 //#define D8BUZZER
-#define RCOPTIONSBEEP        //uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
 
 // Inverted status LED for Promicro ver 10.
 //#define PROMICRO10
@@ -100,7 +100,7 @@
    note: only the RX PIN is used, the GPS is not configured by multiwii
    the GPS must be configured to output NMEA sentences (which is generally the default conf for most GPS devices)
    uncomment the first line to select the GPS serial port of the arduino */
-//#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
+#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
 #define GPS_BAUD   115200
 
 /* I2C GPS device made with an independant arduino + GPS device
@@ -159,19 +159,19 @@
 /* I2C accelerometer */
 //#define MMA745
 //#define ADXL345
-//#define BMA020
+#define BMA020
 //#define BMA180
 //#define NUNCHACK  // if you want to use the nunckuk as a standalone I2C ACC without WMP
 //#define LIS3LV02
 //#define LSM303DLx_ACC
 
 /* I2C barometer */
-//#define BMP085
+#define BMP085
 //#define MS561101BA
 
 /* I2C magnetometer */
 //#define HMC5843
-//#define HMC5883
+#define HMC5883
 //#define AK8975
 
 /* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
@@ -221,7 +221,7 @@
    IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
    Select the right line depending on your radio brand. Feel free to modify the order in your PPM order is different */
 //#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4 //For Graupner/Spektrum
-//#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For Robe/Hitec/Futaba
+#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For Robe/Hitec/Futaba
 //#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For some Hitec/Sanwa/Others
 
 /* The following lines apply only for Spektrum Satellite Receiver
@@ -268,14 +268,14 @@
 /* The following lines apply only for a pitch/roll tilt stabilization system
    Uncomment the first line to activate it */
 //#define SERVO_TILT
-#define TILT_PITCH_MIN    1020    //servo travel min, don't set it below 1020
-#define TILT_PITCH_MAX    2000    //servo travel max, max value=2000
+#define TILT_PITCH_MIN    1100    //servo travel min, don't set it below 1020
+#define TILT_PITCH_MAX    1900    //servo travel max, max value=2000
 #define TILT_PITCH_MIDDLE 1500    //servo neutral value
-#define TILT_PITCH_PROP   10      //servo proportional (tied to angle) ; can be negative to invert movement
+#define TILT_PITCH_PROP   -13      //servo proportional (tied to angle) ; can be negative to invert movement
 #define TILT_ROLL_MIN     1020
 #define TILT_ROLL_MAX     2000
 #define TILT_ROLL_MIDDLE  1500
-#define TILT_ROLL_PROP    10
+#define TILT_ROLL_PROP    16
 
 /* interleaving delay in micro seconds between 2 readings WMP/NK in a WMP+NK config
    if the ACC calibration time is very long (20 or 30s), try to increase this delay up to 4000
@@ -287,11 +287,11 @@
    with R1=33k and R2=51k
    vbat = [0;1023]*16/VBATSCALE */
 #define VBAT              // comment this line to suppress the vbat code
-#define VBATSCALE     131 // change this value if readed Battery voltage is different than real voltage
-#define VBATLEVEL1_3S 107 // 10,7V
+#define VBATSCALE     125 // change this value if readed Battery voltage is different than real voltage
+#define VBATLEVEL1_3S 105 // 10,7V
 #define VBATLEVEL2_3S 103 // 10,3V
 #define VBATLEVEL3_3S 99  // 9.9V
-#define NO_VBAT       16 // Avoid beeping without any battery
+#define NO_VBAT       60 // Avoid beeping without any battery
 
 /* when there is an error on I2C bus, we neutralize the values during a short time. expressed in microseconds
    it is relevent only for a conf with at least a WMP */
@@ -501,7 +501,7 @@
 //if you want to change to orientation of individual sensor
 //#define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  = -X; accADC[YAW]  = Z;}
 //#define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = Z;}
-//#define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
+#define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y; magADC[PITCH]  = X; magADC[YAW]  = -Z;}
 
  
 /* frequenies for rare cyclic actions in the main loop, depend on cycle time! */
