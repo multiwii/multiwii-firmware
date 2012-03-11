@@ -23,7 +23,15 @@
 //#define OCTOFLATP
 //#define OCTOFLATX
 //#define FLYING_WING
-//#define VTAIL4
+//#define VTAIL4      //experimental The mix is a modified Y4 Mix.
+
+//***********************************************************************************************//
+//******************************* !!!!  MuliWii Airplane   !!!! *********************************//
+//***********************************************************************************************//
+//#define AIRPLANE       // PatrikE Experimental. Howto setup =>>>http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
+//#define D12_POWER    // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12 
+#define NUM_MOTRORS 0  // Only for use with 490Hz ESC's on Airplane & Heli
+//*************************************************************************************************//
 
 #define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
 //#define YAW_DIRECTION -1
@@ -100,7 +108,7 @@
    note: only the RX PIN is used, the GPS is not configured by multiwii
    the GPS must be configured to output NMEA sentences (which is generally the default conf for most GPS devices)
    uncomment the first line to select the GPS serial port of the arduino */
-#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
+//#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
 #define GPS_BAUD   115200
 
 /* I2C GPS device made with an independant arduino + GPS device
@@ -146,7 +154,7 @@
 //#define DROTEK_IMU10DOF
 //#define DROTEK_IMU10DOF_MS
 //#define DROTEK_IMU6DOFv2
-//#define MONGOOSE1_0     // mongoose 1.0    http://www.fuzzydrone.org/
+//#define MONGOOSE1_0     // mongoose 1.0    http://store.ckdevices.com/
 //#define CRIUS_LITE      // Crius MultiWii Lite
 //#define CRIUS_SE        // Crius MultiWii SE
 
@@ -303,7 +311,12 @@
 
 /* this is the maximum value for the ESCs at full power
    this value can be increased up to 2000 */
+#if defined(AIRPLANE)
+#define MAXTHROTTLE  2000        // range must be inside [1020;2000]
+#else
 #define MAXTHROTTLE 1850
+#endif
+
 
 /* This is the speed of the serial interface. 115200 kbit/s is the best option for a USB connection.*/
 #define SERIAL_COM_SPEED 115200

@@ -29,6 +29,30 @@ void GPS_NewData() {
           *varptr++ = i2c_readAck();
           *varptr   = i2c_readNak();
         }
+		uint8_t *varptr;
+		//GPS_ground_speed
+		varptr = (uint8_t *)&GPS_ground_speed;
+		i2c_rep_start(I2C_GPS_ADDRESS);
+		i2c_write(I2C_GPS_GROUND_SPEED );       //0x07
+		i2c_rep_start(I2C_GPS_ADDRESS+1);
+		*varptr++ = i2c_readAck();
+		*varptr   = i2c_readNak();
+
+		//GPS_ground_course
+		varptr = (uint8_t *)&GPS_ground_course;
+		i2c_rep_start(I2C_GPS_ADDRESS);
+		i2c_write(I2C_GPS_COURSE);             //0x9C
+		i2c_rep_start(I2C_GPS_ADDRESS+1);
+		*varptr++ = i2c_readAck();
+		*varptr   = i2c_readNak();
+
+		//GPS_altitude
+		varptr = (uint8_t *)&GPS_altitude;
+		i2c_rep_start(I2C_GPS_ADDRESS);
+		i2c_write(I2C_GPS_ALTITUDE);             //0x09
+		i2c_rep_start(I2C_GPS_ADDRESS+1);
+		*varptr++ = i2c_readAck();
+		*varptr   = i2c_readNak();
   
     } else {                                                                          //We don't have a fix zero out distance and bearing (for safety reasons)
       GPS_distanceToHome = 0;

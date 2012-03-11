@@ -600,6 +600,20 @@
 #endif
 
 
+
+#if defined (AIRPLANE) && defined(PROMINI) 
+ #if defined(D12_POWER)
+  #define SERVO_4_PINMODE            ;  // D12
+  #define SERVO_4_PIN_HIGH           ;
+  #define SERVO_4_PIN_LOW            ;
+ #else if
+  #define POWERPIN_PINMODE           ;
+  #define POWERPIN_ON                ;
+  #define POWERPIN_OFF               ;
+ #endif
+#endif
+
+
 #if defined(TRI)
   #define MULTITYPE 1
 #elif defined(QUADP)
@@ -623,10 +637,8 @@
 #elif defined(OCTOX8)
   #define MULTITYPE 11   //the JAVA GUI is the same for all 8 motor configs 
 #elif defined(OCTOFLATP)
-
   #define MULTITYPE 12   //12  for MultiWinGui
 #elif defined(OCTOFLATX)
-
   #define MULTITYPE 13   //13  for MultiWinGui 
 #elif defined(AIRPLANE)    
   #define MULTITYPE 14    
@@ -656,6 +668,11 @@
   #define NUMBER_MOTOR 1
   #define PRI_SERVO_FROM   1 // use servo from 1 to 2
   #define PRI_SERVO_TO     2
+#elif defined(AIRPLANE)
+  #define NUMBER_MOTOR NUM_MOTRORS
+  // Use all acvailable servos - NUMBER_MOTOR
+  #define ALL_SERVOS
+  
 #elif defined(BI)
   #define NUMBER_MOTOR 2
   #define PRI_SERVO_FROM   5 // use servo from 5 to 6
@@ -691,6 +708,11 @@
     #define SEC_SERVO_FROM   3 // use servo 3
     #define SEC_SERVO_TO     3
   #endif
+#if defined(ALL_SERVOS)
+  // Use all acvailable servos - NUMBER_MOTOR
+  #define SEC_SERVO_FROM   1
+  #define SEC_SERVO_TO     8 - NUMBER_MOTOR  
+  #endif  
 #endif
 
 
@@ -718,7 +740,7 @@
           
   #define I2C_GPS_GROUND_SPEED                    0x07   //GPS ground speed in m/s*100 (uint16_t)      (Read Only)
   #define I2C_GPS_ALTITUDE                        0x09   //GPS altitude in meters (uint16_t)           (Read Only)
-
+  #define I2C_GPS_COURSE                          0x9C   //GPS Course in degrees *10                   (Read Only)  
   #define I2C_GPS_TIME                            0x0b   //UTC Time from GPS in hhmmss.sss * 100 (uint32_t)(unneccesary precision) (Read Only)
   #define I2C_GPS_DISTANCE                        0x0f   //Distance between current pos and internal target location register in meters (uint16_t) (Read Only)
   #define I2C_GPS_DIRECTION                       0x11   //direction towards interal target location reg from current position (+/- 180 degree)    (read Only)

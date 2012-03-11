@@ -12,7 +12,13 @@
   uint8_t PWM_PIN[8] = {3,5,6,2,7,8,9,10};      //for a quad+: rear,right,left,front   //+ for y6: 7:under right  8:under left
 #endif
 #if !defined(PROMICRO) || defined(HWPWM6)
-  volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
+
+#if defined(AIRPLANE)
+// To prevent motor to start at reset. atomicServo[7]=5 or 249 if reverseed servo
+volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,5}; 
+#else
+   volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
+#endif
   //for HEX Y6 and HEX6/HEX6X flat for promini
   volatile uint8_t atomicPWM_PIN5_lowState;
   volatile uint8_t atomicPWM_PIN5_highState;
@@ -706,13 +712,75 @@ void mixTable() {
     motor[6] = PIDMIX(-1/2,+1  ,-1); //REAR_R
     motor[7] = PIDMIX(+1  ,+1/2,-1); //MIDREAR_L 
   #endif
-  #ifdef VTAIL4
-    motor[0] = PIDMIX(+0,+1, -1/2);      //REAR_R 
+  #ifdef VTAIL4 
+           /* Modified Y4 */
+    motor[0] = PIDMIX(+0,+1, -1/2);   //REAR_R 
     motor[1] = PIDMIX(-1, -1, +2/10); //FRONT_R 
-    motor[2] = PIDMIX(+0,+1, +1/2);      //REAR_L 
+    motor[2] = PIDMIX(+0,+1, +1/2);   //REAR_L 
     motor[3] = PIDMIX(+1, -1, -2/10); //FRONT_L
-  #endif
+  #endif   
+ 
+ /************************************************************************************************************
+ PatrikE Experimentals
+ ************************************************************************************************************/  
+#if defined(AIRPLANE) 
+// Common functions for Plane
 
+static int16_t servolimit[8][2]; // Holds servolimit data
+#define SERVO_MIN 1020           // limit servo travel range must be inside [1020;2000]
+#define SERVO_MAX 2000           // limit servo travel range must be inside [1020;2000]
+
+ /***************************
+    Set rates with 0 - 100%. 
+ ***************************/
+ for(i=0; i<8; i++){
+      servolimit[i][0]=servoMid[i]-((servoMid[i]-SERVO_MIN) *(servotravel[i]*0.01));
+      servolimit[i][1]=servoMid[i]+((SERVO_MAX - servoMid[i]) *(servotravel[i]*0.01));  
+    }
+ /***********************************************************************************/
+ 
+ if (!armed){ 
+     // Kill throttle when disarmed
+     servo[7]=constrain( 900, SERVO_MIN, SERVO_MAX); 
+ }else{   
+ if (NUM_MOTRORS){
+   motor[0]  = constrain(rcCommand[THROTTLE], servolimit[7][0], servolimit[7][1]); //   490hz ESC
+  } else { 
+  servo[7]  = constrain(rcCommand[THROTTLE], servolimit[7][0], servolimit[7][1]); }//   50hz ESC or servo
+ }
+   #endif
+    /*   servo[7] is programmed with safty features to avoid motorstarts when ardu reset..  
+      All other servos go to center at reset..  Half throttle can be dangerus    
+      Only use servo[7] as motorcontrol if motor is used in the setup            */
+   
+  #ifdef AIRPLANE    
+ /************************************************************************************************************/  
+ 
+    if(passThruMode){   // Direct passthru from RX 
+    servo[3]  = servoMid[3]+(rcCommand[ROLL] *servoreverse[3]);     //   Wing 1
+    servo[4]  = servoMid[4]+(rcCommand[ROLL] *servoreverse[4]);     //   Wing 2
+    servo[5]  = servoMid[5]+(rcCommand[YAW]  *servoreverse[5]);     //   Rudder
+    servo[6]  = servoMid[6]+(rcCommand[PITCH]*servoreverse[6]);     //   Elevator 
+   }else{
+   // use sensors to correct (gyro only or gyro+acc according to AUX configuration
+   // invert the sign before axisPID to reverse servos GyroResponse
+    servo[3]  =(servoMid[3] + (((axisPID[ROLL]) + (angle[ROLL]  /16)) *servoreverse[3])); //   Right Ail 
+    servo[4]  =(servoMid[4] + (((axisPID[ROLL]) + (angle[ROLL]  /16)) *servoreverse[4])); //   Left Ail  
+    servo[5]  =(servoMid[5] + (((axisPID[YAW])                      ) *servoreverse[5])); //   Rudder
+    servo[6]  =(servoMid[6] + (((axisPID[PITCH] + (angle[PITCH] /16)))*servoreverse[6])); //   Elevator
+     } 
+     
+   // ServoRates
+    for(uint8_t i=0;i<8;i++){ 
+    servo[i]  = map(servo[i], SERVO_MIN, SERVO_MAX, servolimit[i][0],  servolimit[i][1]);
+    servo[i]  = constrain( servo[i], SERVO_MIN, SERVO_MAX);
+  }
+ 
+   #endif
+   
+ /************************************************************************************************************/ 
+ // End of PatrikE Experimentals
+ /************************************************************************************************************/ 
   #ifdef SERVO_TILT
     #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
       #define S_PITCH servo[2]

@@ -13,6 +13,15 @@ March  2012     V2.0_pre_version_1
 #include <avr/pgmspace.h>
 #define  VERSION  201
 
+/**************************************************************************************************************
+  Servosettings Only For Airplane */
+
+ uint16_t      servoMid[8] = {1500,1500,1500,1500,1500,1500,1500,1500}; // Midpoint on servo
+ uint16_t   servotravel[8] = {100, 100, 100, 100, 100, 100, 100, 100};  // Rates in 0-100% 
+ int8_t    servoreverse[8] = { 1,   1,   1,   -1,  1,   1,   1,   1};   // Invert servos by setting -1  
+
+/**************************************************************************************************************/
+
 /*********** RC alias *****************/
 #define ROLL       0
 #define PITCH      1
@@ -171,6 +180,10 @@ static uint16_t GPS_distanceToHome,GPS_distanceToHold;       // distance to home
 static int16_t  GPS_directionToHome,GPS_directionToHold;     // direction to home or hol point in degrees
 static uint8_t  GPS_update = 0;          // it's a binary toogle to distinct a GPS position update
 static int16_t  GPS_angle[2];            // it's the angles that must be applied for GPS correction
+
+uint16_t GPS_ground_speed = 0;     // m/sec*100
+uint16_t GPS_ground_course = 0;    //degrees *10
+uint16_t GPS_altitude = 0;         //altitude in dm
 
 void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
   uint8_t i,r;
