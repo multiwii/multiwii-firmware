@@ -51,13 +51,13 @@ void writeServos() {
     #if defined(SEC_SERVO_FROM)   // write secundary servos
       #if defined(SERVO_TILT) && defined(MMSERVOGIMBAL)
         // Moving Average Servo Gimbal by Magnetron1
-        static int16_t mediaMobileServoGimbalADC[2][MMSERVOGIMBALVECTORLENGHT];
-        static int32_t mediaMobileServoGimbalADCSum[2];
+        static int16_t mediaMobileServoGimbalADC[3][MMSERVOGIMBALVECTORLENGHT];
+        static int32_t mediaMobileServoGimbalADCSum[3];
         static uint8_t mediaMobileServoGimbalIDX;
         uint8_t axis;
 
         mediaMobileServoGimbalIDX = ++mediaMobileServoGimbalIDX % MMSERVOGIMBALVECTORLENGHT;
-        for (axis=1; axis < 2; axis++) {
+        for (axis=(SEC_SERVO_FROM-1); axis < SEC_SERVO_TO; axis++) {
           mediaMobileServoGimbalADCSum[axis] -= mediaMobileServoGimbalADC[axis][mediaMobileServoGimbalIDX];
           mediaMobileServoGimbalADC[axis][mediaMobileServoGimbalIDX] = servo[axis];
           mediaMobileServoGimbalADCSum[axis] += mediaMobileServoGimbalADC[axis][mediaMobileServoGimbalIDX];
@@ -348,7 +348,7 @@ void initOutput() {
     #endif
   #endif
   
-  writeAllMotors(1000);
+  writeAllMotors(MINCOMMAND);
   delay(300);
   #if defined(SERVO)
     initializeServo();

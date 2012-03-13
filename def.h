@@ -503,19 +503,26 @@
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
 #endif
 
-#if defined(CITRUSv1_0)
+#if defined(CITRUSv2_1)
   #define ITG3200
   #define ADXL345
   #define BMP085
   #define HMC5883
-  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
-  #define ADXL345_ADDRESS 0xA6
+  #define ACC_ORIENTATION(X, Y, Z) {accADC[ROLL] = -X; accADC[PITCH] = -Y; accADC[YAW] = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z) {magADC[ROLL] = Y; magADC[PITCH] = Z; magADC[YAW] = X;}
   #define ITG3200_ADDRESS 0XD0
+  #undef INTERNAL_I2C_PULLUPS
 #endif
 
-#if defined(DROTEK_IMU10DOF) || defined(DROTEK_IMU10DOF_MS)
+#if defined(CHERRY6DOFv1_0)
+  #define MPU6050
+  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  = -X; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(Y, X, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = -Y; gyroADC[YAW] = -Z;}
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+
+#if defined(DROTEK_10DOF) || defined(DROTEK_10DOF_MS)
   #define ITG3200
   #define BMA180
   #define HMC5883
@@ -523,19 +530,26 @@
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define ITG3200_ADDRESS 0XD2
-  #if defined(DROTEK_IMU10DOF_MS)
+  #if defined(DROTEK_10DOF_MS)
     #define MS561101BA
-  #elif defined(DROTEK_IMU10DOF)
+  #elif defined(DROTEK_10DOF)
     #define BMP085
   #endif
 #endif
 
-#if defined(DROTEK_IMU6DOFv2)
+#if defined(DROTEK_6DOFv2)
   #define ITG3200
   #define BMA180
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -X; gyroADC[PITCH] = -Y; gyroADC[YAW] = -Z;}
   #define ITG3200_ADDRESS 0XD2
+#endif
+
+#if defined(DROTEK_6DOF_MPU)
+  #define MPU6050
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -X; gyroADC[PITCH] = -Y; gyroADC[YAW] = -Z;}
+  #define MPU6050_ADDRESS 0xD2
 #endif
 
 #if defined(MONGOOSE1_0)
@@ -556,7 +570,7 @@
   #define ITG3200
   #define ADXL345
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
 #endif
 
 #if defined(CRIUS_SE)
@@ -741,6 +755,14 @@
   #define I2C_GPS_WP15                            0x93
   #define I2C_GPS_WP_NAV_PAR1                     0x9B   //Waypoint navigation parameter 1
           #define I2C_GPS_WP_NAV_PAR1_REACH_LIMIT 0x0F      //lover 4 bit, waypoint reached distance
+#endif
+
+#if !(defined(DISPLAY_2LINES)) && !(defined(DISPLAY_MULTILINE))
+  #if (defined(LCD_VT100))
+    #define DISPLAY_MULTILINE
+  #else
+    #define DISPLAY_2LINES
+  #endif
 #endif
 
 /**************************/

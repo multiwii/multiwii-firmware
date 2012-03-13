@@ -257,7 +257,6 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
     uint16_t vbatRaw = 0;
     static uint16_t vbatRawArray[8];
     if (! (++vbatTimer % VBATFREQ)) {
-    	ADCSRA |= _BV(ADPS2) ; ADCSRA &= ~_BV(ADPS1); ADCSRA &= ~_BV(ADPS0); //this speeds up analogRead without loosing too much resolution: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1208715493/11
     	vbatRawArray[(ind++)%8] = analogRead(V_BATPIN);
     	for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
     	vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
@@ -348,7 +347,7 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
 
 
 void setup() {
-  SerialOpen(0,115200);
+  SerialOpen(0,SERIAL_COM_SPEED);
   LEDPIN_PINMODE;
   POWERPIN_PINMODE;
   BUZZERPIN_PINMODE;
@@ -382,6 +381,7 @@ void setup() {
   #ifdef LCD_CONF_DEBUG
     configurationLoop();
   #endif
+  ADCSRA |= _BV(ADPS2) ; ADCSRA &= ~_BV(ADPS1); ADCSRA &= ~_BV(ADPS0); //this speeds up analogRead without loosing too much resolution: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1208715493/11
 }
 
 // ******** Main Loop *********
@@ -429,8 +429,15 @@ void loop () {
         if (rcDelayCommand == 20) calibratingG=400;
       } else if (rcData[YAW] > MAXCHECK && rcData[PITCH] > MAXCHECK && armed == 0) {
         if (rcDelayCommand == 20) {
-          servo[0] = 1500; //we center the yaw gyro in conf mode
-          writeServos();
+          #ifdef TRI
+            servo[5] = 1500; //we center the yaw servo in conf mode
+            writeServos();
+          #endif
+          #ifdef FLYING_WING
+            servo[0]  = wing_left_mid;
+            servo[1]  = wing_right_mid;
+            writeServos();
+          #endif
           #if defined(LCD_CONF)
             configurationLoop(); //beginning LCD configuration
           #endif
@@ -642,7 +649,6 @@ void loop () {
       rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
     }
   #endif
-  
   #if GPS
     uint16_t GPS_dist;
     int16_t  GPS_dir;

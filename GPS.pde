@@ -69,13 +69,10 @@ void GPS_NewData() {
    output: distance in meters, bearing in degrees
 */
 void GPS_distance(int32_t lat1, int32_t lon1, int32_t lat2, int32_t lon2, uint16_t* dist, int16_t* bearing) {
-  float dLat = ((lat2 - lat1));                                    // difference of latitude in 1/100000 degrees
-  float dLon = ((lon2 - lon1)) * cos(lat1*(PI/180/100000.0));      // difference of longitude in 1/100000 degrees
+  float dLat = (lat2 - lat1);                                    // difference of latitude in 1/100000 degrees
+  float dLon = (lon2 - lon1) * cos(lat1*(PI/180/100000.0));      // difference of longitude in 1/100000 degrees
   *dist = 6372795 / 100000.0 * PI/180*(sqrt(sq(dLat) + sq(dLon)));
-  if (lat1 != lat2)
-    *bearing = 180/PI*(atan2(dLon,dLat));
-  else
-    *bearing = 0;
+  *bearing = 180/PI*(atan2(dLon,dLat));
 }
 
 /* The latitude or longitude is coded this way in NMEA frames

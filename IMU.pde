@@ -61,7 +61,6 @@ void computeIMU () {
     static uint8_t Smoothing[3]  = GYRO_SMOOTHING; // How much to smoothen with per axis
     static int16_t gyroSmooth[3] = {0,0,0};
     for (axis = 0; axis < 3; axis++) {
-      constrain(Smoothing[axis],1,100); // Avoid to divide with Zero
       gyroData[axis] = (gyroSmooth[axis]*(Smoothing[axis]-1)+gyroData[axis]+1)/Smoothing[axis];
       gyroSmooth[axis] = gyroData[axis];
     }
@@ -296,7 +295,7 @@ void getEstimatedAltitude(){
   EstAlt = BaroHigh*10/(BARO_TAB_SIZE/2);
   
   temp32 = AltHold - EstAlt;
-  if (abs(temp32) < 10 && BaroPID < 10) BaroPID = 0;  //remove small D parametr to reduce noise near zoro position
+  if (abs(temp32) < 10 && abs(BaroPID) < 10) BaroPID = 0;  //remove small D parametr to reduce noise near zoro position
   
   //P
   BaroPID += P8[PIDALT]*constrain(temp32,(-2)*P8[PIDALT],2*P8[PIDALT])/100;   

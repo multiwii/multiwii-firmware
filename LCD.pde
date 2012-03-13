@@ -456,7 +456,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 &lcd_param_text38,   &tri_yaw_middle,       &__SE,
 #endif
 #ifdef LOG_VALUES
-&lcd_param_text39,   &failsafeEvents,       &__FS,
+&lcd_param_text39,   &failsafeEvents,       &__L,
 &lcd_param_text40,   &i2c_errors_count,     &__L,
 &lcd_param_text41,   &annex650_overrun_count, &__L
 #endif
@@ -616,12 +616,14 @@ void configurationLoop() {
 
   // LCDbar(n,v) : draw a bar graph - n number of chars for width, v value in % to display
 void LCDbar(uint8_t n,uint8_t v) {
+  if (v > 100) v = 100;
+  else if (v < 0) v = 0;
   #if defined(LCD_SERIAL3W)
     for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
   #elif defined(LCD_TEXTSTAR)
     LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v);
   #elif defined(LCD_VT100)
-    uint8_t i, j = n*v/100;
+    uint8_t i, j = (n*v)/100;
     for (i=0; i< j; i++) LCDprint( '=' );
     for (i=j; i< n; i++) LCDprint( '.' );
   #elif defined(LCD_ETPP)
@@ -761,8 +763,17 @@ void output_checkboxitems() {
     }
   }
 }
-/* ------------ */
 
+#define GYROLIMIT 30 // threshold: for larger values replace bar with dots
+#define ACCLIMIT 40 // threshold: for larger values replace bar with dots
+void outputSensor(uint8_t num, int16_t data, int16_t limit) {
+        if (data < -limit) { LCDprintChar("<<<"); }
+        else if (data > limit) { LCDprintChar(">>>>"); }
+        else  LCDbar(num, limit + data *50/limit);
+}
+
+/* ------------ DISPLAY_2LINES ------------------------------------*/
+#ifdef DISPLAY_2LINES
 void lcd_telemetry() {
   static uint8_t linenr = 0;
   switch (telemetry) { // output telemetry data
@@ -770,51 +781,6 @@ void lcd_telemetry() {
   uint8_t i;
   case 1: // button A on Textstar LCD -> angles
   case '1':
-#ifdef LCD_VT100
-  switch (linenr++ % 8) { // not really linenumbers
-  case 0: // V, mAh
-          LCDsetLine(1);
-          fill_line1_VmA();
-          LCDprintChar(line1);
-          break;
-  case 1: // V, mAh bars
-          LCDsetLine(2);
-          output_VmAbars();
-          break;
-  case 2: // A, maxA
-          LCDsetLine(3);
-          fill_line2_AmaxA();
-          LCDprintChar(line2);
-          break;
-  case 3: // checkboxstatus
-          LCDsetLine(4);
-          output_checkboxitems();
-          break;
-
-  case 4: // cycle
-          LCDsetLine(5); // to clear the unused line
-          LCDsetLine(6);
-          fill_line1_cycle();
-          LCDprintChar(line1);
-          break;
-  case 5: // cycle min/max
-          LCDsetLine(7);
-          fill_line2_cycleMinMax();
-          LCDprintChar(line2);
-          break;
-  case 6: // Fails....
-          LCDsetLine(8);
-          fill_line1_fails();
-          LCDprintChar(line1);
-          break;
-  case 7: // Fails....
-          LCDsetLine(9);
-          fill_line2_fails_values();
-          LCDprintChar(line2);
-          break;
-  }
-  LCDcrlf();
-#else // all 2-line displays
   if (linenr++ % 2) {
           fill_line1_deg();
           LCDsetLine(1);
@@ -823,11 +789,8 @@ void lcd_telemetry() {
           fill_line2_AmaxA();
           LCDsetLine(2);LCDprintChar(line2);
   }
-#endif // vt100
   break;
 
-#ifdef LCD_VT100
-#else // all 2-line displays
   case 2: // button B on Textstar LCD -> Voltage, PowerSum and power alarm trigger value
   case '2':
           if (linenr++ % 2) {
@@ -839,7 +802,7 @@ void lcd_telemetry() {
                   output_VmAbars();
           }
           break;
-#endif // vt100
+
   case 3: // button C on Textstar LCD -> cycle time
   case '3':
           if (linenr++ % 2) {
@@ -857,60 +820,21 @@ void lcd_telemetry() {
 
   case 4: // button D on Textstar LCD -> sensors
   case '4':
-        #define GYROLIMIT 30 // threshold: for larger values replace bar with dots
-        #define ACCLIMIT 40 // threshold: for larger values replace bar with dots
-#ifdef LCD_VT100
-                static char sensorNames[6][3] = {"Gx", " y", " z", "Ax", " y", " z" };
-                i = linenr++ % 6;
-                LCDsetLine(i+1);
-                LCDprintChar(sensorNames[i]);
-                LCDprint(' ');
-                switch (i) {
-                case 0:
-                        if (abs(gyroData[0]) < GYROLIMIT) { LCDbar(12,(GYROLIMIT+gyroData[0])*50/GYROLIMIT); } else LCDprintChar("....");
-                        break;
-                case 1:
-                        if (abs(gyroData[1]) < GYROLIMIT) { LCDbar(12,(GYROLIMIT+gyroData[1])*50/GYROLIMIT); } else LCDprintChar("....");
-                        break;
-                case 2:
-                        if (abs(gyroData[2]) < GYROLIMIT) { LCDbar(12,(GYROLIMIT+gyroData[2])*50/GYROLIMIT); } else LCDprintChar("....");
-                        break;
-                case 3:
-                        if (abs(accSmooth[0]) < ACCLIMIT) { LCDbar(12,(ACCLIMIT+accSmooth[0])*50/ACCLIMIT); } else LCDprintChar("....");
-                        break;
-                case 4:
-                        if (abs(accSmooth[1]) < ACCLIMIT) { LCDbar(12,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT); } else LCDprintChar("....");
-                        break;
-                case 5:
-                        if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCDbar(12,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT); } else LCDprintChar("....");
-                        break;
-                }
-            LCDcrlf();
-#else // all 2-line displays
         if (linenr++ % 2) {
                 LCDsetLine(1);LCDprintChar("G "); //refresh line 1 of LCD
-                if (abs(gyroData[0]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[0])*50/GYROLIMIT); } else LCDprintChar("...."); LCDprint(' ');
-                if (abs(gyroData[1]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[1])*50/GYROLIMIT); } else LCDprintChar("...."); LCDprint(' ');
-                if (abs(gyroData[2]) < GYROLIMIT) { LCDbar(4,(GYROLIMIT+gyroData[2])*50/GYROLIMIT); } else LCDprintChar("....");
+                outputSensor(4, gyroData[0], GYROLIMIT); LCDprint(' ');
+                outputSensor(4, gyroData[1], GYROLIMIT); LCDprint(' ');
+                outputSensor(4, gyroData[2], GYROLIMIT);
         } else {
                 LCDsetLine(2);LCDprintChar("A "); //refresh line 2 of LCD
-                if (abs(accSmooth[0]) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[0])*50/ACCLIMIT); } else LCDprintChar("...."); LCDprint(' ');
-                if (abs(accSmooth[1]) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[1])*50/ACCLIMIT); } else LCDprintChar("...."); LCDprint(' ');
-                if (abs(accSmooth[2] - acc_1G) < ACCLIMIT) { LCDbar(4,(ACCLIMIT+accSmooth[2]-acc_1G)*50/ACCLIMIT); } else LCDprintChar("....");
+                outputSensor(4, accSmooth[0], ACCLIMIT); LCDprint(' ');
+                outputSensor(4, accSmooth[1], ACCLIMIT); LCDprint(' ');
+                outputSensor(4, accSmooth[2] - acc_1G, ACCLIMIT);
         }
-#endif  // vt100
         break;
 
     case 5:
     case '5':
-#ifdef LCD_VT100
-        i = linenr++ % CHECKBOXITEMS;
-        LCDsetLine(i+1);
-        LCDprintChar(checkboxitemNames[i]);
-        LCDprint(' ');
-        LCDprint( rcOptions[i] ? 'X' : '.');
-        LCDcrlf();
-#else // all 2-line displays
         if (linenr++ % 2) {
                 fill_line1_fails();
                 LCDsetLine(1);
@@ -920,30 +844,10 @@ void lcd_telemetry() {
                 LCDsetLine(2);
                 LCDprintChar(line2);
         }
-#endif  // vt100
         break;
 
     case 6:     // RX inputs
     case '6':
-#ifdef LCD_VT100
-        static char channelNames[8][4] = {"Ail", "Ele", "Yaw", "Thr", "Ax1", "Ax2", "Ax3", "Ax4" };
-        i = linenr++ % 8; // 8 channels
-        //strcpy_P(line1,PSTR("-Thr ---- "));
-        //                   0123456789.12345
-        LCDsetLine(i+1);
-        LCDprint( '0' + i+1); // channel numbering [1;8]
-        LCDprint(' ');
-        LCDprintChar(channelNames[i]);
-        LCDprint(' ');
-        unit = rcData[i];
-        LCDprint( digit1000(unit) );
-        LCDprint( digit100(unit) );
-        LCDprint( digit10(unit) );
-        LCDprint( digit1(unit) );
-        LCDprint(' ');
-        LCDbar(12, (unit-1000)/10 );
-        LCDcrlf();
-#else // all 2-line displays
         if (linenr++ % 2) {
                 strcpy_P(line1,PSTR("Roll Pitch Throt"));
                 if (armed) line2[14] = 'A'; else line2[14] = 'a';
@@ -956,17 +860,16 @@ void lcd_telemetry() {
                 line2[1] = digit100( rcData[ROLL] );
                 line2[2] = digit10( rcData[ROLL] );
                 line2[3] = digit1( rcData[ROLL] );
-                line2[5] = '0' + rcData[PITCH] / 1000 - (rcData[PITCH]/10000) * 10;
-                line2[6] = '0' + rcData[PITCH] / 100  - (rcData[PITCH]/1000)  * 10;
-                line2[7] = '0' + rcData[PITCH] / 10   - (rcData[PITCH]/100)   * 10;
-                line2[8] = '0' + rcData[PITCH]        - (rcData[PITCH]/10)    * 10;
-                line2[10] = '0' + rcData[THROTTLE] / 1000 - (rcData[THROTTLE]/10000) * 10;
-                line2[11] = '0' + rcData[THROTTLE] / 100  - (rcData[THROTTLE]/1000)  * 10;
-                line2[12] = '0' + rcData[THROTTLE] / 10   - (rcData[THROTTLE]/100)   * 10;
-                line2[13] = '0' + rcData[THROTTLE]        - (rcData[THROTTLE]/10)    * 10;
+                line2[5] = digit1000( rcData[PITCH] );
+                line2[6] = digit100( rcData[PITCH] );
+                line2[7] = digit10( rcData[PITCH] );
+                line2[8] = digit1( rcData[PITCH] );
+                line2[10] = digit1000( rcData[THROTTLE] );
+                line2[11] = digit100( rcData[THROTTLE] );
+                line2[12] = digit10( rcData[THROTTLE] );
+                line2[13] = digit1( rcData[THROTTLE] );
                 LCDsetLine(2);LCDprintChar(line2);
         }
-#endif // vt100
         break;
 
     case 7:
@@ -999,58 +902,6 @@ void lcd_telemetry() {
                 #endif // case 7 : GPS
         break;
 
-#ifdef LCD_VT100
-    case 9: // outputs motors+sensors
-    case '9':
-        static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
-                        "S1", "S2","S3", "S4", "S5", "S6", "S7", "S8", };
-        static uint8_t index = 0;
-        i = index++ % 16;
-        if (i == 0) linenr = 1; //vt100 starts linenumbering @1
-        LCDsetLine(linenr);
-        if (i < 8) {
-                if (i < NUMBER_MOTOR) {
-                LCDprintChar(outputNames[i]);
-                LCDprint(' ');
-                unit = motor[i]; // [1000 ; 2000]
-                        LCDprint( digit1000(unit) );
-                        LCDprint( digit100(unit) );
-                        LCDprint( digit10(unit) );
-                        LCDprint( digit1(unit) );
-                        LCDprint(' ');
-                        LCDbar(12, (unit-1000)/10 );
-                    LCDcrlf();
-                        linenr++;
-                } else {
-                        index = 8;
-                }
-        } else {
-                uint8_t j = i-7; // [8;15] -> [1;8]
-                        #ifdef SEC_SERVO_FROM
-                if (PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j) || (SEC_SERVO_FROM  <= j && SEC_SERVO_TO  >= j)
-                        #else
-                        if (j < PRI_SERVO_FROM) index = 7 + PRI_SERVO_FROM;
-                        else if (j > PRI_SERVO_TO) index = 16;
-                        else // (PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j)
-                        #endif
-                        {
-                                LCDprintChar(outputNames[i]);
-                                LCDprint(' ');
-                                unit = servo[j-1]; // [1000 ; 2000]
-                                LCDprint( digit1000(unit) );
-                                LCDprint( digit100(unit) );
-                                LCDprint( digit10(unit) );
-                                LCDprint( digit1(unit) );
-                                LCDprint(' ');
-                                LCDbar(12, (unit-1000)/10 );
-                            LCDcrlf();
-                                linenr++;
-                                break;
-                        }
-        }
-        break;
-
-#endif // vt100 case 9
 
         #if defined(LOG_VALUES) && defined(DEBUG)
     case 'R':
@@ -1083,6 +934,212 @@ void lcd_telemetry() {
     // WARNING: if you add another case here, you should also add a case: in Serial.pde, so users can access your case via terminal input
   } // end switch (telemetry) 
 } // end function lcd_telemetry
+
+#endif // DISPLAY_2LINES
+/* ------------ DISPLAY_MULTILINE ------------------------------------*/
+#ifdef DISPLAY_MULTILINE
+
+void lcd_telemetry() {
+  static uint8_t linenr = 0;
+  switch (telemetry) { // output telemetry data
+  uint16_t unit;
+  uint8_t i;
+  case 1: // overall display
+  case '1':
+    switch (linenr++ % 8) { // not really linenumbers
+    case 0: // V, mAh
+      LCDsetLine(1);
+      fill_line1_VmA();
+      LCDprintChar(line1);
+      break;
+    case 1: // V, mAh bars
+      LCDsetLine(2);
+      output_VmAbars();
+      break;
+    case 2: // A, maxA
+      LCDsetLine(3);
+      fill_line2_AmaxA();
+      LCDprintChar(line2);
+      break;
+    case 3: // checkboxstatus
+      LCDsetLine(4);
+      output_checkboxitems();
+      break;
+
+    case 4: // cycle
+      LCDsetLine(5); // to clear the unused line
+      LCDsetLine(6);
+      fill_line1_cycle();
+      LCDprintChar(line1);
+      break;
+    case 5: // cycle min/max
+      LCDsetLine(7);
+      fill_line2_cycleMinMax();
+      LCDprintChar(line2);
+      break;
+    case 6: // Fails....
+      LCDsetLine(8);
+      fill_line1_fails();
+      LCDprintChar(line1);
+      break;
+    case 7: // Fails....
+      LCDsetLine(9);
+      fill_line2_fails_values();
+      LCDprintChar(line2);
+      break;
+    }
+    LCDcrlf();
+    break;
+
+    case 2: // sensor readings
+    case '2':
+      static char sensorNames[6][3] = {"Gx", " y", " z", "Ax", " y", " z" };
+      i = linenr++ % 6;
+      LCDsetLine(i+1);
+      LCDprintChar(sensorNames[i]);
+      LCDprint(' ');
+      switch (i) {
+      case 0:
+        outputSensor(12, gyroData[0], GYROLIMIT);
+        break;
+      case 1:
+        outputSensor(12, gyroData[1], GYROLIMIT);
+        break;
+      case 2:
+        outputSensor(12, gyroData[2], GYROLIMIT);
+        break;
+      case 3:
+        outputSensor(12, accSmooth[0], ACCLIMIT);
+        break;
+      case 4:
+        outputSensor(12, accSmooth[1], ACCLIMIT);
+        break;
+      case 5:
+        outputSensor(12, accSmooth[2] - acc_1G, ACCLIMIT);
+        break;
+      }
+      LCDcrlf();
+      break;
+
+      case 3: // checkboxes and modes
+      case '3':
+        i = linenr++ % CHECKBOXITEMS;
+        LCDsetLine(i+1);
+        LCDprintChar(checkboxitemNames[i]);
+        LCDprint(' ');
+        LCDprint( rcOptions[i] ? 'X' : '.');
+        LCDcrlf();
+        break;
+
+      case 4:     // RX inputs
+      case '4':
+        static char channelNames[8][4] = {"Ail", "Ele", "Yaw", "Thr", "Ax1", "Ax2", "Ax3", "Ax4" };
+        i = linenr++ % 8; // 8 channels
+        //strcpy_P(line1,PSTR("-Thr ---- "));
+        //                   0123456789.12345
+        LCDsetLine(i+1);
+        LCDprint( '0' + i+1); // channel numbering [1;8]
+        LCDprint(' ');
+        LCDprintChar(channelNames[i]);
+        LCDprint(' ');
+        unit = rcData[i];
+        LCDprint( digit1000(unit) );
+        LCDprint( digit100(unit) );
+        LCDprint( digit10(unit) );
+        LCDprint( digit1(unit) );
+        LCDprint(' ');
+        LCDbar(12, (unit-1000)/10 );
+        LCDcrlf();
+        break;
+
+      case 5: // outputs motors+sensors
+      case '5':
+        static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
+            "S1", "S2","S3", "S4", "S5", "S6", "S7", "S8", };
+        static uint8_t index = 0;
+        i = index++ % 16;
+        if (i == 0) linenr = 1; //vt100 starts linenumbering @1
+        LCDsetLine(linenr);
+        if (i < 8) {
+            if (i < NUMBER_MOTOR) {
+                LCDprintChar(outputNames[i]);
+                LCDprint(' ');
+                unit = motor[i]; // [1000 ; 2000]
+                LCDprint( digit1000(unit) );
+                LCDprint( digit100(unit) );
+                LCDprint( digit10(unit) );
+                LCDprint( digit1(unit) );
+                LCDprint(' ');
+                LCDbar(12, (unit-1000)/10 );
+                LCDcrlf();
+                linenr++;
+            } else {
+                index = 8;
+            }
+        } else {
+            uint8_t j = i-7; // [8;15] -> [1;8]
+            #if defined(PRI_SERVO_FROM) && defined(SEC_SERVO_FROM)
+            if ((PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j) || (SEC_SERVO_FROM  <= j && SEC_SERVO_TO  >= j))
+            #elif defined(PRI_SERVO_FROM)
+              if (j < PRI_SERVO_FROM) index = 7 + PRI_SERVO_FROM;
+              else if (j > PRI_SERVO_TO) index = 16;
+              else // (PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j)
+            #endif
+            #if defined(PRI_SERVO_FROM) || defined(SEC_SERVO_FROM)
+                {
+                  LCDprintChar(outputNames[i]);
+                  LCDprint(' ');
+                  unit = servo[j-1]; // [1000 ; 2000]
+                  LCDprint( digit1000(unit) );
+                  LCDprint( digit100(unit) );
+                  LCDprint( digit10(unit) );
+                  LCDprint( digit1(unit) );
+                  LCDprint(' ');
+                  LCDbar(12, (unit-1000)/10 );
+                  LCDcrlf();
+                  linenr++;
+                  break;
+                }
+            #endif
+
+        }
+        break;
+
+
+    #if defined(LOG_VALUES) && defined(DEBUG)
+    case 'R':
+        //Reset logvalues
+        cycleTimeMax = 0; // reset min/max on transition on->off
+        cycleTimeMin = 65535;
+        telemetry = 0; // no use to repeat this forever
+        break;
+    #endif // case R
+
+   #ifdef DEBUG
+    case 'F':
+        extern unsigned int __bss_end;
+        extern unsigned int __heap_start;
+        extern void *__brkval;
+        int free_memory;
+        if((int)__brkval == 0)
+                free_memory = ((int)&free_memory) - ((int)&__bss_end);
+        else
+                free_memory = ((int)&free_memory) - ((int)__brkval);
+        strcpy_P(line1,PSTR(" Free ----")); // uint8_t free_memory
+        line1[6] = digit1000( free_memory );
+        line1[7] = digit100( free_memory );
+        line1[8] = digit10( free_memory );
+        line1[9] = digit1( free_memory );
+        LCDsetLine(1); LCDprintChar(line1);
+        break;
+   #endif // DEBUG
+
+    // WARNING: if you add another case here, you should also add a case: in Serial.pde, so users can access your case via terminal input
+  } // end switch (telemetry)
+} // end function lcd_telemetry
+
+#endif // DISPLAY_MULTILINE
+
 
 void toggle_telemetry(uint8_t t) {
   if (telemetry == t) telemetry = 0; else { telemetry = t; LCDclear(); }

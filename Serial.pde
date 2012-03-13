@@ -1,24 +1,8 @@
-#define SERIAL_RX_BUFFER_SIZE 64
-
-#if defined(PROMINI) 
-  uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][1];
-  volatile uint8_t serialHeadRX[1],serialTailRX[1];
-#endif
-#if defined(PROMICRO)
-  uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][2];
-  volatile uint8_t serialHeadRX[2],serialTailRX[2];
-  uint8_t usb_use_buf = 0;
-#endif
-#if defined(MEGA)
-  uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][4];
-  volatile uint8_t serialHeadRX[4],serialTailRX[4];
-#endif
-
 void serialCom() {
-  uint8_t i;
+  uint8_t i, sr;
   
   if (SerialAvailable(0)) {
-    switch (SerialRead(0)) {
+    switch (sr = SerialRead(0)) {
     #ifdef BTSERIAL
     case 'K': //receive RC data from Bluetooth Serial adapter as a remote
       rcData[THROTTLE] = (SerialRead(0) * 4) + 1000;
@@ -30,50 +14,40 @@ void serialCom() {
     #endif
     #ifdef LCD_TELEMETRY
     case 'A': // button A press
-    case '1':
       toggle_telemetry(1);
       break;
     case 'B': // button B press
-    case '2':
       toggle_telemetry(2);
       break;
     case 'C': // button C press
-    case '3':
       toggle_telemetry(3);
       break;
     case 'D': // button D press
-    case '4':
       toggle_telemetry(4);
       break;
+    case '1':
+    case '2':
+    case '3':
+    case '4':
     case '5':
-      toggle_telemetry(5);
-      break;
     case '6':
-      toggle_telemetry(6);
-      break;
     case '7':
-      toggle_telemetry(7);
-      break;
+    case '8':
     case '9':
-      toggle_telemetry(9);
-      break;
-     #if defined(LOG_VALUES) && defined(DEBUG)
+    #if defined(LOG_VALUES) && defined(DEBUG)
     case 'R':
-      //Reset logvalues
-      toggle_telemetry('R');
-      break;
-     #endif
-     #ifdef DEBUG
+    #endif
+    #ifdef DEBUG
     case 'F':
-      toggle_telemetry('F');
+    #endif
+      toggle_telemetry(sr);
       break;
-     #endif
     case 'a': // button A release
     case 'b': // button B release
     case 'c': // button C release
     case 'd': // button D release
       break;      
-    #endif
+    #endif // LCD_TELEMETRY
     case 'M': // Multiwii @ arduino to GUI all data
       serialize8('M');
       serialize8(VERSION);
@@ -107,7 +81,7 @@ void serialCom() {
         serialize8(activate2[i] | (rcOptions[i]<<7) ); // use highest bit to transport state in mwc
       }
       serialize16(GPS_distanceToHome);
-      serialize16(GPS_directionToHome);
+      serialize16(GPS_directionToHome+180);
       serialize8(GPS_numSat);
       serialize8(GPS_fix);
       serialize8(GPS_update);
@@ -120,7 +94,7 @@ void serialCom() {
       serialize16(debug4);
       serialize8('M');
       UartSendData();
-      break;
+      break; 
     case 'O':  // arduino to OSD data - contribution from MIS
       serialize8('O');
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
@@ -227,15 +201,31 @@ void SerialEnd(uint8_t port) {
   }
 }
 
+#define SERIAL_RX_BUFFER_SIZE 64
+
+#if defined(PROMINI) 
+  uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][1];
+  volatile uint8_t serialHeadRX[1],serialTailRX[1];
+#endif
+#if defined(PROMICRO)
+  uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][2];
+  volatile uint8_t serialHeadRX[2],serialTailRX[2];
+  uint8_t usb_use_buf = 0;
+#endif
+#if defined(MEGA)
+  uint8_t serialBufferRX[SERIAL_RX_BUFFER_SIZE][4];
+  volatile uint8_t serialHeadRX[4],serialTailRX[4];
+#endif
+
 #if defined(PROMINI) && !(defined(SPEKTRUM))
-SIGNAL(USART_RX_vect){
+ISR(USART_RX_vect){
   uint8_t d = UDR0;
   uint8_t i = (serialHeadRX[0] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = d; serialHeadRX[0] = i;}
 }
 #endif
 #if defined(MEGA)
-SIGNAL(USART0_RX_vect){
+ISR(USART0_RX_vect){
   uint8_t d = UDR0;
   uint8_t i = (serialHeadRX[0] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = d; serialHeadRX[0] = i;}
@@ -243,7 +233,7 @@ SIGNAL(USART0_RX_vect){
 #endif
 #if defined(MEGA) || defined(PROMICRO)
   #if !(defined(SPEKTRUM))
-  SIGNAL(USART1_RX_vect){
+  ISR(USART1_RX_vect){
     uint8_t d = UDR1;
     uint8_t i = (serialHeadRX[1] + 1) % SERIAL_RX_BUFFER_SIZE;
     if (i != serialTailRX[1]) {serialBufferRX[serialHeadRX[1]][1] = d; serialHeadRX[1] = i;}
@@ -251,12 +241,12 @@ SIGNAL(USART0_RX_vect){
   #endif
 #endif
 #if defined(MEGA)
-SIGNAL(USART2_RX_vect){
+ISR(USART2_RX_vect){
   uint8_t d = UDR2;
   uint8_t i = (serialHeadRX[2] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[2]) {serialBufferRX[serialHeadRX[2]][2] = d; serialHeadRX[2] = i;}
 }
-SIGNAL(USART3_RX_vect){
+ISR(USART3_RX_vect){
   uint8_t d = UDR3;
   uint8_t i = (serialHeadRX[3] + 1) % SERIAL_RX_BUFFER_SIZE;
   if (i != serialTailRX[3]) {serialBufferRX[serialHeadRX[3]][3] = d; serialHeadRX[3] = i;}
