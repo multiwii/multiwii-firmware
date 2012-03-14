@@ -258,7 +258,7 @@
    After FAILSAVE_DELAY time of pulse absence, the level mode is on (if ACC or nunchuk is avaliable), PITCH, ROLL and YAW is centered
    and THROTTLE is set to FAILSAVE_THR0TTLE value. You must set this value to descending about 1m/s or so for best results. 
    This value is depended from your configuration, AUW and some other params. 
-   Next, after FAILSAVE_OFF_DELAY the copter is disarmed, and motors is stopped.
+   Next, after FAILSAVE_OFF_DELAY the copter is disarmed and motors are stopped.
    If RC pulse coming back before reached FAILSAVE_OFF_DELAY time, after the small quard time the RC control is returned to normal.
    If you use serial sum PPM, the sum converter must completly turn off the PPM SUM pusles for this FailSafe functionality.*/
 #define FAILSAFE                                  // Alex: comment this line if you want to deactivate the failsafe function
