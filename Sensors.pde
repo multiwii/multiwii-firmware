@@ -930,14 +930,18 @@ void Mag_getADC() {
   t = currentTime + 100000;
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   Device_Mag_getADC();
-  if (calibratingM == 1) {
-    tCal = t;
-    for(axis=0;axis<3;axis++) {magZero[axis] = 0;magZeroTempMin[axis] = 0; magZeroTempMax[axis] = 0;}
-    calibratingM = 0;
-  }
   magADC[ROLL]  = magADC[ROLL]  * magCal[ROLL];
   magADC[PITCH] = magADC[PITCH] * magCal[PITCH];
   magADC[YAW]   = magADC[YAW]   * magCal[YAW];
+  if (calibratingM == 1) {
+    tCal = t;
+    for(axis=0;axis<3;axis++) {
+      magZero[axis] = 0;
+      magZeroTempMin[axis] = magADC[axis];
+      magZeroTempMax[axis] = magADC[axis];
+    }
+    calibratingM = 0;
+  }
   if (magInit) { // we apply offset only once mag calibration is done
     magADC[ROLL]  -= magZero[ROLL];
     magADC[PITCH] -= magZero[PITCH];
@@ -959,6 +963,38 @@ void Mag_getADC() {
     }
   }
 }
+#endif
+
+// ************************************************************************************************************
+// I2C Compass MAG3110
+// ************************************************************************************************************
+// I2C adress: 0x1C (8bit)   0x0E (7bit)
+// ************************************************************************************************************
+#if defined(MAG3110)
+  #define MAG_ADDRESS 0x1C
+  #define MAG_DATA_REGISTER 0x01
+  #define MAG_CTRL_REG1 0x10
+  #define MAG_CTRL_REG2 0x11
+  
+  void Mag_init() {
+    delay(100);
+    i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG2,0x80);  //Automatic Magnetic Sensor Reset
+    delay(100);
+    i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG1,0x12);  //Trigger immediate with 20 Hz (64 samples) and then return to standby mode
+    delay(100);
+    magInit = 1;
+  }
+  
+  #if not defined(MPU6050_EN_I2C_BYPASS)
+    void Device_Mag_getADC() {
+      i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
+      MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,          
+                       ((rawADC[2]<<8) | rawADC[3]) ,     
+                       ((rawADC[4]<<8) | rawADC[5]) );
+      //Start a new meassurement
+      i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG1,0x12);  //Trigger immediate with 20 Hz (64 samples) and then return to standby mode
+    }
+  #endif
 #endif
 
 // ************************************************************************************************************

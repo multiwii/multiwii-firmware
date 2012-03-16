@@ -18,7 +18,7 @@ void GPS_NewData() {
        }
        if (_i2c_gps_status & I2C_GPS_STATUS_NEW_DATA) {                               //Check about new data
           if (GPS_update) { GPS_update = 0;} else { GPS_update = 1;}                  //Fancy flash on GUI :D
-          //Read GPS data for distance and heading
+          //Read GPS data for distance, heading and gps position 
           i2c_rep_start(I2C_GPS_ADDRESS);
           i2c_write(I2C_GPS_DISTANCE);                                                //Start read from here 2x2 bytes distance and direction
           i2c_rep_start(I2C_GPS_ADDRESS+1);
@@ -26,6 +26,26 @@ void GPS_NewData() {
           *varptr++ = i2c_readAck();
           *varptr   = i2c_readAck();
           varptr = (uint8_t *)&GPS_directionToHome;
+          *varptr++ = i2c_readAck();
+          *varptr   = i2c_readAck();
+          varptr = (uint8_t *)&GPS_latitude;		// for OSD latitude displaying
+          *varptr++ = i2c_readAck();
+          *varptr++ = i2c_readAck();
+          *varptr++ = i2c_readAck();
+          *varptr   = i2c_readAck();
+          varptr = (uint8_t *)&GPS_longitude;		// for OSD longitude displaying
+          *varptr++ = i2c_readAck();
+          *varptr++ = i2c_readAck();
+          *varptr++ = i2c_readAck();
+          *varptr   = i2c_readNak();
+
+          i2c_rep_start(I2C_GPS_ADDRESS);
+          i2c_write(I2C_GPS_GROUND_SPEED);          //Start read from here 2x2 bytes speed and altitude
+          i2c_rep_start(I2C_GPS_ADDRESS+1);
+          varptr = (uint8_t *)&GPS_speed;			// speed in cm/s for OSD
+          *varptr++ = i2c_readAck();
+          *varptr   = i2c_readAck();
+          varptr = (uint8_t *)&GPS_altitude;       // altitude in meters for OSD
           *varptr++ = i2c_readAck();
           *varptr   = i2c_readNak();
         }
@@ -60,6 +80,23 @@ void GPS_NewData() {
       }
     }
   #endif
+
+  #if defined(GPS_FROM_OSD)
+    if(GPS_update) {
+      if (GPS_fix  && GPS_numSat > 3) {
+        if (GPS_fix_home == 0) {
+          GPS_fix_home = 1;
+          GPS_latitude_home  = GPS_latitude;
+          GPS_longitude_home = GPS_longitude;
+        }
+        if (GPSModeHold == 1)
+          GPS_distance(GPS_latitude_hold,GPS_longitude_hold,GPS_latitude,GPS_longitude, &GPS_distanceToHold, &GPS_directionToHold);
+        else
+          GPS_distance(GPS_latitude_home,GPS_longitude_home,GPS_latitude,GPS_longitude, &GPS_distanceToHome, &GPS_directionToHome);
+        }
+        GPS_update = 0;
+    }
+  #endif
 }
 
 /* this is an equirectangular approximation to calculate distance and bearing between 2 GPS points (lat/long)
@@ -74,6 +111,8 @@ void GPS_distance(int32_t lat1, int32_t lon1, int32_t lat2, int32_t lon2, uint16
   *dist = 6372795 / 100000.0 * PI/180*(sqrt(sq(dLat) + sq(dLon)));
   *bearing = 180/PI*(atan2(dLon,dLat));
 }
+
+#if defined(GPS_SERIAL)
 
 /* The latitude or longitude is coded this way in NMEA frames
   dm.m   coded as degrees + minutes + minute decimal
@@ -101,6 +140,28 @@ uint32_t GPS_coord_to_degrees(char* s) {
   return sec ;
 }
 
+// helper functions 
+uint16_t grab_fields(char* src, uint8_t mult) {  // convert string to uint16
+  uint8_t i;
+  uint16_t tmp = 0;
+  for(i=0; src[i]!=0; i++) {
+    if(src[i] == '.') {
+      i++;
+      if(mult==0)   break;
+      else  src[i+mult] = 0;
+    }
+    tmp *= 10;
+    if(src[i] >='0' && src[i] <='9')	tmp += src[i]-'0';
+  }
+  return tmp;
+}
+
+uint8_t hex_c(uint8_t n) {		// convert '0'..'9','A'..'F' to 0..15
+  n -= '0';
+  if(n>9)  n -= 7;
+  n &= 0x0F;
+  return n;
+} 
 
 /* This is a light implementation of a GPS frame decoding
    This should work with most of modern GPS devices configured to output NMEA frames.
@@ -110,34 +171,46 @@ uint32_t GPS_coord_to_degrees(char* s) {
      - longitude
      - GPS fix is/is not ok
      - GPS num sat (4 is enough to be +/- reliable)
+     // added by Mis
+     - GPS altitude (for OSD displaying)
+     - GPS speed (for OSD displaying)
 */
+#define FRAME_GGA  1
+#define FRAME_RMC  2
+
 bool GPS_newFrame(char c) {
   uint8_t frameOK = 0;
   static uint8_t param = 0, offset = 0, parity = 0;
   static char string[15];
-  static uint8_t checksum_param, GPGGA_frame = 0;
+  static uint8_t checksum_param, frame = 0;
 
   if (c == '$') {
     param = 0; offset = 0; parity = 0;
   } else if (c == ',' || c == '*') {
     string[offset] = 0;
     if (param == 0) { //frame identification
-      if (string[0] == 'G' && string[1] == 'P' && string[2] == 'G' && string[3] == 'G' && string[4] == 'A') GPGGA_frame = 1;
-      else GPGGA_frame = 0;
-    } else if (GPGGA_frame == 1) {
+      frame = 0;
+      if (string[0] == 'G' && string[1] == 'P' && string[2] == 'G' && string[3] == 'G' && string[4] == 'A') frame = FRAME_GGA;
+      if (string[0] == 'G' && string[1] == 'P' && string[2] == 'R' && string[3] == 'M' && string[4] == 'C') frame = FRAME_RMC;
+    } else if (frame == FRAME_GGA) {
       if      (param == 2)                     {GPS_latitude = GPS_coord_to_degrees(string);}
       else if (param == 3 && string[0] == 'S') GPS_latitude = -GPS_latitude;
       else if (param == 4)                     {GPS_longitude = GPS_coord_to_degrees(string);}
       else if (param == 5 && string[0] == 'W') GPS_longitude = -GPS_longitude;
       else if (param == 6)                     {GPS_fix = string[0]  > '0' ;}
-      else if (param == 7)                     {if (offset>1) GPS_numSat = (string[0]-'0') * 10 + string[1]-'0'; else GPS_numSat = string[0]-'0';}
+      else if (param == 7)                     {GPS_numSat = grab_fields(string,0);}
+      else if (param == 9)                     {GPS_altitude = grab_fields(string,0);}	// altitude in meters added by Mis
+    } else if (frame == FRAME_RMC) {
+      if      (param == 7)                     {GPS_speed = ((uint32_t)grab_fields(string,1)*514444L)/100000L;}	// speed in cm/s added by Mis
     }
     param++; offset = 0;
     if (c == '*') checksum_param=1;
     else parity ^= c;
   } else if (c == '\r' || c == '\n') {
     if (checksum_param) { //parity checksum
-      uint8_t checksum = 16 * ((string[0]>='A') ? string[0] - 'A'+10: string[0] - '0') + ((string[1]>='A') ? string[1] - 'A'+10: string[1]-'0');
+      uint8_t checksum = hex_c(string[0]);
+      checksum <<= 4;
+      checksum += hex_c(string[1]);
       if (checksum == parity) frameOK = 1;
     }
     checksum_param=0;
@@ -145,6 +218,8 @@ bool GPS_newFrame(char c) {
      if (offset < 15) string[offset++] = c;
      if (!checksum_param) parity ^= c;
   }
-  return frameOK && GPGGA_frame;
+  return frameOK && (frame==FRAME_GGA);
 }
+
+#endif
 #endif

@@ -75,6 +75,12 @@
    http://code.google.com/p/i2c-gps-nav/ */
 //#define I2C_GPS
 
+/* GPS data readed from Misio-OSD  ( EXPERIMENTAL )
+   If we have Misio-OSD with GPS module connected to OSD we can use this GPS for navigation purpose. 
+   Working with OSD firmware v0.66 or newer.
+   contribution from Mis */
+//#define GPS_FROM_OSD
+
 /* Pseudo-derivative conrtroller for level mode (experimental)
    Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
 //#define LEVEL_PDF
@@ -150,6 +156,7 @@
 //#define HMC5843
 //#define HMC5883
 //#define AK8975
+//#define MAG3110
 
 /* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
 //#define ADCACC
