@@ -1,3 +1,20 @@
+// 256 RX buffer is needed for GPS communication (64 or 128 was too short)
+// it avoids also modulo operations
+
+#if defined(PROMINI) 
+  uint8_t serialBufferRX[256][1];
+  volatile uint8_t serialHeadRX[1],serialTailRX[1];
+#endif
+#if defined(PROMICRO)
+  uint8_t serialBufferRX[256][2];
+  volatile uint8_t serialHeadRX[2],serialTailRX[2];
+  uint8_t usb_use_buf = 0;
+#endif
+#if defined(MEGA)
+  uint8_t serialBufferRX[256][4];
+  volatile uint8_t serialHeadRX[4],serialTailRX[4];
+#endif
+
 void serialCom() {
   uint8_t i, sr;
   #if defined(GPS_FROM_OSD)
@@ -233,23 +250,6 @@ void SerialEnd(uint8_t port) {
     #endif
   }
 }
-
-// 256 RX buffer is needed for GPS communication (64 or 128 was too short)
-// it avoids also modulo operations
-
-#if defined(PROMINI) 
-  uint8_t serialBufferRX[256][1];
-  volatile uint8_t serialHeadRX[1],serialTailRX[1];
-#endif
-#if defined(PROMICRO)
-  uint8_t serialBufferRX[256][2];
-  volatile uint8_t serialHeadRX[2],serialTailRX[2];
-  uint8_t usb_use_buf = 0;
-#endif
-#if defined(MEGA)
-  uint8_t serialBufferRX[256][4];
-  volatile uint8_t serialHeadRX[4],serialTailRX[4];
-#endif
 
 #if defined(PROMINI) && !(defined(SPEKTRUM))
 ISR(USART_RX_vect){

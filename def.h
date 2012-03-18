@@ -27,13 +27,13 @@
     #define POWERPIN_PINMODE           pinMode (12, OUTPUT);
     #define POWERPIN_ON                PORTB |= 1<<4;
     #define POWERPIN_OFF               PORTB &= ~(1<<4); //switch OFF WMP, digital PIN 12
-    #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5;   // PIN A4&A5 (SDA&SCL)
   #else
     #define POWERPIN_PINMODE           ;
     #define POWERPIN_ON                ;
     #define POWERPIN_OFF               ;
     #define RCAUXPIN
   #endif
+  #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5;   // PIN A4&A5 (SDA&SCL)
   #define I2C_PULLUPS_DISABLE        PORTC &= ~(1<<4); PORTC &= ~(1<<5);
   #define PINMODE_LCD                pinMode(0, OUTPUT);
   #define LCDPIN_OFF                 PORTD &= ~1; //switch OFF digital PIN 0
@@ -590,7 +590,7 @@
   #define ACC 0
 #endif
 
-#if defined(HMC5883) || defined(HMC5843) || defined(AK8975)
+#if defined(HMC5883) || defined(HMC5843) || defined(AK8975) || defined(MAG3110)
   #define MAG 1
 #else
   #define MAG 0
