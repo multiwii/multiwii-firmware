@@ -207,7 +207,12 @@ void initLCD() {
     i2c_LCD03_init();
   #endif
   LCDclear();
-  strcpy_P(line1,PSTR("MultiWii V2.0")); LCDsetLine(1);   LCDprintChar(line1);
+  strcpy_P(line1,PSTR("MultiWii V-.--")); 
+//                     0123456789.123456
+  line1[10] = digit100(VERSION);
+  line1[12] = digit10(VERSION);
+  line1[13] = digit1(VERSION);
+  LCDsetLine(1);   LCDprintChar(line1);
   #if defined(LCD_TEXTSTAR) || defined(LCD_VT100)
     delay(2500);
     LCDclear();
