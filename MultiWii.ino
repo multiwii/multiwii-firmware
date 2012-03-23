@@ -179,7 +179,7 @@ static uint8_t  GPS_numSat;
 static uint16_t GPS_distanceToHome,GPS_distanceToHold;   // distance to home or hold point in meters
 static int16_t  GPS_directionToHome,GPS_directionToHold; // direction to home or hol point in degrees
 static uint8_t  GPS_update = 0;                          // it's a binary toogle to distinct a GPS position update
-static int16_t  GPS_angle[2];                            // it's the angles that must be applied for GPS correction
+static int16_t  GPS_angle[2] = { 0, 0};            // it's the angles that must be applied for GPS correction
 
 uint16_t GPS_ground_speed = 0;     // m/sec*100
 uint16_t GPS_ground_course = 0;    //degrees *10
