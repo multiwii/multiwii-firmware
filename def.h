@@ -396,6 +396,10 @@
   #endif
 #endif
 
+#if defined(FREEIMUv043)
+ #define FREEIMUv04
+#endif
+
 #if defined(FREEIMUv04)
   #define MPU6050
   #define HMC5883

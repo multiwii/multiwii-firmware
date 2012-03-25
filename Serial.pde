@@ -70,6 +70,7 @@ void serialCom() {
     #endif // LCD_TELEMETRY
     case 'M': // Multiwii @ arduino to GUI all data
       serialize8('M');
+      //delay(10);
       serialize8(VERSION);
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
       for(i=0;i<3;i++) serialize16(gyroData[i]);
@@ -198,20 +199,32 @@ void serialCom() {
 // *******************************************************
 static uint8_t headTX,tailTX;
 static uint8_t bufTX[256];      // 256 is choosen to avoid modulo operations on 8 bits pointers
-void serialize16(int16_t a) {bufTX[headTX++]  = a; bufTX[headTX++]  = a>>8&0xff;}
-void serialize8(uint8_t a)  {bufTX[headTX++]  = a;}
+void serialize16(int16_t a) {
+  bufTX[headTX++]  = a;
+  bufTX[headTX++]  = a>>8&0xff;
+  #if !defined(PROMICRO)
+    UCSR0B |= (1<<UDRIE0);      // in case ISR_UART desactivates the interrupt, we force its reactivation anyway
+  #endif 
+}
+void serialize8(uint8_t a)  {
+  bufTX[headTX++]  = a;
+  #if !defined(PROMICRO)
+    UCSR0B |= (1<<UDRIE0);
+  #endif
+}
 
 #if !defined(PROMICRO)
   ISR_UART {
-    UDR0 = bufTX[tailTX++];         // Transmit next byte in the ring
+    if( headTX != tailTX )
+      UDR0 = bufTX[tailTX++];       // Transmit next byte in the ring
     if ( tailTX == headTX )         // Check if all data is transmitted
       UCSR0B &= ~(1<<UDRIE0);       // Disable transmitter UDRE interrupt
   }
 #endif
 
-void UartSendData() {         // Data transmission acivated when the ring is not empty
+void UartSendData() {               // Data transmission acivated when the ring is not empty
   #if !defined(PROMICRO)
-    UCSR0B |= (1<<UDRIE0);      // Enable transmitter UDRE interrupt
+    UCSR0B |= (1<<UDRIE0);          // Enable transmitter UDRE interrupt
   #else
     USB_Send(USB_CDC_TX,bufTX,headTX);
     headTX = 0;

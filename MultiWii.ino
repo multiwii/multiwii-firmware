@@ -1,7 +1,7 @@
 /*
 MultiWiiCopter by Alexandre Dubus
 www.multiwii.com
-March  2012     V2.0_pre_version_3
+March  2012     V2.0
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -11,7 +11,7 @@ March  2012     V2.0_pre_version_3
 #include "config.h"
 #include "def.h"
 #include <avr/pgmspace.h>
-#define  VERSION  203
+#define  VERSION  20
 
 /*********** RC alias *****************/
 #define ROLL       0
