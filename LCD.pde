@@ -181,6 +181,34 @@ void LCDsetLine(byte line) {  // Line = 1 or 2 - vt100 has lines 1-99
     i2c_LCD03_set_cursor(0,line-1);
   #endif
 }
+#if defined(LCD_VT100)
+void LCDattributesBold() { LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("1m"); }
+void LCDattributesReverse() { LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("7m"); }
+void LCDattributesOff() { LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("0m"); }
+#else
+void LCDattributesBold() {}
+void LCDattributesReverse() {}
+void LCDattributesOff() {}
+#endif
+#define LCD_FLUSH {/*UartSendData();*/ delayMicroseconds(20000); }
+
+void   lcdprint_int16(int16_t v) {
+  uint16_t unit;
+  char line1[7] = "      ";
+  if (v < 0 ) {
+          unit = -v;
+          line1[0] = '-';
+  } else {
+          unit = v;
+          line1[0] = ' ';
+  }
+  line1[1] = digit10000(unit);
+  line1[2] = digit1000(unit);
+  line1[3] = digit100(unit);
+  line1[4] = digit10(unit);
+  line1[5] = digit1(unit);
+  LCDprintChar(line1);
+}
 
 void initLCD() {
   blinkLED(20,30,1);
@@ -538,6 +566,53 @@ static uint8_t lcdStickState[3];
 #define LCD_MENU_NEXT 'c'
 #define LCD_VALUE_UP 'd'
 #define LCD_VALUE_DOWN 'b'
+/* ------------ DISPLAY_2LINES ------------------------------------*/
+#ifdef DISPLAY_2LINES
+void ConfigRefresh(uint8_t p) {
+  blinkLED(10,20,1);
+  strcpy_P(line1,PSTR("                "));
+  strcpy(line2,line1);
+  strcpy_P(line1, (char*)pgm_read_word(&(lcd_param_ptr_table[p * 3])));
+  lcd_param_def_t* deft = (lcd_param_def_t*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 2]));
+  deft->type->fmt((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), deft->multiplier, deft->decimal);
+  LCDclear();
+  LCDsetLine(1);LCDprintChar(line1); //refresh line 1 of LCD
+  LCDsetLine(2);LCDprintChar(line2); //refresh line 2 of LCD
+}
+#endif // DISPLAY_2LINES
+/* ------------ DISPLAY_MULTILINE ---------------------------------*/
+#ifdef DISPLAY_MULTILINE
+// display slice of config items prior and after current item (index p)
+void ConfigRefresh(uint8_t p) {
+  uint8_t j, l = 1;
+  int8_t pp = (int8_t)p;
+  blinkLED(10,20,1);
+  LCDclear();
+  for (int8_t i=pp-6; i<pp+9; i++) {
+      //j = i % (1+PARAMMAX); // why does modulo not work here?
+      j = (i<0 ? i + 1 + PARAMMAX : i);
+      if (j > PARAMMAX) j -= (1 + PARAMMAX);
+      strcpy_P(line1,PSTR("                "));
+      strcpy(line2,line1);
+      strcpy_P(line1, (char*)pgm_read_word(&(lcd_param_ptr_table[j * 3])));
+      lcd_param_def_t* deft = (lcd_param_def_t*)pgm_read_word(&(lcd_param_ptr_table[(j * 3) + 2]));
+      deft->type->fmt((void*)pgm_read_word(&(lcd_param_ptr_table[(j * 3) + 1])), deft->multiplier, deft->decimal);
+
+      if (j == p) {LCDprint('>'); }
+      LCDsetLine(l++);
+      if (j == p) {LCDattributesBold(); }
+      LCDprintChar(line1);
+      if (j == p) {LCDattributesOff(); LCDattributesReverse(); }
+      LCDprint(' ');
+      LCDprintChar(line2);
+      if (j == p) {LCDattributesOff(); LCDprint('<'); }
+      LCDcrlf();
+      LCD_FLUSH;
+  }
+  LCDcrlf();
+}
+#endif // DISPLAY_MULTILINE
+
 
 void configurationLoop() {
   uint8_t i, p;
@@ -547,18 +622,10 @@ void configurationLoop() {
   initLCD(); 
   p = 0;
   while (LCD == 1) {
-    if (refreshLCD) {
-      blinkLED(10,20,1);
-      strcpy_P(line1,PSTR("                "));
-      strcpy(line2,line1);
-      strcpy_P(line1, (char*)pgm_read_word(&(lcd_param_ptr_table[p * 3])));
-      lcd_param_def_t* deft = (lcd_param_def_t*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 2]));
-      deft->type->fmt((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), deft->multiplier, deft->decimal);
-      LCDclear();
-      LCDsetLine(1);LCDprintChar(line1); //refresh line 1 of LCD
-      LCDsetLine(2);LCDprintChar(line2); //refresh line 2 of LCD
-      refreshLCD = 0;
-    }
+      if (refreshLCD) {
+          ConfigRefresh(p);
+          refreshLCD = 0;
+      }
 
     #if defined(LCD_TEXTSTAR) || defined(LCD_VT100) // textstar or vt100 can send keys
       key = ( SerialAvailable(0) ?  SerialRead(0) : 0 );
@@ -621,8 +688,8 @@ void configurationLoop() {
 
   // LCDbar(n,v) : draw a bar graph - n number of chars for width, v value in % to display
 void LCDbar(uint8_t n,uint8_t v) {
-  if (v > 100) v = 100;
-  else if (v < 0) v = 0;
+  if (v > 200) v = 0;
+  else if (v > 100) v = 100;
   #if defined(LCD_SERIAL3W)
     for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
   #elif defined(LCD_TEXTSTAR)
@@ -769,8 +836,8 @@ void output_checkboxitems() {
   }
 }
 
-#define GYROLIMIT 30 // threshold: for larger values replace bar with dots
-#define ACCLIMIT 40 // threshold: for larger values replace bar with dots
+#define GYROLIMIT 60 // threshold: for larger values replace bar with dots
+#define ACCLIMIT 60 // threshold: for larger values replace bar with dots
 void outputSensor(uint8_t num, int16_t data, int16_t limit) {
         if (data < -limit) { LCDprintChar("<<<"); }
         else if (data > limit) { LCDprintChar(">>>>"); }
