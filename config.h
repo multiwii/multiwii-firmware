@@ -23,15 +23,8 @@
 //#define OCTOFLATP
 //#define OCTOFLATX
 //#define FLYING_WING
-//#define VTAIL4      //experimental The mix is a modified Y4 Mix.
-
-//***********************************************************************************************//
-//******************************* !!!!  MuliWii Airplane   !!!! *********************************//
-//***********************************************************************************************//
-//#define AIRPLANE       // PatrikE Experimental. Howto setup =>>>http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
-//#define D12_POWER    // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12 
-#define NUM_MOTRORS 0  // Only for use with 490Hz ESC's on Airplane & Heli
-//*************************************************************************************************//
+//#define VTAIL4
+//#define AIRPLANE     // PatrikE Experimental. Howto setup =>>>http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
 
 #define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
 //#define YAW_DIRECTION -1
@@ -69,39 +62,6 @@
 //#define RCAUXPIN12
 //#define RCOPTIONSBEEP        //uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
 
-
-
-/* Settings for ProMicro, Leonardo and other Atmega32u4 Boards (BETA) */
-
-// activate this for a better pinlayout if all pins can be used => not possible on ProMicro!
-//#define A32U4ALLPINS
-
-// activate all 6 hardware PWM outputs Motor 5 = D11 and 6 = D13. => not possible on ProMicro! (untested!) 
-// if activated: 
-// Motor 1-6 = 10-bit hardware PWM
-// Motor 7-8 = 8-bit Software PWM
-// Servos    = 8-bit Software PWM
-// if deactivated:
-// Motor 1-4 = 10-bit hardware PWM
-// Motor 5-8 = 10-bit Software PWM
-// Servos    = 10-bit Software PWM
-//#define HWPWM6
-
-// aux2 pin on pin RXO 
-//#define RCAUX2PINRXO
-
-// aux2 pin on pin D17 (RXLED)
-//#define RCAUX2PIND17
-
-// this moves the Buzzer pin from TXO to D8 for use with ppm sum or spectrum sat. RX (not needed if A32U4ALLPINS is active)
-//#define D8BUZZER
-
-// Inverted status LED for Promicro ver 10.
-//#define PROMICRO10
-
-/* end of Settings for ProMicro, Leonardo and other Atmega32u4 Boards */
-
-
 /* GPS using a SERIAL port
    only available on MEGA boards (this might be possible on 328 based boards in the future)
    if enabled, define here the Arduino Serial port number and the UART speed
@@ -117,6 +77,12 @@
    http://code.google.com/p/i2c-gps-nav/ */
 //#define I2C_GPS
 
+/* GPS data readed from Misio-OSD  ( EXPERIMENTAL )
+   If we have Misio-OSD with GPS module connected to OSD we can use this GPS for navigation purpose. 
+   Working with OSD firmware v0.66 or newer.
+   contribution from Mis */
+//#define GPS_FROM_OSD
+
 /* Pseudo-derivative conrtroller for level mode (experimental)
    Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
 //#define LEVEL_PDF
@@ -124,6 +90,15 @@
 /* introduce a deadband around the stick center
    Must be greater than zero, comment if you dont want a deadband on roll, pitch and yaw */
 //#define DEADBAND 6
+
+/* interleaving delay in micro seconds between 2 readings WMP/NK in a WMP+NK config
+   if the ACC calibration time is very long (20 or 30s), try to increase this delay up to 4000
+   it is relevent only for a conf with NK */
+#define INTERLEAVING_DELAY 3000
+
+/* when there is an error on I2C bus, we neutralize the values during a short time. expressed in microseconds
+   it is relevent only for a conf with at least a WMP */
+#define NEUTRALIZE_DELAY 100000
 
 /********************************************************************/
 /****           boards and sensor definitions                    ****/
@@ -141,6 +116,7 @@
 //#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
 //#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
 //#define FREEIMUv04      // FreeIMU v0.4 with MPU6050, HMC5883L, MS561101BA                  <- confirmed by Alex
+//#define FREEIMUv043     // same as FREEIMUv04 with final MPU6050 (with the right ACC scale)
 //#define PIPO            // 9DOF board from erazz
 //#define QUADRINO        // full FC board 9DOF+baro board from witespy  with BMP085 baro     <- confirmed by Alex
 //#define QUADRINO_ZOOM   // full FC board 9DOF+baro board from witespy  second edition       <- confirmed by Alex
@@ -150,10 +126,12 @@
 //#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
 //#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
 //#define MINIWII         // Jussi's MiniWii Flight Controller
-//#define CITRUSv1_0      // CITRUSv1 from qcrc.ca
-//#define DROTEK_IMU10DOF
-//#define DROTEK_IMU10DOF_MS
-//#define DROTEK_IMU6DOFv2
+//#define CITRUSv2_1      // CITRUS from qcrc.ca
+//#define CHERRY6DOFv1_0
+//#define DROTEK_10DOF    // Drotek 10DOF with ITG3200, BMA180, HMC5883, BMP085, w or w/o LLC
+//#define DROTEK_10DOF_MS // Drotek 10DOF with ITG3200, BMA180, HMC5883, MS5611, LLC
+//#define DROTEK_6DOFv2   // Drotek 6DOF v2
+//#define DROTEK_6DOF_MPU // Drotek 6DOF with MPU6050
 //#define MONGOOSE1_0     // mongoose 1.0    http://store.ckdevices.com/
 //#define CRIUS_LITE      // Crius MultiWii Lite
 //#define CRIUS_SE        // Crius MultiWii SE
@@ -181,6 +159,7 @@
 //#define HMC5843
 //#define HMC5883
 //#define AK8975
+//#define MAG3110
 
 /* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
 //#define ADCACC
@@ -221,6 +200,36 @@
 //#define MMSERVOGIMBAL                  // Active Output Moving Average Function for Servos Gimbal
 //#define MMSERVOGIMBALVECTORLENGHT 32   // Lenght of Moving Average Vector
 
+/*--------------------------------------------------------------------*/
+/* Settings for ProMicro, Leonardo and other Atmega32u4 Boards (BETA) */
+  // activate this for a better pinlayout if all pins can be used => not possible on ProMicro!
+  //#define A32U4ALLPINS
+
+  // activate all 6 hardware PWM outputs Motor 5 = D11 and 6 = D13. => not possible on ProMicro! (untested!) 
+  // if activated: 
+  // Motor 1-6 = 10-bit hardware PWM
+  // Motor 7-8 = 8-bit Software PWM
+  // Servos    = 8-bit Software PWM
+  // if deactivated:
+  // Motor 1-4 = 10-bit hardware PWM
+  // Motor 5-8 = 10-bit Software PWM
+  // Servos    = 10-bit Software PWM
+  //#define HWPWM6
+
+  // aux2 pin on pin RXO 
+  //#define RCAUX2PINRXO
+
+  // aux2 pin on pin D17 (RXLED)
+  //#define RCAUX2PIND17
+
+  // this moves the Buzzer pin from TXO to D8 for use with ppm sum or spectrum sat. RX (not needed if A32U4ALLPINS is active)
+  //#define D8BUZZER
+
+  // Inverted status LED for Promicro ver 10.
+  //#define PROMICRO10
+/* end of Settings for ProMicro, Leonardo and other Atmega32u4 Boards */
+/*--------------------------------------------------------------------*/
+
 /********************************************************************/
 /****           special receiver types                           ****/
 /********************************************************************/
@@ -258,7 +267,7 @@
    After FAILSAVE_DELAY time of pulse absence, the level mode is on (if ACC or nunchuk is avaliable), PITCH, ROLL and YAW is centered
    and THROTTLE is set to FAILSAVE_THR0TTLE value. You must set this value to descending about 1m/s or so for best results. 
    This value is depended from your configuration, AUW and some other params. 
-   Next, after FAILSAVE_OFF_DELAY the copter is disarmed and motors are stopped.
+   Next, afrer FAILSAVE_OFF_DELAY the copter is disarmed, and motors is stopped.
    If RC pulse coming back before reached FAILSAVE_OFF_DELAY time, after the small quard time the RC control is returned to normal.
    If you use serial sum PPM, the sum converter must completly turn off the PPM SUM pusles for this FailSafe functionality.*/
 #define FAILSAFE                                  // Alex: comment this line if you want to deactivate the failsafe function
@@ -273,50 +282,13 @@
   As with the SPEKTRUM option, is not possible to use the configuration tool on a mini or promini. */
 //#define BTSERIAL
 
-/* The following lines apply only for a pitch/roll tilt stabilization system
-   Uncomment the first line to activate it */
-//#define SERVO_TILT
-#define TILT_PITCH_MIN    1020    //servo travel min, don't set it below 1020
-#define TILT_PITCH_MAX    2000    //servo travel max, max value=2000
-#define TILT_PITCH_MIDDLE 1500    //servo neutral value
-#define TILT_PITCH_PROP   10      //servo proportional (tied to angle) ; can be negative to invert movement
-#define TILT_ROLL_MIN     1020
-#define TILT_ROLL_MAX     2000
-#define TILT_ROLL_MIDDLE  1500
-#define TILT_ROLL_PROP    10
-
-/* interleaving delay in micro seconds between 2 readings WMP/NK in a WMP+NK config
-   if the ACC calibration time is very long (20 or 30s), try to increase this delay up to 4000
-   it is relevent only for a conf with NK */
-#define INTERLEAVING_DELAY 3000
-
-/* for V BAT monitoring
-   after the resistor divisor we should get [0V;5V]->[0;1023] on analog V_BATPIN
-   with R1=33k and R2=51k
-   vbat = [0;1023]*16/VBATSCALE */
-#define VBAT              // comment this line to suppress the vbat code
-#define VBATSCALE     131 // change this value if readed Battery voltage is different than real voltage
-#define VBATLEVEL1_3S 107 // 10,7V
-#define VBATLEVEL2_3S 103 // 10,3V
-#define VBATLEVEL3_3S 99  // 9.9V
-#define NO_VBAT       16 // Avoid beeping without any battery
-
-/* when there is an error on I2C bus, we neutralize the values during a short time. expressed in microseconds
-   it is relevent only for a conf with at least a WMP */
-#define NEUTRALIZE_DELAY 100000
-
 /* this is the value for the ESCs when they are not armed
    in some cases, this value must be lowered down to 900 for some specific ESCs */
 #define MINCOMMAND 1000
 
 /* this is the maximum value for the ESCs at full power
    this value can be increased up to 2000 */
-#if defined(AIRPLANE)
-#define MAXTHROTTLE  2000        // range must be inside [1020;2000]
-#else
 #define MAXTHROTTLE 1850
-#endif
-
 
 /* This is the speed of the serial interface. 115200 kbit/s is the best option for a USB connection.*/
 #define SERIAL_COM_SPEED 115200
@@ -337,13 +309,13 @@
 #define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
 /* serial (wired or wireless via BT etc.) */
 //#define LCD_TEXTSTAR    // Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
-//#define LCD_VT100		  // vt100 compatible terminal emulation (blueterm, putty, etc.)
+//#define LCD_VT100       // vt100 compatible terminal emulation (blueterm, putty, etc.)
 /* i2c devices */
 //#define LCD_ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
 //#define LCD_LCD03       // LCD03, which is i2c
 
 /* style of display - autodetected by LCD_ setting - only activate to overwrite defaults */
-//#define DISPLAY_2LINES
+#define DISPLAY_2LINES
 //#define DISPLAY_MULTILINE
 
 /* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
@@ -406,6 +378,18 @@
 
 /* some radios have not a neutral point centered on 1500. can be changed here */
 #define MIDRC 1500
+
+/* The following lines apply only for a pitch/roll tilt stabilization system
+   Uncomment the first line to activate it */
+//#define SERVO_TILT
+#define TILT_PITCH_MIN    1020    //servo travel min, don't set it below 1020
+#define TILT_PITCH_MAX    2000    //servo travel max, max value=2000
+#define TILT_PITCH_MIDDLE 1500    //servo neutral value
+#define TILT_PITCH_PROP   10      //servo proportional (tied to angle) ; can be negative to invert movement
+#define TILT_ROLL_MIN     1020
+#define TILT_ROLL_MAX     2000
+#define TILT_ROLL_MIDDLE  1500
+#define TILT_ROLL_PROP    10
 
 /* experimental
    camera trigger function : activated via Rc Options in the GUI, servo output=A2 on promini */
@@ -484,11 +468,20 @@
 #define PINT2mA 13 // for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
 
 
-
-
 /********************************************************************/
 /****           diagnostics                                      ****/
 /********************************************************************/
+
+/* for V BAT monitoring
+   after the resistor divisor we should get [0V;5V]->[0;1023] on analog V_BATPIN
+   with R1=33k and R2=51k
+   vbat = [0;1023]*16/VBATSCALE */
+#define VBAT              // comment this line to suppress the vbat code
+#define VBATSCALE     131 // change this value if readed Battery voltage is different than real voltage
+#define VBATLEVEL1_3S 107 // 10,7V
+#define VBATLEVEL2_3S 103 // 10,3V
+#define VBATLEVEL3_3S 99  // 9.9V
+#define NO_VBAT       16 // Avoid beeping without any battery
 
 /* to log values like max loop time and others to come */
 /* logging values are visible via LCD config */

@@ -1,7 +1,7 @@
 /*
 MultiWiiCopter by Alexandre Dubus
 www.multiwii.com
-March  2012     V2.0_pre_version_1
+March  2012     V2.0
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -11,16 +11,7 @@ March  2012     V2.0_pre_version_1
 #include "config.h"
 #include "def.h"
 #include <avr/pgmspace.h>
-#define  VERSION  201
-
-/**************************************************************************************************************
-  Servosettings Only For Airplane */
-
- uint16_t      servoMid[8] = {1500,1500,1500,1500,1500,1500,1500,1500}; // Midpoint on servo
- uint16_t   servotravel[8] = {100, 100, 100, 100, 100, 100, 100, 100};  // Rates in 0-100% 
- int8_t    servoreverse[8] = { 1,   1,   1,   -1,  1,   1,   1,   1};   // Invert servos by setting -1  
-
-/**************************************************************************************************************/
+#define  VERSION  20
 
 /*********** RC alias *****************/
 #define ROLL       0
@@ -176,14 +167,14 @@ static int32_t  GPS_latitude_home,GPS_longitude_home;
 static int32_t  GPS_latitude_hold,GPS_longitude_hold;
 static uint8_t  GPS_fix , GPS_fix_home = 0;
 static uint8_t  GPS_numSat;
-static uint16_t GPS_distanceToHome,GPS_distanceToHold;   // distance to home or hold point in meters
-static int16_t  GPS_directionToHome,GPS_directionToHold; // direction to home or hol point in degrees
-static uint8_t  GPS_update = 0;                          // it's a binary toogle to distinct a GPS position update
-static int16_t  GPS_angle[2] = { 0, 0};            // it's the angles that must be applied for GPS correction
+static uint16_t GPS_distanceToHome,GPS_distanceToHold;       // distance to home or hold point in meters
+static int16_t  GPS_directionToHome,GPS_directionToHold;     // direction to home or hol point in degrees
+static uint16_t GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s - Added by Mis
+static uint8_t  GPS_update = 0;                              // it's a binary toogle to distinct a GPS position update
+static int16_t  GPS_angle[2] = { 0, 0};                      // it's the angles that must be applied for GPS correction
 
-uint16_t GPS_ground_speed = 0;     // m/sec*100
-uint16_t GPS_ground_course = 0;    //degrees *10
-uint16_t GPS_altitude = 0;         //altitude in dm
+static uint16_t GPS_ground_course = 0;                       //degrees*10
+
 
 void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
   uint8_t i,r;
@@ -210,16 +201,22 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #ifdef VBAT
     static uint8_t vbatTimer = 0;
   #endif
-  static uint8_t  buzzerFreq;         //delay between buzzer ring
+  static uint8_t  buzzerFreq;         // delay between buzzer ring
   uint8_t axis,prop1,prop2;
   #if defined(POWERMETER_HARD)
-    uint16_t pMeterRaw;     //used for current reading
+    uint16_t pMeterRaw;               // used for current reading
   #endif
 
-  //PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
-  if      (rcData[THROTTLE]<1500) prop2 = 100;
-  else if (rcData[THROTTLE]<2000) prop2 = 100 - (uint16_t)dynThrPID*(rcData[THROTTLE]-1500)/500;
-  else                            prop2 = 100 - dynThrPID;
+  // PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
+  if   (rcData[THROTTLE]<1500) {
+    prop2 = 100;
+  } else {
+    if (rcData[THROTTLE]<2000) {
+      prop2 = 100 - (uint16_t)dynThrPID*(rcData[THROTTLE]-1500)/500;
+    } else {
+      prop2 = 100 - dynThrPID;
+    }
+  }
 
   for(axis=0;axis<3;axis++) {
     uint16_t tmp = min(abs(rcData[axis]-MIDRC),500);
@@ -232,7 +229,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       rcCommand[axis] = lookupRX[tmp2] + (tmp-tmp2*100) * (lookupRX[tmp2+1]-lookupRX[tmp2]) / 100;
       prop1 = 100-(uint16_t)rollPitchRate*tmp/500;
       prop1 = (uint16_t)prop1*prop2/100;
-    } else { //YAW
+    } else {      // YAW
       rcCommand[axis] = tmp;
       prop1 = 100-(uint16_t)yawRate*tmp/500;
     }
@@ -271,7 +268,6 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     uint16_t vbatRaw = 0;
     static uint16_t vbatRawArray[8];
     if (! (++vbatTimer % VBATFREQ)) {
-    	ADCSRA |= _BV(ADPS2) ; ADCSRA &= ~_BV(ADPS1); ADCSRA &= ~_BV(ADPS0); // this speeds up analogRead without loosing too much resolution: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1208715493/11
     	vbatRawArray[(ind++)%8] = analogRead(V_BATPIN);
     	for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
     	vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
@@ -384,6 +380,7 @@ void setup() {
   #ifdef LCD_CONF_DEBUG
     configurationLoop();
   #endif
+  ADCSRA |= _BV(ADPS2) ; ADCSRA &= ~_BV(ADPS1); ADCSRA &= ~_BV(ADPS0); // this speeds up analogRead without loosing too much resolution: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1208715493/11
 }
 
 // ******** Main Loop *********
@@ -432,13 +429,13 @@ void loop () {
       } else if (rcData[YAW] > MAXCHECK && rcData[PITCH] > MAXCHECK && armed == 0) {
         if (rcDelayCommand == 20) {
           #ifdef TRI
-          servo[5] = 1500; // we center the yaw servo in conf mode
-          writeServos();
+            servo[5] = 1500; // we center the yaw servo in conf mode
+            writeServos();
           #endif
           #ifdef FLYING_WING
-          servo[0]  = wing_left_mid;
-          servo[1]  = wing_right_mid;
-          writeServos();
+            servo[0]  = wing_left_mid;
+            servo[1]  = wing_right_mid;
+            writeServos();
           #endif
           #if defined(LCD_CONF)
             configurationLoop(); // beginning LCD configuration
@@ -449,14 +446,14 @@ void loop () {
       #if defined(InflightAccCalibration)  
         else if (armed == 0 && rcData[YAW] < MINCHECK && rcData[PITCH] > MAXCHECK && rcData[ROLL] > MAXCHECK){
           if (rcDelayCommand == 20){
-            if (AccInflightCalibrationMeasurementDone){ // trigger saving into eeprom after landing
+            if (AccInflightCalibrationMeasurementDone){                // trigger saving into eeprom after landing
               AccInflightCalibrationMeasurementDone = 0;
               AccInflightCalibrationSavetoEEProm = 1;
             }else{ 
               AccInflightCalibrationArmed = !AccInflightCalibrationArmed; 
               if (AccInflightCalibrationArmed){
                 toggleBeep = 2;
-              }else{
+              } else {
                 toggleBeep = 3;
               } 
             }
@@ -489,7 +486,7 @@ void loop () {
       } else
         rcDelayCommand = 0;
     } else if (rcData[THROTTLE] > MAXCHECK && armed == 0) {
-      if (rcData[YAW] < MINCHECK && rcData[PITCH] < MINCHECK) { // throttle=max, yaw=left, pitch=min
+      if (rcData[YAW] < MINCHECK && rcData[PITCH] < MINCHECK) {        // throttle=max, yaw=left, pitch=min
         if (rcDelayCommand == 20) calibratingA=400;
         rcDelayCommand++;
       } else if (rcData[YAW] > MAXCHECK && rcData[PITCH] < MINCHECK) { // throttle=max, yaw=right, pitch=min  
@@ -529,7 +526,7 @@ void loop () {
         InflightcalibratingA = 50;
         AccInflightCalibrationArmed = 0;  
       }  
-      if (rcOptions[BOXPASSTHRU]) { // Use the Passthru Option to activate : Passthru = TRUE Meausrement started, Land and passtrhu = 0 measurement stored
+      if (rcOptions[BOXPASSTHRU]) {      // Use the Passthru Option to activate : Passthru = TRUE Meausrement started, Land and passtrhu = 0 measurement stored
         if (!AccInflightCalibrationActive && !AccInflightCalibrationMeasurementDone){
           InflightcalibratingA = 50;
         }
@@ -555,7 +552,7 @@ void loop () {
         errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
         accMode = 1;
       }  
-    } else accMode = 0; // modified by MIS for failsave support
+    } else accMode = 0;  // modified by MIS for failsave support
 
     if (rcOptions[BOXARM] == 0) okToArm = 1;
     if (accMode == 1) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
@@ -599,7 +596,7 @@ void loop () {
     #endif
     if (rcOptions[BOXPASSTHRU]) {passThruMode = 1;}
     else passThruMode = 0;
-  } else { //not in rc loop
+  } else { // not in rc loop
     static int8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
     switch (taskOrder) {
       case 0:
@@ -643,7 +640,7 @@ void loop () {
       int16_t dif = heading - magHold;
       if (dif <= - 180) dif += 360;
       if (dif >= + 180) dif -= 360;
-      if ( smallAngle25 ) rcCommand[YAW] -= dif*P8[PIDMAG]/30; // 18 deg
+      if ( smallAngle25 ) rcCommand[YAW] -= dif*P8[PIDMAG]/30;  // 18 deg
     } else magHold = heading;
   #endif
 
@@ -655,7 +652,6 @@ void loop () {
       rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
     }
   #endif
-  
   #if GPS
     uint16_t GPS_dist;
     int16_t  GPS_dir;
@@ -682,7 +678,7 @@ void loop () {
   for(axis=0;axis<3;axis++) {
     if (accMode == 1 && axis<2 ) { //LEVEL MODE
       // 50 degrees max inclination
-      errorAngle = constrain(2*rcCommand[axis] - GPS_angle[axis],-500,+500) - angle[axis] + accTrim[axis]; // 16 bits is ok here
+      errorAngle = constrain(2*rcCommand[axis] - GPS_angle[axis],-500,+500) - angle[axis] + accTrim[axis]; //16 bits is ok here
       #ifdef LEVEL_PDF
         PTerm      = -(int32_t)angle[axis]*P8[PIDLEVEL]/100 ;
       #else  
@@ -690,7 +686,7 @@ void loop () {
       #endif
       PTerm = constrain(PTerm,-D8[PIDLEVEL]*5,+D8[PIDLEVEL]*5);
 
-      errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);    // WindUp //16 bits is ok here
+      errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);    // WindUp     //16 bits is ok here
       ITerm              = ((int32_t)errorAngleI[axis]*I8[PIDLEVEL])>>12;            // 32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
     } else { //ACRO MODE or YAW axis
       if (abs(rcCommand[axis])<350) error =          rcCommand[axis]*10*8/P8[axis] ; // 16 bits is needed for calculation: 350*10*8 = 28000      16 bits is ok for result if P8>2 (P>0.2)
@@ -699,7 +695,7 @@ void loop () {
 
       PTerm = rcCommand[axis];
       
-      errorGyroI[axis]  = constrain(errorGyroI[axis]+error,-16000,+16000);          // WindUp //16 bits is ok here
+      errorGyroI[axis]  = constrain(errorGyroI[axis]+error,-16000,+16000);          // WindUp   16 bits is ok here
       if (abs(gyroData[axis])>640) errorGyroI[axis] = 0;
       ITerm = (errorGyroI[axis]/125*I8[axis])>>6;                                   // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
     }

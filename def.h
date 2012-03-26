@@ -27,13 +27,13 @@
     #define POWERPIN_PINMODE           pinMode (12, OUTPUT);
     #define POWERPIN_ON                PORTB |= 1<<4;
     #define POWERPIN_OFF               PORTB &= ~(1<<4); //switch OFF WMP, digital PIN 12
-    #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5;   // PIN A4&A5 (SDA&SCL)
   #else
     #define POWERPIN_PINMODE           ;
     #define POWERPIN_ON                ;
     #define POWERPIN_OFF               ;
     #define RCAUXPIN
   #endif
+  #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5;   // PIN A4&A5 (SDA&SCL)
   #define I2C_PULLUPS_DISABLE        PORTC &= ~(1<<4); PORTC &= ~(1<<5);
   #define PINMODE_LCD                pinMode(0, OUTPUT);
   #define LCDPIN_OFF                 PORTD &= ~1; //switch OFF digital PIN 0
@@ -257,7 +257,6 @@
 #endif
 
 #if defined(MONGOOSE1_0)  // basically it's a PROMINI without some PINS => same code as a PROMINI board except PIN definition
-  // http://www.fuzzydrone.org/ 
   // http://www.multiwii.com/forum/viewtopic.php?f=6&t=627
   
   #define LEDPIN_PINMODE             pinMode (4, OUTPUT);
@@ -396,6 +395,10 @@
   #endif
 #endif
 
+#if defined(FREEIMUv043)
+ #define FREEIMUv04
+#endif
+
 #if defined(FREEIMUv04)
   #define MPU6050
   #define HMC5883
@@ -453,6 +456,7 @@
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
+  #define BMA180_ADDRESS 0x82
 #endif
 
 #if defined(AEROQUADSHIELDv2) // to confirm
@@ -503,19 +507,26 @@
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
 #endif
 
-#if defined(CITRUSv1_0)
+#if defined(CITRUSv2_1)
   #define ITG3200
   #define ADXL345
   #define BMP085
   #define HMC5883
-  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
-  #define ADXL345_ADDRESS 0xA6
+  #define ACC_ORIENTATION(X, Y, Z) {accADC[ROLL] = -X; accADC[PITCH] = -Y; accADC[YAW] = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z) {magADC[ROLL] = Y; magADC[PITCH] = Z; magADC[YAW] = X;}
   #define ITG3200_ADDRESS 0XD0
+  #undef INTERNAL_I2C_PULLUPS
 #endif
 
-#if defined(DROTEK_IMU10DOF) || defined(DROTEK_IMU10DOF_MS)
+#if defined(CHERRY6DOFv1_0)
+  #define MPU6050
+  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  = -X; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(Y, X, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = -Y; gyroADC[YAW] = -Z;}
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+
+#if defined(DROTEK_10DOF) || defined(DROTEK_10DOF_MS)
   #define ITG3200
   #define BMA180
   #define HMC5883
@@ -523,19 +534,26 @@
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define ITG3200_ADDRESS 0XD2
-  #if defined(DROTEK_IMU10DOF_MS)
+  #if defined(DROTEK_10DOF_MS)
     #define MS561101BA
-  #elif defined(DROTEK_IMU10DOF)
+  #elif defined(DROTEK_10DOF)
     #define BMP085
   #endif
 #endif
 
-#if defined(DROTEK_IMU6DOFv2)
+#if defined(DROTEK_6DOFv2)
   #define ITG3200
   #define BMA180
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -X; gyroADC[PITCH] = -Y; gyroADC[YAW] = -Z;}
   #define ITG3200_ADDRESS 0XD2
+#endif
+
+#if defined(DROTEK_6DOF_MPU)
+  #define MPU6050
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -X; gyroADC[PITCH] = -Y; gyroADC[YAW] = -Z;}
+  #define MPU6050_ADDRESS 0xD2
 #endif
 
 #if defined(MONGOOSE1_0)
@@ -575,7 +593,7 @@
   #define ACC 0
 #endif
 
-#if defined(HMC5883) || defined(HMC5843) || defined(AK8975)
+#if defined(HMC5883) || defined(HMC5843) || defined(AK8975) || defined(MAG3110)
   #define MAG 1
 #else
   #define MAG 0
@@ -593,26 +611,17 @@
   #define BARO 0
 #endif
 
-#if defined(GPS_SERIAL)  || defined(I2C_GPS)
+#if defined(GPS_SERIAL)  || defined(I2C_GPS) || defined(GPS_FROM_OSD)
   #define GPS 1
 #else
   #define GPS 0
 #endif
 
-
-
 #if defined (AIRPLANE) && defined(PROMINI) 
- #if defined(D12_POWER)
-  #define SERVO_4_PINMODE            ;  // D12
-  #define SERVO_4_PIN_HIGH           ;
-  #define SERVO_4_PIN_LOW            ;
- #else if
   #define POWERPIN_PINMODE           ;
   #define POWERPIN_ON                ;
   #define POWERPIN_OFF               ;
- #endif
 #endif
-
 
 #if defined(TRI)
   #define MULTITYPE 1
@@ -656,37 +665,36 @@
 
 /* motor and servo numbers */
 
-#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(CAMTRIG)
+#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(AIRPLANE) || defined(CAMTRIG)
   #define SERVO
 #endif
 
 #if defined(GIMBAL)
-  #define NUMBER_MOTOR 0
+  #define NUMBER_MOTOR     0
   #define PRI_SERVO_FROM   1 // use servo from 1 to 2
   #define PRI_SERVO_TO     2
 #elif defined(FLYING_WING)
-  #define NUMBER_MOTOR 1
+  #define NUMBER_MOTOR     1
   #define PRI_SERVO_FROM   1 // use servo from 1 to 2
   #define PRI_SERVO_TO     2
 #elif defined(AIRPLANE)
-  #define NUMBER_MOTOR NUM_MOTRORS
-  // Use all acvailable servos - NUMBER_MOTOR
-  #define ALL_SERVOS
-  
+  #define NUMBER_MOTOR     0
+  #define PRI_SERVO_FROM   4 // use servo from 4 to 8
+  #define PRI_SERVO_TO     8
 #elif defined(BI)
-  #define NUMBER_MOTOR 2
+  #define NUMBER_MOTOR     2
   #define PRI_SERVO_FROM   5 // use servo from 5 to 6
   #define PRI_SERVO_TO     6
 #elif defined(TRI)
-  #define NUMBER_MOTOR 3
+  #define NUMBER_MOTOR     3
   #define PRI_SERVO_FROM   6 // use only servo 6
   #define PRI_SERVO_TO     6
 #elif defined(QUADP) || defined(QUADX) || defined(Y4)|| defined(VTAIL4)
-  #define NUMBER_MOTOR 4
+  #define NUMBER_MOTOR     4
 #elif defined(Y6) || defined(HEX6) || defined(HEX6X)
-  #define NUMBER_MOTOR 6
+  #define NUMBER_MOTOR     6
 #elif defined(OCTOX8) || defined(OCTOFLATP) || defined(OCTOFLATX)
-  #define NUMBER_MOTOR 8
+  #define NUMBER_MOTOR     8
 #endif
 
 
@@ -708,13 +716,7 @@
     #define SEC_SERVO_FROM   3 // use servo 3
     #define SEC_SERVO_TO     3
   #endif
-#if defined(ALL_SERVOS)
-  // Use all acvailable servos - NUMBER_MOTOR
-  #define SEC_SERVO_FROM   1
-  #define SEC_SERVO_TO     8 - NUMBER_MOTOR  
-  #endif  
 #endif
-
 
 #if defined(I2C_GPS)
   #define I2C_GPS_ADDRESS                         0x40       
@@ -780,7 +782,6 @@
 #if (defined(LCD_CONF) || defined(LCD_TELEMETRY)) && !(defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_ETPP) || defined(LCD_LCD03))
   #error "LCD_CONF or LCD_TELEMETRY defined, and choice of LCD not defined.  Uncomment one of LCD_SERIAL3W or LCD_TEXTSTAR or LCD_VT100 or LCD_ETPP or LCD_LCD03"
 #endif
-
 
 #if defined(POWERMETER) && !(defined(VBAT))
   	#error "to use powermeter, you must also define and configure VBAT"
