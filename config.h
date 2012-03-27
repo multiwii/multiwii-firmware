@@ -315,7 +315,7 @@
 //#define LCD_LCD03       // LCD03, which is i2c
 
 /* style of display - autodetected by LCD_ setting - only activate to overwrite defaults */
-#define DISPLAY_2LINES
+//#define DISPLAY_2LINES
 //#define DISPLAY_MULTILINE
 
 /* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
@@ -417,6 +417,18 @@
 #define WING_LEFT_MAX  2000 // limit servo travel range must be inside [1020;2000]
 #define WING_RIGHT_MIN 1020 // limit servo travel range must be inside [1020;2000]
 #define WING_RIGHT_MAX 2000 // limit servo travel range must be inside [1020;2000]
+
+
+//***********************************************************************************************//
+//******************************* !!!!  Airplane Settings  !!!! *********************************//
+//***********************************************************************************************//
+//Howto setup =>>> http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
+//#define D12_POWER    // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12 
+
+#define SERVO_OFFSET     {  0,   0,   0, -20,  40,   0,  20,   0 } // Servo MID Offset
+#define SERVO_RATES      {100, 100, 100, 100, 100, 100, 100, 100 } // Rates in 0-100% 
+#define SERVO_DIRECTION  {  1,   1,   1,   -1,  1,   1,   1,   1 } // Invert servos by setting -1 
+//*************************************************************************************************// 
 
 /********************************************************************/
 /****           powermeter                                       ****/

@@ -437,6 +437,12 @@ void loop () {
             servo[1]  = wing_right_mid;
             writeServos();
           #endif
+          #ifdef AIRPLANE
+            for(int i = 4; i<7 ;i++) { 
+              servo[i]  = 1500;
+          }
+          writeServos();
+          #endif          
           #if defined(LCD_CONF)
             configurationLoop(); // beginning LCD configuration
           #endif

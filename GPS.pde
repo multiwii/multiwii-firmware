@@ -7,10 +7,10 @@ void GPS_NewData() {
     //Do not use i2c_writereg, since writing a register does not work if an i2c_stop command is issued at the end
     //Still investigating, however with separated i2c_repstart and i2c_write commands works... and did not caused i2c errors on a long term test.
   
+    GPS_numSat = (_i2c_gps_status & 0xf0) >> 4;
     _i2c_gps_status = i2c_readReg(I2C_GPS_ADDRESS,I2C_GPS_STATUS);                    //Get status register 
     if (_i2c_gps_status & I2C_GPS_STATUS_3DFIX) {                                     //Check is we have a good 3d fix (numsats>5)
-       GPS_fix = 1;                                                                   //Set fix
-       GPS_numSat = (_i2c_gps_status & 0xf0) >> 4;                                    //Num of sats is stored the upmost 4 bits of status
+       GPS_fix = 1;                                                                   //Num of sats is stored the upmost 4 bits of status
        if (!GPS_fix_home) {        //if home is not set set home position to WP#0 and activate it
           i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_SET_WP);//Store current position to WP#0 (this is used for RTH)
           i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_ACTIVATE_WP);//Set WP#0 as the active WP

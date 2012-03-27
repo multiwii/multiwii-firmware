@@ -319,10 +319,10 @@
   #define SERVO_4_PINMODE            ;                   // Not available
   #define SERVO_4_PIN_HIGH           ;
   #define SERVO_4_PIN_LOW            ;
-  #define SERVO_5_PINMODE            pinMode(3,OUTPUT); // BI LEFT
+  #define SERVO_5_PINMODE            pinMode(11,OUTPUT); // BI LEFT
   #define SERVO_5_PIN_HIGH           PORTD|= 1<<3;
   #define SERVO_5_PIN_LOW            PORTD &= ~(1<<3);
-  #define SERVO_6_PINMODE            pinMode(11,OUTPUT); // TRI REAR
+  #define SERVO_6_PINMODE            pinMode(3,OUTPUT); // TRI REAR
   #define SERVO_6_PIN_HIGH           PORTB |= 1<<3;
   #define SERVO_6_PIN_LOW            PORTB &= ~(1<<3);
   #define SERVO_7_PINMODE            pinMode(10,OUTPUT); // new motor pin 10
@@ -562,8 +562,8 @@
   #define BMP085
   #define HMC5883
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = -Z;}
-  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
-  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y; magADC[PITCH]  = -X; magADC[YAW]  = -Z;}
+  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -X; magADC[PITCH]  = -Y; magADC[YAW]  = -Z;}
   #define ADXL345_ADDRESS 0xA6
   #define ITG3200_ADDRESS 0XD0
   #define BMP085_ADDRESS 0xEE
@@ -617,10 +617,17 @@
   #define GPS 0
 #endif
 
-#if defined (AIRPLANE) && defined(PROMINI) 
+
+#if defined (AIRPLANE) || defined(HELICOPTER) && defined(PROMINI) 
+ #if defined(D12_POWER)
+  #define SERVO_4_PINMODE            ;  // D12
+  #define SERVO_4_PIN_HIGH           ;
+  #define SERVO_4_PIN_LOW            ;
+ #else if
   #define POWERPIN_PINMODE           ;
   #define POWERPIN_ON                ;
   #define POWERPIN_OFF               ;
+ #endif
 #endif
 
 #if defined(TRI)

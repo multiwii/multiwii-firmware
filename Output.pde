@@ -12,7 +12,12 @@
   uint8_t PWM_PIN[8] = {3,5,6,2,7,8,9,10};      //for a quad+: rear,right,left,front   //+ for y6: 7:under right  8:under left
 #endif
 #if !defined(PROMICRO) || defined(HWPWM6)
-  volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
+  #if defined(AIRPLANE)
+// To prevent motor to start at reset. atomicServo[7]=5 or 249 if reverseed servo
+    volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,5}; 
+  #else
+   volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
+  #endif
   //for HEX Y6 and HEX6/HEX6X flat for promini
   volatile uint8_t atomicPWM_PIN5_lowState;
   volatile uint8_t atomicPWM_PIN5_highState;
@@ -746,18 +751,21 @@ void mixTable() {
     servo[0]  = constrain(servo[0] + wing_left_mid , WING_LEFT_MIN,  WING_LEFT_MAX );
     servo[1]  = constrain(servo[1] + wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX);
   #endif
+  
   #if defined(AIRPLANE) //PatrikE Experimentals
     // Servosettings Only For Airplane
-    uint16_t      servoMid[8] = {1500,1500,1500,1500,1500,1500,1500,1500}; // Midpoint on servo
-    uint16_t   servotravel[8] = {100, 100, 100, 100, 100, 100, 100, 100};  // Rates in 0-100% 
-    int8_t    servoreverse[8] = { 1,   1,   1,   -1,  1,   1,   1,   1};   // Invert servos by setting -1  
-  
+   static int16_t   servoMid[8];                        // Midpoint on servo
+   static uint8_t   servotravel[8] = SERVO_RATES;       // Rates in 0-100% 
+   static int8_t    Mid[8] = SERVO_OFFSET;
+   static int8_t    servoreverse[8] = SERVO_DIRECTION ; // Inverted servos
+ 
     // Common functions for Plane
     static int16_t servolimit[8][2]; // Holds servolimit data
     #define SERVO_MIN 1020           // limit servo travel range must be inside [1020;2000]
     #define SERVO_MAX 2000           // limit servo travel range must be inside [1020;2000]
 
     for(i=0; i<8; i++){  //  Set rates with 0 - 100%. 
+      servoMid[i]     =MIDRC + Mid[i];
       servolimit[i][0]=servoMid[i]-((servoMid[i]-SERVO_MIN) *(servotravel[i]*0.01));
       servolimit[i][1]=servoMid[i]+((SERVO_MAX - servoMid[i]) *(servotravel[i]*0.01));  
     }
@@ -771,21 +779,20 @@ void mixTable() {
     // All other servos go to center at reset..  Half throttle can be dangerus    
     // Only use servo[7] as motorcontrol if motor is used in the setup            */
 
-    if(passThruMode) {   // Direct passthru from RX 
-      servo[3]  = servoMid[3]+(rcCommand[ROLL] *servoreverse[3]);     //   Wing 1
-      servo[4]  = servoMid[4]+(rcCommand[ROLL] *servoreverse[4]);     //   Wing 2
-      servo[5]  = servoMid[5]+(rcCommand[YAW]  *servoreverse[5]);     //   Rudder
-      servo[6]  = servoMid[6]+(rcCommand[PITCH]*servoreverse[6]);     //   Elevator 
-    } else {
-      // use sensors to correct (gyro only or gyro+acc according to AUX configuration
-      // invert the sign before axisPID to reverse servos GyroResponse
-      servo[3]  =(servoMid[3] + (((axisPID[ROLL]) + (angle[ROLL]  /16)) *servoreverse[3])); //   Right Ail 
-      servo[4]  =(servoMid[4] + (((axisPID[ROLL]) + (angle[ROLL]  /16)) *servoreverse[4])); //   Left Ail  
-      servo[5]  =(servoMid[5] + (((axisPID[YAW])                      ) *servoreverse[5])); //   Rudder
-      servo[6]  =(servoMid[6] + (((axisPID[PITCH] + (angle[PITCH] /16)))*servoreverse[6])); //   Elevator
-    }
+    if(passThruMode){   // Direct passthru from RX 
+    servo[3]  = servoMid[3]+(rcCommand[ROLL] *servoreverse[3]);     //   Wing 1
+    servo[4]  = servoMid[4]+(rcCommand[ROLL] *servoreverse[4]);     //   Wing 2
+    servo[5]  = servoMid[5]+(rcCommand[YAW]  *servoreverse[5]);     //   Rudder
+    servo[6]  = servoMid[6]+(rcCommand[PITCH]*servoreverse[6]);     //   Elevator 
+   }else{
+   // use sensors to correct (gyro only or gyro+acc according to AUX configuration
+    servo[3]  =(servoMid[3] + (axisPID[ROLL]  * servoreverse[3])); //   Wing 1 
+    servo[4]  =(servoMid[4] + (axisPID[ROLL]  * servoreverse[4])); //   Wing 2
+    servo[5]  =(servoMid[5] + (axisPID[YAW]   * servoreverse[5])); //   Rud(der
+    servo[6]  =(servoMid[6] + (axisPID[PITCH] * servoreverse[6])); //   Elevator
+      } 
     // ServoRates
-    for(uint8_t i=0;i<8;i++){ 
+    for(uint8_t i=3;i<8;i++){ 
       servo[i]  = map(servo[i], SERVO_MIN, SERVO_MAX, servolimit[i][0],  servolimit[i][1]);
       servo[i]  = constrain( servo[i], SERVO_MIN, SERVO_MAX);
     }
