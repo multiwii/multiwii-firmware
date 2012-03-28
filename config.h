@@ -47,7 +47,7 @@
 #define TRUSTED_ACCZ
 
 /* This will activate the ACC-Inflight calibration if unchecked */  
-//#define InflightAccCalibration
+//#define INFLIGHT_ACC_CALIBRATION
 
 /* PIN A0 and A1 instead of PIN D5 & D6 for 6 motors config and promini config
    This mod allow the use of a standard receiver on a pro mini
@@ -294,7 +294,7 @@
 #define SERIAL_COM_SPEED 115200
 
 /********************************************************************/
-/****           LCD - display and telemetry settings             ****/
+/****           LCD - display settings                           ****/
 /********************************************************************/
 /* In order to save space, it's possibile to desactivate the LCD configuration functions
    comment this line only if you don't plan to used a LCD */
@@ -369,6 +369,19 @@
 /* so we try do define a meaningful part. For a 3S battery we define full=12,6V and calculate how much it is above first warning level */
 /* Example: 12.6V - VBATLEVEL1_3S  (for me = 126 - 102 = 24) */
 #define VBATREF 24
+
+/* if program gets too large (>32k), need to exclude some functionality */
+/* uncomment to suppress some unwanted telemetry pages (only useful if telemetry is enabled) */
+//#define SUPPRESS_TELEMETRY_PAGE_1
+//#define SUPPRESS_TELEMETRY_PAGE_2
+//#define SUPPRESS_TELEMETRY_PAGE_3
+//#define SUPPRESS_TELEMETRY_PAGE_4
+//#define SUPPRESS_TELEMETRY_PAGE_5
+//#define SUPPRESS_TELEMETRY_PAGE_6
+//#define SUPPRESS_TELEMETRY_PAGE_7
+//#define SUPPRESS_TELEMETRY_PAGE_8
+//#define SUPPRESS_TELEMETRY_PAGE_9
+
 /********************************************************************/
 /****           motor, servo and other presets                   ****/
 /********************************************************************/
@@ -431,7 +444,7 @@
 //*************************************************************************************************// 
 
 /********************************************************************/
-/****           powermeter                                       ****/
+/****           powermeter (battery capacity monitoring)         ****/
 /********************************************************************/
 
 /* enable monitoring of the power consumption from battery (think of mAh) */
@@ -481,7 +494,7 @@
 
 
 /********************************************************************/
-/****           diagnostics                                      ****/
+/****           battery voltage monitoring                       ****/
 /********************************************************************/
 
 /* for V BAT monitoring
@@ -494,6 +507,10 @@
 #define VBATLEVEL2_3S 103 // 10,3V
 #define VBATLEVEL3_3S 99  // 9.9V
 #define NO_VBAT       16 // Avoid beeping without any battery
+
+/********************************************************************/
+/****           diagnostics                                      ****/
+/********************************************************************/
 
 /* to log values like max loop time and others to come */
 /* logging values are visible via LCD config */
@@ -512,6 +529,9 @@
 //#define LCD_TELEMETRY_DEBUG  //This form rolls between all screens, LCD_TELEMETRY_AUTO must also be defined.
 //#define LCD_TELEMETRY_DEBUG 6  //This form stays on the screen specified.
 
+/* to reduce memory footprint, suppress some code fragments if not needed */
+/* uncomment to suppress  */
+//#define SUPPRESS_OSD_SERIAL_COMMANDS
 
 //****** end of advanced users settings ***********************************
 /* ===================================================================== */

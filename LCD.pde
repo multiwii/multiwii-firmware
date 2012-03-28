@@ -194,20 +194,20 @@ void LCDattributesOff() {}
 
 void   lcdprint_int16(int16_t v) {
   uint16_t unit;
-  char line1[7] = "      ";
+  char line[7] = "      ";
   if (v < 0 ) {
           unit = -v;
-          line1[0] = '-';
+          line[0] = '-';
   } else {
           unit = v;
-          line1[0] = ' ';
+          line[0] = ' ';
   }
-  line1[1] = digit10000(unit);
-  line1[2] = digit1000(unit);
-  line1[3] = digit100(unit);
-  line1[4] = digit10(unit);
-  line1[5] = digit1(unit);
-  LCDprintChar(line1);
+  line[1] = digit10000(unit);
+  line[2] = digit1000(unit);
+  line[3] = digit100(unit);
+  line[4] = digit10(unit);
+  line[5] = digit1(unit);
+  LCDprintChar(line);
 }
 
 void initLCD() {
@@ -259,7 +259,7 @@ void initLCD() {
 typedef void (*formatter_func_ptr)(void *, uint8_t, uint8_t);
 typedef void (*inc_func_ptr)(void *, int8_t);
 
-typedef struct lcd_type_desc_t{
+/*typedef*/ struct lcd_type_desc_t{
   formatter_func_ptr fmt;
   inc_func_ptr inc;
 };  
@@ -270,7 +270,7 @@ static lcd_type_desc_t LPMM  = {&__upMFmt, &__nullInc};
 static lcd_type_desc_t LPMS  = {&__upSFmt, &__nullInc};
 static lcd_type_desc_t LAUX  = {&__uAuxFmt,  &__u8Inc};
 
-typedef struct lcd_param_def_t{
+/*typedef*/ struct lcd_param_def_t{
   lcd_type_desc_t * type;
   uint8_t  decimal;
   uint8_t  multiplier;  
@@ -365,32 +365,32 @@ PROGMEM prog_char lcd_param_text40 []  = "i2c Errors";
 PROGMEM prog_char lcd_param_text41 []  = "annex overruns";
 #endif
 #if defined(LCD_CONF_AUX_12) || defined(LCD_CONF_AUX_1234)
-PROGMEM prog_char lcd_param_text42 []  = "AUX1/2 level";
-PROGMEM prog_char lcd_param_text43 []  = "AUX1/2 baro";
-PROGMEM prog_char lcd_param_text44 []  = "AUX1/2 mag";
-PROGMEM prog_char lcd_param_text45 []  = "AUX1/2 cam stab";
-PROGMEM prog_char lcd_param_text46 []  = "AUX1/2 cam trig";
-PROGMEM prog_char lcd_param_text47 []  = "AUX1/2 arm";
-PROGMEM prog_char lcd_param_text48 []  = "AUX1/2 gps home";
-PROGMEM prog_char lcd_param_text49 []  = "AUX1/2 gps hold";
-PROGMEM prog_char lcd_param_text50 []  = "AUX1/2 passthru";
-PROGMEM prog_char lcd_param_text51 []  = "AUX1/2 headfree";
-PROGMEM prog_char lcd_param_text52 []  = "AUX1/2 beeper";
+PROGMEM prog_char lcd_param_text42 []  = "AX1/2 level";
+PROGMEM prog_char lcd_param_text43 []  = "AX1/2 baro";
+PROGMEM prog_char lcd_param_text44 []  = "AX1/2 mag";
+PROGMEM prog_char lcd_param_text45 []  = "AX1/2 cam stab";
+PROGMEM prog_char lcd_param_text46 []  = "AX1/2 cam trig";
+PROGMEM prog_char lcd_param_text47 []  = "AX1/2 arm";
+PROGMEM prog_char lcd_param_text48 []  = "AX1/2 gps home";
+PROGMEM prog_char lcd_param_text49 []  = "AX1/2 gps hold";
+PROGMEM prog_char lcd_param_text50 []  = "AX1/2 passthru";
+PROGMEM prog_char lcd_param_text51 []  = "AX1/2 headfree";
+PROGMEM prog_char lcd_param_text52 []  = "AX1/2 beeper";
 // 53 to 61 reserved
 #endif
 #if defined(LCD_CONF_AUX_1234)
 // aux3/4
-PROGMEM prog_char lcd_param_text62 []  = "AUX3/4 level";
-PROGMEM prog_char lcd_param_text63 []  = "AUX3/4 baro";
-PROGMEM prog_char lcd_param_text64 []  = "AUX3/4 mag";
-PROGMEM prog_char lcd_param_text65 []  = "AUX3/4 cam stab";
-PROGMEM prog_char lcd_param_text66 []  = "AUX3/4 cam trig";
-PROGMEM prog_char lcd_param_text67 []  = "AUX3/4 arm";
-PROGMEM prog_char lcd_param_text68 []  = "AUX3/4 gps home";
-PROGMEM prog_char lcd_param_text69 []  = "AUX3/4 gps hold";
-PROGMEM prog_char lcd_param_text70 []  = "AUX3/4 passthru";
-PROGMEM prog_char lcd_param_text71 []  = "AUX3/4 headfree";
-PROGMEM prog_char lcd_param_text72 []  = "AUX3/4 beeper";
+PROGMEM prog_char lcd_param_text62 []  = "AX3/4 level";
+PROGMEM prog_char lcd_param_text63 []  = "AX3/4 baro";
+PROGMEM prog_char lcd_param_text64 []  = "AX3/4 mag";
+PROGMEM prog_char lcd_param_text65 []  = "AX3/4 cam stab";
+PROGMEM prog_char lcd_param_text66 []  = "AX3/4 cam trig";
+PROGMEM prog_char lcd_param_text67 []  = "AX3/4 arm";
+PROGMEM prog_char lcd_param_text68 []  = "AX3/4 gps home";
+PROGMEM prog_char lcd_param_text69 []  = "AX3/4 gps hold";
+PROGMEM prog_char lcd_param_text70 []  = "AX3/4 passthru";
+PROGMEM prog_char lcd_param_text71 []  = "AX3/4 headfree";
+PROGMEM prog_char lcd_param_text72 []  = "AX3/4 beeper";
 // 73 to 81 reserved
 #endif
 //                                        0123456789.12345
@@ -429,11 +429,15 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 &lcd_param_text42,   &activate1[BOXACC],     &__AUX,
 &lcd_param_text43,   &activate1[BOXBARO],    &__AUX,
 &lcd_param_text44,   &activate1[BOXMAG],     &__AUX,
+#ifdef GIMBAL
 &lcd_param_text45,   &activate1[BOXCAMSTAB], &__AUX,
 &lcd_param_text46,   &activate1[BOXCAMTRIG], &__AUX,
+#endif
 &lcd_param_text47,   &activate1[BOXARM],     &__AUX,
+#if GPS
 &lcd_param_text48,   &activate1[BOXGPSHOME], &__AUX,
 &lcd_param_text49,   &activate1[BOXGPSHOLD], &__AUX,
+#endif
 &lcd_param_text50,   &activate1[BOXPASSTHRU],&__AUX,
 &lcd_param_text51,   &activate1[BOXHEADFREE],&__AUX,
 &lcd_param_text52,   &activate1[BOXBEEPERON],&__AUX,
@@ -445,16 +449,20 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 &lcd_param_text63,   &activate2[BOXBARO],    &__AUX,
 &lcd_param_text44,   &activate1[BOXMAG],     &__AUX,
 &lcd_param_text64,   &activate2[BOXMAG],     &__AUX,
+#ifdef GIMBAL
 &lcd_param_text45,   &activate1[BOXCAMSTAB], &__AUX,
 &lcd_param_text65,   &activate2[BOXCAMSTAB], &__AUX,
 &lcd_param_text46,   &activate1[BOXCAMTRIG], &__AUX,
 &lcd_param_text66,   &activate2[BOXCAMTRIG], &__AUX,
+#endif
 &lcd_param_text47,   &activate1[BOXARM],     &__AUX,
 &lcd_param_text67,   &activate2[BOXARM],     &__AUX,
+#if GPS
 &lcd_param_text48,   &activate1[BOXGPSHOME], &__AUX,
 &lcd_param_text68,   &activate2[BOXGPSHOME], &__AUX,
 &lcd_param_text49,   &activate1[BOXGPSHOLD], &__AUX,
 &lcd_param_text69,   &activate2[BOXGPSHOLD], &__AUX,
+#endif
 &lcd_param_text50,   &activate1[BOXPASSTHRU],&__AUX,
 &lcd_param_text70,   &activate2[BOXPASSTHRU],&__AUX,
 &lcd_param_text51,   &activate1[BOXHEADFREE],&__AUX,
@@ -464,14 +472,30 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #endif
 #ifdef LOG_VALUES
 #if (LOG_VALUES == 2)
+#if (NUMBER_MOTOR > 0)
 &lcd_param_text25,   &pMeter[0],            &__PM,
+#endif
+#if (NUMBER_MOTOR > 1)
 &lcd_param_text26,   &pMeter[1],            &__PM,
+#endif
+#if (NUMBER_MOTOR > 2)
 &lcd_param_text27,   &pMeter[2],            &__PM,
+#endif
+#if (NUMBER_MOTOR > 3)
 &lcd_param_text28,   &pMeter[3],            &__PM,
+#endif
+#if (NUMBER_MOTOR > 4)
 &lcd_param_text29,   &pMeter[4],            &__PM,
+#endif
+#if (NUMBER_MOTOR > 5)
 &lcd_param_text30,   &pMeter[5],            &__PM,
+#endif
+#if (NUMBER_MOTOR > 6)
 &lcd_param_text31,   &pMeter[6],            &__PM,
+#endif
+#if (NUMBER_MOTOR > 7)
 &lcd_param_text32,   &pMeter[7],            &__PM,
+#endif
 #endif
 #endif
 #ifdef POWERMETER
@@ -525,15 +549,12 @@ void __u16Fmt(void * var, uint8_t mul, uint8_t dec) {
 
 void __uAuxFmt(void * var, uint8_t mul, uint8_t dec) {
   uint8_t unit = *(uint8_t*)var;
-  line2[0] = 'L';
-  line2[1] = 'M';
-  line2[2] = 'H';
-  line2[4] = ( unit & 1<<0 ? 'X' : '.' );
-  line2[5] = ( unit & 1<<1 ? 'X' : '.' );
-  line2[6] = ( unit & 1<<2 ? 'X' : '.' );
-  line2[8] = ( unit & 1<<3 ? 'X' : '.' );
-  line2[9] = ( unit & 1<<4 ? 'X' : '.' );
-  line2[10] = ( unit & 1<<5 ? 'X' : '.' );
+  line2[4] = ( unit & 1<<0 ? 'L' : '.' );
+  line2[5] = ( unit & 1<<1 ? 'M' : '.' );
+  line2[6] = ( unit & 1<<2 ? 'H' : '.' );
+  line2[8] = ( unit & 1<<3 ? 'L' : '.' );
+  line2[9] = ( unit & 1<<4 ? 'M' : '.' );
+  line2[10] = ( unit & 1<<5 ? 'H' : '.' );
 }
 
 void __upMFmt(void * var, uint8_t mul, uint8_t dec) {
@@ -598,15 +619,14 @@ void ConfigRefresh(uint8_t p) {
       lcd_param_def_t* deft = (lcd_param_def_t*)pgm_read_word(&(lcd_param_ptr_table[(j * 3) + 2]));
       deft->type->fmt((void*)pgm_read_word(&(lcd_param_ptr_table[(j * 3) + 1])), deft->multiplier, deft->decimal);
 
-      if (j == p) {LCDprint('>'); }
       LCDsetLine(l++);
-      if (j == p) {LCDattributesBold(); }
+      if (j == p) {LCDprint('>'); LCDattributesBold(); }
       LCDprintChar(line1);
       if (j == p) {LCDattributesOff(); LCDattributesReverse(); }
-      LCDprint(' ');
+      //LCDprint(' ');
       LCDprintChar(line2);
       if (j == p) {LCDattributesOff(); LCDprint('<'); }
-      LCDcrlf();
+      //LCDcrlf();
       LCD_FLUSH;
   }
   LCDcrlf();
@@ -792,6 +812,7 @@ void fill_line1_cycle() {
 }
 void fill_line2_cycleMinMax() {
   strcpy_P(line2,PSTR("(-----, -----)us")); //uin16_t cycleTimeMax
+#if (LOG_VALUES == 2)
   line2[1] = digit10000(cycleTimeMin );
   line2[2] = digit1000(cycleTimeMin );
   line2[3] = digit100(cycleTimeMin );
@@ -802,6 +823,7 @@ void fill_line2_cycleMinMax() {
   line2[10] = digit100(cycleTimeMax);
   line2[11] = digit10(cycleTimeMax);
   line2[12] = digit1(cycleTimeMax);
+#endif
 }
 void fill_line1_fails() {
   strcpy_P(line1,PSTR("Fails i2c t-errs"));
@@ -843,7 +865,17 @@ void outputSensor(uint8_t num, int16_t data, int16_t limit) {
         else if (data > limit) { LCDprintChar(">>>>"); }
         else  LCDbar(num, limit + data *50/limit);
 }
-
+void print_uptime(uint16_t sec) {
+	uint16_t m, s;
+	char line[6] = "--:--";
+	m = sec / 60;
+	s = sec - (60 * m);
+	line[0] = digit10(m);
+	line[1] = digit1(m);
+	line[3] = digit10(s);
+	line[4] = digit1(s);
+	LCDprintChar(line);
+}
 /* ------------ DISPLAY_2LINES ------------------------------------*/
 #ifdef DISPLAY_2LINES
 void lcd_telemetry() {
@@ -851,6 +883,7 @@ void lcd_telemetry() {
   switch (telemetry) { // output telemetry data
   uint16_t unit;
   uint8_t i;
+#ifndef SUPPRESS_TELEMETRY_PAGE_1
   case 1: // button A on Textstar LCD -> angles
   case '1':
   if (linenr++ % 2) {
@@ -862,7 +895,8 @@ void lcd_telemetry() {
           LCDsetLine(2);LCDprintChar(line2);
   }
   break;
-
+#endif
+#ifndef SUPPRESS_TELEMETRY_PAGE_2
   case 2: // button B on Textstar LCD -> Voltage, PowerSum and power alarm trigger value
   case '2':
           if (linenr++ % 2) {
@@ -874,7 +908,8 @@ void lcd_telemetry() {
                   output_VmAbars();
           }
           break;
-
+#endif
+#ifndef SUPPRESS_TELEMETRY_PAGE_3
   case 3: // button C on Textstar LCD -> cycle time
   case '3':
           if (linenr++ % 2) {
@@ -882,14 +917,15 @@ void lcd_telemetry() {
                   LCDsetLine(1);
                   LCDprintChar(line1);
           } else {
-         #ifdef LOG_VALUES
+         #if (LOG_VALUES == 2)
               fill_line2_cycleMinMax();
               LCDsetLine(2);
               LCDprintChar(line2);
          #endif
           }
           break;
-
+#endif
+#ifndef SUPPRESS_TELEMETRY_PAGE_4
   case 4: // button D on Textstar LCD -> sensors
   case '4':
         if (linenr++ % 2) {
@@ -904,7 +940,8 @@ void lcd_telemetry() {
                 outputSensor(4, accSmooth[2] - acc_1G, ACCLIMIT);
         }
         break;
-
+#endif
+#ifndef SUPPRESS_TELEMETRY_PAGE_5
     case 5:
     case '5':
         if (linenr++ % 2) {
@@ -917,7 +954,8 @@ void lcd_telemetry() {
                 LCDprintChar(line2);
         }
         break;
-
+#endif
+#ifndef SUPPRESS_TELEMETRY_PAGE_6
     case 6:     // RX inputs
     case '6':
         if (linenr++ % 2) {
@@ -943,7 +981,8 @@ void lcd_telemetry() {
                 LCDsetLine(2);LCDprintChar(line2);
         }
         break;
-
+#endif
+#ifndef SUPPRESS_TELEMETRY_PAGE_7
     case 7:
     case '7':   // contributed by PatrikE
                 #if GPS
@@ -973,7 +1012,7 @@ void lcd_telemetry() {
         }
                 #endif // case 7 : GPS
         break;
-
+#endif
 
         #if defined(LOG_VALUES) && defined(DEBUG)
     case 'R':
@@ -1018,7 +1057,7 @@ void lcd_telemetry() {
   uint8_t i;
   case 1: // overall display
   case '1':
-    switch (linenr++ % 8) { // not really linenumbers
+    switch (linenr++ % 6) { // not really linenumbers
     case 0: // V, mAh
       LCDsetLine(1);
       fill_line1_VmA();
@@ -1034,35 +1073,32 @@ void lcd_telemetry() {
       LCDprintChar(line2);
       break;
     case 3: // checkboxstatus
-      LCDsetLine(4);
+        LCDsetLine(4);
+        LCDsetLine(5);
       output_checkboxitems();
       break;
-
-    case 4: // cycle
-      LCDsetLine(5); // to clear the unused line
-      LCDsetLine(6);
-      fill_line1_cycle();
-      LCDprintChar(line1);
-      break;
-    case 5: // cycle min/max
+    case 4: // uptime, uptime_armed
+      LCDsetLine(6); // to clear the unused line
       LCDsetLine(7);
-      fill_line2_cycleMinMax();
-      LCDprintChar(line2);
+      LCDprintChar("U:"); print_uptime(millis() / 1000 );
+      LCDprintChar("  A:"); print_uptime(armedTime / 1000000);
       break;
-    case 6: // Fails....
-      LCDsetLine(8);
-      fill_line1_fails();
-      LCDprintChar(line1);
-      break;
-    case 7: // Fails....
-      LCDsetLine(9);
-      fill_line2_fails_values();
-      LCDprintChar(line2);
-      break;
+    case 5: // height
+    	LCDsetLine(8); // to clear the unused line
+    	LCDsetLine(9);
+#if BARO
+    	int16_t h = (BaroAlt - BaroAltStart) / 100;
+    	LCDprint('A'); lcdprint_int16(h); LCDprint('m');
+#ifdef LOG_VALUES
+    	h = (BaroAltMax - BaroAltStart) / 100;
+    	LCDprintChar(" ("); lcdprint_int16(h);
+#endif
+#endif
+    	break;
     }
     LCDcrlf();
     break;
-
+#ifndef SUPPRESS_TELEMETRY_PAGE_2
     case 2: // sensor readings
     case '2':
       static char sensorNames[6][3] = {"Gx", " y", " z", "Ax", " y", " z" };
@@ -1092,7 +1128,8 @@ void lcd_telemetry() {
       }
       LCDcrlf();
       break;
-
+#endif
+#ifndef SUPPRESS_TELEMETRY_PAGE_3
       case 3: // checkboxes and modes
       case '3':
         i = linenr++ % CHECKBOXITEMS;
@@ -1102,8 +1139,9 @@ void lcd_telemetry() {
         LCDprint( rcOptions[i] ? 'X' : '.');
         LCDcrlf();
         break;
-
-      case 4:     // RX inputs
+#endif
+#ifndef SUPPRESS_TELEMETRY_PAGE_4
+     case 4:     // RX inputs
       case '4':
         static char channelNames[8][4] = {"Ail", "Ele", "Yaw", "Thr", "Ax1", "Ax2", "Ax3", "Ax4" };
         i = linenr++ % 8; // 8 channels
@@ -1123,7 +1161,8 @@ void lcd_telemetry() {
         LCDbar(12, (unit-1000)/10 );
         LCDcrlf();
         break;
-
+#endif
+#ifndef SUPPRESS_TELEMETRY_PAGE_5
       case 5: // outputs motors+sensors
       case '5':
         static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
@@ -1176,14 +1215,48 @@ void lcd_telemetry() {
 
         }
         break;
-
+#endif // page 5
+#ifndef SUPPRESS_TELEMETRY_PAGE_9
+      case 9: // diagnostics
+      case '9':
+        switch (linenr++ % 4) { // not really linenumbers
+        case 0: // cycle
+          LCDsetLine(1);
+          fill_line1_cycle();
+          LCDprintChar(line1);
+          break;
+       case 1: // cycle min/max
+          LCDsetLine(2);
+          fill_line2_cycleMinMax();
+          LCDprintChar(line2);
+          break;
+        case 2: // Fails.... labels
+          LCDsetLine(3);
+          fill_line1_fails();
+          LCDprintChar(line1);
+          break;
+        case 3: // Fails.... values
+          LCDsetLine(4);
+          fill_line2_fails_values();
+          LCDprintChar(line2);
+          break;
+        }
+        LCDcrlf();
+        break;
+#endif // page 9
 
     #if defined(LOG_VALUES) && defined(DEBUG)
     case 'R':
         //Reset logvalues
         cycleTimeMax = 0; // reset min/max on transition on->off
         cycleTimeMin = 65535;
-        telemetry = 0; // no use to repeat this forever
+#if BARO
+    	BaroAltStart = 0;
+#if defined(LOG_VALUES)
+    	BaroAltMax = 0;
+#endif
+#endif
+    	telemetry = 0; // no use to repeat this forever
         break;
     #endif // case R
 
@@ -1203,6 +1276,7 @@ void lcd_telemetry() {
         line1[8] = digit10( free_memory );
         line1[9] = digit1( free_memory );
         LCDsetLine(1); LCDprintChar(line1);
+        telemetry = 0; // no use to repeat this forever
         break;
    #endif // DEBUG
 

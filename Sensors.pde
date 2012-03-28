@@ -273,7 +273,7 @@ void ACC_Common() {
     }
     calibratingA--;
   }
-  #if defined(InflightAccCalibration)
+  #if defined(INFLIGHT_ACC_CALIBRATION)
       static int32_t b[3];
       static int16_t accZero_saved[3]  = {0,0,0};
       static int16_t  accTrim_saved[2] = {0, 0};
@@ -951,6 +951,7 @@ void Mag_getADC() {
   if (tCal != 0) {
     if ((t - tCal) < 30000000) { // 30s: you have 30s to turn the multi in all directions
       LEDPIN_TOGGLE;
+
       for(axis=0;axis<3;axis++) {
         if (magADC[axis] < magZeroTempMin[axis]) magZeroTempMin[axis] = magADC[axis];
         if (magADC[axis] > magZeroTempMax[axis]) magZeroTempMax[axis] = magADC[axis];

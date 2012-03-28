@@ -115,7 +115,8 @@ void serialCom() {
       serialize8('M');
       UartSendData();
       break;
-    case 'O':  // arduino to OSD data - contribution from MIS
+#ifndef SUPPRESS_OSD_SERIAL_COMMANDS
+      case 'O':  // arduino to OSD data - contribution from MIS
       serialize8('O');
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
       for(i=0;i<3;i++) serialize16(gyroData[i]);
@@ -144,7 +145,7 @@ void serialCom() {
       serialize8('O');
       UartSendData();
       break;
-    #if defined(GPS_FROM_OSD)
+      #if defined(GPS_FROM_OSD)
     case 'G':                      // OSD to arduino data for using GPS from OSD for navigation - added by Mis
       GPS_fix = SerialRead(0);     // get GPS Fix status
       GPS_numSat = SerialRead(0);  // get number of sat
@@ -161,6 +162,7 @@ void serialCom() {
       GPS_update = 1;            // new data indicator
       break;
     #endif 
+#endif
     case 'W': //GUI write params to eeprom @ arduino
      #if defined(PROMICRO)
       usb_use_buf = 1; // enable USB buffer
