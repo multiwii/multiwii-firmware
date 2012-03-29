@@ -135,7 +135,7 @@
 //#define MONGOOSE1_0     // mongoose 1.0    http://store.ckdevices.com/
 //#define CRIUS_LITE      // Crius MultiWii Lite
 //#define CRIUS_SE        // Crius MultiWii SE
-#define OPENLRSv2MULTI  // OpenLRS v2 Multi Rc Receiver board including ITG3205 and ADXL345
+//#define OPENLRSv2MULTI  // OpenLRS v2 Multi Rc Receiver board including ITG3205 and ADXL345
 
 //if you use independent sensors
 //leave it commented if you already checked a specific board above
@@ -314,6 +314,9 @@
 /* i2c devices */
 //#define LCD_ETPP        // Eagle Tree Power Panel LCD, which is i2c (not serial)
 //#define LCD_LCD03       // LCD03, which is i2c
+//#define OLED_I2C_128x64 // OLED http://www.multiwii.com/forum/viewtopic.php?f=7&t=1350
+
+//#define NEW_OLED_FONT	// OLED use other font (more lines)
 
 /* style of display - autodetected by LCD_ setting - only activate to overwrite defaults */
 //#define DISPLAY_2LINES

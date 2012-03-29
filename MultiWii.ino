@@ -389,9 +389,7 @@ void setup() {
   #if defined(GPS_SERIAL)
     SerialOpen(GPS_SERIAL,GPS_BAUD);
   #endif
-  #if defined(LCD_ETPP)
-    initLCD();
-  #elif defined(LCD_LCD03)
+  #if defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64)
     initLCD();
   #endif
   #ifdef LCD_TELEMETRY_DEBUG
@@ -655,7 +653,7 @@ void loop () {
   cycleTime = currentTime - previousTime;
   previousTime = currentTime;
 
-#ifdef LOG_VALUES && (LOG_VALUES == 2)
+#if defined(LOG_VALUES) && (LOG_VALUES == 2)
   if (cycleTime > cycleTimeMax) cycleTimeMax = cycleTime; // remember highscore
   if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
 #endif
