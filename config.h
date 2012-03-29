@@ -135,6 +135,7 @@
 //#define MONGOOSE1_0     // mongoose 1.0    http://store.ckdevices.com/
 //#define CRIUS_LITE      // Crius MultiWii Lite
 //#define CRIUS_SE        // Crius MultiWii SE
+#define OPENLRSv2MULTI  // OpenLRS v2 Multi Rc Receiver board including ITG3205 and ADXL345
 
 //if you use independent sensors
 //leave it commented if you already checked a specific board above

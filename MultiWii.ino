@@ -129,6 +129,7 @@ static uint8_t rcRate8;
 static uint8_t rcExpo8;
 static int16_t lookupRX[7];       // lookup table for expo & RC rate
 volatile uint8_t rcFrameComplete; // for serial rc receiver Spektrum
+static uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim or other usages 
 
 
 // **************
@@ -372,6 +373,9 @@ void setup() {
   readEEPROM();
   checkFirstTime();
   configureReceiver();
+  #if defined(OPENLRSv2MULTI)
+      initOpenLRS();
+  #endif
   initSensors();
   previousTime = micros();
   #if defined(GIMBAL)
@@ -416,10 +420,14 @@ void loop () {
   #if defined(SPEKTRUM)
     if (rcFrameComplete) computeRC();
   #endif
+    
+  #if defined(OPENLRSv2MULTI) 
+   Read_OpenLRS_RC();
+  #endif 
 
   if (currentTime > rcTime ) { // 50Hz
     rcTime = currentTime + 20000;
-    #if !(defined(SPEKTRUM) ||defined(BTSERIAL))
+    #if !(defined(SPEKTRUM) ||defined(BTSERIAL)  || defined(OPENLRSv2MULTI))
       computeRC();
     #endif
     // Failsafe routine - added by MIS

@@ -587,6 +587,63 @@
   #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
 #endif
 
+#if defined(OPENLRSv2MULTI)
+  #define ITG3200
+  #define ADXL345
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define ADXL345_ADDRESS 0xA6
+  #define ITG3200_ADDRESS 0XD0
+  
+  #define SDO_pin A0
+  #define SDI_pin A1        
+  #define SCLK_pin A2 
+  #define IRQ_pin 2
+  #define nSel_pin 4
+  #define IRQ_interrupt 0
+  
+  #define  nIRQ_1 (PIND & 0x04)==0x04 //D2
+  #define  nIRQ_0 (PIND & 0x04)==0x00 //D2
+  
+  #define  nSEL_on PORTD |= 0x10 //D4
+  #define  nSEL_off PORTD &= 0xEF //D4
+  
+  #define  SCK_on PORTC |= 0x04 //C2
+  #define  SCK_off PORTC &= 0xFB //C2
+  
+  #define  SDI_on PORTC |= 0x02 //C1
+  #define  SDI_off PORTC &= 0xFD //C1
+  
+  #define  SDO_1 (PINC & 0x01) == 0x01 //C0
+  #define  SDO_0 (PINC & 0x01) == 0x00 //C0
+  
+  //#### Other interface pinouts ###
+  #define GREEN_LED_pin 13
+  #define RED_LED_pin A3
+
+  #define Red_LED_ON  PORTC |= _BV(3);
+  #define Red_LED_OFF  PORTC &= ~_BV(3);
+  
+  #define Green_LED_ON  PORTB |= _BV(5);
+  #define Green_LED_OFF  PORTB &= ~_BV(5);
+  
+  #define NOP() __asm__ __volatile__("nop") 
+ 
+  #define RF22B_PWRSTATE_READY    01 
+  #define RF22B_PWRSTATE_TX        0x09 
+  #define RF22B_PWRSTATE_RX       05 
+  #define RF22B_Rx_packet_received_interrupt   0x02 
+  #define RF22B_PACKET_SENT_INTERRUPT  04 
+  #define RF22B_PWRSTATE_POWERDOWN  00    
+  
+  unsigned char ItStatus1, ItStatus2;  
+  typedef struct   
+  { 
+   unsigned char reach_1s    : 1; 
+  } FlagType; 
+  FlagType               Flag;   
+#endif
+
 #if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LIS3LV02) || defined(LSM303DLx_ACC) || defined(MPU6050)
   #define ACC 1
 #else
