@@ -1,0 +1,78 @@
+   This is at least a partial credits-file of people that have
+   contributed to the MultiWii project.  It is unsorted and incomplete.  
+   Policy is to leave marks here and not scattered all over the code.
+   In the best of all worlds a name mentioned here was synonymous for 
+   the person taking the responsibility of support and maintaining the code. 
+   The initial version of this file was created by moving the info 
+   from comments in the code.
+   If you do not find your name here, it is not meant as a disrespect
+   of your work. Please, feel free to add your name here.
+
+ Thanks,
+
+         Hamburger
+----------
+
+* AIRPLANE mode - PatrikE Experimental
+
+* BTSERIAL - Luis Correia
+
+* Eagle Tree Power Panel - Danal
+
+* Failsave - MIS
+
+* GPS_altitude,GPS_speed - Mis
+
+* GPS G-command - Mis
+
+* i2c LCD03 - Th0rsten
+
+* i2c OLED  128x64 display - howardbb howard@automatrix.co.za
+
+* I2C Barometer MS561101BA - Fabio, Alex
+
+* I2C Accelerometer BMA180
+- contribution initially from opie11 (rc-groups)
+- adaptation from C2po (may 2011)
+- ziss_dm (June 2011)
+- ToLuSe (Jully 2011)
+- Alex (December 2011)
+
+* I2C Accelerometer BMA020
+- Point65 and mgros (rc-groups)
+- ziss_dm (June 2011)
+- ToLuSe (Jully 2011)
+
+* LIS3LV02 I2C Accelerometer
+- adver (http://multiwii.com/forum/viewtopic.php?f=8&t=451)
+
+* I2C Accelerometer LSM303DLx
+- wektorx (http://www.multiwii.com/forum/viewtopic.php?f=8&t=863)
+
+* I2C Gyroscope L3G4200D - Ciskje
+
+* I2C Compass AK8975 - EOSBandi
+
+* OpenLRS - Melih Karakelle Version 1.11 2012-03-25 
+- Melih Karakelle (http://www.flytron.com) (forum nick name: Flytron)
+- Jan-Dirk Schuitemaker (http://www.schuitemaker.org/) 
+	(forum nick name: CrashingDutchman)
+- Etienne Saint-Paul (http://www.gameseed.fr) 
+	(forum nick name: Etienne) 
+
+* OSD O-command - MIS
+
+* PROGMEM - 11/21/2001 Danal
+
+* Simplified IMU - ziss_dm 19/04/2011 Version: V1.1
+
+* Moving Average Gyros - Magnetron1 (Michele Ardito) ########## beta
+
+* SBUS - Captain IxI and Zaggo
+
+* Spektrum Satellite Receiver - Danal
+
+* Textstar LCD - initial support Luca Brizzi aka gtrick90 @ RCG
+
+
+

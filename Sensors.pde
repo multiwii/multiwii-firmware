@@ -477,8 +477,6 @@ void Baro_update() {
 // ************************************************************************************************************
 // I2C Barometer MS561101BA
 // ************************************************************************************************************
-// first contribution from Fabio
-// modification from Alex (September 2011)
 //
 // specs are here: http://www.meas-spec.com/downloads/MS5611-01BA03.pdf
 // useful info on pages 7 -> 12
@@ -672,11 +670,6 @@ void ACC_getADC () {
 #endif
 
 // ************************************************************************************************************
-// contribution initially from opie11 (rc-groups)
-// adaptation from C2po (may 2011)
-// contribution from ziss_dm (June 2011)
-// contribution from ToLuSe (Jully 2011)
-// contribution from Alex (December 2011)
 // I2C Accelerometer BMA180
 // ************************************************************************************************************
 // I2C adress: 0x80 (8bit)    0x40 (7bit) (SDO connection to VCC) 
@@ -728,9 +721,6 @@ void ACC_getADC () {
 #endif
 
 // ************************************************************************************************************
-// contribution from Point65 and mgros (rc-groups)
-// contribution from ziss_dm (June 2011)
-// contribution from ToLuSe (Jully 2011)
 // I2C Accelerometer BMA020
 // ************************************************************************************************************
 // I2C adress: 0x70 (8bit)
@@ -791,7 +781,6 @@ void ACC_getADC() {
 
 // ************************************************************************
 // LIS3LV02 I2C Accelerometer
-//contribution from adver (http://multiwii.com/forum/viewtopic.php?f=8&t=451)
 // ************************************************************************
 #if defined(LIS3LV02)
 #define LIS3A  0x3A // I2C adress: 0x3A (8bit)
@@ -814,7 +803,6 @@ void i2c_ACC_getADC(){
 
 // ************************************************************************************************************
 // I2C Accelerometer LSM303DLx
-// contribution from wektorx (http://www.multiwii.com/forum/viewtopic.php?f=8&t=863)
 // ************************************************************************************************************
 #if defined(LSM303DLx_ACC)
 void ACC_init () {
@@ -857,7 +845,6 @@ void ACC_getADC() {
 #endif
 
 // ************************************************************************************************************
-// contribution from Ciskje
 // I2C Gyroscope L3G4200D 
 // ************************************************************************************************************
 #if defined(L3G4200D)
@@ -1056,7 +1043,7 @@ void Device_Mag_getADC() {
 #endif
 
 // ************************************************************************************************************
-// I2C Compass AK8975 (Contribution by EOSBandi)
+// I2C Compass AK8975
 // ************************************************************************************************************
 // I2C adress: 0x18 (8bit)   0x0C (7bit)
 // ************************************************************************************************************

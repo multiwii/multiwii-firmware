@@ -83,8 +83,8 @@ static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
 static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
 static uint16_t powerMax = 0;           // highest ever current
 static uint32_t armedTime = 0;
-static int32_t  BaroAltStart = 0;		// offset value from powerup
-static int32_t	BaroAltMax = 0;			// maximum value
+static int32_t  BAROaltStart = 0;		// offset value from powerup
+static int32_t	BAROaltMax = 0;			// maximum value
 
 static int16_t  i2c_errors_count = 0;
 static int16_t  annex650_overrun_count = 0;
@@ -173,7 +173,7 @@ static uint8_t  GPS_fix , GPS_fix_home = 0;
 static uint8_t  GPS_numSat;
 static uint16_t GPS_distanceToHome,GPS_distanceToHold;       // distance to home or hold point in meters
 static int16_t  GPS_directionToHome,GPS_directionToHold;     // direction to home or hol point in degrees
-static uint16_t GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s - Added by Mis
+static uint16_t GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s
 static uint8_t  GPS_update = 0;                              // it's a binary toogle to distinct a GPS position update
 static int16_t  GPS_angle[2] = { 0, 0};                      // it's the angles that must be applied for GPS correction
 
@@ -352,9 +352,9 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 void armNow() {
 #if BARO
 	if (armed == 0) {
-		BaroAltStart = BaroAlt;
+	  BAROaltStart = BaroAlt;
 #if LOG_VALUES
-		BaroAltMax = BaroAlt;
+	  BAROaltMax = BaroAlt;
 #endif
 	}
 #endif
@@ -574,7 +574,7 @@ void loop () {
         errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
         accMode = 1;
       }  
-    } else accMode = 0;  // modified by MIS for failsave support
+    } else accMode = 0;  // failsave support
 
     if (rcOptions[BOXARM] == 0) okToArm = 1;
     if (accMode == 1) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
@@ -630,7 +630,7 @@ void loop () {
 #if BARO
     	Baro_update();
 #if defined(LOG_VALUES)
-    	if (BaroAlt > BaroAltMax) BaroAltMax = BaroAlt;
+    	if (BaroAlt > BAROaltMax) BAROaltMax = BaroAlt;
 #endif
 #endif
     	break;

@@ -24,7 +24,7 @@
 //#define OCTOFLATX
 //#define FLYING_WING
 //#define VTAIL4
-//#define AIRPLANE     // PatrikE Experimental. Howto setup =>>>http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
+//#define AIRPLANE     // Howto setup =>>>http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
 
 #define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
 //#define YAW_DIRECTION -1
@@ -194,7 +194,7 @@
    Good results for helicopter, airplanes and flying wings (foamies) with lots of vibrations.*/
 //#define GYRO_SMOOTHING {20, 20, 3}    // separate averaging ranges for roll, pitch, yaw
 
-// Moving Average Gyros by Magnetron1 (Michele Ardito) ########## beta
+// Moving Average Gyros
 //#define MMGYRO                         // Active Moving Average Function for Gyros
 //#define MMGYROVECTORLENGHT 10          // Lenght of Moving Average Vector
 // Moving Average ServoGimbal Signal Output
@@ -250,20 +250,18 @@
      If you use an inline-regulator, a standard 3-pin servo connector can connect to ground, +5V, and RX0; solder the correct wires (and the 3V regulator!) to a Spektrum baseRX-to-Sat cable that has been cut in half. 
      NOTE: Because there is only one serial port on the Pro Mini, using a Spektrum Satellite implies you CANNOT use the PC based configuration tool. Further, you cannot use on-aircraft serial LCD as the baud rates are incompatible. You can configure by one of two methods:
        1) Use an on-aircraft i2c LCD (such as Eagle Tree or LCD03) for setting gains, reading sensors, etc. 
-       2) Available now: Comment out the Spektrum definition, upload, plug in PC, configure; uncomment the Spektrum definition, upload, plug in RX, and fly.  Repeat as required to configure. 
-   (Contribution by Danal) */
+       2) Available now: Comment out the Spektrum definition, upload, plug in PC, configure; uncomment the Spektrum definition, upload, plug in RX, and fly.  Repeat as required to configure. */
 //#define SPEKTRUM 1024
 //#define SPEKTRUM 2048
 
 
 /* EXPERIMENTAL !!
-   contribution from Captain IxI and Zaggo
    cf http://www.multiwii.com/forum/viewtopic.php?f=7&t=289
    The following line apply only for Futaba S-Bus Receiver on MEGA boards at RX1 only (Serial 1).
    You have to invert the S-Bus-Serial Signal e.g. with a Hex-Inverter like IC SN74 LS 04 */
 //#define SBUS
 
-/* Failsave settings - added by MIS
+/* Failsave settings
    Failsafe check pulse on THROTTLE channel. If the pulse is OFF (on only THROTTLE or on all channels) the failsafe procedure is initiated.
    After FAILSAVE_DELAY time of pulse absence, the level mode is on (if ACC or nunchuk is avaliable), PITCH, ROLL and YAW is centered
    and THROTTLE is set to FAILSAVE_THR0TTLE value. You must set this value to descending about 1m/s or so for best results. 
@@ -271,13 +269,12 @@
    Next, afrer FAILSAVE_OFF_DELAY the copter is disarmed, and motors is stopped.
    If RC pulse coming back before reached FAILSAVE_OFF_DELAY time, after the small quard time the RC control is returned to normal.
    If you use serial sum PPM, the sum converter must completly turn off the PPM SUM pusles for this FailSafe functionality.*/
-#define FAILSAFE                                  // Alex: comment this line if you want to deactivate the failsafe function
+#define FAILSAFE                                  // comment this line if you want to deactivate the failsafe function
 #define FAILSAVE_DELAY     10                     // Guard time for failsafe activation after signal lost. 1 step = 0.1sec - 1sec in example
 #define FAILSAVE_OFF_DELAY 200                    // Time for Landing before motors stop in 0.1sec. 1 step = 0.1sec - 20sec in example
 #define FAILSAVE_THR0TTLE  (MINTHROTTLE + 200)    // Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
 
 /* EXPERIMENTAL !!
-  contribution from Luis Correia
   see http://www.multiwii.com/forum/viewtopic.php?f=18&t=828
   It uses a Bluetooth Serial module as the input for controlling the device via an Android application
   As with the SPEKTRUM option, is not possible to use the configuration tool on a mini or promini. */
@@ -334,15 +331,13 @@
  VCC to +5V VCC (pin1 from top)
  SDA - Pin A4 Mini Pro - Pin 20 Mega (pin2 from top)
  SCL - Pin A5 Mini Pro - Pin 21 Mega (pin3 from top)
- GND to Ground (pin4 from top)
- (by Th0rsten) */
+ GND to Ground (pin4 from top) */
 
 /* To use an Eagle Tree Power Panel LCD for configuration:
  White wire  to Ground
  Red wire    to +5V VCC (or to the WMP power pin, if you prefer to reset everything on the bus when WMP resets)
  Yellow wire to SDA - Pin A4 Mini Pro - Pin 20 Mega
  Brown wire  to SCL - Pin A5 Mini Pro - Pin 21 Mega 
- (Contribution by Danal) */
 
 /* Cat's whisker LCD_TEXTSTAR LCD
    Pleae note this display needs a full 4 wire connection to (+5V, Gnd, RXD, TXD )

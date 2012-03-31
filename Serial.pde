@@ -116,7 +116,7 @@ void serialCom() {
       UartSendData();
       break;
 #ifndef SUPPRESS_OSD_SERIAL_COMMANDS
-      case 'O':  // arduino to OSD data - contribution from MIS
+      case 'O':  // arduino to OSD data
       serialize8('O');
       for(i=0;i<3;i++) serialize16(accSmooth[i]);
       for(i=0;i<3;i++) serialize16(gyroData[i]);
@@ -146,7 +146,7 @@ void serialCom() {
       UartSendData();
       break;
       #if defined(GPS_FROM_OSD)
-    case 'G':                      // OSD to arduino data for using GPS from OSD for navigation - added by Mis
+    case 'G':                      // OSD to arduino data for using GPS from OSD for navigation
       GPS_fix = SerialRead(0);     // get GPS Fix status
       GPS_numSat = SerialRead(0);  // get number of sat
       rptr = (uint8_t *)&GPS_latitude;

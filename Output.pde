@@ -843,7 +843,6 @@ void mixTable() {
   #if (LOG_VALUES == 2) || defined(POWERMETER_SOFT)
     uint32_t amp;
     /* true cubic function; when divided by vbat_max=126 (12.6V) for 3 cell battery this gives maximum value of ~ 500 */
-    /* Lookup table moved to PROGMEM 11/21/2001 by Danal */
     static uint16_t amperes[64] =   {   0,  2,  6, 15, 30, 52, 82,123,
                                      175,240,320,415,528,659,811,984,
                                      1181,1402,1648,1923,2226,2559,2924,3322,

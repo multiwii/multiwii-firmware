@@ -386,24 +386,6 @@ void computeRC() {
 
 
 #if defined(OPENLRSv2MULTI) 
-// **********************************************************
-// ******************   OpenLRS Rx Code   *******************
-// ***  OpenLRS Designed by Melih Karakelle on 2010-2012  ***
-// **  an Arudino based RC Rx/Tx system with extra futures **
-// **       This Source code licensed under GPL            **
-// **********************************************************
-// Version Number     : 1.11
-// Latest Code Update : 2012-03-25
-// Supported Hardware : OpenLRS Rx boards (store.flytron.com)
-// Project Forum      : http://forum.flytron.com/viewforum.php?f=7
-// Google Code Page   : http://code.google.com/p/openlrs/
-// **********************************************************
-// # PROJECT DEVELOPERS # 
-// Melih Karakelle (http://www.flytron.com) (forum nick name: Flytron)
-// Jan-Dirk Schuitemaker (http://www.schuitemaker.org/) (forum nick name: CrashingDutchman)
-// Etienne Saint-Paul (http://www.gameseed.fr) (forum nick name: Etienne) 
-//
-
 //######### TRANSMISSION VARIABLES ##########
 #define CARRIER_FREQUENCY 435000  // 435Mhz startup frequency
 #define FREQUENCY_HOPPING 1 // 1 = Enabled  0 = Disabled
@@ -511,15 +493,7 @@ void Read_OpenLRS_RC(){
 
 // **********************************************************
 // **      RFM22B/Si4432 control functions for OpenLRS     **
-// **       This Source code licensed under GPL            **
 // **********************************************************
-// Latest Code Update : 2011-09-26
-// Supported Hardware : OpenLRS Tx/Rx boards (store.flytron.com)
-// Project Forum      : http://forum.flytron.com/viewforum.php?f=7
-// Google Code Page   : http://code.google.com/p/openlrs/
-// **********************************************************
-
-//***************************************************************************** 
 //*****************************************************************************  
 
 //-------------------------------------------------------------- 
