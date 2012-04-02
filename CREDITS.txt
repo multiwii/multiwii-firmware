@@ -74,5 +74,7 @@
 
 * Textstar LCD - initial support Luca Brizzi aka gtrick90 @ RCG
 
+* Inflight ACC Calibration - Jevermeister (Nils Ivo von Aswege)
 
+* Global Buzzer Handling (buzzer.pde) - Jevermeister (Nils Ivo von Aswege)
 
