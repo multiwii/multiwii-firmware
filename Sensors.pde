@@ -299,7 +299,7 @@ void ACC_Common() {
         if (InflightcalibratingA == 1) {
           AccInflightCalibrationActive = 0;
           AccInflightCalibrationMeasurementDone = 1;
-          blinkLED(10,10,2);      //buzzer for indicatiing the start inflight
+          toggleBeep = 2;      //buzzer for indicatiing the end of calibration
         // recover saved values to maintain current flight behavior until new values are transferred
          accZero[ROLL]  = accZero_saved[ROLL] ;
          accZero[PITCH] = accZero_saved[PITCH];
