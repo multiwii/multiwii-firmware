@@ -447,7 +447,13 @@ void loop () {
       errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
       rcDelayCommand++;
       if (rcData[YAW] < MINCHECK && rcData[PITCH] < MINCHECK && armed == 0) {
-        if (rcDelayCommand == 20) calibratingG=400;
+        if (rcDelayCommand == 20) 
+          {
+          calibratingG=400;
+          #if GPS 
+          GPS_reset_home_position();
+          #endif
+          }
       } else if (rcData[YAW] > MAXCHECK && rcData[PITCH] > MAXCHECK && armed == 0) {
         if (rcDelayCommand == 20) {
           #ifdef TRI
