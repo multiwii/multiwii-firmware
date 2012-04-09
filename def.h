@@ -435,8 +435,22 @@
 #if defined(QUADRINO_ZOOM)
   #define ITG3200
   #define BMA180
-  #define BMP085  // note, can be also #define MS561101BA  on some versions
-  //#define MS561101BA
+  #define BMP085
+  #define HMC5883
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
+  #define BMA180_ADDRESS 0x80
+  #define ITG3200_ADDRESS 0XD0
+  #define STABLEPIN_PINMODE pinMode (A2, OUTPUT);
+  #define STABLEPIN_ON PORTC |= (1<<2);
+  #define STABLEPIN_OFF PORTC &= ~(1<<2);
+#endif
+
+#if defined(QUADRINO_ZOOM_MS)
+  #define ITG3200
+  #define BMA180
+  #define MS561101BA
   #define HMC5883
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
@@ -554,6 +568,7 @@
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -X; gyroADC[PITCH] = -Y; gyroADC[YAW] = -Z;}
   #define MPU6050_ADDRESS 0xD2
+  #undef INTERNAL_I2C_PULLUPS
 #endif
 
 #if defined(MONGOOSE1_0)
@@ -674,17 +689,22 @@
   #define GPS 0
 #endif
 
+#if defined(SRF02) || defined(SRF08) || defined(SRF10) || defined(SRC235)
+  #define SONAR 1
+#else
+  #define SONAR 0
+#endif
 
 #if defined (AIRPLANE) || defined(HELICOPTER) && defined(PROMINI) 
- #if defined(D12_POWER)
-  #define SERVO_4_PINMODE            ;  // D12
-  #define SERVO_4_PIN_HIGH           ;
-  #define SERVO_4_PIN_LOW            ;
- #else if
-  #define POWERPIN_PINMODE           ;
-  #define POWERPIN_ON                ;
-  #define POWERPIN_OFF               ;
- #endif
+  #if defined(D12_POWER)
+    #define SERVO_4_PINMODE            ;  // D12
+    #define SERVO_4_PIN_HIGH           ;
+    #define SERVO_4_PIN_LOW            ;
+  #else
+    #define POWERPIN_PINMODE           ;
+    #define POWERPIN_ON                ;
+    #define POWERPIN_OFF               ;
+  #endif
 #endif
 
 #if defined(TRI)
@@ -848,9 +868,9 @@
 #endif
 
 #if defined(POWERMETER) && !(defined(VBAT))
-  	#error "to use powermeter, you must also define and configure VBAT"
+        #error "to use powermeter, you must also define and configure VBAT"
 #endif
 
 #if defined(LCD_TELEMETRY_AUTO) && !(defined(LCD_TELEMETRY))
- 	#error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
+        #error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
 #endif

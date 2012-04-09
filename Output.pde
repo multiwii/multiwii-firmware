@@ -13,10 +13,10 @@
 #endif
 #if !defined(PROMICRO) || defined(HWPWM6)
   #if defined(AIRPLANE)
-// To prevent motor to start at reset. atomicServo[7]=5 or 249 if reverseed servo
+    // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reverseed servo
     volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,5}; 
   #else
-   volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
+    volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
   #endif
   //for HEX Y6 and HEX6/HEX6X flat for promini
   volatile uint8_t atomicPWM_PIN5_lowState;
@@ -751,13 +751,12 @@ void mixTable() {
     servo[0]  = constrain(servo[0] + wing_left_mid , WING_LEFT_MIN,  WING_LEFT_MAX );
     servo[1]  = constrain(servo[1] + wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX);
   #endif
-  
   #if defined(AIRPLANE) //PatrikE Experimentals
     // Servosettings Only For Airplane
-   static int16_t   servoMid[8];                        // Midpoint on servo
-   static uint8_t   servotravel[8] = SERVO_RATES;       // Rates in 0-100% 
-   static int8_t    Mid[8] = SERVO_OFFSET;
-   static int8_t    servoreverse[8] = SERVO_DIRECTION ; // Inverted servos
+    static int16_t   servoMid[8];                        // Midpoint on servo
+    static uint8_t   servotravel[8] = SERVO_RATES;       // Rates in 0-100% 
+    static int8_t    Mid[8] = SERVO_OFFSET;
+    static int8_t    servoreverse[8] = SERVO_DIRECTION ; // Inverted servos
  
     // Common functions for Plane
     static int16_t servolimit[8][2]; // Holds servolimit data
@@ -780,17 +779,17 @@ void mixTable() {
     // Only use servo[7] as motorcontrol if motor is used in the setup            */
 
     if(passThruMode){   // Direct passthru from RX 
-    servo[3]  = servoMid[3]+(rcCommand[ROLL] *servoreverse[3]);     //   Wing 1
-    servo[4]  = servoMid[4]+(rcCommand[ROLL] *servoreverse[4]);     //   Wing 2
-    servo[5]  = servoMid[5]+(rcCommand[YAW]  *servoreverse[5]);     //   Rudder
-    servo[6]  = servoMid[6]+(rcCommand[PITCH]*servoreverse[6]);     //   Elevator 
-   }else{
-   // use sensors to correct (gyro only or gyro+acc according to AUX configuration
-    servo[3]  =(servoMid[3] + (axisPID[ROLL]  * servoreverse[3])); //   Wing 1 
-    servo[4]  =(servoMid[4] + (axisPID[ROLL]  * servoreverse[4])); //   Wing 2
-    servo[5]  =(servoMid[5] + (axisPID[YAW]   * servoreverse[5])); //   Rud(der
-    servo[6]  =(servoMid[6] + (axisPID[PITCH] * servoreverse[6])); //   Elevator
-      } 
+      servo[3]  = servoMid[3]+(rcCommand[ROLL] *servoreverse[3]);     //   Wing 1
+      servo[4]  = servoMid[4]+(rcCommand[ROLL] *servoreverse[4]);     //   Wing 2
+      servo[5]  = servoMid[5]+(rcCommand[YAW]  *servoreverse[5]);     //   Rudder
+      servo[6]  = servoMid[6]+(rcCommand[PITCH]*servoreverse[6]);     //   Elevator 
+    } else {
+      // use sensors to correct (gyro only or gyro+acc according to AUX configuration
+      servo[3]  =(servoMid[3] + (axisPID[ROLL]  * servoreverse[3])); //   Wing 1 
+      servo[4]  =(servoMid[4] + (axisPID[ROLL]  * servoreverse[4])); //   Wing 2
+      servo[5]  =(servoMid[5] + (axisPID[YAW]   * servoreverse[5])); //   Rud(der
+      servo[6]  =(servoMid[6] + (axisPID[PITCH] * servoreverse[6])); //   Elevator
+    } 
     // ServoRates
     for(uint8_t i=3;i<8;i++){ 
       servo[i]  = map(servo[i], SERVO_MIN, SERVO_MAX, servolimit[i][0],  servolimit[i][1]);

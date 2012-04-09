@@ -11,7 +11,7 @@ March  2012     V2.0
 #include "config.h"
 #include "def.h"
 #include <avr/pgmspace.h>
-#define  VERSION  200 // need 3 digits for proper processing in LCDconfig()
+#define  VERSION  200
 
 /*********** RC alias *****************/
 #define ROLL       0
@@ -77,14 +77,15 @@ static int16_t  errorAltitudeI = 0;
 static uint8_t  buzzerState = 0;
 static uint8_t  toggleBeep = 0;
 static int16_t  debug1,debug2,debug3,debug4;
-  
+static int16_t  sonarAlt; //to think about the unit
+
 //for log
 static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
 static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
 static uint16_t powerMax = 0;           // highest ever current
 static uint32_t armedTime = 0;
-static int32_t  BAROaltStart = 0;		// offset value from powerup
-static int32_t	BAROaltMax = 0;			// maximum value
+static int32_t  BAROaltStart = 0;       // offset value from powerup
+static int32_t	BAROaltMax = 0;	        // maximum value
 
 static int16_t  i2c_errors_count = 0;
 static int16_t  annex650_overrun_count = 0;
@@ -129,8 +130,7 @@ static uint8_t rcRate8;
 static uint8_t rcExpo8;
 static int16_t lookupRX[7];       // lookup table for expo & RC rate
 volatile uint8_t rcFrameComplete; // for serial rc receiver Spektrum
-static uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim or other usages 
-
+static uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim or other usages
 
 // **************
 // gyro+acc IMU
@@ -160,8 +160,7 @@ static uint8_t dynP8[3], dynI8[3], dynD8[3];
 static uint8_t rollPitchRate;
 static uint8_t yawRate;
 static uint8_t dynThrPID;
-static uint8_t activate1[CHECKBOXITEMS];
-static uint8_t activate2[CHECKBOXITEMS];
+static uint16_t activate[CHECKBOXITEMS];
 
 // **********************
 // GPS
@@ -347,19 +346,22 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       LEDPIN_TOGGLE;
     }
   #endif
-}
 
-void armNow() {
-#if BARO
-	if (armed == 0) {
-	  BAROaltStart = BaroAlt;
-#if LOG_VALUES
-	  BAROaltMax = BaroAlt;
-#endif
-	}
-#endif
-	armed = 1;
-	headFreeModeHold = heading;
+  #if defined(LOG_VALUES) && (LOG_VALUES == 2)
+    if (cycleTime > cycleTimeMax) cycleTimeMax = cycleTime; // remember highscore
+    if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
+  #endif
+  #ifdef LOG_VALUES
+    if (armed) armedTime += (uint32_t)cycleTime;
+    #if BARO
+      if (armed == 0) {
+        BAROaltStart = BaroAlt;
+        BAROaltMax = BaroAlt;
+      } else {
+        if (BaroAlt > BAROaltMax) BAROaltMax = BaroAlt;
+      }
+    #endif
+  #endif
 }
 
 void setup() {
@@ -374,7 +376,7 @@ void setup() {
   checkFirstTime();
   configureReceiver();
   #if defined(OPENLRSv2MULTI)
-      initOpenLRS();
+    initOpenLRS();
   #endif
   initSensors();
   previousTime = micros();
@@ -418,16 +420,13 @@ void loop () {
   #if defined(SPEKTRUM)
     if (rcFrameComplete) computeRC();
   #endif
-    
   #if defined(OPENLRSv2MULTI) 
-   Read_OpenLRS_RC();
+    Read_OpenLRS_RC();
   #endif 
 
   if (currentTime > rcTime ) { // 50Hz
     rcTime = currentTime + 20000;
-    #if !(defined(SPEKTRUM) ||defined(BTSERIAL)  || defined(OPENLRSv2MULTI))
-      computeRC();
-    #endif
+    computeRC();
     // Failsafe routine - added by MIS
     #if defined(FAILSAFE)
       if ( failsafeCnt > (5*FAILSAVE_DELAY) && armed==1) {                  // Stabilize, and set Throttle to specified level
@@ -447,13 +446,12 @@ void loop () {
       errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
       rcDelayCommand++;
       if (rcData[YAW] < MINCHECK && rcData[PITCH] < MINCHECK && armed == 0) {
-        if (rcDelayCommand == 20) 
-          {
+        if (rcDelayCommand == 20) {
           calibratingG=400;
           #if GPS 
-          GPS_reset_home_position();
+            GPS_reset_home_position();
           #endif
-          }
+        }
       } else if (rcData[YAW] > MAXCHECK && rcData[PITCH] > MAXCHECK && armed == 0) {
         if (rcDelayCommand == 20) {
           #ifdef TRI
@@ -466,10 +464,8 @@ void loop () {
             writeServos();
           #endif
           #ifdef AIRPLANE
-            for(int i = 4; i<7 ;i++) { 
-              servo[i]  = 1500;
-          }
-          writeServos();
+            for(i = 4; i<7 ;i++) servo[i] = 1500;
+            writeServos();
           #endif          
           #if defined(LCD_CONF)
             configurationLoop(); // beginning LCD configuration
@@ -477,7 +473,7 @@ void loop () {
           previousTime = micros();
         }
       }
-      #if defined(INFLIGHT_ACC_CALIBRATION)
+      #if defined(InflightAccCalibration)  
         else if (armed == 0 && rcData[YAW] < MINCHECK && rcData[PITCH] > MAXCHECK && rcData[ROLL] > MAXCHECK){
           if (rcDelayCommand == 20){
             if (AccInflightCalibrationMeasurementDone){                // trigger saving into eeprom after landing
@@ -494,16 +490,18 @@ void loop () {
           }
        } 
      #endif
-      else if ((activate1[BOXARM] > 0) || (activate2[BOXARM] > 0)) {
+      else if (activate[BOXARM] > 0) {
         if ( rcOptions[BOXARM] && okToArm ) {
-        	armNow();
+	  armed = 1;
+	  headFreeModeHold = heading;
         } else if (armed) armed = 0;
         rcDelayCommand = 0;
       } else if ( (rcData[YAW] < MINCHECK || rcData[ROLL] < MINCHECK)  && armed == 1) {
         if (rcDelayCommand == 20) armed = 0; // rcDelayCommand = 20 => 20x20ms = 0.4s = time to wait for a specific RC command to be acknowledged
       } else if ( (rcData[YAW] > MAXCHECK || rcData[ROLL] > MAXCHECK) && rcData[PITCH] < MAXCHECK && armed == 0 && calibratingG == 0 && calibratedACC == 1) {
         if (rcDelayCommand == 20) {
-        	armNow();
+	  armed = 1;
+	  headFreeModeHold = heading;
         }
      #ifdef LCD_TELEMETRY_AUTO
       } else if (rcData[ROLL] < MINCHECK && rcData[PITCH] > MAXCHECK && armed == 0) {
@@ -548,7 +546,7 @@ void loop () {
         rcDelayCommand = 0;
       }
     }
-
+    
     #if defined(INFLIGHT_ACC_CALIBRATION)
       if (AccInflightCalibrationArmed && armed == 1 && rcData[THROTTLE] > MINCHECK && !rcOptions[BOXARM] ){ // Copter is airborne and you are turning it off via boxarm : start measurement
         InflightcalibratingA = 50;
@@ -564,15 +562,14 @@ void loop () {
       }
     #endif
 
-    for(i=0;i<CHECKBOXITEMS;i++) {
+    for(i=0;i<CHECKBOXITEMS;i++) {   
       rcOptions[i] = (
-      ( (rcData[AUX1]<1300)    | (1300<rcData[AUX1] && rcData[AUX1]<1700)<<1 | (rcData[AUX1]>1700)<<2
-       |(rcData[AUX2]<1300)<<3 | (1300<rcData[AUX2] && rcData[AUX2]<1700)<<4 | (rcData[AUX2]>1700)<<5) & activate1[i]
-      )||(
-      ( (rcData[AUX3]<1300)    | (1300<rcData[AUX3] && rcData[AUX3]<1700)<<1 | (rcData[AUX3]>1700)<<2
-       |(rcData[AUX4]<1300)<<3 | (1300<rcData[AUX4] && rcData[AUX4]<1700)<<4 | (rcData[AUX4]>1700)<<5) & activate2[i]);
+       ((rcData[AUX1]<1300)    | (1300<rcData[AUX1] && rcData[AUX1]<1700)<<1 | (rcData[AUX1]>1700)<<2
+       |(rcData[AUX2]<1300)<<3 | (1300<rcData[AUX2] && rcData[AUX2]<1700)<<4 | (rcData[AUX2]>1700)<<5
+       |(rcData[AUX3]<1300)<<6 | (1300<rcData[AUX3] && rcData[AUX3]<1700)<<7 | (rcData[AUX3]>1700)<<8
+       |(rcData[AUX4]<1300)<<9 | (1300<rcData[AUX4] && rcData[AUX4]<1700)<<10| (rcData[AUX4]>1700)<<11) & activate[i])>0;
     }
-    
+
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAVE_DELAY is always false
     if (( rcOptions[BOXACC] || (failsafeCnt > 5*FAILSAVE_DELAY) ) && (ACC || nunchuk)) { 
       // bumpless transfer to Level mode
@@ -626,30 +623,32 @@ void loop () {
     else passThruMode = 0;
   } else { // not in rc loop
     static int8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
-    switch (taskOrder++ % 4) {
-    case 0:
-#if MAG
-    	Mag_getADC();
-#endif
-    	break;
-    case 1:
-#if BARO
-    	Baro_update();
-#if defined(LOG_VALUES)
-    	if (BaroAlt > BAROaltMax) BAROaltMax = BaroAlt;
-#endif
-#endif
-    	break;
-    case 2:
-#if BARO
-    	getEstimatedAltitude();
-#endif
-    	break;
-    case 3:
-#if GPS
-    	GPS_NewData();
-#endif
-    	break;
+    switch (taskOrder++ % 5) {
+      case 0:
+        #if MAG
+          Mag_getADC();
+        #endif
+        break;
+      case 1:
+        #if BARO
+          Baro_update();
+        #endif
+        break;
+      case 2:
+        #if BARO
+          getEstimatedAltitude();
+        #endif
+        break;
+      case 3:
+        #if GPS
+          GPS_NewData();
+        #endif
+        break;
+      case 4:
+        #if SONAR
+          Sonar_update();debug3 = sonarAlt;
+        #endif
+        break;
     }
   }
 
@@ -658,14 +657,6 @@ void loop () {
   currentTime = micros();
   cycleTime = currentTime - previousTime;
   previousTime = currentTime;
-
-#if defined(LOG_VALUES) && (LOG_VALUES == 2)
-  if (cycleTime > cycleTimeMax) cycleTimeMax = cycleTime; // remember highscore
-  if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
-#endif
-#ifdef LOG_VALUES
-  if (armed) armedTime += (uint32_t)cycleTime;
-#endif
 
   #if MAG
     if (abs(rcCommand[YAW]) <70 && magMode) {

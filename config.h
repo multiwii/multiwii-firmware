@@ -119,7 +119,8 @@
 //#define FREEIMUv043     // same as FREEIMUv04 with final MPU6050 (with the right ACC scale)
 //#define PIPO            // 9DOF board from erazz
 //#define QUADRINO        // full FC board 9DOF+baro board from witespy  with BMP085 baro     <- confirmed by Alex
-//#define QUADRINO_ZOOM   // full FC board 9DOF+baro board from witespy  second edition       <- confirmed by Alex
+//#define QUADRINO_ZOOM   // full FC board 9DOF+baro board from witespy  second edition
+//#define QUADRINO_ZOOM_MS    // full FC board 9DOF+baro board from witespy  second edition       <- confirmed by Alex
 //#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU
 //#define AEROQUADSHIELDv2
 //#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). requires 3.3V power.
@@ -161,6 +162,14 @@
 //#define HMC5883
 //#define AK8975
 //#define MAG3110
+
+// use the Devantech SRF i2c sensors, SRF08, SRF02
+// (for now, there is no difference in the SRF0x code, but we may want to differentiate in the future.)
+//#define SRF02
+//#define SRF08
+//#define SRF10
+//#define SRF23
+
 
 /* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
 //#define ADCACC
@@ -249,7 +258,7 @@
      There is no 3.3V source on a pro mini; you can either use a different 3V source, or attach orange to 5V with a 3V regulator in-line (such as http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail&name=MCP1700-3002E/TO-ND)
      If you use an inline-regulator, a standard 3-pin servo connector can connect to ground, +5V, and RX0; solder the correct wires (and the 3V regulator!) to a Spektrum baseRX-to-Sat cable that has been cut in half. 
      NOTE: Because there is only one serial port on the Pro Mini, using a Spektrum Satellite implies you CANNOT use the PC based configuration tool. Further, you cannot use on-aircraft serial LCD as the baud rates are incompatible. You can configure by one of two methods:
-       1) Use an on-aircraft i2c LCD (such as Eagle Tree or LCD03) for setting gains, reading sensors, etc. 
+       1) Use an on-aircraft i2c LCD (such as Eagle Tree or LCD03) for setting gains, reading sensors, etc.
        2) Available now: Comment out the Spektrum definition, upload, plug in PC, configure; uncomment the Spektrum definition, upload, plug in RX, and fly.  Repeat as required to configure. */
 //#define SPEKTRUM 1024
 //#define SPEKTRUM 2048
@@ -274,11 +283,8 @@
 #define FAILSAVE_OFF_DELAY 200                    // Time for Landing before motors stop in 0.1sec. 1 step = 0.1sec - 20sec in example
 #define FAILSAVE_THR0TTLE  (MINTHROTTLE + 200)    // Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
 
-/* EXPERIMENTAL !!
-  see http://www.multiwii.com/forum/viewtopic.php?f=18&t=828
-  It uses a Bluetooth Serial module as the input for controlling the device via an Android application
-  As with the SPEKTRUM option, is not possible to use the configuration tool on a mini or promini. */
-//#define BTSERIAL
+/* to input RC signal with the serial port */
+//#define RCSERIAL
 
 /* this is the value for the ESCs when they are not armed
    in some cases, this value must be lowered down to 900 for some specific ESCs */
@@ -297,11 +303,8 @@
 /* In order to save space, it's possibile to desactivate the LCD configuration functions
    comment this line only if you don't plan to used a LCD */
 #define LCD_CONF
-/* to include setting the aux switches for AUX1 and AUX2 via LCD */
-//#define LCD_CONF_AUX_12
-/* to include setting the aux switches for AUX1, AUX2, AUX3 and AUX4 via LCD */
-//#define LCD_CONF_AUX_1234
-
+/* to include setting the aux switches for AUX1 -> AUX4 via LCD */ //to review (activate[] is now 16 bit long)
+//#define LCD_CONF_AUX
 
 /* choice of LCD attached for configuration and telemetry, see notes below */
 #define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
@@ -316,7 +319,7 @@
 //#define NEW_OLED_FONT	// OLED use other font (more lines)
 
 /* style of display - autodetected by LCD_ setting - only activate to overwrite defaults */
-//#define DISPLAY_2LINES
+#define DISPLAY_2LINES
 //#define DISPLAY_MULTILINE
 
 /* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
@@ -331,13 +334,13 @@
  VCC to +5V VCC (pin1 from top)
  SDA - Pin A4 Mini Pro - Pin 20 Mega (pin2 from top)
  SCL - Pin A5 Mini Pro - Pin 21 Mega (pin3 from top)
- GND to Ground (pin4 from top) */
+ GND to Ground (pin4 from top)*/
 
 /* To use an Eagle Tree Power Panel LCD for configuration:
  White wire  to Ground
  Red wire    to +5V VCC (or to the WMP power pin, if you prefer to reset everything on the bus when WMP resets)
  Yellow wire to SDA - Pin A4 Mini Pro - Pin 20 Mega
- Brown wire  to SCL - Pin A5 Mini Pro - Pin 21 Mega 
+ Brown wire  to SCL - Pin A5 Mini Pro - Pin 21 Mega */
 
 /* Cat's whisker LCD_TEXTSTAR LCD
    Pleae note this display needs a full 4 wire connection to (+5V, Gnd, RXD, TXD )
@@ -429,7 +432,6 @@
 #define WING_LEFT_MAX  2000 // limit servo travel range must be inside [1020;2000]
 #define WING_RIGHT_MIN 1020 // limit servo travel range must be inside [1020;2000]
 #define WING_RIGHT_MAX 2000 // limit servo travel range must be inside [1020;2000]
-
 
 //***********************************************************************************************//
 //******************************* !!!!  Airplane Settings  !!!! *********************************//
@@ -528,9 +530,6 @@
 //#define LCD_TELEMETRY_DEBUG  //This form rolls between all screens, LCD_TELEMETRY_AUTO must also be defined.
 //#define LCD_TELEMETRY_DEBUG 6  //This form stays on the screen specified.
 
-/* to reduce memory footprint, suppress some code fragments if not needed */
-/* uncomment to suppress  */
-//#define SUPPRESS_OSD_SERIAL_COMMANDS
 
 //****** end of advanced users settings ***********************************
 /* ===================================================================== */

@@ -86,7 +86,6 @@ void computeIMU () {
 // Currently Magnetometer uses separate CF which is used only
 // for heading approximation.
 //
-// code size reduction and tmp vector intermediate step for vector rotation computation: October 2011 by Alex
 // **************************************************
 
 //******  advanced users settings *******************

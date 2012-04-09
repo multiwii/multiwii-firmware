@@ -713,7 +713,7 @@ static lcd_type_desc_t LTU8 = {&__u8Fmt, &__u8Inc};
 static lcd_type_desc_t LTU16 = {&__u16Fmt, &__u16Inc};
 static lcd_type_desc_t LPMM = {&__upMFmt, &__nullInc};
 static lcd_type_desc_t LPMS = {&__upSFmt, &__nullInc};
-static lcd_type_desc_t LAUX = {&__uAuxFmt, &__u8Inc};
+static lcd_type_desc_t LAUX = {&__uAuxFmt, &__u16Inc}; //to review (activate is now 16 bit long)
 
 /*typedef*/struct lcd_param_def_t {
   lcd_type_desc_t * type;
@@ -808,34 +808,19 @@ PROGMEM prog_char lcd_param_text39 [] = "Failsafes";
 PROGMEM prog_char lcd_param_text40 [] = "i2c Errors";
 PROGMEM prog_char lcd_param_text41 [] = "annex overruns";
 #endif
-#if defined(LCD_CONF_AUX_12) || defined(LCD_CONF_AUX_1234)
-PROGMEM prog_char lcd_param_text42 [] = "AX1/2 level";
-PROGMEM prog_char lcd_param_text43 [] = "AX1/2 baro";
-PROGMEM prog_char lcd_param_text44 [] = "AX1/2 mag";
-PROGMEM prog_char lcd_param_text45 [] = "AX1/2 cam stab";
-PROGMEM prog_char lcd_param_text46 [] = "AX1/2 cam trig";
-PROGMEM prog_char lcd_param_text47 [] = "AX1/2 arm";
-PROGMEM prog_char lcd_param_text48 [] = "AX1/2 gps home";
-PROGMEM prog_char lcd_param_text49 [] = "AX1/2 gps hold";
-PROGMEM prog_char lcd_param_text50 [] = "AX1/2 passthru";
-PROGMEM prog_char lcd_param_text51 [] = "AX1/2 headfree";
-PROGMEM prog_char lcd_param_text52 [] = "AX1/2 beeper";
+#if defined(LCD_CONF_AUX)
+PROGMEM prog_char lcd_param_text42 [] = "AUX level";
+PROGMEM prog_char lcd_param_text43 [] = "AUX baro";
+PROGMEM prog_char lcd_param_text44 [] = "AUX mag";
+PROGMEM prog_char lcd_param_text45 [] = "AUX cam stab";
+PROGMEM prog_char lcd_param_text46 [] = "AUX cam trig";
+PROGMEM prog_char lcd_param_text47 [] = "AUX arm";
+PROGMEM prog_char lcd_param_text48 [] = "AUX gps home";
+PROGMEM prog_char lcd_param_text49 [] = "AUX gps hold";
+PROGMEM prog_char lcd_param_text50 [] = "AUX passthru";
+PROGMEM prog_char lcd_param_text51 [] = "AUX headfree";
+PROGMEM prog_char lcd_param_text52 [] = "AUX beeper";
 // 53 to 61 reserved
-#endif
-#if defined(LCD_CONF_AUX_1234)
-// aux3/4
-PROGMEM prog_char lcd_param_text62 [] = "AX3/4 level";
-PROGMEM prog_char lcd_param_text63 [] = "AX3/4 baro";
-PROGMEM prog_char lcd_param_text64 [] = "AX3/4 mag";
-PROGMEM prog_char lcd_param_text65 [] = "AX3/4 cam stab";
-PROGMEM prog_char lcd_param_text66 [] = "AX3/4 cam trig";
-PROGMEM prog_char lcd_param_text67 [] = "AX3/4 arm";
-PROGMEM prog_char lcd_param_text68 [] = "AX3/4 gps home";
-PROGMEM prog_char lcd_param_text69 [] = "AX3/4 gps hold";
-PROGMEM prog_char lcd_param_text70 [] = "AX3/4 passthru";
-PROGMEM prog_char lcd_param_text71 [] = "AX3/4 headfree";
-PROGMEM prog_char lcd_param_text72 [] = "AX3/4 beeper";
-// 73 to 81 reserved
 #endif
 //                                        0123456789.12345
 
@@ -869,51 +854,24 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
   &lcd_param_text22, &rollPitchRate, &__RC,
   &lcd_param_text23, &yawRate, &__RC,
   &lcd_param_text24, &dynThrPID, &__RC,
-#ifdef LCD_CONF_AUX_12
-  &lcd_param_text42, &activate1[BOXACC], &__AUX,
-  &lcd_param_text43, &activate1[BOXBARO], &__AUX,
-  &lcd_param_text44, &activate1[BOXMAG], &__AUX,
+#ifdef LCD_CONF_AUX
+  &lcd_param_text42, &activate[BOXACC], &__AUX,
+  &lcd_param_text43, &activate[BOXBARO], &__AUX,
+  &lcd_param_text44, &activate[BOXMAG], &__AUX,
 #ifdef GIMBAL
-  &lcd_param_text45, &activate1[BOXCAMSTAB], &__AUX,
-  &lcd_param_text46, &activate1[BOXCAMTRIG], &__AUX,
+  &lcd_param_text45, &activate[BOXCAMSTAB], &__AUX,
+  &lcd_param_text46, &activate[BOXCAMTRIG], &__AUX,
 #endif
-  &lcd_param_text47, &activate1[BOXARM], &__AUX,
+  &lcd_param_text47, &activate[BOXARM], &__AUX,
 #if GPS
-  &lcd_param_text48, &activate1[BOXGPSHOME], &__AUX,
-  &lcd_param_text49, &activate1[BOXGPSHOLD], &__AUX,
+  &lcd_param_text48, &activate[BOXGPSHOME], &__AUX,
+  &lcd_param_text49, &activate[BOXGPSHOLD], &__AUX,
 #endif
-  &lcd_param_text50, &activate1[BOXPASSTHRU],&__AUX,
-  &lcd_param_text51, &activate1[BOXHEADFREE],&__AUX,
-  &lcd_param_text52, &activate1[BOXBEEPERON],&__AUX,
+  &lcd_param_text50, &activate[BOXPASSTHRU],&__AUX,
+  &lcd_param_text51, &activate[BOXHEADFREE],&__AUX,
+  &lcd_param_text52, &activate[BOXBEEPERON],&__AUX,
 #endif
-#ifdef LCD_CONF_AUX_1234
-  &lcd_param_text42, &activate1[BOXACC], &__AUX,
-  &lcd_param_text62, &activate2[BOXACC], &__AUX,
-  &lcd_param_text43, &activate1[BOXBARO], &__AUX,
-  &lcd_param_text63, &activate2[BOXBARO], &__AUX,
-  &lcd_param_text44, &activate1[BOXMAG], &__AUX,
-  &lcd_param_text64, &activate2[BOXMAG], &__AUX,
-#ifdef GIMBAL
-  &lcd_param_text45, &activate1[BOXCAMSTAB], &__AUX,
-  &lcd_param_text65, &activate2[BOXCAMSTAB], &__AUX,
-  &lcd_param_text46, &activate1[BOXCAMTRIG], &__AUX,
-  &lcd_param_text66, &activate2[BOXCAMTRIG], &__AUX,
-#endif
-  &lcd_param_text47, &activate1[BOXARM], &__AUX,
-  &lcd_param_text67, &activate2[BOXARM], &__AUX,
-#if GPS
-  &lcd_param_text48, &activate1[BOXGPSHOME], &__AUX,
-  &lcd_param_text68, &activate2[BOXGPSHOME], &__AUX,
-  &lcd_param_text49, &activate1[BOXGPSHOLD], &__AUX,
-  &lcd_param_text69, &activate2[BOXGPSHOLD], &__AUX,
-#endif
-  &lcd_param_text50, &activate1[BOXPASSTHRU],&__AUX,
-  &lcd_param_text70, &activate2[BOXPASSTHRU],&__AUX,
-  &lcd_param_text51, &activate1[BOXHEADFREE],&__AUX,
-  &lcd_param_text71, &activate2[BOXHEADFREE],&__AUX,
-  &lcd_param_text52, &activate1[BOXBEEPERON],&__AUX,
-  &lcd_param_text72, &activate2[BOXBEEPERON],&__AUX,
-#endif
+
 #ifdef LOG_VALUES
 #if (LOG_VALUES == 2)
 #if (NUMBER_MOTOR > 0)
@@ -991,7 +949,7 @@ void __u16Fmt(void * var, uint8_t mul, uint8_t dec) {
   line2[8] = digit1(unit);
 }
 
-void __uAuxFmt(void * var, uint8_t mul, uint8_t dec) {
+void __uAuxFmt(void * var, uint8_t mul, uint8_t dec) { //to review (activate is now 16 bit long)
   uint8_t unit = *(uint8_t*)var;
   line2[4] = ( unit & 1<<0 ? 'L' : '.' );
   line2[5] = ( unit & 1<<1 ? 'M' : '.' );

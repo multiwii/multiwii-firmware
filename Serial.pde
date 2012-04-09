@@ -15,23 +15,277 @@
   volatile uint8_t serialHeadRX[4],serialTailRX[4];
 #endif
 
-void serialCom() {
-  uint8_t i, sr;
-  #if defined(GPS_FROM_OSD)
-    uint8_t *rptr;
-  #endif
 
-  if (SerialAvailable(0)) {
-    switch (sr = SerialRead(0)) {
-    #ifdef BTSERIAL
-    case 'K': //receive RC data from Bluetooth Serial adapter as a remote
-      rcData[THROTTLE] = (SerialRead(0) * 4) + 1000;
-      rcData[ROLL]     = (SerialRead(0) * 4) + 1000;
-      rcData[PITCH]    = (SerialRead(0) * 4) + 1000;
-      rcData[YAW]      = (SerialRead(0) * 4) + 1000;
-      rcData[AUX1]     = (SerialRead(0) * 4) + 1000;
-      break;
-    #endif
+#define MSP_IDENT                100   //out message         multitype + version
+#define MSP_STATUS               101   //out message         cycletime & errors_count & sensor present & box activation
+#define MSP_RAW_IMU              102   //out message         9 DOF
+#define MSP_SERVO                103   //out message         8 servos
+#define MSP_MOTOR                104   //out message         8 motors
+#define MSP_RC                   105   //out message         8 rc chan
+#define MSP_RAW_GPS              106   //out message         fix, numsat, lat, lon, alt, speed
+#define MSP_COMP_GPS             107   //out message         distance home, direction home
+#define MSP_ATTITUDE             108   //out message         2 angles 1 heading
+#define MSP_ALTITUDE             109   //out message         1 altitude
+#define MSP_BAT                  110   //out message         vbat, powermetersum
+#define MSP_RC_TUNING            111   //out message         rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+#define MSP_PID                  112   //out message         up to 16 P I D (8 are used)
+#define MSP_BOX                  113   //out message         up to 16 checkbox (11 are used)
+#define MSP_MISC                 114   //out message         powermeter trig + 8 free for future use
+
+#define MSP_SET_RAW_RC           205   //in message          8 rc chan
+#define MSP_SET_RAW_GPS          206   //in message          fix, numsat, lat, lon, alt, speed
+#define MSP_SET_PID              212   //in message          up to 16 P I D (8 are used)
+#define MSP_SET_BOX              213   //in message          up to 16 checkbox (11 are used)
+#define MSP_SET_RC_TUNING        214   //in message          rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+#define MSP_ACC_CALIBRATION      215   //in message          no param
+#define MSP_MAG_CALIBRATION      216   //in message          no param
+#define MSP_SET_MISC             217   //in message          powermeter trig + 8 free for future use
+#define MSP_RESET_CONF           218   //in message          no param
+
+#define MSP_EEPROM_WRITE         220   //in message          no param
+
+#define MSP_DEBUG                254   //out message         debug1,debug2,debug3,debug4
+
+
+static uint8_t checksum,stateMSP,indRX,inBuf[64];
+
+uint32_t read32() {
+  uint32_t t = inBuf[indRX++];
+  t+= inBuf[indRX++]<<8;
+  t+= inBuf[indRX++]<<16;
+  t+= inBuf[indRX++]<<24;
+  return t;
+}
+
+uint16_t read16() {
+  uint16_t t = inBuf[indRX++];
+  t+= inBuf[indRX++]<<8;
+  return t;
+}
+uint8_t read8()  {return inBuf[indRX++]&0xff;}
+
+void headSerialReply(uint8_t c) {
+  serialize8('$');serialize8('M');serialize8('>');serialize8(c);checksum = 0;
+}
+
+void tailSerialReply() {
+  serialize8(checksum);UartSendData();stateMSP = 0;
+}
+
+void serialCom() {
+  uint8_t i, c;
+  static uint8_t offset,dataSize;
+  
+  while (SerialAvailable(0)) {
+    c = SerialRead(0);
+
+    if (stateMSP > 3) {
+      if (offset < dataSize+1) {
+        inBuf[offset++] = c;
+        if ( offset < dataSize+1 ) checksum ^= c;
+      } else {stateMSP = 0;}
+      if ( offset == dataSize+1  && checksum == inBuf[offset-1] && stateMSP > 0) {
+        #if defined(PROMICRO)
+          usb_use_buf = 1; // enable USB buffer
+          serialHeadRX[0] = 0; // reset tail and head
+          serialTailRX[0] = 0;     
+        #endif
+        switch(stateMSP) {
+          case MSP_SET_RAW_RC:
+            stateMSP = 0;
+            for(i=0;i<8;i++) {rcData[i] = read16();}
+            break;
+          case MSP_SET_RAW_GPS:
+            stateMSP = 0;
+            GPS_fix = read8();
+            GPS_numSat = read8();
+            GPS_latitude = read32();
+            GPS_longitude = read32();
+            GPS_altitude = read16();
+            GPS_speed = read16();
+            GPS_update = 1;
+            break;
+          case MSP_SET_PID:
+            stateMSP = 0;
+            for(i=0;i<PIDITEMS;i++) {P8[i]=read8();I8[i]=read8();D8[i]=read8();}
+            break;
+          case MSP_SET_BOX:
+            stateMSP = 0;
+            for(i=0;i<CHECKBOXITEMS;i++) {activate[i]=read16();}
+            break;
+          case MSP_SET_RC_TUNING:
+            stateMSP = 0;
+            rcRate8 = read8();
+            rcExpo8 = read8();
+            rollPitchRate = read8();
+            yawRate = read8();
+            dynThrPID = read8();
+            break;
+          case MSP_SET_MISC:
+            stateMSP = 0;
+            #if defined(POWERMETER)
+              powerTrigger1 = read16() / PLEVELSCALE; // we rely on writeParams() to compute corresponding pAlarm value
+            #endif
+            break;
+        }
+        #if defined(PROMICRO)
+          usb_use_buf = 0; // disable USB buffer
+        #endif
+      }
+      return;
+    } else {
+      offset = 0;checksum = 0;indRX=0;
+    }
+
+    if (stateMSP == 3) {
+      switch(c) {
+        case MSP_IDENT:
+          headSerialReply(c);
+          serialize8(VERSION);
+          serialize8(MULTITYPE);
+          tailSerialReply();break;
+        case MSP_STATUS:
+          headSerialReply(c);
+          serialize16(cycleTime);
+          serialize16(i2c_errors_count);
+          serialize16((ACC|nunchuk)|BARO<<1|MAG<<2|GPS<<3|SONAR<<4);
+          serialize16(accMode<<BOXACC|baroMode<<BOXBARO|magMode<<BOXMAG|armed<<BOXARM|
+                      GPSModeHome<<BOXGPSHOME|GPSModeHold<<BOXGPSHOLD|headFreeMode<<BOXHEADFREE);
+          tailSerialReply();break;
+        case MSP_RAW_IMU:
+          headSerialReply(c);
+          for(i=0;i<3;i++) serialize16(accSmooth[i]);
+          for(i=0;i<3;i++) serialize16(gyroData[i]);
+          for(i=0;i<3;i++) serialize16(magADC[i]);
+          tailSerialReply();break;
+        case MSP_SERVO:
+          headSerialReply(c);
+          for(i=0;i<8;i++) serialize16(servo[i]);
+          tailSerialReply();break;
+        case MSP_MOTOR:
+          headSerialReply(c);
+          for(i=0;i<8;i++) serialize16(motor[i]);
+          tailSerialReply();break;
+        case MSP_RC:
+          headSerialReply(c);
+          for(i=0;i<8;i++) serialize16(rcData[i]);
+          tailSerialReply();break;
+        case MSP_RAW_GPS:
+          headSerialReply(c);
+          serialize8(GPS_fix);
+          serialize8(GPS_numSat);
+          serialize32(GPS_latitude);
+          serialize32(GPS_longitude);
+          serialize16(GPS_altitude);
+          serialize16(GPS_speed);
+          tailSerialReply();break;
+        case MSP_COMP_GPS:
+          headSerialReply(c);
+          serialize16(GPS_distanceToHome);
+          serialize16(GPS_directionToHome+180);
+          serialize8(GPS_update);
+          tailSerialReply();break;
+        case MSP_ATTITUDE:
+          headSerialReply(c);
+          for(i=0;i<2;i++) serialize16(angle[i]);
+          serialize16(heading);
+          tailSerialReply();break;
+        case MSP_ALTITUDE:
+          headSerialReply(c);
+          serialize16(EstAlt/10);
+          tailSerialReply();break;
+        case MSP_BAT:
+          headSerialReply(c);
+          serialize8(vbat);
+          serialize16(intPowerMeterSum);
+          tailSerialReply();break;
+        case MSP_RC_TUNING:
+          headSerialReply(c);
+          serialize8(rcRate8);
+          serialize8(rcExpo8);
+          serialize8(rollPitchRate);
+          serialize8(yawRate);
+          serialize8(dynThrPID);
+          tailSerialReply();break;
+        case MSP_PID:
+          headSerialReply(c);
+          for(i=0;i<PIDITEMS;i++)    {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);}
+          for(i=0;i<16-PIDITEMS;i++) {serialize8(0);serialize8(0);serialize8(0);} //future use
+          tailSerialReply();break;
+        case MSP_BOX:
+          headSerialReply(c);
+          for(i=0;i<CHECKBOXITEMS;i++)    {serialize16(activate[i]);}
+          for(i=0;i<16-CHECKBOXITEMS;i++) {serialize16(0);} //future use
+          tailSerialReply();break;
+        case MSP_MISC:
+          headSerialReply(c);
+          serialize16(intPowerTrigger1);
+          for(i=0;i<8;i++) {serialize8(0);} //future use
+          tailSerialReply();break;
+        case MSP_SET_RAW_RC:
+          stateMSP = MSP_SET_RAW_RC;
+          dataSize = 16;break;
+        case MSP_SET_RAW_GPS:
+          stateMSP = MSP_SET_RAW_GPS;
+          dataSize = 14;break;
+        case MSP_SET_PID:
+          stateMSP = MSP_SET_PID;
+          dataSize = 48;break;
+        case MSP_SET_BOX:
+          stateMSP = MSP_SET_BOX;
+          dataSize = 32;break;
+        case MSP_SET_RC_TUNING:
+          stateMSP = MSP_SET_RC_TUNING;
+          dataSize = 5;break;
+        case MSP_SET_MISC:
+          stateMSP = MSP_SET_MISC;
+          dataSize = 10;break;
+        case MSP_RESET_CONF:
+          stateMSP = 0;
+          checkNewConf++;checkFirstTime();
+          checkNewConf--;checkFirstTime();
+          break;
+        case MSP_ACC_CALIBRATION:
+          stateMSP = 0;
+          calibratingA=400;
+          break;
+        case MSP_MAG_CALIBRATION:
+          stateMSP = 0;
+          calibratingM=1;
+          break;
+        case MSP_EEPROM_WRITE:
+          stateMSP = 0;
+          writeParams();
+          break;
+        case MSP_DEBUG:
+          headSerialReply(c);
+          serialize16(debug1);             // 4 variables are here for general monitoring purpose
+          serialize16(debug2);
+          serialize16(debug3);
+          serialize16(debug4);
+          tailSerialReply();break;
+      }
+      return;
+    }
+    if (stateMSP < 3) {
+      switch(c) {
+        case '$':                                         //header detection $MW<
+          if (stateMSP == 0) stateMSP++;break;
+        case 'M':
+          if (stateMSP == 1) stateMSP++;break;
+        case '<':
+          if (stateMSP == 2) stateMSP++;break;
+      }
+    }
+    if (stateMSP == 0) {
+      oldSerialCom(c);
+    }
+  }
+}
+
+void oldSerialCom(uint8_t sr) {
+  //last things to clean
+  switch (sr) {
     #ifdef LCD_TELEMETRY
     case 'A': // button A press
       toggle_telemetry(1);
@@ -68,147 +322,36 @@ void serialCom() {
     case 'd': // button D release
       break;      
     #endif // LCD_TELEMETRY
-    case 'M': // Multiwii @ arduino to GUI all data
-      serialize8('M');
-      serialize8(VERSION);
-      for(i=0;i<3;i++) serialize16(accSmooth[i]);
-      for(i=0;i<3;i++) serialize16(gyroData[i]);
-      for(i=0;i<3;i++) serialize16(magADC[i]);
-      serialize16(EstAlt/10);
-      serialize16(heading);
-      for(i=0;i<8;i++) serialize16(servo[i]);
-      for(i=0;i<8;i++) serialize16(motor[i]);
-      for(i=0;i<8;i++) serialize16(rcData[i]);
-      serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3|GPS<<4);
-      serialize8(accMode<<BOXACC|baroMode<<BOXBARO|magMode<<BOXMAG|GPSModeHome<<BOXGPSHOME|GPSModeHold<<BOXGPSHOLD|armed<<BOXARM);
-      #if defined(LOG_VALUES)
-        serialize16(cycleTimeMax);
-        cycleTimeMax = 0;
-      #else
-        serialize16(cycleTime);
-      #endif
-      serialize16(i2c_errors_count);
-      for(i=0;i<2;i++) serialize16(angle[i]);
-      serialize8(MULTITYPE);
-      for(i=0;i<PIDITEMS;i++) {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);}
-      serialize8(rcRate8);
-      serialize8(rcExpo8);
-      serialize8(rollPitchRate);
-      serialize8(yawRate);
-      serialize8(dynThrPID);
-      for(i=0;i<CHECKBOXITEMS;i++) {
-        serialize8(activate1[i]);
-        serialize8(activate2[i] | (rcOptions[i]<<7) ); // use highest bit to transport state in mwc
-      }
-      serialize16(GPS_distanceToHome);
-      serialize16(GPS_directionToHome+180);
-      serialize8(GPS_numSat);
-      serialize8(GPS_fix);
-      serialize8(GPS_update);
-      serialize16(intPowerMeterSum);
-      serialize16(intPowerTrigger1);
-      serialize8(vbat);
-      serialize16(BaroAlt/10);             // 4 variables are here for general monitoring purpose
-      serialize16(debug2);
-      serialize16(debug3);
-      serialize16(debug4);
-      serialize8('M');
-      UartSendData();
-      break;
-#ifndef SUPPRESS_OSD_SERIAL_COMMANDS
-      case 'O':  // arduino to OSD data
-      serialize8('O');
-      for(i=0;i<3;i++) serialize16(accSmooth[i]);
-      for(i=0;i<3;i++) serialize16(gyroData[i]);
-      serialize16(EstAlt*10.0f);
-      serialize16(heading); // compass - 16 bytes
-      for(i=0;i<2;i++) serialize16(angle[i]); //20
-      for(i=0;i<6;i++) serialize16(motor[i]); //32
-      for(i=0;i<6;i++) {serialize16(rcData[i]);} //44
-      serialize8(nunchuk|ACC<<1|BARO<<2|MAG<<3|GPS<<4);    // added GPS info
-      serialize8(accMode|baroMode<<1|magMode<<2|GPSModeHome<<3|GPSModeHold<<4|armed<<5);  // added GPS modes
-      serialize8(vbat);     // Vbatt 47
-      serialize8(VERSION);  // MultiWii Firmware version
-      // new fields for using arduino GPS for OSD (OSD f/w >= 0.66)
-      #if defined(GPS_FROM_OSD)
-        serialize8(0x04);                 // Signalisation for OSD that MWC want GPS data from OSD
-      #else	
-        serialize8(GPS_fix);              // Fix indicator for OSD
-      #endif
-      serialize8(GPS_numSat);
-      serialize16(GPS_latitude);
-      serialize16(GPS_latitude >> 16);
-      serialize16(GPS_longitude);
-      serialize16(GPS_longitude >> 16);
-      serialize16(GPS_altitude);
-      serialize16(GPS_speed);            // Speed for OSD
-      serialize8('O');
-      UartSendData();
-      break;
-      #if defined(GPS_FROM_OSD)
-    case 'G':                      // OSD to arduino data for using GPS from OSD for navigation
-      GPS_fix = SerialRead(0);     // get GPS Fix status
-      GPS_numSat = SerialRead(0);  // get number of sat
-      rptr = (uint8_t *)&GPS_latitude;
-      *rptr++ = SerialRead(0);	 // get latitude byte 0
-      *rptr++ = SerialRead(0);	 // get latitude byte 1
-      *rptr++ = SerialRead(0);	 // get latitude byte 2
-      *rptr   = SerialRead(0);	 // get latitude byte 3
-      rptr = (uint8_t *)&GPS_longitude;
-      *rptr++ = SerialRead(0);	 // get longitude byte 0
-      *rptr++ = SerialRead(0);	 // get longitude byte 1
-      *rptr++ = SerialRead(0);	 // get longitude byte 2
-      *rptr   = SerialRead(0);   // get longitude byte 3
-      GPS_update = 1;            // new data indicator
-      break;
-    #endif 
-#endif
-    case 'W': //GUI write params to eeprom @ arduino
-     #if defined(PROMICRO)
-      usb_use_buf = 1; // enable USB buffer
-      serialHeadRX[0] = 0; // reset tail and head
-      serialTailRX[0] = 0;     
-     #endif
-      while (SerialAvailable(0)<(7+3*PIDITEMS+2*CHECKBOXITEMS)) {}
-      for(i=0;i<PIDITEMS;i++) {P8[i]= SerialRead(0); I8[i]= SerialRead(0); D8[i]= SerialRead(0);}
-      rcRate8 = SerialRead(0); rcExpo8 = SerialRead(0); //2
-      rollPitchRate = SerialRead(0); yawRate = SerialRead(0); //4
-      dynThrPID = SerialRead(0); //5
-      for(i=0;i<CHECKBOXITEMS;i++) {activate1[i] = SerialRead(0);activate2[i] = SerialRead(0);}
-     #if defined(POWERMETER)
-      powerTrigger1 = (SerialRead(0) + 256* SerialRead(0) ) / PLEVELSCALE; // we rely on writeParams() to compute corresponding pAlarm value
-     #else
-      SerialRead(0);SerialRead(0); //7 so we unload the two bytes
-     #endif
-     #if defined(PROMICRO)
-      usb_use_buf = 0; // disable USB buffer
-     #endif
-      writeParams();
-      break;
-    case 'S': //GUI to arduino ACC calibration request
-      calibratingA=400;
-      break;
-    case 'E': //GUI to arduino MAG calibration request
-      calibratingM=1;
-      break;
-    }
   }
 }
+
 
 // *******************************************************
 // Interrupt driven UART transmitter - using a ring buffer
 // *******************************************************
 static uint8_t headTX,tailTX;
 static uint8_t bufTX[256];      // 256 is choosen to avoid modulo operations on 8 bits pointers
-void serialize16(int16_t a) {
-  bufTX[headTX++]  = a;
-  bufTX[headTX++]  = a>>8&0xff;
+
+void serialize32(uint32_t a) {
+  static uint8_t t;
+  t = a;       bufTX[headTX++] = t ; checksum ^= t;
+  t = a>>8;    bufTX[headTX++] = t ; checksum ^= t;
+  t = a>>16;   bufTX[headTX++] = t ; checksum ^= t;
+  t = a>>24;   bufTX[headTX++] = t ; checksum ^= t;
   #if !defined(PROMICRO)
     UCSR0B |= (1<<UDRIE0);      // in case ISR_UART desactivates the interrupt, we force its reactivation anyway
   #endif 
 }
+void serialize16(int16_t a) {
+  static uint8_t t;
+  t = a;          bufTX[headTX++] = t ; checksum ^= t;
+  t = a>>8&0xff;  bufTX[headTX++] = t ; checksum ^= t;
+  #if !defined(PROMICRO)
+    UCSR0B |= (1<<UDRIE0);
+  #endif 
+}
 void serialize8(uint8_t a)  {
-  bufTX[headTX++]  = a;
+  bufTX[headTX++]  = a; checksum ^= a;
   #if !defined(PROMICRO)
     UCSR0B |= (1<<UDRIE0);
   #endif
