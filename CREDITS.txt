@@ -1,8 +1,10 @@
    This is at least a partial credits-file of people that have
-   contributed to the MultiWii project.  It is unsorted and incomplete.  
+   contributed to the MultiWii project.  It is incomplete.  
    Policy is to leave marks here and not scattered all over the code.
    In the best of all worlds a name mentioned here was synonymous for 
    the person taking the responsibility of support and maintaining the code. 
+   But we accept the fluctuational concept of participation in an 
+   Open Source project.
    The initial version of this file was created by moving the info 
    from comments in the code.
    If you do not find your name here, it is not meant as a disrespect
@@ -12,69 +14,193 @@
 
          Hamburger
 ----------
+Format: It is sorted by short description and
+   formatted to allow easy grepping and beautification by
+   scripts.  The fields are: name (N), email (E), web-address
+   (W), description (D), and short description (S).
 
-* AIRPLANE mode - PatrikE Experimental
 
-* BTSERIAL - Luis Correia
+S: AIRPLANE mode - Experimental
+D:
+N: PatrikE
+E:
+W: http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
 
-* Eagle Tree Power Panel - Danal
+S: BTSERIAL
+D:
+N: Luis Correia
+E:
+W: http://www.multiwii.com/forum/viewtopic.php?f=18&t=828
 
-* Failsave - MIS
+S: Eagle Tree Power Panel
+D:
+N: Danal
+E:
+W:
 
-* GPS_altitude,GPS_speed - Mis
+S: Extended motor range
+D: support for special ESC firmware with range 2 - 252
+N: ziss_dm
+E:
+W: http://www.multiwii.com/forum/viewtopic.php?f=13&t=516
 
-* GPS G-command - Mis
+S: Failsave
+D:
+N: MIS
+E:
+W:
 
-* i2c LCD03 - Th0rsten
+S: Global Buzzer Handling (buzzer.pde)
+D:
+N: Jevermeister (Nils Ivo von Aswege)
+E:
+W:
 
-* i2c OLED  128x64 display - howardbb howard@automatrix.co.za
+S: GPS_altitude,GPS_speed
+D:
+N: Mis
+E:
+W:
 
-* I2C Barometer MS561101BA - Fabio, Alex
+S: GPS G-command
+D:
+N: Mis
+E:
+W:
 
-* I2C Accelerometer BMA180
-- contribution initially from opie11 (rc-groups)
-- adaptation from C2po (may 2011)
-- ziss_dm (June 2011)
-- ToLuSe (Jully 2011)
-- Alex (December 2011)
+S: i2c LCD03
+D:
+N: 
+E:
+W:
 
-* I2C Accelerometer BMA020
-- Point65 and mgros (rc-groups)
-- ziss_dm (June 2011)
-- ToLuSe (Jully 2011)
+S: i2c OLED  128x64 display
+D:
+N: howardbb
+E: howard@automatrix.co.za
+W:
 
-* LIS3LV02 I2C Accelerometer
-- adver (http://multiwii.com/forum/viewtopic.php?f=8&t=451)
+S: I2C Barometer MS561101BA
+D:
+N: Fabio
+N: Alex (September 2011)
+E:
+W:
 
-* I2C Accelerometer LSM303DLx
-- wektorx (http://www.multiwii.com/forum/viewtopic.php?f=8&t=863)
+S: I2C Accelerometer BMA180
+D: contribution initially from opie11 (rc-groups)
+N: adaptation from C2po (may 2011)
+N: ziss_dm (June 2011)
+N: ToLuSe (Jully 2011)
+N: Alex (December 2011)
+E:
+W:
 
-* I2C Gyroscope L3G4200D - Ciskje
+S: I2C Accelerometer BMA020
+N: Point65 and mgros (rc-groups)
+N: ziss_dm (June 2011)
+N: oLuSe (Jully 2011)
+D:
+N:
+E:
+W:
 
-* I2C Compass AK8975 - EOSBandi
+S: LIS3LV02 I2C Accelerometer
+N: adver
+D:
+N:
+E:
+W: http://multiwii.com/forum/viewtopic.php?f=8&t=451
 
-* OpenLRS - Melih Karakelle Version 1.11 2012-03-25 
-- Melih Karakelle (http://www.flytron.com) (forum nick name: Flytron)
-- Jan-Dirk Schuitemaker (http://www.schuitemaker.org/) 
-	(forum nick name: CrashingDutchman)
-- Etienne Saint-Paul (http://www.gameseed.fr) 
-	(forum nick name: Etienne) 
+S: I2C Accelerometer LSM303DLx
+D:
+N: wektorx
+E:
+W: http://www.multiwii.com/forum/viewtopic.php?f=8&t=863
 
-* OSD O-command - MIS
+S: I2C Gyroscope L3G4200D
+D:
+N: Ciskje
+E:
+W:
 
-* PROGMEM - 11/21/2001 Danal
+S: I2C Compass AK8975
+D:
+N: EOSBandi
+E:
+W:
 
-* Simplified IMU - ziss_dm 19/04/2011 Version: V1.1
+S: Inflight ACC Calibration
+D:
+N: Jevermeister (Nils Ivo von Aswege)
+E:
+W:
 
-* Moving Average Gyros - Magnetron1 (Michele Ardito) ########## beta
 
-* SBUS - Captain IxI and Zaggo
+S: OpenLRS Designed by Melih Karakelle on 2010-2012 
+D: Version Number     : 1.11
+D: Latest Code Update : 2012-03-25
+D: Supported Hardware : OpenLRS Rx boards (store.flytron.com)
+D: Project Forum      : http://forum.flytron.com/viewforum.php?f=7
+D: Google Code Page   : http://code.google.com/p/openlrs/ 
+N: Melih Karakelle (http://www.flytron.com) (forum nick name: Flytron)
+N: Jan-Dirk Schuitemaker (http://www.schuitemaker.org/) (forum nick name: CrashingDutchman)
+N: Etienne Saint-Paul (http://www.gameseed.fr) 	(forum nick name: Etienne) 
+E:
+W: http://code.google.com/p/openlrs
 
-* Spektrum Satellite Receiver - Danal
+S: OpenLRS  - RFM22B/Si4432 control functions
+D: Latest Code Update : 2011-09-26
+N: Melih Karakelle (http://www.flytron.com) (forum nick name: Flytron)
+E: 
+W: 
 
-* Textstar LCD - initial support Luca Brizzi aka gtrick90 @ RCG
+S: OSD O-command
+D:
+N: MIS
+E:
+W:
 
-* Inflight ACC Calibration - Jevermeister (Nils Ivo von Aswege)
+S: powermeter
+D: estimate consumed power either in software only or with hardware current sensor
+N: hamburger
+E:
+W: http://www.multiwii.com/forum/viewtopic.php?f=8&t=167
 
-* Global Buzzer Handling (buzzer.pde) - Jevermeister (Nils Ivo von Aswege)
+S: PROGMEM
+D: 11/21/2001 memory saving
+N: Danal
+E:
+W:
+
+S: Simplified IMU
+D: 19/04/2011 Version: V1.1
+N: ziss_dm
+E:
+W:
+
+S: Moving Average Gyros
+D: status beta
+N: Magnetron1 (Michele Ardito
+E:
+W:
+
+S: SBUS
+D:
+N: Captain IxI 
+N: Zaggo
+E:
+W:
+
+S: Spektrum Satellite Receiver
+D:
+N: Danal
+E:
+W:
+
+S: Textstar LCD
+D: initial support
+N: Luca Brizzi aka gtrick90 @ RCG
+E:
+W:
 
