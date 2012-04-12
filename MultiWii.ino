@@ -473,7 +473,7 @@ void loop () {
           previousTime = micros();
         }
       }
-      #if defined(InflightAccCalibration)  
+      #if defined(INFLIGHT_ACC_CALIBRATION)  
         else if (armed == 0 && rcData[YAW] < MINCHECK && rcData[PITCH] > MAXCHECK && rcData[ROLL] > MAXCHECK){
           if (rcDelayCommand == 20){
             if (AccInflightCalibrationMeasurementDone){                // trigger saving into eeprom after landing
