@@ -32,12 +32,13 @@ void buzzer(uint8_t warn_vbat){
     if ( failsafeCnt == 0) warn_failsafe = 0;                                              // turn off alarm if TX is okay
   #endif
   //===================== GPS fix notification handling =====================
+  #if GPS
   if ((GPSModeHome || GPSModeHold) && !GPS_fix){    //if no fix and gps funtion is activated: do warning beeps.
     warn_noGPSfix = 1;    
   }else{
     warn_noGPSfix = 0;
   }
-
+  #endif
  //===================== Main Handling Block =====================
   repeat = 1;                                           // set repeat to default
   ontime = 100;                                           // set offtime to default
