@@ -57,7 +57,7 @@
   #define V_BATPIN                   A3    // Analog PIN 3
   #define PSENSORPIN                 A2    // Analog PIN 2
   
-  #if defined(A0_A1_HEX) && (NUMBER_MOTOR < 8)
+  #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR < 8)
     #define SOFT_PWM_1_PIN_HIGH        PORTC |= 1<<0;
     #define SOFT_PWM_1_PIN_LOW         PORTC &= ~(1<<0);
     #define SOFT_PWM_2_PIN_HIGH        PORTC |= 1<<1;
@@ -305,7 +305,7 @@
   #define V_BATPIN                   A3    // Analog PIN 3
   #define PSENSORPIN                 A2    // Analog PIN 2
   
-  #if defined(A0_A1_HEX) && (NUMBER_MOTOR < 8)
+  #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR < 8)
     #define SOFT_PWM_1_PIN_HIGH        PORTC |= 1<<0;
     #define SOFT_PWM_1_PIN_LOW         PORTC &= ~(1<<0);
     #define SOFT_PWM_2_PIN_HIGH        PORTC |= 1<<1;
