@@ -168,10 +168,17 @@ void writeMotors() { // [1000;2000] => [125;250]
     #endif    
     #if (NUMBER_MOTOR > 4)
       #if !defined(HWPWM6)
-        atomicPWM_PIN5_highState = ((motor[4]-1000)<<4)+320;
-        atomicPWM_PIN5_lowState = 15743-atomicPWM_PIN5_highState;
-        atomicPWM_PIN6_highState = ((motor[5]-1000)<<4)+320;
-        atomicPWM_PIN6_lowState = 15743-atomicPWM_PIN6_highState;
+        #if (NUMBER_MOTOR == 6) && !defined(SERVO)
+          atomicPWM_PIN5_highState = motor[4]<<3;
+          atomicPWM_PIN5_lowState = 16383-atomicPWM_PIN5_highState;
+          atomicPWM_PIN6_highState = motor[5]<<3;
+          atomicPWM_PIN6_lowState = 16383-atomicPWM_PIN6_highState;      
+        #else
+          atomicPWM_PIN5_highState = ((motor[4]-1000)<<4)+320;
+          atomicPWM_PIN5_lowState = 15743-atomicPWM_PIN5_highState;
+          atomicPWM_PIN6_highState = ((motor[5]-1000)<<4)+320;
+          atomicPWM_PIN6_lowState = 15743-atomicPWM_PIN6_highState;        
+        #endif
       #else
         OCR1C = motor[4]<<3; //  pin 11
         static uint8_t pwm4_HBA;
@@ -227,11 +234,23 @@ void writeMotors() { // [1000;2000] => [125;250]
         OCR2B = ((motor[3]>>2) - 250) + 2;
       #endif
     #endif
-    #if (NUMBER_MOTOR > 4) //note: EXT_MOTOR_RANGE not possible here
-      atomicPWM_PIN6_highState = ((motor[4]-1000)>>2)+5;
-      atomicPWM_PIN6_lowState  = 245-atomicPWM_PIN6_highState;
-      atomicPWM_PIN5_highState = ((motor[5]-1000)>>2)+5;
-      atomicPWM_PIN5_lowState  = 245-atomicPWM_PIN5_highState;
+    #if (NUMBER_MOTOR > 4) 
+      #if (NUMBER_MOTOR == 6) && !defined(SERVO)
+        #ifndef EXT_MOTOR_RANGE 
+          atomicPWM_PIN6_highState = motor[4]>>3;
+          atomicPWM_PIN5_highState = motor[5]>>3;
+        #else
+          atomicPWM_PIN6_highState = ((motor[4]>>2) - 250) + 2;
+          atomicPWM_PIN5_highState = ((motor[5]>>2) - 250) + 2;       
+        #endif
+        atomicPWM_PIN6_lowState  = 255-atomicPWM_PIN6_highState;
+        atomicPWM_PIN5_lowState  = 255-atomicPWM_PIN5_highState; 
+      #else //note: EXT_MOTOR_RANGE not possible here
+        atomicPWM_PIN6_highState = ((motor[4]-1000)>>2)+5;
+        atomicPWM_PIN6_lowState  = 245-atomicPWM_PIN6_highState;
+        atomicPWM_PIN5_highState = ((motor[5]-1000)>>2)+100;
+        atomicPWM_PIN5_lowState  = 245-atomicPWM_PIN5_highState;
+      #endif
     #endif
     #if (NUMBER_MOTOR > 6) //note: EXT_MOTOR_RANGE not possible here
       atomicPWM_PINA2_highState = ((motor[6]-1000)>>2)+5;
@@ -258,7 +277,7 @@ void initOutput() {
       TCCR3A &= ~(1<<WGM30);
       TCCR3B |= (1<<WGM33);
       TCCR3B &= ~(1<<CS31); // no prescaler
-      ICR3   |= 0x3FFF; // TOP to = 16383;      
+      ICR3   |= 0x3FFF; // TOP to 16383;      
       
       TCCR3A |= _BV(COM3C1); // connect pin 3 to timer 3 channel C
     #endif
@@ -271,7 +290,7 @@ void initOutput() {
       TCCR4A &= ~(1<<WGM40);
       TCCR4B |= (1<<WGM43);
       TCCR4B &= ~(1<<CS41); // no prescaler
-      ICR4   |= 0x3FFF; // TOP to = 16383;    
+      ICR4   |= 0x3FFF; // TOP to 16383;    
       
       TCCR4A |= _BV(COM4A1); // connect pin 6 to timer 4 channel A
     #endif
@@ -541,79 +560,103 @@ ISR(SERVO_ISR) {
       #if (NUMBER_MOTOR > 4) && !defined(HWPWM6) 
         TIMSK0 |= (1<<OCIE0B); // Enable CTC interrupt  
       #endif
-      #if (NUMBER_MOTOR > 6)
+      #if (NUMBER_MOTOR > 6) || ((NUMBER_MOTOR == 6) && !defined(SERVO))
         TIMSK0 |= (1<<OCIE0A);
       #endif
     #else
         TCCR3A &= ~(1<<WGM30); // normal counting mode
         TCCR3B &= ~(1<<CS31); // no prescaler
         TIMSK3 |= (1<<OCIE3B); // Enable CTC interrupt  
-        #if (NUMBER_MOTOR > 6)
+        #if (NUMBER_MOTOR > 6) || ((NUMBER_MOTOR == 6) && !defined(SERVO))
           TIMSK3 |= (1<<OCIE3C);
         #endif   
     #endif
   }
-  
-  // HEXA with just OCR0B 
-  ISR(SOFT_PWM_ISR1) { 
-    static uint8_t state = 0;
-    if(state == 0){
-      #if !defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR < 8)
-        SOFT_PWM_1_PIN_HIGH;
-      #else
-        PORTC |= 1<<0;//PIN A0
-      #endif
-      SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_highState;
-      state = 1;
-    }else if(state == 1){
-      #if !defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR < 8)
-        SOFT_PWM_2_PIN_LOW;
-      #else
-        PORTC &= ~(1<<1);
-      #endif
-      SOFT_PWM_CHANNEL1 += atomicPWM_PIN6_lowState;
-      state = 2;
-    }else if(state == 2){
-      #if !defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR < 8)
-       SOFT_PWM_2_PIN_HIGH;
-      #else
-        PORTC |= 1<<1;//PIN A1
-      #endif
-      SOFT_PWM_CHANNEL1 += atomicPWM_PIN6_highState;
-      state = 3;  
-    }else if(state == 3){
-      #if !defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR < 8)
-        SOFT_PWM_1_PIN_LOW;
-      #else
-        PORTC &= ~(1<<0);
-      #endif 
-      SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_lowState;
-      state = 0;   
-    }
-  }
-
-  //the same with digital PIN A2 & 12 OCR0A counter for OCTO
-  #if (NUMBER_MOTOR > 6) && !defined(HWPWM6)
-    ISR(SOFT_PWM_ISR2) {
+  // hexa with old but sometimes better SW PWM method
+  // for setups without servos
+  #if (NUMBER_MOTOR == 6) && !defined(SERVO)
+    ISR(SOFT_PWM_ISR1) { 
       static uint8_t state = 0;
       if(state == 0){
-        SOFT_PWM_3_PIN_HIGH;
-        SOFT_PWM_CHANNEL2 += atomicPWM_PINA2_highState;
+        SOFT_PWM_1_PIN_HIGH;
+        SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_highState;
         state = 1;
       }else if(state == 1){
-        SOFT_PWM_4_PIN_LOW;
-        SOFT_PWM_CHANNEL2 += atomicPWM_PIN12_lowState;
+        SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_highState;
         state = 2;
       }else if(state == 2){
-        SOFT_PWM_4_PIN_HIGH;
-        SOFT_PWM_CHANNEL2 += atomicPWM_PIN12_highState;
+        SOFT_PWM_1_PIN_LOW;
+        SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_lowState;
         state = 3;  
       }else if(state == 3){
-        SOFT_PWM_3_PIN_LOW;
-        SOFT_PWM_CHANNEL2 += atomicPWM_PINA2_lowState;
+        SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_lowState;
         state = 0;   
       }
     }
+    ISR(SOFT_PWM_ISR2) { 
+      static uint8_t state = 0;
+      if(state == 0){
+        SOFT_PWM_2_PIN_HIGH;
+        SOFT_PWM_CHANNEL2 += atomicPWM_PIN6_highState;
+        state = 1;
+      }else if(state == 1){
+        SOFT_PWM_CHANNEL2 += atomicPWM_PIN6_highState;
+        state = 2;
+      }else if(state == 2){
+        SOFT_PWM_2_PIN_LOW;
+        SOFT_PWM_CHANNEL2 += atomicPWM_PIN6_lowState;
+        state = 3;  
+      }else if(state == 3){
+        SOFT_PWM_CHANNEL2 += atomicPWM_PIN6_lowState;
+        state = 0;   
+      }
+    }
+  #else
+    // HEXA with just OCR0B 
+    ISR(SOFT_PWM_ISR1) { 
+      static uint8_t state = 0;
+      if(state == 0){
+        SOFT_PWM_1_PIN_HIGH;
+        SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_highState;
+        state = 1;
+      }else if(state == 1){
+        SOFT_PWM_2_PIN_LOW;
+        SOFT_PWM_CHANNEL1 += atomicPWM_PIN6_lowState;
+        state = 2;
+      }else if(state == 2){
+        SOFT_PWM_2_PIN_HIGH;
+        SOFT_PWM_CHANNEL1 += atomicPWM_PIN6_highState;
+        state = 3;  
+      }else if(state == 3){
+        SOFT_PWM_1_PIN_LOW;
+        SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_lowState;
+        state = 0;   
+      }
+    } 
+  
+    //the same with digital PIN A2 & 12 OCR0A counter for OCTO
+    #if (NUMBER_MOTOR > 6) && !defined(HWPWM6)
+      ISR(SOFT_PWM_ISR2) {
+        static uint8_t state = 0;
+        if(state == 0){
+          SOFT_PWM_3_PIN_HIGH;
+          SOFT_PWM_CHANNEL2 += atomicPWM_PINA2_highState;
+          state = 1;
+        }else if(state == 1){
+          SOFT_PWM_4_PIN_LOW;
+          SOFT_PWM_CHANNEL2 += atomicPWM_PIN12_lowState;
+          state = 2;
+        }else if(state == 2){
+          SOFT_PWM_4_PIN_HIGH;
+          SOFT_PWM_CHANNEL2 += atomicPWM_PIN12_highState;
+          state = 3;  
+        }else if(state == 3){
+          SOFT_PWM_3_PIN_LOW;
+          SOFT_PWM_CHANNEL2 += atomicPWM_PINA2_lowState;
+          state = 0;   
+        }
+      }
+    #endif
   #endif
 #endif
 
