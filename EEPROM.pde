@@ -45,7 +45,7 @@ void readEEPROM() {
   #if defined(POWERMETER)
     pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
   #endif
-  for(i=0;i<7;i++) lookupRX[i] = (2500+rcExpo8*(i*i-25))*i*(int32_t)rcRate8/1250;
+  for(i=0;i<7;i++) lookupRX[i] = (2500+rcExpo8*(i*i-25))*i*(int32_t)rcRate8/2500;
   #ifdef FLYING_WING
     wing_left_mid  = constrain(wing_left_mid, WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT 
     wing_right_mid = constrain(wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
@@ -55,13 +55,13 @@ void readEEPROM() {
   #endif
 }
 
-void writeParams() {
+void writeParams(uint8_t b) {
   uint8_t i, _address = 0;
   for(i=0; i<EEBLOCK_SIZE; i++) {
     eeprom_write_block(eep_entry[i].var, (void*)(_address), eep_entry[i].size); _address += eep_entry[i].size;
   }  
   readEEPROM();
-  blinkLED(15,20,1);
+  if (b == 1) blinkLED(15,20,1);
 }
 
 void checkFirstTime() {
@@ -75,7 +75,7 @@ void checkFirstTime() {
   P8[PIDVEL]   =  0; I8[PIDVEL]   = 0;  D8[PIDVEL]   = 0;
   P8[PIDLEVEL] = 90; I8[PIDLEVEL] = 45; D8[PIDLEVEL] = 100;
   P8[PIDMAG] = 40;
-  rcRate8 = 45; // = 0.9 in GUI
+  rcRate8 = 90;
   rcExpo8 = 65;
   rollPitchRate = 0;
   yawRate = 0;
@@ -90,6 +90,6 @@ void checkFirstTime() {
   #ifdef TRI
     tri_yaw_middle = TRI_YAW_MIDDLE; 
   #endif
-  writeParams();
+  writeParams(0);
 }
 

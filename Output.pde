@@ -221,20 +221,20 @@ void writeMotors() { // [1000;2000] => [125;250]
       #endif
     #endif
     #if (NUMBER_MOTOR > 2)
-      #ifndef EXT_MOTOR_RANGE 
+      #ifndef EXT_MOTOR_RANGE
         OCR2A = motor[2]>>3; //  pin 11
       #else
         OCR2A = ((motor[2]>>2) - 250) + 2;
       #endif
     #endif
     #if (NUMBER_MOTOR > 3)
-      #ifndef EXT_MOTOR_RANGE 
+      #ifndef EXT_MOTOR_RANGE
         OCR2B = motor[3]>>3; //  pin 3
       #else
         OCR2B = ((motor[3]>>2) - 250) + 2;
       #endif
     #endif
-    #if (NUMBER_MOTOR > 4) 
+    #if (NUMBER_MOTOR > 4)
       #if (NUMBER_MOTOR == 6) && !defined(SERVO)
         #ifndef EXT_MOTOR_RANGE 
           atomicPWM_PIN6_highState = motor[4]>>3;

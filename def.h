@@ -424,6 +424,13 @@
   #undef INTERNAL_I2C_PULLUPS
 #endif
 
+#if defined(NANOWII)
+  #define MPU6050
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -X; gyroADC[PITCH] = -Y; gyroADC[YAW] = -Z;}
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+
 #if defined(PIPO)
   #define L3G4200D
   #define ADXL345

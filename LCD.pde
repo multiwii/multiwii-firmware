@@ -735,7 +735,6 @@ static lcd_type_desc_t LAUX = {&__uAuxFmt, &__u16Inc}; //to review (activate is 
 static lcd_param_def_t __P = {&LTU8, 1, 1, 1};
 static lcd_param_def_t __I = {&LTU8, 3, 1, 2};
 static lcd_param_def_t __D = {&LTU8, 0, 1, 1};
-static lcd_param_def_t __RCR = {&LTU8, 2, 2, 2};
 static lcd_param_def_t __RC = {&LTU8, 2, 1, 2};
 static lcd_param_def_t __PM = {&LPMM, 1, 1, 0};
 static lcd_param_def_t __PS = {&LPMS, 1, 1, 0};
@@ -849,7 +848,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #if MAG
   &lcd_param_text19, &P8[PIDMAG], &__P,
 #endif
-  &lcd_param_text20, &rcRate8, &__RCR,
+  &lcd_param_text20, &rcRate8, &__RC,
   &lcd_param_text21, &rcExpo8, &__RC,
   &lcd_param_text22, &rollPitchRate, &__RC,
   &lcd_param_text23, &yawRate, &__RC,
@@ -1084,7 +1083,7 @@ void configurationLoop() {
     strcpy_P(line1,PSTR("Aborting"));
     LCDprintChar(line1);
   }
-  if (LCD == 0) writeParams();
+  if (LCD == 0) writeParams(1);
   LCDsetLine(2);
   strcpy_P(line1,PSTR("Exit"));
   LCDprintChar(line1);

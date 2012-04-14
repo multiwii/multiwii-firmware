@@ -67,19 +67,8 @@ void GPS_NewData() {
       GPS_distanceToHome = 0;
       GPS_directionToHome = 0;
       GPS_numSat = 0;
-    }  
+    }
   #endif     
-
-void GPS_reset_home_position() {
-  #if defined(I2C_GPS)
-    //set current position as home
-    i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_SET_WP);//Store current position to WP#0 (this is used for RTH)
-    i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_ACTIVATE_WP);//Set WP#0 as the active WP
-  #else
-    GPS_latitude_home  = GPS_latitude;
-    GPS_longitude_home = GPS_longitude;
-  #endif
-}
 
   #if defined(GPS_SERIAL)
     while (SerialAvailable(GPS_SERIAL)) {
@@ -115,6 +104,17 @@ void GPS_reset_home_position() {
         }
         GPS_update = 0;
     }
+  #endif
+}
+
+void GPS_reset_home_position() {
+  #if defined(I2C_GPS)
+    //set current position as home
+    i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_SET_WP);//Store current position to WP#0 (this is used for RTH)
+    i2c_rep_start(I2C_GPS_ADDRESS);i2c_write(I2C_GPS_COMMAND);i2c_write(I2C_GPS_COMMAND_ACTIVATE_WP);//Set WP#0 as the active WP
+  #else
+    GPS_latitude_home  = GPS_latitude;
+    GPS_longitude_home = GPS_longitude;
   #endif
 }
 

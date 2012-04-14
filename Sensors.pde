@@ -269,7 +269,7 @@ void ACC_Common() {
       accZero[YAW]   = a[YAW]/400-acc_1G; // for nunchuk 200=1G
       accTrim[ROLL]   = 0;
       accTrim[PITCH]  = 0;
-      writeParams(); // write accZero in EEPROM
+      writeParams(1); // write accZero in EEPROM
     }
     calibratingA--;
   }
@@ -317,7 +317,7 @@ void ACC_Common() {
         accZero[YAW]   = b[YAW]/50-acc_1G; // for nunchuk 200=1G
         accTrim[ROLL]   = 0;
         accTrim[PITCH]  = 0;
-        writeParams(); // write accZero in EEPROM
+        writeParams(1); // write accZero in EEPROM
       }
   #endif
   accADC[ROLL]  -=  accZero[ROLL] ;
@@ -946,7 +946,7 @@ void Mag_getADC() {
       tCal = 0;
       for(axis=0;axis<3;axis++)
         magZero[axis] = (magZeroTempMin[axis] + magZeroTempMax[axis])/2;
-      writeParams();
+      writeParams(1);
     }
   }
 }
@@ -1101,10 +1101,10 @@ void ACC_init () {
   i2c_writeReg(MPU6050_ADDRESS, 0x1C, 0x10);             //ACCEL_CONFIG  -- AFS_SEL=2 (Full Scale = +/-8G)  ; ACCELL_HPF=0   //note something is wrong in the spec.
   //note: something seems to be wrong in the spec here. With AFS=2 1G = 4096 but according to my measurement: 1G=2048 (and 2048/8 = 256)
   //confirmed here: http://www.multiwii.com/forum/viewtopic.php?f=8&t=1080&start=10#p7480
-  #if defined(FREEIMUv043)
-    acc_1G = 512;
-  #else
+  #if defined(FREEIMUv04)
     acc_1G = 255;
+  #else
+    acc_1G = 512;
   #endif
 
   #if defined(MPU6050_EN_I2C_BYPASS)

@@ -523,22 +523,22 @@ void loop () {
         if (rcDelayCommand == 20) calibratingM=1; // MAG calibration request
         rcDelayCommand++;
       } else if (rcData[PITCH] > MAXCHECK) {
-         accTrim[PITCH]+=2;writeParams();
+         accTrim[PITCH]+=2;writeParams(1);
          #if defined(LED_RING)
            blinkLedRing();
          #endif
       } else if (rcData[PITCH] < MINCHECK) {
-         accTrim[PITCH]-=2;writeParams();
+         accTrim[PITCH]-=2;writeParams(1);
          #if defined(LED_RING)
            blinkLedRing();
          #endif
       } else if (rcData[ROLL] > MAXCHECK) {
-         accTrim[ROLL]+=2;writeParams();
+         accTrim[ROLL]+=2;writeParams(1);
          #if defined(LED_RING)
            blinkLedRing();
          #endif
       } else if (rcData[ROLL] < MINCHECK) {
-         accTrim[ROLL]-=2;writeParams();
+         accTrim[ROLL]-=2;writeParams(1);
          #if defined(LED_RING)
            blinkLedRing();
          #endif
@@ -622,7 +622,7 @@ void loop () {
     if (rcOptions[BOXPASSTHRU]) {passThruMode = 1;}
     else passThruMode = 0;
   } else { // not in rc loop
-    static int8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
+    static uint8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
     switch (taskOrder++ % 5) {
       case 0:
         #if MAG
@@ -651,7 +651,7 @@ void loop () {
         break;
     }
   }
-
+ 
   computeIMU();
   // Measure loop rate just afer reading the sensors
   currentTime = micros();
