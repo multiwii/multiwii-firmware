@@ -1385,34 +1385,46 @@ void lcd_telemetry() {
 #endif
 #ifndef SUPPRESS_TELEMETRY_PAGE_7
     case 7:
-    case '7': // contributed by PatrikE
-#if GPS
-    if (linenr++ % 2) {
-      strcpy_P(line1,PSTR("Lat      Lon --"));
-      // 0123456789012345
-      if (armed) line1[14] = 'A'; else line1[14] = 'a';
-      if (failsafeCnt > 5) line1[15] = 'F'; else line1[15] = 'f';
-      LCDsetLine(1);LCDprintChar(line1);
-    } else {
-      strcpy_P(line2,PSTR("-------  -------"));
-      line2[0] = '0' + GPS_latitude / 1000000 - (GPS_latitude/10000000) * 10;
-      line2[1] = '0' + GPS_latitude / 100000 - (GPS_latitude/1000000) * 10;
-      line2[2] = '0' + GPS_latitude / 10000 - (GPS_latitude/100000) * 10;
-      line2[3] = '0' + GPS_latitude / 1000 - (GPS_latitude/10000) * 10;
-      line2[4] = '0' + GPS_latitude / 100 - (GPS_latitude/1000) * 10;
-      line2[5] = '0' + GPS_latitude / 10 - (GPS_latitude/100) * 10;
-      line2[6] = '0' + GPS_latitude - (GPS_latitude/10) * 10;
-      line2[9] = '0' + GPS_longitude / 1000000 - (GPS_longitude/10000000) * 10;
-      line2[10] = '0' + GPS_longitude / 100000 - (GPS_longitude/1000000) * 10;
-      line2[11] = '0' + GPS_longitude / 10000 - (GPS_longitude/100000) * 10;
-      line2[12] = '0' + GPS_longitude / 1000 - (GPS_longitude/10000) * 10;
-      line2[13] = '0' + GPS_longitude / 100 - (GPS_longitude/1000) * 10;
-      line2[14] = '0' + GPS_longitude / 10 - (GPS_longitude/100) * 10;
-      line2[15] = '0' + GPS_longitude - (GPS_longitude/10) * 10;
-      LCDsetLine(2);LCDprintChar(line2);
-    }
-#endif // case 7 : GPS
-    break;
+    case '7':
+      #if GPS
+      if (linenr++ % 2) {
+
+        strcpy_P(line1,PSTR("- Lat - - Lon --"));
+        //                   0123456789012345
+        if (armed) line1[14] = 'A'; else line1[14] = 'a';
+        if (failsafeCnt > 5) line1[15] = 'F'; else line1[15] = 'f';
+        line1[0]=GPS_latitude<0?'S':'N';
+        line1[8]=GPS_longitude<0?'W':'E';
+        line1[6]=0x30+GPS_numSat;
+        LCDsetLine(1);LCDprintChar(line1);
+       
+      } else {
+        int32_t aGPS_latitude = abs(GPS_latitude);
+        int32_t aGPS_longitude = abs(GPS_longitude);
+        int pos=0;
+        strcpy_P(line2,PSTR("------- ------- "));
+       
+        line2[pos++] = '0' + aGPS_latitude / 1000000 - (aGPS_latitude/10000000) * 10;
+        line2[pos++] = '0' + aGPS_latitude / 100000  - (aGPS_latitude/1000000)  * 10;
+        line2[pos++] = '0' + aGPS_latitude / 10000   - (aGPS_latitude/100000)   * 10;
+        line2[pos++] = '0' + aGPS_latitude / 1000 -    (aGPS_latitude/10000) * 10;
+        line2[pos++] = '0' + aGPS_latitude / 100  -    (aGPS_latitude/1000)  * 10;
+        line2[pos++] = '0' + aGPS_latitude / 10   -    (aGPS_latitude/100)   * 10;
+        line2[pos++] = '0' + aGPS_latitude        -    (aGPS_latitude/10)    * 10;       
+       
+        pos++;
+        line2[pos++] = '0' + aGPS_longitude / 1000000 - (aGPS_longitude/10000000) * 10;
+        line2[pos++] = '0' + aGPS_longitude / 100000  - (aGPS_longitude/1000000)  * 10;
+        line2[pos++] = '0' + aGPS_longitude / 10000   - (aGPS_longitude/100000)   * 10;
+        line2[pos++] = '0' + aGPS_longitude / 1000    - (aGPS_longitude/10000) * 10;
+        line2[pos++] = '0' + aGPS_longitude / 100     - (aGPS_longitude/1000)  * 10;
+        line2[pos++] = '0' + aGPS_longitude / 10      - (aGPS_longitude/100)   * 10;
+        line2[pos++] = '0' + aGPS_longitude           - (aGPS_longitude/10)    * 10;
+       
+        LCDsetLine(2);LCDprintChar(line2);
+      }
+      #endif // case 7 : GPS
+      break;
 #endif
 
 #if defined(LOG_VALUES) && defined(DEBUG)
