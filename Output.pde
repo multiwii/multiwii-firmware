@@ -12,8 +12,9 @@
   uint8_t PWM_PIN[8] = {3,5,6,2,7,8,9,10};      //for a quad+: rear,right,left,front   //+ for y6: 7:under right  8:under left
 #endif
 #if !defined(PROMICRO) || defined(HWPWM6)
+
   #if defined(AIRPLANE)
-    // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reverseed servo
+    // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
     volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,5}; 
   #else
     volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
@@ -561,6 +562,7 @@ ISR(SERVO_ISR) {
         TIMSK0 |= (1<<OCIE0B); // Enable CTC interrupt  
       #endif
       #if (NUMBER_MOTOR > 6) || ((NUMBER_MOTOR == 6) && !defined(SERVO))
+
         TIMSK0 |= (1<<OCIE0A);
       #endif
     #else
@@ -568,6 +570,7 @@ ISR(SERVO_ISR) {
         TCCR3B &= ~(1<<CS31); // no prescaler
         TIMSK3 |= (1<<OCIE3B); // Enable CTC interrupt  
         #if (NUMBER_MOTOR > 6) || ((NUMBER_MOTOR == 6) && !defined(SERVO))
+
           TIMSK3 |= (1<<OCIE3C);
         #endif   
     #endif
@@ -612,23 +615,40 @@ ISR(SERVO_ISR) {
       }
     }
   #else
+
     // HEXA with just OCR0B 
     ISR(SOFT_PWM_ISR1) { 
       static uint8_t state = 0;
       if(state == 0){
+
         SOFT_PWM_1_PIN_HIGH;
+
+
+
         SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_highState;
         state = 1;
       }else if(state == 1){
+
         SOFT_PWM_2_PIN_LOW;
+
+
+
         SOFT_PWM_CHANNEL1 += atomicPWM_PIN6_lowState;
         state = 2;
       }else if(state == 2){
+
         SOFT_PWM_2_PIN_HIGH;
+
+
+
         SOFT_PWM_CHANNEL1 += atomicPWM_PIN6_highState;
         state = 3;  
       }else if(state == 3){
+
         SOFT_PWM_1_PIN_LOW;
+
+
+
         SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_lowState;
         state = 0;   
       }
@@ -681,6 +701,7 @@ void mixTable() {
     motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
     motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
     servo[5] = constrain(tri_yaw_middle + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
+
   #endif
   #ifdef QUADP
     motor[0] = PIDMIX( 0,+1,-1); //REAR
@@ -793,53 +814,73 @@ void mixTable() {
     }
     servo[0]  = constrain(servo[0] + wing_left_mid , WING_LEFT_MIN,  WING_LEFT_MAX );
     servo[1]  = constrain(servo[1] + wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX);
-  #endif
-  #if defined(AIRPLANE) //PatrikE Experimentals
-    // Servosettings Only For Airplane
-    static int16_t   servoMid[8];                        // Midpoint on servo
-    static uint8_t   servotravel[8] = SERVO_RATES;       // Rates in 0-100% 
-    static int8_t    Mid[8] = SERVO_OFFSET;
-    static int8_t    servoreverse[8] = SERVO_DIRECTION ; // Inverted servos
- 
+  #endif  
+  
+ /************************************************************************************************************/ 
+ // PatrikE Experimentals
+ /************************************************************************************************************/
+ #if defined(AIRPLANE) 
+ // Common fuctions for Plane
+   static int16_t   servoMid[8];                        // Midpoint on servo
+   static uint8_t   servotravel[8] = SERVO_RATES;       // Rates in 0-100% 
+   static int8_t    Mid[8] = SERVO_OFFSET;
+   static int8_t    servoreverse[8] = SERVO_DIRECTION ; // Inverted servos
+   
     // Common functions for Plane
     static int16_t servolimit[8][2]; // Holds servolimit data
     #define SERVO_MIN 1020           // limit servo travel range must be inside [1020;2000]
     #define SERVO_MAX 2000           // limit servo travel range must be inside [1020;2000]
-
+    
+   /***************************
+    servo endpoints Airplane. 
+   ***************************/
     for(i=0; i<8; i++){  //  Set rates with 0 - 100%. 
       servoMid[i]     =MIDRC + Mid[i];
-      servolimit[i][0]=servoMid[i]-((servoMid[i]-SERVO_MIN) *(servotravel[i]*0.01));
+      servolimit[i][0]=servoMid[i]-((servoMid[i]-SERVO_MIN)   *(servotravel[i]*0.01));
       servolimit[i][1]=servoMid[i]+((SERVO_MAX - servoMid[i]) *(servotravel[i]*0.01));  
     }
+
+ // servo[7] is programmed with safty features to avoid motorstarts when ardu reset..  
+ // All other servos go to center at reset..  Half throttle can be dangerus    
+ // Only use servo[7] as motorcontrol if motor is used in the setup            */
     if (!armed){ 
       servo[7]=constrain( 900, SERVO_MIN, SERVO_MAX); // Kill throttle when disarmed
     } else {   
       servo[7]  = constrain(rcCommand[THROTTLE], servolimit[7][0], servolimit[7][1]); //   50hz ESC or servo
     }
-
-    // servo[7] is programmed with safty features to avoid motorstarts when ardu reset..  
-    // All other servos go to center at reset..  Half throttle can be dangerus    
-    // Only use servo[7] as motorcontrol if motor is used in the setup            */
-
+ 
+// FlaperonFunctions
+  int16_t flaps[2]={0,0};    
+  #if  defined(FLAP_CHANNEL) && defined(FLAP_EP) && defined(InvertFlaps)  
+    int8_t flapinv[2] = InvertFlaps; 
+    static int16_t F_Endpoint[2] = FLAP_EP;
+    int16_t flap = (MIDRC- constrain(rcData[FLAP_CHANNEL],F_Endpoint[0],F_Endpoint[1]));
+    for(i=0; i<2; i++){ flaps[i] = flap * flapinv[i] ;}
+  #endif
+    
     if(passThruMode){   // Direct passthru from RX 
-      servo[3]  = servoMid[3]+(rcCommand[ROLL] *servoreverse[3]);     //   Wing 1
-      servo[4]  = servoMid[4]+(rcCommand[ROLL] *servoreverse[4]);     //   Wing 2
-      servo[5]  = servoMid[5]+(rcCommand[YAW]  *servoreverse[5]);     //   Rudder
-      servo[6]  = servoMid[6]+(rcCommand[PITCH]*servoreverse[6]);     //   Elevator 
-    } else {
-      // use sensors to correct (gyro only or gyro+acc according to AUX configuration
-      servo[3]  =(servoMid[3] + (axisPID[ROLL]  * servoreverse[3])); //   Wing 1 
-      servo[4]  =(servoMid[4] + (axisPID[ROLL]  * servoreverse[4])); //   Wing 2
-      servo[5]  =(servoMid[5] + (axisPID[YAW]   * servoreverse[5])); //   Rud(der
-      servo[6]  =(servoMid[6] + (axisPID[PITCH] * servoreverse[6])); //   Elevator
-    } 
-    // ServoRates
+    servo[3]  = servoMid[3]+((rcCommand[ROLL] + flaps[0]) *servoreverse[3]);     //   Wing 1
+    servo[4]  = servoMid[4]+((rcCommand[ROLL] + flaps[1]) *servoreverse[4]);     //   Wing 2
+    servo[5]  = servoMid[5]+(rcCommand[YAW]               *servoreverse[5]);     //   Rudder
+    servo[6]  = servoMid[6]+(rcCommand[PITCH]             *servoreverse[6]);     //   Elevator 
+   }else{
+   // Asisted modes (gyro only or gyro+acc according to AUX configuration
+    servo[3]  =(servoMid[3] + ((axisPID[ROLL] + flaps[0]) *servoreverse[3]));   //   Wing 1 
+    servo[4]  =(servoMid[4] + ((axisPID[ROLL] + flaps[1]) *servoreverse[4]));   //   Wing 2
+    servo[5]  =(servoMid[5] + (axisPID[YAW]               *servoreverse[5]));   //   Rudder
+    servo[6]  =(servoMid[6] + (axisPID[PITCH]             *servoreverse[6]));   //   Elevator
+      } 
+// ServoRates
     for(uint8_t i=3;i<8;i++){ 
-      servo[i]  = map(servo[i], SERVO_MIN, SERVO_MAX, servolimit[i][0],  servolimit[i][1]);
+      servo[i]  = map(servo[i], SERVO_MIN, SERVO_MAX,servolimit[i][0],servolimit[i][1]);
       servo[i]  = constrain( servo[i], SERVO_MIN, SERVO_MAX);
     }
-  #endif
 
+  #endif
+ /************************************************************************************************************/ 
+ // End of PatrikE Experimentals
+ /************************************************************************************************************/ 
+  
   #if defined(CAMTRIG)
     static uint8_t camCycle = 0;
     static uint8_t camState = 0;
@@ -885,6 +926,7 @@ void mixTable() {
   #if (LOG_VALUES == 2) || defined(POWERMETER_SOFT)
     uint32_t amp;
     /* true cubic function; when divided by vbat_max=126 (12.6V) for 3 cell battery this gives maximum value of ~ 500 */
+
     static uint16_t amperes[64] =   {   0,  2,  6, 15, 30, 52, 82,123,
                                      175,240,320,415,528,659,811,984,
                                      1181,1402,1648,1923,2226,2559,2924,3322,
