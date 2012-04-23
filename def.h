@@ -113,7 +113,7 @@
     #define BUZZERPIN_PINMODE          pinMode (8, OUTPUT);
     #define BUZZERPIN_ON               PORTB |= 1<<4;
     #define BUZZERPIN_OFF              PORTB &= ~(1<<4); 
-  #elseif defined(A32U4ALLPINS)
+  #elif defined(A32U4ALLPINS)
     #define BUZZERPIN_PINMODE          pinMode (4, OUTPUT);
     #define BUZZERPIN_ON               PORTD |= 1<<4;
     #define BUZZERPIN_OFF              PORTD &= ~(1<<4);    
