@@ -768,13 +768,17 @@
  #define MULTITYPE 17
 #endif
 
+#if defined(HELI_120_CCPM) || defined(HELI_90_DEG)
+  #define HELI
+#endif
+
 #if defined(POWERMETER_HARD) || defined(POWERMETER_SOFT)
   #define POWERMETER
 #endif
 
 /* motor and servo numbers */
 
-#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(AIRPLANE) || defined(CAMTRIG)
+#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(AIRPLANE) || defined(CAMTRIG) || defined(HELI)
   #define SERVO
 #endif
 
@@ -804,6 +808,14 @@
   #define NUMBER_MOTOR     6
 #elif defined(OCTOX8) || defined(OCTOFLATP) || defined(OCTOFLATX)
   #define NUMBER_MOTOR     8
+#elif defined(HELI_120_CCPM)
+  #define NUMBER_MOTOR     1
+  #define PRI_SERVO_FROM   1 // use servo from 1 to 4
+  #define PRI_SERVO_TO     4
+#elif defined(HELI_90_DEG)
+  #define NUMBER_MOTOR     1
+  #define PRI_SERVO_FROM   1 // use servo from 1 to 3
+  #define PRI_SERVO_TO     3
 #endif
 
 
