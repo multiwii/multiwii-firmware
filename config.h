@@ -42,6 +42,14 @@
 /* I2C DFRobot LED RING communication */
 //#define LED_RING
 
+/* LED FLASHER */
+//#define LED_FLASHER
+//#define LED_FLASHER_DDR DDRB
+//#define LED_FLASHER_PORT PORTB
+//#define LED_FLASHER_BIT PB4
+// create double flashes
+//#define LED_FLASHER_SEQUENCE ( (uint8_t) (1<<0 | 1<<2) )
+
 /* This will activate the ACC-Inflight calibration if unchecked */  
 //#define INFLIGHT_ACC_CALIBRATION
 
@@ -57,6 +65,9 @@
 //#define RCAUXPIN8
 //#define RCAUXPIN12
 //#define RCOPTIONSBEEP        //uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
+
+/* disable use of the POWER PIN */
+//#define DISABLE_POWER_PIN
 
 /* GPS using a SERIAL port
    only available on MEGA boards (this might be possible on 328 based boards in the future)

@@ -308,6 +308,10 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     }
   #endif
 
+  #if defined(LED_FLASHER)
+    switch_led_flasher();
+  #endif
+
   if ( currentTime > calibratedAccTime ) {
     if (smallAngle25 == 0) {
       calibratedACC = 0; // the multi uses ACC and is not calibrated or is too much inclinated
@@ -401,6 +405,10 @@ void setup() {
     configurationLoop();
   #endif
   ADCSRA |= _BV(ADPS2) ; ADCSRA &= ~_BV(ADPS1); ADCSRA &= ~_BV(ADPS0); // this speeds up analogRead without loosing too much resolution: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1208715493/11
+  #if defined(LED_FLASHER)
+    init_led_flasher();
+    led_flasher_set_sequence(LED_FLASHER_SEQUENCE);
+  #endif
 }
 
 // ******** Main Loop *********

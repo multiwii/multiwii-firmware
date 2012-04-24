@@ -47,6 +47,7 @@ W: http://www.multiwii.com/forum/viewtopic.php?f=13&t=516
 S: Failsave
 D:
 N: MIS
+N: Jevermeister (Nils Ivo von Aswege)
 E:
 W:
 
@@ -54,7 +55,7 @@ S: Global Buzzer Handling (buzzer.pde)
 D:
 N: Jevermeister (Nils Ivo von Aswege)
 E:
-W:
+W:http://ncopters.blogspot.com
 
 S: GPS_altitude,GPS_speed
 D:
@@ -134,7 +135,7 @@ S: Inflight ACC Calibration
 D:
 N: Jevermeister (Nils Ivo von Aswege)
 E:
-W:
+W:http://ncopters.blogspot.com
 
 
 S: OpenLRS Designed by Melih Karakelle on 2010-2012 
@@ -204,3 +205,9 @@ N: Luca Brizzi aka gtrick90 @ RCG
 E:
 W:
 
+S: LED Flasher Code
+D: initial support
+N: Stefan Tomanek
+N: Jevermeister (Nils Ivo von Aswege)
+E:
+W:http://ncopters.blogspot.com

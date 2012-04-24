@@ -23,7 +23,7 @@
     #define BUZZERPIN_OFF              ;
     #define RCAUXPIN
   #endif
-  #if !defined(RCAUXPIN12)
+  #if !defined(RCAUXPIN12) && !defined(DISABLE_POWER_PIN)
     #define POWERPIN_PINMODE           pinMode (12, OUTPUT);
     #define POWERPIN_ON                PORTB |= 1<<4;
     #define POWERPIN_OFF               PORTB &= ~(1<<4); //switch OFF WMP, digital PIN 12
@@ -31,6 +31,8 @@
     #define POWERPIN_PINMODE           ;
     #define POWERPIN_ON                ;
     #define POWERPIN_OFF               ;
+  #endif
+  #if defined(RCAUXPIN12)
     #define RCAUXPIN
   #endif
   #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5;   // PIN A4&A5 (SDA&SCL)
@@ -213,9 +215,15 @@
   #define BUZZERPIN_PINMODE          pinMode (32, OUTPUT);
   #define BUZZERPIN_ON               PORTC |= 1<<5;
   #define BUZZERPIN_OFF              PORTC &= ~(1<<5);
-  #define POWERPIN_PINMODE           pinMode (37, OUTPUT);
-  #define POWERPIN_ON                PORTC |= 1<<0;
-  #define POWERPIN_OFF               PORTC &= ~(1<<0);
+  #if !defined(DISABLE_POWER_PIN)
+    #define POWERPIN_PINMODE           pinMode (37, OUTPUT);
+    #define POWERPIN_ON                PORTC |= 1<<0;
+    #define POWERPIN_OFF               PORTC &= ~(1<<0);
+  #else
+    #define POWERPIN_PINMODE           ;
+    #define POWERPIN_ON                ;
+    #define POWERPIN_OFF               ;
+  #endif
   #define I2C_PULLUPS_ENABLE         PORTD |= 1<<0; PORTD |= 1<<1;       // PIN 20&21 (SDA&SCL)
   #define I2C_PULLUPS_DISABLE        PORTD &= ~(1<<0); PORTD &= ~(1<<1);
   #define PINMODE_LCD                pinMode(0, OUTPUT);
