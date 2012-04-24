@@ -109,14 +109,18 @@
     #define LEDPIN_OFF                 PORTD &= ~(1<<5);
     #define LEDPIN_ON                  PORTD |= (1<<5);
   #endif
-  #if !defined(D8BUZZER) && !defined(A32U4ALLPINS)
-    #define BUZZERPIN_PINMODE          pinMode (1, OUTPUT);
-    #define BUZZERPIN_ON               PORTD |= 1<<3;
-    #define BUZZERPIN_OFF              PORTD &= ~(1<<3);
-  #else
+  #if defined(D8BUZZER)
     #define BUZZERPIN_PINMODE          pinMode (8, OUTPUT);
     #define BUZZERPIN_ON               PORTB |= 1<<4;
-    #define BUZZERPIN_OFF              PORTB &= ~(1<<4);  
+    #define BUZZERPIN_OFF              PORTB &= ~(1<<4); 
+  #elif defined(A32U4ALLPINS)
+    #define BUZZERPIN_PINMODE          pinMode (4, OUTPUT);
+    #define BUZZERPIN_ON               PORTD |= 1<<4;
+    #define BUZZERPIN_OFF              PORTD &= ~(1<<4);    
+  #else
+    #define BUZZERPIN_PINMODE          pinMode (1, OUTPUT);
+    #define BUZZERPIN_ON               PORTD |= 1<<3;
+    #define BUZZERPIN_OFF              PORTD &= ~(1<<3); 
   #endif
   #define POWERPIN_PINMODE           //
   #define POWERPIN_ON                //
@@ -185,9 +189,9 @@
     #define AUX1PIN                    7
   #else
     #define ROLLPIN                    7
-    #define PITCHPIN                   4
-    #define YAWPIN                     6
-    #define AUX1PIN                    5   
+    #define PITCHPIN                   6
+    #define YAWPIN                     4
+    #define AUX1PIN                    5 
   #endif
   #define AUX2PIN                    0 
   #define AUX3PIN                    1 // unused 
