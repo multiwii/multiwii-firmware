@@ -44,6 +44,7 @@ void configureReceiver() {
       PORTB   = (1<<1) | (1<<2) | (1<<3) | (1<<4);
       PCMSK0 |= (1<<1) | (1<<2) | (1<<3) | (1<<4); 
       #if defined(RCAUX2PIND17)
+        pinMode(17,INPUT);
         PORTB  |= (1<<0);
         PCMSK0 |= (1<<0);       
       #endif
