@@ -702,7 +702,7 @@ void initLCD() {
 #ifdef LCD_CONF
 
 typedef void (*formatter_func_ptr)(void *, uint8_t, uint8_t);
-typedef void (*inc_func_ptr)(void *, int8_t);
+typedef void (*inc_func_ptr)(void *, int16_t);
 
 /*typedef*/struct lcd_type_desc_t {
   formatter_func_ptr fmt;
@@ -713,13 +713,16 @@ static lcd_type_desc_t LTU8 = {&__u8Fmt, &__u8Inc};
 static lcd_type_desc_t LTU16 = {&__u16Fmt, &__u16Inc};
 static lcd_type_desc_t LPMM = {&__upMFmt, &__nullInc};
 static lcd_type_desc_t LPMS = {&__upSFmt, &__nullInc};
-static lcd_type_desc_t LAUX = {&__uAuxFmt, &__u16Inc}; //to review (activate is now 16 bit long)
+static lcd_type_desc_t LAUX1 = {&__uAuxFmt1, &__u16Inc};
+static lcd_type_desc_t LAUX2 = {&__uAuxFmt2, &__u16Inc};
+static lcd_type_desc_t LAUX3 = {&__uAuxFmt3, &__u16Inc};
+static lcd_type_desc_t LAUX4 = {&__uAuxFmt4, &__u16Inc};
 
 /*typedef*/struct lcd_param_def_t {
   lcd_type_desc_t * type;
   uint8_t decimal;
   uint8_t multiplier;
-  uint8_t increment;
+  uint16_t increment;
 };
 
 //typedef struct lcd_param_t{
@@ -743,7 +746,10 @@ static lcd_param_def_t __VB = {&LTU8, 1, 1, 0};
 static lcd_param_def_t __L = {&LTU8, 0, 1, 0};
 static lcd_param_def_t __FS = {&LTU8, 1, 1, 0};
 static lcd_param_def_t __SE = {&LTU16, 0, 1, 10};
-static lcd_param_def_t __AUX = {&LAUX, 0, 1, 1};
+static lcd_param_def_t __AUX1 = {&LAUX1, 0, 1, 1};
+static lcd_param_def_t __AUX2 = {&LAUX2, 0, 1, 8};
+static lcd_param_def_t __AUX3 = {&LAUX3, 0, 1, 64};
+static lcd_param_def_t __AUX4 = {&LAUX4, 0, 1, 512};
 
 // Program Space Strings - These sit in program flash, not SRAM.
 
@@ -854,21 +860,84 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
   &lcd_param_text23, &yawRate, &__RC,
   &lcd_param_text24, &dynThrPID, &__RC,
 #ifdef LCD_CONF_AUX
-  &lcd_param_text42, &activate[BOXACC], &__AUX,
-  &lcd_param_text43, &activate[BOXBARO], &__AUX,
-  &lcd_param_text44, &activate[BOXMAG], &__AUX,
-#ifdef GIMBAL
-  &lcd_param_text45, &activate[BOXCAMSTAB], &__AUX,
-  &lcd_param_text46, &activate[BOXCAMTRIG], &__AUX,
-#endif
-  &lcd_param_text47, &activate[BOXARM], &__AUX,
-#if GPS
-  &lcd_param_text48, &activate[BOXGPSHOME], &__AUX,
-  &lcd_param_text49, &activate[BOXGPSHOLD], &__AUX,
-#endif
-  &lcd_param_text50, &activate[BOXPASSTHRU],&__AUX,
-  &lcd_param_text51, &activate[BOXHEADFREE],&__AUX,
-  &lcd_param_text52, &activate[BOXBEEPERON],&__AUX,
+  #if ACC
+    &lcd_param_text42, &activate[BOXACC], &__AUX1,
+    &lcd_param_text42, &activate[BOXACC], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX34
+      &lcd_param_text42, &activate[BOXACC], &__AUX3,
+      &lcd_param_text42, &activate[BOXACC], &__AUX4,
+    #endif
+  #endif
+  #if BARO
+    &lcd_param_text43, &activate[BOXBARO], &__AUX1,
+    &lcd_param_text43, &activate[BOXBARO], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX34
+      &lcd_param_text43, &activate[BOXBARO], &__AUX3,
+      &lcd_param_text43, &activate[BOXBARO], &__AUX4,
+    #endif
+  #endif
+  #if MAG
+    &lcd_param_text44, &activate[BOXMAG], &__AUX1,
+    &lcd_param_text44, &activate[BOXMAG], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX34
+      &lcd_param_text44, &activate[BOXMAG], &__AUX3,
+      &lcd_param_text44, &activate[BOXMAG], &__AUX4,
+    #endif
+  #endif
+  #ifdef GIMBAL
+    &lcd_param_text45, &activate[BOXCAMSTAB], &__AUX1,
+    &lcd_param_text45, &activate[BOXCAMSTAB], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX34
+      &lcd_param_text45, &activate[BOXCAMSTAB], &__AUX3,
+      &lcd_param_text45, &activate[BOXCAMSTAB], &__AUX4,
+    #endif
+    &lcd_param_text46, &activate[BOXCAMTRIG], &__AUX1,
+    &lcd_param_text46, &activate[BOXCAMTRIG], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX34
+      &lcd_param_text46, &activate[BOXCAMTRIG], &__AUX3,
+      &lcd_param_text46, &activate[BOXCAMTRIG], &__AUX4,
+    #endif
+  #endif
+  &lcd_param_text47, &activate[BOXARM], &__AUX1,
+  &lcd_param_text47, &activate[BOXARM], &__AUX2,
+  #ifndef SUPPRESS_LCD_CONF_AUX34
+    &lcd_param_text47, &activate[BOXARM], &__AUX3,
+    &lcd_param_text47, &activate[BOXARM], &__AUX4,
+  #endif
+  #if GPS
+    &lcd_param_text48, &activate[BOXGPSHOME], &__AUX1,
+    &lcd_param_text48, &activate[BOXGPSHOME], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX34
+      &lcd_param_text48, &activate[BOXGPSHOME], &__AUX3,
+      &lcd_param_text48, &activate[BOXGPSHOME], &__AUX4,
+    #endif
+    &lcd_param_text49, &activate[BOXGPSHOLD], &__AUX1,
+    &lcd_param_text49, &activate[BOXGPSHOLD], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX34
+      &lcd_param_text49, &activate[BOXGPSHOLD], &__AUX3,
+      &lcd_param_text49, &activate[BOXGPSHOLD], &__AUX4,
+    #endif
+  #endif
+  &lcd_param_text50, &activate[BOXPASSTHRU],&__AUX1,
+  &lcd_param_text50, &activate[BOXPASSTHRU],&__AUX2,
+  #ifndef SUPPRESS_LCD_CONF_AUX34
+    &lcd_param_text50, &activate[BOXPASSTHRU],&__AUX3,
+    &lcd_param_text50, &activate[BOXPASSTHRU],&__AUX4,
+  #endif
+  #if MAG
+    &lcd_param_text51, &activate[BOXHEADFREE],&__AUX1,
+    &lcd_param_text51, &activate[BOXHEADFREE],&__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX34
+      &lcd_param_text51, &activate[BOXHEADFREE],&__AUX3,
+      &lcd_param_text51, &activate[BOXHEADFREE],&__AUX4,
+    #endif
+  #endif
+  &lcd_param_text52, &activate[BOXBEEPERON],&__AUX1,
+  &lcd_param_text52, &activate[BOXBEEPERON],&__AUX2,
+  #ifndef SUPPRESS_LCD_CONF_AUX34
+    &lcd_param_text52, &activate[BOXBEEPERON],&__AUX3,
+    &lcd_param_text52, &activate[BOXBEEPERON],&__AUX4,
+  #endif
 #endif
 
 #ifdef LOG_VALUES
@@ -922,9 +991,9 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #define PARAMMAX (sizeof(lcd_param_ptr_table)/6 - 1)
 // ************************************************************************************************************
 
-void __u8Inc(void * var, int8_t inc) {*(uint8_t*)var += inc;};
-void __u16Inc(void * var, int8_t inc) {*(uint16_t*)var += inc;};
-void __nullInc(void * var, int8_t inc) {};
+void __u8Inc(void * var, int16_t inc) {*(uint8_t*)var += (uint8_t)inc;};
+void __u16Inc(void * var, int16_t inc) {*(uint16_t*)var += inc;};
+void __nullInc(void * var, int16_t inc) {};
 
 void __u8Fmt(void * var, uint8_t mul, uint8_t dec) {
   uint16_t unit = *(uint8_t*)var;
@@ -947,15 +1016,30 @@ void __u16Fmt(void * var, uint8_t mul, uint8_t dec) {
   line2[7] = digit10(unit);
   line2[8] = digit1(unit);
 }
+void __uAuxFmt1(void * var, uint8_t mul, uint8_t dec) {  __uAuxFmt(var, mul, dec, 1); }
+void __uAuxFmt2(void * var, uint8_t mul, uint8_t dec) {  __uAuxFmt(var, mul, dec, 2); }
+void __uAuxFmt3(void * var, uint8_t mul, uint8_t dec) {  __uAuxFmt(var, mul, dec, 3); }
+void __uAuxFmt4(void * var, uint8_t mul, uint8_t dec) {  __uAuxFmt(var, mul, dec, 4); }
 
-void __uAuxFmt(void * var, uint8_t mul, uint8_t dec) { //to review (activate is now 16 bit long)
-  uint8_t unit = *(uint8_t*)var;
-  line2[4] = ( unit & 1<<0 ? 'L' : '.' );
-  line2[5] = ( unit & 1<<1 ? 'M' : '.' );
-  line2[6] = ( unit & 1<<2 ? 'H' : '.' );
-  line2[8] = ( unit & 1<<3 ? 'L' : '.' );
-  line2[9] = ( unit & 1<<4 ? 'M' : '.' );
-  line2[10] = ( unit & 1<<5 ? 'H' : '.' );
+
+void __uAuxFmt(void * var, uint8_t mul, uint8_t dec, uint8_t aux) {
+  uint16_t unit = *(uint16_t*)var;
+  line2[0] =  (aux == 1 ? '>' : ' ');
+  line2[1] =  ( unit & 1<<0 ? 'L' : '.' );
+  line2[2] =  ( unit & 1<<1 ? 'M' : '.' );
+  line2[3] =  ( unit & 1<<2 ? 'H' : '.' );
+  line2[4] =  (aux == 2 ? '>' : ' ');
+  line2[5] =  ( unit & 1<<3 ? 'L' : '.' );
+  line2[6] =  ( unit & 1<<4 ? 'M' : '.' );
+  line2[7] =  ( unit & 1<<5 ? 'H' : '.' );
+  line2[8] =  (aux == 3 ? '>' : ' ');
+  line2[9] =  ( unit & 1<<6 ? 'L' : '.' );
+  line2[10] = ( unit & 1<<7 ? 'M' : '.' );
+  line2[11] = ( unit & 1<<8 ? 'H' : '.' );
+  line2[12] = (aux == 4 ? '>' : ' ');
+  line2[13] = ( unit & 1<<9 ? 'L' : '.' );
+  line2[14] = ( unit & 1<<10 ? 'M' : '.' );
+  line2[15] = ( unit & 1<<11 ? 'H' : '.' );
 }
 
 void __upMFmt(void * var, uint8_t mul, uint8_t dec) {

@@ -303,6 +303,9 @@
 #define LCD_CONF
 /* to include setting the aux switches for AUX1 -> AUX4 via LCD */ //to review (activate[] is now 16 bit long)
 //#define LCD_CONF_AUX
+/* if program gets too large (>32k), need to exclude some functionality */
+/* uncomment to suppress some unwanted aux3 aux4 items in config menu (only useful if LCD_CONF_AUX is enabled) */
+//#define SUPPRESS_LCD_CONF_AUX34
 
 /* choice of LCD attached for configuration and telemetry, see notes below */
 #define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
@@ -316,8 +319,8 @@
 
 //#define NEW_OLED_FONT	// OLED use other font (more lines)
 
-/* style of display - autodetected by LCD_ setting - only activate to overwrite defaults */
-#define DISPLAY_2LINES
+/* style of display - AUTODETECTED via LCD_ setting - only activate to overwrite defaults */
+//#define DISPLAY_2LINES
 //#define DISPLAY_MULTILINE
 
 /* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
