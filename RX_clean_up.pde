@@ -93,7 +93,7 @@ void configureReceiver() {
 /**************************************************************************************/
 #if defined(STANDARD_RX)
   // predefined PC pin block (thanks to lianj)
-  #define RX_PIN_CHECK(pin_pos, rc_value_pos) \
+  #define RX_PIN_CHECK(pin_pos, rc_value_pos)                                                        \
     if (mask & PCInt_RX_Pins[pin_pos]) {                                                             \
       if (!(pin & PCInt_RX_Pins[pin_pos])) {                                                         \
         dTime = cTime-edgeTime[pin_pos]; if (900<dTime && dTime<2200) rcValue[rc_value_pos] = dTime; \
