@@ -92,6 +92,14 @@ void configureReceiver() {
 /***************               Standard RX Pins reading            ********************/
 /**************************************************************************************/
 #if defined(STANDARD_RX)
+  // predefined PC pin block (thanks to lianj)
+  #define RX_PIN_CHECK(pin_pos, rc_value_pos) \
+    if (mask & PCInt_RX_Pins[pin_pos]) {                                                             \
+      if (!(pin & PCInt_RX_Pins[pin_pos])) {                                                         \
+        dTime = cTime-edgeTime[pin_pos]; if (900<dTime && dTime<2200) rcValue[rc_value_pos] = dTime; \
+      } else edgeTime[pin_pos] = cTime;                                                              \
+    }
+  // port change Interrupt
   ISR(RX_PC_INTERRUPT) { //this ISR is common to every receiver channel, it is call everytime a change state occurs on a RX input pin
     uint8_t mask;
     uint8_t pin;
@@ -106,54 +114,32 @@ void configureReceiver() {
     PCintLast = pin;          // we memorize the current state of all PINs [D0-D7]
   
     cTime = micros();         // micros() return a uint32_t, but it is not usefull to keep the whole bits => we keep only 16 bits
+    
     #if (PCINT_PIN_COUNT > 0)
-      if (mask & PCInt_RX_Pins[0])         //indicates the bit of the RX pin changed, if 1 => this pin has just changed
-        if (!(pin & PCInt_RX_Pins[0])) {   //indicates if the bit of the RX pin is not at a high state (so that we match here only descending PPM pulse)
-          dTime = cTime-edgeTime[0]; if (900<dTime && dTime<2200) rcValue[2] = dTime; // just a verification: the value must be in the range [1000;2000] + some margin
-        } else edgeTime[0] = cTime;       // if the bit of the RX pin is at a high state (ascending PPM pulse), we memorize the time
+      RX_PIN_CHECK(0,2);
     #endif
     #if (PCINT_PIN_COUNT > 1)
-      if (mask & PCInt_RX_Pins[1]) //same principle for other channels   // avoiding a for() is more than twice faster, and it's important to minimize execution time in ISR
-        if (!(pin & PCInt_RX_Pins[1])) {
-          dTime = cTime-edgeTime[1]; if (900<dTime && dTime<2200) rcValue[4] = dTime;
-        } else edgeTime[1] = cTime; 
-    #endif   
+      RX_PIN_CHECK(1,4);
+    #endif
     #if (PCINT_PIN_COUNT > 2)
-      if (mask & PCInt_RX_Pins[2]) 
-        if (!(pin & PCInt_RX_Pins[2])) {
-          dTime = cTime-edgeTime[2]; if (900<dTime && dTime<2200) rcValue[5] = dTime;
-        } else edgeTime[2] = cTime; 
-    #endif   
+      RX_PIN_CHECK(2,5);
+    #endif
     #if (PCINT_PIN_COUNT > 3)
-      if (mask & PCInt_RX_Pins[3]) 
-        if (!(pin & PCInt_RX_Pins[3])) {
-          dTime = cTime-edgeTime[3]; if (900<dTime && dTime<2200) rcValue[6] = dTime;
-        } else edgeTime[3] = cTime; 
-    #endif   
+      RX_PIN_CHECK(3,6);
+    #endif
     #if (PCINT_PIN_COUNT > 4)
-      if (mask & PCInt_RX_Pins[4]) 
-        if (!(pin & PCInt_RX_Pins[4])) {
-          dTime = cTime-edgeTime[4]; if (900<dTime && dTime<2200) rcValue[7] = dTime;
-        } else edgeTime[4] = cTime; 
-    #endif   
+      RX_PIN_CHECK(4,7);
+    #endif
     #if (PCINT_PIN_COUNT > 5)
-      if (mask & PCInt_RX_Pins[5]) 
-        if (!(pin & PCInt_RX_Pins[5])) {
-          dTime = cTime-edgeTime[5]; if (900<dTime && dTime<2200) rcValue[0] = dTime;
-        } else edgeTime[5] = cTime; 
-    #endif   
+      RX_PIN_CHECK(5,0);
+    #endif
     #if (PCINT_PIN_COUNT > 6)
-      if (mask & PCInt_RX_Pins[6]) 
-        if (!(pin & PCInt_RX_Pins[6])) {
-          dTime = cTime-edgeTime[6]; if (900<dTime && dTime<2200) rcValue[1] = dTime;
-        } else edgeTime[6] = cTime; 
-    #endif   
+      RX_PIN_CHECK(6,1);
+    #endif
     #if (PCINT_PIN_COUNT > 7)
-      if (mask & PCInt_RX_Pins[7]) 
-        if (!(pin & PCInt_RX_Pins[7])) {
-          dTime = cTime-edgeTime[7]; if (900<dTime && dTime<2200) rcValue[3] = dTime;
-        } else edgeTime[7] = cTime; 
-    #endif   
+      RX_PIN_CHECK(7,3);
+    #endif
+    
     #if defined(FAILSAFE) && !defined(PROMICRO)
       if (mask & 1<<THROTTLEPIN) {  // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
         if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
