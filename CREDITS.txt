@@ -32,6 +32,14 @@ N: Luis Correia
 E:
 W: http://www.multiwii.com/forum/viewtopic.php?f=18&t=828
 
+S: Configuration Menu over LCD
+D: Use of attached LCD (serial,i2c) via cable or BT to tune parameters
+N: Alex
+N: ??? editing via TX-Sticks
+N: Hamburger (auxN settings, multiline/fullscreen, VT100 type)
+E:
+W:
+
 S: Eagle Tree Power Panel
 D:
 N: Danal
@@ -48,6 +56,13 @@ S: Failsave
 D:
 N: MIS
 N: Jevermeister (Nils Ivo von Aswege)
+E:
+W:
+
+S: Flying Wing model
+D: support for model with 1 motor and 2 servos for 2 combined control surfaces (aileron+elevator)
+N: Alex (initial layout)
+N: Hamburger
 E:
 W:
 
@@ -76,7 +91,7 @@ E:
 W:
 
 S: i2c OLED  128x64 display
-D:
+D: support for OLED as alternatative to LCD
 N: howardbb
 E: howard@automatrix.co.za
 W:
@@ -135,8 +150,7 @@ S: Inflight ACC Calibration
 D:
 N: Jevermeister (Nils Ivo von Aswege)
 E:
-W:http://ncopters.blogspot.com
-
+W: http://ncopters.blogspot.com
 
 S: OpenLRS Designed by Melih Karakelle on 2010-2012 
 D: Version Number     : 1.11
@@ -162,9 +176,9 @@ N: MIS
 E:
 W:
 
-S: powermeter
+S: Powermeter
 D: estimate consumed power either in software only or with hardware current sensor
-N: hamburger
+N: Hamburger
 E:
 W: http://www.multiwii.com/forum/viewtopic.php?f=8&t=167
 
@@ -199,9 +213,16 @@ N: Danal
 E:
 W:
 
+S: Telemetry over LCD/OLED serial/i2c
+D: 
+N: Hamburger
+E:
+W:
+
 S: Textstar LCD
-D: initial support
-N: Luca Brizzi aka gtrick90 @ RCG
+D: support for LCD 2x16 from Cat's Whisker
+N: Luca Brizzi aka gtrick90 @ RCG for initial support
+N: Hamburger (bargraph)
 E:
 W:
 
