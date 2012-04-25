@@ -370,7 +370,7 @@ void computeRC() {
   static int16_t rcData4Values[8][4], rcDataMean[8];
   static uint8_t rc4ValuesIndex = 0;
   uint8_t chan,a;
-  #if !(defined(SPEKTRUM) || defined(RCSERIAL) || defined(OPENLRSv2MULTI))
+  //#if (defined(SPEKTRUM) || defined(RCSERIAL) || defined(OPENLRSv2MULTI))
     #if defined(SBUS)
       readSBus();
     #endif
@@ -383,7 +383,7 @@ void computeRC() {
       if ( rcDataMean[chan] < rcData[chan] -3)  rcData[chan] = rcDataMean[chan]+2;
       if ( rcDataMean[chan] > rcData[chan] +3)  rcData[chan] = rcDataMean[chan]-2;
     }
-  #endif
+  //#endif
 }
 
 
