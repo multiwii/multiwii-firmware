@@ -27,6 +27,14 @@
 //#define VTAIL4
 //#define AIRPLANE     // Howto setup =>>>http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
 
+//*******************************************************
+// Heli is  beta test ......!
+// Howto setup =>>> http://fotoflygarn.blogspot.se/2012/04/multiwii-helicopter.html
+//*******************************************************
+//#define HELI_120_CCPM	 // PatrikE Experimental 
+//#define HELI_90_DEG	 // PatrikE Experimental 
+//*******************************************************
+
 /********************************    YAW_DIRECTION    *********************************/
 #define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
 //#define YAW_DIRECTION -1
@@ -242,7 +250,7 @@
 
 /* this is the maximum value for the ESCs at full power
    this value can be increased up to 2000 */
-#define MAXTHROTTLE 1950
+#define MAXTHROTTLE 1850
 
 
 
@@ -489,6 +497,7 @@
 
 /* The following lines apply only for a pitch/roll tilt stabilization system
    Uncomment the first line to activate it */
+//#define SERVO_TILT              //  Simple CameraGimbal By Bledy http://youtu.be/zKGr6iR54vM
 //#define SERVO_TILT
 #define TILT_PITCH_MIN    1020    //servo travel min, don't set it below 1020
 #define TILT_PITCH_MAX    2000    //servo travel max, max value=2000
@@ -531,14 +540,37 @@
 //***********************************************************************************************//
 // Howto setup =>>> http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
 
-//#define D12_POWER    // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12 
-#define SERVO_OFFSET     {  0,   0,   0, -20,  40,   0,  20,   0 } // Servo MID Offset
-#define SERVO_RATES      {100, 100, 100, 100, 100, 100, 100, 100 } // Rates in 0-100% 
+#define SERVO_OFFSET     {  0,   0,   0,  0,   0,   0,  0,   0 } // Adjust Servo MID Offset & Swash angles 
+#define SERVO_RATES      {100, 100, 100, 100, 100, 100, 100, 100} // Rates in 0-100% 
 #define SERVO_DIRECTION  { -1,   1,   1,   1,  1,   1,   1,   1 } // Invert servos by setting -1 
-
+ 
 //#define FLAP_CHANNEL     AUX4       // Define the Channel to controll Flaps with.If used.
 #define FLAP_EP      { 1500, 1650 } // Endpooints for flaps on a 2 way switch else set {1020,2000} and program in radio.
-#define InvertFlaps    { 1, -1 }    // Change direction om flaps { Wing1, Wing2 }
+#define FLAP_INVERT    { 1, -1 }    // Change direction om flaps { Wing1, Wing2 }
+
+//***********************************************************************************************//
+//*************************** !!!!  Common for Heli & Airplane  !!!! ****************************//
+//***********************************************************************************************//
+
+//#define D12_POWER            // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12 
+
+//***********************************************************************************************//
+//****************************** !!!!  Hellicopter Settings  !!!! *******************************//
+//***********************************************************************************************//
+// Channel to controll CollectivePitch
+#define CollectivePitch AUX1   // Selectable channels: ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4
+
+// Set Maximum available movement for the servos. Depending on modell.
+#define SERVO_ENDPOINT_HIGH {2000,2000,2000,2000,2000,2000,2000,2000};
+#define SERVO_ENDPOINT_LOW  {1020,1020,1020,1020,1020,1020,1020,1020};
+
+// Limit the range of Collective Pitch. 100% is Full Range each way and position for Zero Pitch
+#define CollectiveRange { 80, 1500, 80 }// {Min%, ZeroPitch, Max%}.
+#define YAWCenter             1500      // Use servo[5] SERVO_ENDPOINT_HIGH/LOW for the endpoits.
+#define YAWMOTOR                0       // If a motor is use as YAW Set to 1 else set to 0.
+
+// Limit Maximum controll for Roll & Nick  in 0-100%  
+#define ControllRange   { 100, 100 }      //  { ROLL,PITCH }
 //*************************************************************************************************// 
 
 /********************************************************************/

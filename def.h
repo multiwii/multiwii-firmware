@@ -770,9 +770,9 @@
 #elif defined(AIRPLANE)    
   #define MULTITYPE 14    
 #elif defined (HELI_120_CCPM)   
-  #define MULTITYPE 15      // Simple model 
+  #define MULTITYPE 15      
 #elif defined (HELI_90_DEG)   
-  #define MULTITYPE 16      // Simple model  
+  #define MULTITYPE 16      
 #elif defined(VTAIL4)
  #define MULTITYPE 17
 #endif
@@ -794,7 +794,7 @@
 #endif
 
 #if defined(HELI_120_CCPM) || defined(HELI_90_DEG)
-  #define HELI
+  #define HELICOPTER
 #endif
 
 #if defined(POWERMETER_HARD) || defined(POWERMETER_SOFT)
@@ -826,7 +826,7 @@
 /**************************************************************************************/
 /***************             motor and servo numbers               ********************/
 /**************************************************************************************/
-#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(AIRPLANE) || defined(CAMTRIG) || defined(HELI)
+#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(AIRPLANE) || defined(CAMTRIG) || defined(HELICOPTER) || defined(SERVO_MIX_TILT)
   #define SERVO
 #endif
 
@@ -856,22 +856,18 @@
   #define NUMBER_MOTOR     6
 #elif defined(OCTOX8) || defined(OCTOFLATP) || defined(OCTOFLATX)
   #define NUMBER_MOTOR     8
-#elif defined(HELI_120_CCPM)
-  #define NUMBER_MOTOR     1
-  #define PRI_SERVO_FROM   1 // use servo from 1 to 4
-  #define PRI_SERVO_TO     4
-#elif defined(HELI_90_DEG)
-  #define NUMBER_MOTOR     1
-  #define PRI_SERVO_FROM   1 // use servo from 1 to 3
-  #define PRI_SERVO_TO     3
+#elif defined(HELICOPTER)
+  #define NUMBER_MOTOR     0
+  #define PRI_SERVO_FROM   4 // use servo from 4 to 8
+  #define PRI_SERVO_TO     8
 #endif
 
 
-#if defined(SERVO_TILT) && defined(CAMTRIG)
+#if (defined(SERVO_TILT)|| defined(SERVO_MIX_TILT))&& defined(CAMTRIG)
   #define SEC_SERVO_FROM   1 // use servo from 1 to 3
   #define SEC_SERVO_TO     3
 #else
-  #if defined(SERVO_TILT)
+  #if defined(SERVO_TILT)|| defined(SERVO_MIX_TILT)
     // if A0 and A1 is taken by motors, we can use A2 and 12 for Servo tilt
     #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
       #define SEC_SERVO_FROM   3 // use servo from 3 to 4

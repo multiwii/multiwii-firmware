@@ -212,11 +212,13 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #endif
 
   // PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
-  if   (rcData[THROTTLE]<1500) {
+  uint16_t Breakpoint=1500;
+
+  if   (rcData[THROTTLE]<Breakpoint) {
     prop2 = 100;
   } else {
     if (rcData[THROTTLE]<2000) {
-      prop2 = 100 - (uint16_t)dynThrPID*(rcData[THROTTLE]-1500)/500;
+      prop2 = 100 - (uint16_t)dynThrPID*(rcData[THROTTLE]-Breakpoint)/(2000-Breakpoint);
     } else {
       prop2 = 100 - dynThrPID;
     }
