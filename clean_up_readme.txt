@@ -1,1 +1,0 @@
-see: http://www.multiwii.com/forum/viewtopic.php?f=8&t=1596

@@ -2,6 +2,7 @@
 /****           CONFIGURABLE PARAMETERS                                                       ****/
 /*************************************************************************************************/
 
+/*****************************    Motor minthrottle    *******************************/
 /* Set the minimum throttle command sent to the ESC (Electronic Speed Controller)
    This is the minimum value that allow motors to run at a idle speed  */
 //#define MINTHROTTLE 1300 // for Turnigy Plush ESCs 10A
@@ -9,7 +10,7 @@
 //#define MINTHROTTLE 1220
 #define MINTHROTTLE 1150 
 
-/* The type of multicopter */
+/**************************    The type of multicopter    ****************************/
 //#define GIMBAL
 //#define BI
 //#define TRI
@@ -26,23 +27,235 @@
 //#define VTAIL4
 //#define AIRPLANE     // Howto setup =>>>http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
 
+/********************************    YAW_DIRECTION    *********************************/
 #define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
 //#define YAW_DIRECTION -1
 
+/**********************************    I2C speed   ************************************/
 #define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
 //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
 
+/***************************    Internal i2c Pullups   ********************************/
 //enable internal I2C pull ups
 #define INTERNAL_I2C_PULLUPS
 
+/*****************************    Serial com speed    *********************************/
+/* This is the speed of the serial interface. 115200 kbit/s is the best option for a USB connection.*/
+#define SERIAL_COM_SPEED 115200
 
-//****** advanced users settings   ****************************************
-/* ===================================================================== */
 
+
+/**************************************************************************************/
+/***************               advanced users settings             ********************/
+/**************************************************************************************/
+
+
+ 
+/**************************************************************************************/
+/*****************          boards and sensor definitions            ******************/
+/**************************************************************************************/
+
+/***************************    Combined IMU Boards    ********************************/
+/* if you use a specific sensor board:
+   please submit any correction to this list.
+     Note from Alex: I only own some boards
+                     for other boards, I'm not sure, the info was gathered via rc forums, be cautious */
+//#define FFIMUv1         // first 9DOF+baro board from Jussi, with HMC5843                   <- confirmed by Alex
+//#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883       <- confirmed by Alex
+//#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
+//#define FREEIMUv03      // FreeIMU v0.3 and v0.3.1
+//#define FREEIMUv035     // FreeIMU v0.3.5 no baro
+//#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
+//#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
+//#define FREEIMUv04      // FreeIMU v0.4 with MPU6050, HMC5883L, MS561101BA                  <- confirmed by Alex
+//#define FREEIMUv043     // same as FREEIMUv04 with final MPU6050 (with the right ACC scale)
+//#define NANOWII         // the smallest multiwii FC based on MPU6050 + pro micro based proc <- confirmed by Alex
+//#define PIPO            // 9DOF board from erazz
+//#define QUADRINO        // full FC board 9DOF+baro board from witespy  with BMP085 baro     <- confirmed by Alex
+//#define QUADRINO_ZOOM   // full FC board 9DOF+baro board from witespy  second edition
+//#define QUADRINO_ZOOM_MS    // full FC board 9DOF+baro board from witespy  second edition       <- confirmed by Alex
+//#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU
+//#define AEROQUADSHIELDv2
+//#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). requires 3.3V power.
+//#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
+//#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
+//#define MINIWII         // Jussi's MiniWii Flight Controller
+//#define CITRUSv2_1      // CITRUS from qcrc.ca
+//#define CHERRY6DOFv1_0
+//#define DROTEK_10DOF    // Drotek 10DOF with ITG3200, BMA180, HMC5883, BMP085, w or w/o LLC
+//#define DROTEK_10DOF_MS // Drotek 10DOF with ITG3200, BMA180, HMC5883, MS5611, LLC
+//#define DROTEK_6DOFv2   // Drotek 6DOF v2
+//#define DROTEK_6DOF_MPU // Drotek 6DOF with MPU6050
+//#define MONGOOSE1_0     // mongoose 1.0    http://store.ckdevices.com/
+//#define CRIUS_LITE      // Crius MultiWii Lite
+//#define CRIUS_SE        // Crius MultiWii SE
+//#define OPENLRSv2MULTI  // OpenLRS v2 Multi Rc Receiver board including ITG3205 and ADXL345
+
+
+/***************************    independent sensors    ********************************/
+//leave it commented if you already checked a specific board above
+/* I2C gyroscope */
+//#define ITG3200
+//#define L3G4200D
+//#define MPU6050       //combo + ACC
+
+/* I2C accelerometer */
+//#define MMA745
+//#define ADXL345
+//#define BMA020
+//#define BMA180
+//#define NUNCHACK  // if you want to use the nunckuk as a standalone I2C ACC without WMP
+//#define LIS3LV02
+//#define LSM303DLx_ACC
+
+/* I2C barometer */
+//#define BMP085
+//#define MS561101BA
+
+/* I2C magnetometer */
+//#define HMC5843
+//#define HMC5883
+//#define AK8975
+//#define MAG3110
+
+// use the Devantech SRF i2c sensors, SRF08, SRF02
+// (for now, there is no difference in the SRF0x code, but we may want to differentiate in the future.)
+//#define SRF02
+//#define SRF08
+//#define SRF10
+//#define SRF23
+
+
+/* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
+//#define ADCACC
+
+
+/**************************************************************************************/
+/***************                     Gyro filters                  ********************/
+/**************************************************************************************/
+
+/*********************    Lowpass filter for some gyros    ****************************/
+
+/* ITG3200 & ITG3205 Low pass filter setting. In case you cannot eliminate all vibrations to the Gyro, you can try
+   to decrease the LPF frequency, only one step per try. As soon as twitching gone, stick with that setting.
+   It will not help on feedback wobbles, so change only when copter is randomly twiching and all dampening and
+   balancing options ran out. Uncomment only one option!
+   IMPORTANT! Change low pass filter setting changes PID behaviour, so retune your PID's after changing LPF.*/
+//#define ITG3200_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
+//#define ITG3200_LPF_188HZ
+//#define ITG3200_LPF_98HZ
+//#define ITG3200_LPF_42HZ
+//#define ITG3200_LPF_20HZ
+//#define ITG3200_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
+
+/* MPU6050 Low pass filter setting. In case you cannot eliminate all vibrations to the Gyro, you can try
+   to decrease the LPF frequency, only one step per try. As soon as twitching gone, stick with that setting.
+   It will not help on feedback wobbles, so change only when copter is randomly twiching and all dampening and
+   balancing options ran out. Uncomment only one option!
+   IMPORTANT! Change low pass filter setting changes PID behaviour, so retune your PID's after changing LPF.*/
+//#define MPU6050_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
+//#define MPU6050_LPF_188HZ
+//#define MPU6050_LPF_98HZ
+//#define MPU6050_LPF_42HZ
+//#define MPU6050_LPF_20HZ
+//#define MPU6050_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
+
+
+/*****************************    Gyro smoothing    **********************************/
+/* GYRO_SMOOTHING. In case you cannot reduce vibrations _and_ _after_ you have tried the low pass filter options, you
+   may try this gyro smoothing via averaging. Not suitable for multicopters!
+   Good results for helicopter, airplanes and flying wings (foamies) with lots of vibrations.*/
+//#define GYRO_SMOOTHING {20, 20, 3}    // separate averaging ranges for roll, pitch, yaw
+
+
+/************************    Moving Average Gyros    **********************************/
+//#define MMGYRO                         // Active Moving Average Function for Gyros
+//#define MMGYROVECTORLENGHT 10          // Lenght of Moving Average Vector
+// Moving Average ServoGimbal Signal Output
+//#define MMSERVOGIMBAL                  // Active Output Moving Average Function for Servos Gimbal
+//#define MMSERVOGIMBALVECTORLENGHT 32   // Lenght of Moving Average Vector
+
+
+/**************************************************************************************/
+/***************              special receiver types               ********************/
+/**************************************************************************************/
+
+/****************************    PPM Sum Reciver    ***********************************/
+/* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
+   IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
+   Select the right line depending on your radio brand. Feel free to modify the order in your PPM order is different */
+//#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4 //For Graupner/Spektrum
+//#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For Robe/Hitec/Futaba
+//#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For some Hitec/Sanwa/Others
+
+/**********************    Spektrum Satellite Reciver    *******************************/
+/* The following lines apply only for Spektrum Satellite Receiver
+   Spektrum Satellites are 3V devices.  DO NOT connect to 5V!
+   For MEGA boards, attach sat grey wire to RX1, pin 19. Sat black wire to ground. Sat orange wire to Mega board's 3.3V (or any other 3V to 3.3V source).
+   For PROMINI, attach sat grey to RX0.  Attach sat black to ground.  
+     There is no 3.3V source on a pro mini; you can either use a different 3V source, or attach orange to 5V with a 3V regulator in-line (such as http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail&name=MCP1700-3002E/TO-ND)
+     If you use an inline-regulator, a standard 3-pin servo connector can connect to ground, +5V, and RX0; solder the correct wires (and the 3V regulator!) to a Spektrum baseRX-to-Sat cable that has been cut in half. 
+     NOTE: Because there is only one serial port on the Pro Mini, using a Spektrum Satellite implies you CANNOT use the PC based configuration tool. Further, you cannot use on-aircraft serial LCD as the baud rates are incompatible. You can configure by one of two methods:
+       1) Use an on-aircraft i2c LCD (such as Eagle Tree or LCD03) for setting gains, reading sensors, etc.
+       2) Available now: Comment out the Spektrum definition, upload, plug in PC, configure; uncomment the Spektrum definition, upload, plug in RX, and fly.  Repeat as required to configure. */
+//#define SPEKTRUM 1024
+//#define SPEKTRUM 2048
+
+/*******************************    SBUS RECIVER    ************************************/
+/* EXPERIMENTAL !!
+   cf http://www.multiwii.com/forum/viewtopic.php?f=7&t=289
+   The following line apply only for Futaba S-Bus Receiver on MEGA boards at RX1 only (Serial 1).
+   You have to invert the S-Bus-Serial Signal e.g. with a Hex-Inverter like IC SN74 LS 04 */
+//#define SBUS
+
+/*******************  to input RC signal with the serial port  ************************/
+//#define RCSERIAL
+
+
+
+/**************************************************************************************/
+/***************                 Failsave settings                 ********************/
+/**************************************************************************************/
+/*
+   Failsafe check pulse on THROTTLE channel. If the pulse is OFF (on only THROTTLE or on all channels) the failsafe procedure is initiated.
+   After FAILSAVE_DELAY time of pulse absence, the level mode is on (if ACC or nunchuk is avaliable), PITCH, ROLL and YAW is centered
+   and THROTTLE is set to FAILSAVE_THR0TTLE value. You must set this value to descending about 1m/s or so for best results. 
+   This value is depended from your configuration, AUW and some other params. 
+   Next, afrer FAILSAVE_OFF_DELAY the copter is disarmed, and motors is stopped.
+   If RC pulse coming back before reached FAILSAVE_OFF_DELAY time, after the small quard time the RC control is returned to normal.
+   If you use serial sum PPM, the sum converter must completly turn off the PPM SUM pusles for this FailSafe functionality.*/
+#define FAILSAFE                                  // comment this line if you want to deactivate the failsafe function
+#define FAILSAVE_DELAY     10                     // Guard time for failsafe activation after signal lost. 1 step = 0.1sec - 1sec in example
+#define FAILSAVE_OFF_DELAY 200                    // Time for Landing before motors stop in 0.1sec. 1 step = 0.1sec - 20sec in example
+#define FAILSAVE_THR0TTLE  (MINTHROTTLE + 200)    // Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
+
+
+
+
+/**************************************************************************************/
+/***************             Special Throttle settings             ********************/
+/**************************************************************************************/
+
+/* this is the value for the ESCs when they are not armed
+   in some cases, this value must be lowered down to 900 for some specific ESCs */
+#define MINCOMMAND 1000
+
+/* this is the maximum value for the ESCs at full power
+   this value can be increased up to 2000 */
+#define MAXTHROTTLE 1950
+
+
+
+/**************************************************************************************/
+/***************              some standalone features             ********************/
+/**************************************************************************************/
+
+
+/*****************************    DFRobot LED RING    *********************************/
 /* I2C DFRobot LED RING communication */
 //#define LED_RING
 
-/* LED FLASHER */
+/********************************    LED FLASHER    ***********************************/
 //#define LED_FLASHER
 //#define LED_FLASHER_DDR DDRB
 //#define LED_FLASHER_PORT PORTB
@@ -50,24 +263,79 @@
 // create double flashes
 //#define LED_FLASHER_SEQUENCE ( (uint8_t) (1<<0 | 1<<2) )
 
+
+/*************************    INFLIGHT ACC Calibration    *****************************/
 /* This will activate the ACC-Inflight calibration if unchecked */  
 //#define INFLIGHT_ACC_CALIBRATION
 
+
+/**************************    rc option-change beep    *******************************/
+//#define RCOPTIONSBEEP        //uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
+
+/**************************    Disable WMP power pin     *******************************/
+/* disable use of the POWER PIN */
+//#define DISABLE_POWER_PIN
+
+
+/**************************************************************************************/
+/***************             Promini Specifig Settings             ********************/
+/**************************************************************************************/
+
+/**************************    Hexa Motor 5 & 6 Pins    *******************************/
 /* PIN A0 and A1 instead of PIN D5 & D6 for 6 motors config and promini config
    This mod allow the use of a standard receiver on a pro mini
    (no need to use a PPM sum receiver)
 */
 //#define A0_A1_PIN_HEX
 
+/*********************************    Aux 2 Pin     ***********************************/
 /* possibility to use PIN8 or PIN12 as the AUX2 RC input
    it deactivates in this case the POWER PIN (pin 12) or the BUZZER PIN (pin 8)
 */
 //#define RCAUXPIN8
 //#define RCAUXPIN12
-//#define RCOPTIONSBEEP        //uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
 
-/* disable use of the POWER PIN */
-//#define DISABLE_POWER_PIN
+
+/**************************************************************************************/
+/********   Settings for ProMicro, Leonardo and other Atmega32u4 Boards     ***********/
+/**************************************************************************************/
+
+/*********************************    pin Layout     **********************************/
+// activate this for a better pinlayout if all pins can be used => not possible on ProMicro!
+//#define A32U4ALLPINS
+
+/**********************************    PWM Setup     **********************************/
+// activate all 6 hardware PWM outputs Motor 5 = D11 and 6 = D13. => not possible on ProMicro! (untested!) 
+// if activated: 
+// Motor 1-6 = 10-bit hardware PWM
+// Motor 7-8 = 8-bit Software PWM
+// Servos    = 8-bit Software PWM
+// if deactivated:
+// Motor 1-4 = 10-bit hardware PWM
+// Motor 5-8 = 10-bit Software PWM
+// Servos    = 10-bit Software PWM
+//#define HWPWM6
+
+/**********************************    Aux 2 Pin     **********************************/
+// aux2 pin on pin RXO 
+//#define RCAUX2PINRXO
+
+// aux2 pin on pin D17 (RXLED)
+//#define RCAUX2PIND17
+
+/**********************************    Buzzer Pin    **********************************/
+// this moves the Buzzer pin from TXO to D8 for use with ppm sum or spectrum sat. RX (not needed if A32U4ALLPINS is active)
+// #define D8BUZZER
+
+/***********************      Promicro version related     ****************************/
+// Inverted status LED for Promicro ver 10.
+//#define PROMICRO10
+
+
+
+/**************************************************************************************/
+/***********************              Serial GPS             **************************/
+/**************************************************************************************/
 
 /* GPS using a SERIAL port
    only available on MEGA boards (this might be possible on 328 based boards in the future)
@@ -107,217 +375,25 @@
    it is relevent only for a conf with at least a WMP */
 #define NEUTRALIZE_DELAY 100000
 
-/********************************************************************/
-/****           boards and sensor definitions                    ****/
-/********************************************************************/
-
-/* if you use a specific sensor board:
-   please submit any correction to this list.
-     Note from Alex: I only own some boards
-                     for other boards, I'm not sure, the info was gathered via rc forums, be cautious */
-//#define FFIMUv1         // first 9DOF+baro board from Jussi, with HMC5843                   <- confirmed by Alex
-//#define FFIMUv2         // second version of 9DOF+baro board from Jussi, with HMC5883       <- confirmed by Alex
-//#define FREEIMUv1       // v0.1 & v0.2 & v0.3 version of 9DOF board from Fabio
-//#define FREEIMUv03      // FreeIMU v0.3 and v0.3.1
-//#define FREEIMUv035     // FreeIMU v0.3.5 no baro
-//#define FREEIMUv035_MS  // FreeIMU v0.3.5_MS                                                <- confirmed by Alex
-//#define FREEIMUv035_BMP // FreeIMU v0.3.5_BMP
-//#define FREEIMUv04      // FreeIMU v0.4 with MPU6050, HMC5883L, MS561101BA                  <- confirmed by Alex
-//#define FREEIMUv043     // same as FREEIMUv04 with final MPU6050 (with the right ACC scale)
-//#define NANOWII         // the smallest multiwii FC based on MPU6050 + pro micro based proc <- confirmed by Alex
-//#define PIPO            // 9DOF board from erazz
-//#define QUADRINO        // full FC board 9DOF+baro board from witespy  with BMP085 baro     <- confirmed by Alex
-//#define QUADRINO_ZOOM   // full FC board 9DOF+baro board from witespy  second edition
-//#define QUADRINO_ZOOM_MS    // full FC board 9DOF+baro board from witespy  second edition       <- confirmed by Alex
-//#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU
-//#define AEROQUADSHIELDv2
-//#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). requires 3.3V power.
-//#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
-//#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
-//#define MINIWII         // Jussi's MiniWii Flight Controller
-//#define CITRUSv2_1      // CITRUS from qcrc.ca
-//#define CHERRY6DOFv1_0
-//#define DROTEK_10DOF    // Drotek 10DOF with ITG3200, BMA180, HMC5883, BMP085, w or w/o LLC
-//#define DROTEK_10DOF_MS // Drotek 10DOF with ITG3200, BMA180, HMC5883, MS5611, LLC
-//#define DROTEK_6DOFv2   // Drotek 6DOF v2
-//#define DROTEK_6DOF_MPU // Drotek 6DOF with MPU6050
-//#define MONGOOSE1_0     // mongoose 1.0    http://store.ckdevices.com/
-//#define CRIUS_LITE      // Crius MultiWii Lite
-//#define CRIUS_SE        // Crius MultiWii SE
-//#define OPENLRSv2MULTI  // OpenLRS v2 Multi Rc Receiver board including ITG3205 and ADXL345
-
-//if you use independent sensors
-//leave it commented if you already checked a specific board above
-/* I2C gyroscope */
-//#define ITG3200
-//#define L3G4200D
-//#define MPU6050       //combo + ACC
-
-/* I2C accelerometer */
-//#define MMA745
-//#define ADXL345
-//#define BMA020
-//#define BMA180
-//#define NUNCHACK  // if you want to use the nunckuk as a standalone I2C ACC without WMP
-//#define LIS3LV02
-//#define LSM303DLx_ACC
-
-/* I2C barometer */
-//#define BMP085
-//#define MS561101BA
-
-/* I2C magnetometer */
-//#define HMC5843
-//#define HMC5883
-//#define AK8975
-//#define MAG3110
-
-// use the Devantech SRF i2c sensors, SRF08, SRF02
-// (for now, there is no difference in the SRF0x code, but we may want to differentiate in the future.)
-//#define SRF02
-//#define SRF08
-//#define SRF10
-//#define SRF23
 
 
-/* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
-//#define ADCACC
 
-/* ITG3200 & ITG3205 Low pass filter setting. In case you cannot eliminate all vibrations to the Gyro, you can try
-   to decrease the LPF frequency, only one step per try. As soon as twitching gone, stick with that setting.
-   It will not help on feedback wobbles, so change only when copter is randomly twiching and all dampening and
-   balancing options ran out. Uncomment only one option!
-   IMPORTANT! Change low pass filter setting changes PID behaviour, so retune your PID's after changing LPF.*/
-//#define ITG3200_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
-//#define ITG3200_LPF_188HZ
-//#define ITG3200_LPF_98HZ
-//#define ITG3200_LPF_42HZ
-//#define ITG3200_LPF_20HZ
-//#define ITG3200_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
+/**************************************************************************************/
+/***********************        LCD - display settings       **************************/
+/**************************************************************************************/
 
-/* MPU6050 Low pass filter setting. In case you cannot eliminate all vibrations to the Gyro, you can try
-   to decrease the LPF frequency, only one step per try. As soon as twitching gone, stick with that setting.
-   It will not help on feedback wobbles, so change only when copter is randomly twiching and all dampening and
-   balancing options ran out. Uncomment only one option!
-   IMPORTANT! Change low pass filter setting changes PID behaviour, so retune your PID's after changing LPF.*/
-//#define MPU6050_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
-//#define MPU6050_LPF_188HZ
-//#define MPU6050_LPF_98HZ
-//#define MPU6050_LPF_42HZ
-//#define MPU6050_LPF_20HZ
-//#define MPU6050_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
-
-/* GYRO_SMOOTHING. In case you cannot reduce vibrations _and_ _after_ you have tried the low pass filter options, you
-   may try this gyro smoothing via averaging. Not suitable for multicopters!
-   Good results for helicopter, airplanes and flying wings (foamies) with lots of vibrations.*/
-//#define GYRO_SMOOTHING {20, 20, 3}    // separate averaging ranges for roll, pitch, yaw
-
-// Moving Average Gyros
-//#define MMGYRO                         // Active Moving Average Function for Gyros
-//#define MMGYROVECTORLENGHT 10          // Lenght of Moving Average Vector
-// Moving Average ServoGimbal Signal Output
-//#define MMSERVOGIMBAL                  // Active Output Moving Average Function for Servos Gimbal
-//#define MMSERVOGIMBALVECTORLENGHT 32   // Lenght of Moving Average Vector
-
-/*--------------------------------------------------------------------*/
-/* Settings for ProMicro, Leonardo and other Atmega32u4 Boards (BETA) */
-  // activate this for a better pinlayout if all pins can be used => not possible on ProMicro!
-  //#define A32U4ALLPINS
-
-  // activate all 6 hardware PWM outputs Motor 5 = D11 and 6 = D13. => not possible on ProMicro! (untested!) 
-  // if activated: 
-  // Motor 1-6 = 10-bit hardware PWM
-  // Motor 7-8 = 8-bit Software PWM
-  // Servos    = 8-bit Software PWM
-  // if deactivated:
-  // Motor 1-4 = 10-bit hardware PWM
-  // Motor 5-8 = 10-bit Software PWM
-  // Servos    = 10-bit Software PWM
-  //#define HWPWM6
-
-  // aux2 pin on pin RXO 
-  //#define RCAUX2PINRXO
-
-  // aux2 pin on pin D17 (RXLED)
-  //#define RCAUX2PIND17
-
-  // this moves the Buzzer pin from TXO to D8 for use with ppm sum or spectrum sat. RX (not needed if A32U4ALLPINS is active)
-  //#define D8BUZZER
-
-  // Inverted status LED for Promicro ver 10.
-  //#define PROMICRO10
-/* end of Settings for ProMicro, Leonardo and other Atmega32u4 Boards */
-/*--------------------------------------------------------------------*/
-
-/********************************************************************/
-/****           special receiver types                           ****/
-/********************************************************************/
-
-/* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
-   IF YOUR RECEIVER IS NOT CONCERNED, DON'T UNCOMMENT ANYTHING. Note this is mandatory for a Y6 setup on a promini
-   Select the right line depending on your radio brand. Feel free to modify the order in your PPM order is different */
-//#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4 //For Graupner/Spektrum
-//#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For Robe/Hitec/Futaba
-//#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For some Hitec/Sanwa/Others
-
-/* The following lines apply only for Spektrum Satellite Receiver
-   Spektrum Satellites are 3V devices.  DO NOT connect to 5V!
-   For MEGA boards, attach sat grey wire to RX1, pin 19. Sat black wire to ground. Sat orange wire to Mega board's 3.3V (or any other 3V to 3.3V source).
-   For PROMINI, attach sat grey to RX0.  Attach sat black to ground.  
-     There is no 3.3V source on a pro mini; you can either use a different 3V source, or attach orange to 5V with a 3V regulator in-line (such as http://search.digikey.com/scripts/DkSearch/dksus.dll?Detail&name=MCP1700-3002E/TO-ND)
-     If you use an inline-regulator, a standard 3-pin servo connector can connect to ground, +5V, and RX0; solder the correct wires (and the 3V regulator!) to a Spektrum baseRX-to-Sat cable that has been cut in half. 
-     NOTE: Because there is only one serial port on the Pro Mini, using a Spektrum Satellite implies you CANNOT use the PC based configuration tool. Further, you cannot use on-aircraft serial LCD as the baud rates are incompatible. You can configure by one of two methods:
-       1) Use an on-aircraft i2c LCD (such as Eagle Tree or LCD03) for setting gains, reading sensors, etc.
-       2) Available now: Comment out the Spektrum definition, upload, plug in PC, configure; uncomment the Spektrum definition, upload, plug in RX, and fly.  Repeat as required to configure. */
-//#define SPEKTRUM 1024
-//#define SPEKTRUM 2048
-
-
-/* EXPERIMENTAL !!
-   cf http://www.multiwii.com/forum/viewtopic.php?f=7&t=289
-   The following line apply only for Futaba S-Bus Receiver on MEGA boards at RX1 only (Serial 1).
-   You have to invert the S-Bus-Serial Signal e.g. with a Hex-Inverter like IC SN74 LS 04 */
-//#define SBUS
-
-/* Failsave settings
-   Failsafe check pulse on THROTTLE channel. If the pulse is OFF (on only THROTTLE or on all channels) the failsafe procedure is initiated.
-   After FAILSAVE_DELAY time of pulse absence, the level mode is on (if ACC or nunchuk is avaliable), PITCH, ROLL and YAW is centered
-   and THROTTLE is set to FAILSAVE_THR0TTLE value. You must set this value to descending about 1m/s or so for best results. 
-   This value is depended from your configuration, AUW and some other params. 
-   Next, afrer FAILSAVE_OFF_DELAY the copter is disarmed, and motors is stopped.
-   If RC pulse coming back before reached FAILSAVE_OFF_DELAY time, after the small quard time the RC control is returned to normal.
-   If you use serial sum PPM, the sum converter must completly turn off the PPM SUM pusles for this FailSafe functionality.*/
-#define FAILSAFE                                  // comment this line if you want to deactivate the failsafe function
-#define FAILSAVE_DELAY     10                     // Guard time for failsafe activation after signal lost. 1 step = 0.1sec - 1sec in example
-#define FAILSAVE_OFF_DELAY 200                    // Time for Landing before motors stop in 0.1sec. 1 step = 0.1sec - 20sec in example
-#define FAILSAVE_THR0TTLE  (MINTHROTTLE + 200)    // Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
-
-/* to input RC signal with the serial port */
-//#define RCSERIAL
-
-/* this is the value for the ESCs when they are not armed
-   in some cases, this value must be lowered down to 900 for some specific ESCs */
-#define MINCOMMAND 1000
-
-/* this is the maximum value for the ESCs at full power
-   this value can be increased up to 2000 */
-#define MAXTHROTTLE 1850
-
-/* This is the speed of the serial interface. 115200 kbit/s is the best option for a USB connection.*/
-#define SERIAL_COM_SPEED 115200
-
-/********************************************************************/
-/****           LCD - display settings                           ****/
-/********************************************************************/
 /* In order to save space, it's possibile to desactivate the LCD configuration functions
    comment this line only if you don't plan to used a LCD */
 #define LCD_CONF
+
 /* to include setting the aux switches for AUX1 -> AUX4 via LCD */ //to review (activate[] is now 16 bit long)
 //#define LCD_CONF_AUX
+
 /* if program gets too large (>32k), need to exclude some functionality */
 /* uncomment to suppress some unwanted aux3 aux4 items in config menu (only useful if LCD_CONF_AUX is enabled) */
 //#define SUPPRESS_LCD_CONF_AUX34
 
+/*****************************   The type of LCD     **********************************/
 /* choice of LCD attached for configuration and telemetry, see notes below */
 #define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
 /* serial (wired or wireless via BT etc.) */
@@ -328,12 +404,14 @@
 //#define LCD_LCD03       // LCD03, which is i2c
 //#define OLED_I2C_128x64 // OLED http://www.multiwii.com/forum/viewtopic.php?f=7&t=1350
 
+/******************************   Font settings     ***********************************/
 //#define NEW_OLED_FONT	// OLED use other font (more lines)
 
 /* style of display - AUTODETECTED via LCD_ setting - only activate to overwrite defaults */
 //#define DISPLAY_2LINES
 //#define DISPLAY_MULTILINE
 
+/********************************    Navigation     ***********************************/
 /* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
 #define LCD_MENU_PREV 'a'
 #define LCD_MENU_NEXT 'c'
@@ -360,15 +438,17 @@
    NO rx / tx line reconfiguration, use natural pins.
    The four buttons sending 'A', 'B', 'C', 'D' are supported for configuration navigation and request of telemetry pages 1-4 */
 
-/********************************************************************/
-/****           telemetry                                      ****/
-/********************************************************************/
+
+/**************************************************************************************/
+/***********************                telemetry            **************************/
+/**************************************************************************************/
 
 /* to monitor system values (battery level, loop time etc. with LCD enable this */
 /* note: for now you must send single characters to request  different pages */
 /* Buttons toggle request for page on/off */
 /* The active page on the LCD does get updated automatically */
 /* Easy to use with Terminal application or display like LCD - if available uses the 4 preconfigured buttons  to send 'A', 'B', 'C', 'D' */
+/********************************    Activation     ***********************************/
 //#define LCD_TELEMETRY
 /* to enable automatic hopping between a choice of telemetry pages uncomment this. */
 /* This may be useful if your LCD has no buttons or the sending is broken */
@@ -396,9 +476,10 @@
 //#define SUPPRESS_TELEMETRY_PAGE_8
 //#define SUPPRESS_TELEMETRY_PAGE_9
 
-/********************************************************************/
-/****           motor, servo and other presets                   ****/
-/********************************************************************/
+
+/**************************************************************************************/
+/***********************     motor, servo and other presets     ***********************/
+/**************************************************************************************/
 /* motors will not spin when the throttle command is in low position
    this is an alternative method to stop immediately the motors */
 //#define MOTOR_STOP

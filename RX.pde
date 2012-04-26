@@ -1,276 +1,243 @@
+
+/**************************************************************************************/
+/***************             Global RX related variables           ********************/
+/**************************************************************************************/
+
+//RAW RC values will be store here
 volatile uint16_t rcValue[18] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
-#if defined(SERIAL_SUM_PPM)
+
+
+#if defined(SERIAL_SUM_PPM) //Channel order for PPM SUM RX Configs
   static uint8_t rcChannel[8] = {SERIAL_SUM_PPM};
-#elif defined(SBUS)
+#elif defined(SBUS) //Channel order for SBUS RX Configs
   // for 16 + 2 Channels SBUS. The 10 extra channels 8->17 are not used by MultiWii, but it should be easy to integrate them.
   static uint8_t rcChannel[18] = {PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4,8,9,10,11,12,13,14,15,16,17};
   static uint16_t sbusIndex=0;
-#else
+#else // Standard Channel order
   static uint8_t rcChannel[8]  = {ROLLPIN, PITCHPIN, YAWPIN, THROTTLEPIN, AUX1PIN,AUX2PIN,AUX3PIN,AUX4PIN};
+  static uint8_t PCInt_RX_Pins[PCINT_PIN_COUNT] = {PCINT_RX_BITS}; // if this slowes the PCINT readings we can switch to a define for each pcint bit
 #endif
-#if defined(SPEKTRUM)
-  #define SPEK_MAX_CHANNEL 7
-  #define SPEK_FRAME_SIZE 16
-  #if (SPEKTRUM == 1024)
-    #define SPEK_CHAN_SHIFT  2       // Assumes 10 bit frames, that is 1024 mode.
-    #define SPEK_CHAN_MASK   0x03    // Assumes 10 bit frames, that is 1024 mode.
-  #endif
-  #if (SPEKTRUM == 2048)
-    #define SPEK_CHAN_SHIFT  3       // Assumes 11 bit frames, that is 2048 mode.
-    #define SPEK_CHAN_MASK   0x07    // Assumes 11 bit frames, that is 2048 mode.
-  #endif
+#if defined(SPEKTRUM) // Spektrum Satellite Frame size
+  //Note: Defines are moved to def.h 
   volatile uint8_t spekFrame[SPEK_FRAME_SIZE];
 #endif
 
-// Configure each rc pin for PCINT
+
+/**************************************************************************************/
+/***************                   RX Pin Setup                    ********************/
+/**************************************************************************************/
 void configureReceiver() {
-  #if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(RCSERIALERIAL)
+  /******************    Configure each rc pin for PCINT    ***************************/
+  #if defined(STANDARD_RX)
+    #if defined(MEGA)
+      DDRK = 0;  // defined PORTK as a digital port ([A8-A15] are consired as digital PINs and not analogical)
+    #endif
+    // PCINT activation
+    for(uint8_t i = 0; i < PCINT_PIN_COUNT; i++){ // i think a for loop is ok for the init.
+      PCINT_RX_PORT |= PCInt_RX_Pins[i];
+      PCINT_RX_MASK |= PCInt_RX_Pins[i];
+    }
+    PCICR = PCIR_PORT_BIT;
+    
+    /*************    atmega328P's Specific Aux2 Pin Setup    *********************/
     #if defined(PROMINI)
-      // PCINT activated only for specific pin inside [D0-D7]  , [D2 D4 D5 D6 D7] for this multicopter
-      PORTD   = (1<<2) | (1<<4) | (1<<5) | (1<<6) | (1<<7); //enable internal pull ups on the PINs of PORTD (no high impedence PINs)
-      PCMSK2 |= (1<<2) | (1<<4) | (1<<5) | (1<<6) | (1<<7); 
-      PCICR   = (1<<2) ; // PCINT activated only for the port dealing with [D0-D7] PINs on port B
-      #if defined(RCAUXPIN)
-        PCICR  |= (1<<0) ; // PCINT activated also for PINS [D8-D13] on port B
+     #if defined(RCAUXPIN)
+        PCICR  |= (1 << 0) ; // PCINT activated also for PINS [D8-D13] on port B
         #if defined(RCAUXPIN8)
-          PCMSK0 = (1<<0);
+          PCMSK0 = (1 << 0);
         #endif
         #if defined(RCAUXPIN12)
-          PCMSK0 = (1<<4);
+          PCMSK0 = (1 << 4);
         #endif
       #endif
     #endif
+    
+    /***************   atmega32u4's Specific RX Pin Setup   **********************/
     #if defined(PROMICRO)
-      PORTB   = (1<<1) | (1<<2) | (1<<3) | (1<<4);
-      PCMSK0 |= (1<<1) | (1<<2) | (1<<3) | (1<<4); 
-      #if defined(RCAUX2PIND17)
-        pinMode(17,INPUT);
-        PORTB  |= (1<<0);
-        PCMSK0 |= (1<<0);       
-      #endif
-      PCICR   = (1<<0) ; // bit 0 PCINT activated only for the port dealing with PINs on port B
-      //attachinterrupt dosent works with atmega32u4 ATM.
       //Trottle on pin 7
       pinMode(7,INPUT); // set to input
       PORTE |= (1 << 6); // enable pullups
       EIMSK |= (1 << INT6); // enable interuppt
       EICRB |= (1 << ISC60);
+      // Aux2 pin on PBO (D17/RXLED)
+      #if defined(RCAUX2PIND17)
+        pinMode(17,INPUT);  
+      #endif
+      // Aux2 pin on PD2 (RX0)
       #if defined(RCAUX2PINRXO)
-        //AUX2 on RX pin
         pinMode(0,INPUT); // set to input
         PORTD |= (1 << 2); // enable pullups
         EIMSK |= (1 << INT2); // enable interuppt
         EICRA |= (1 << ISC20);
       #endif
     #endif
-    #if defined(MEGA)
-      // PCINT activated only for specific pin inside [A8-A15]
-      DDRK = 0;  // defined PORTK as a digital port ([A8-A15] are consired as digital PINs and not analogical)
-      PORTK   = (1<<0) | (1<<1) | (1<<2) | (1<<3) | (1<<4) | (1<<5) | (1<<6) | (1<<7); //enable internal pull ups on the PINs of PORTK
-      PCMSK2 |= (1<<0) | (1<<1) | (1<<2) | (1<<3) | (1<<4) | (1<<5) | (1<<6) | (1<<7);
-      PCICR   = 1<<2; // PCINT activated only for PORTK dealing with [A8-A15] PINs
-    #endif
+    
+  /*************************   Special RX Setup   ********************************/
   #endif
+  // Init PPM SUM RX
   #if defined(SERIAL_SUM_PPM)
-    #if !defined(PROMICRO)
-      PPM_PIN_INTERRUPT;
-    #else
-      pinMode(7,INPUT); // set to input
-      PORTE |= (1 << 6); // enable pullups
-      EIMSK |= (1 << INT6); // enable interuppt
-      EICRB |= (1 << ISC61)|(1 << ISC60); // rising
-    #endif
+    PPM_PIN_INTERRUPT; 
   #endif
+  // Init Sektrum Satellite RX
   #if defined (SPEKTRUM)
     SerialOpen(1,115200);
   #endif
+  // Init SBUS RX
   #if defined(SBUS)
     SerialOpen(1,100000);
   #endif
 }
 
-#if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(RCSERIAL)
-  #if !defined(PROMICRO)
-    ISR(PCINT2_vect) { //this ISR is common to every receiver channel, it is call everytime a change state occurs on a digital pin [D2-D7]
-  #else
-    ISR(PCINT0_vect) { //this ISR is common to every receiver channel, it is call everytime a change state occurs on a digital pin [B1-B4]
-  #endif
+/**************************************************************************************/
+/***************               Standard RX Pins reading            ********************/
+/**************************************************************************************/
+#if defined(STANDARD_RX)
+  // predefined PC pin block (thanks to lianj)
+  #define RX_PIN_CHECK(pin_pos, rc_value_pos)                                                        \
+    if (mask & PCInt_RX_Pins[pin_pos]) {                                                             \
+      if (!(pin & PCInt_RX_Pins[pin_pos])) {                                                         \
+        dTime = cTime-edgeTime[pin_pos]; if (900<dTime && dTime<2200) rcValue[rc_value_pos] = dTime; \
+      } else edgeTime[pin_pos] = cTime;                                                              \
+    }
+  // port change Interrupt
+  ISR(RX_PC_INTERRUPT) { //this ISR is common to every receiver channel, it is call everytime a change state occurs on a RX input pin
     uint8_t mask;
     uint8_t pin;
     uint16_t cTime,dTime;
     static uint16_t edgeTime[8];
     static uint8_t PCintLast;
   
-    #if defined(PROMINI)
-      pin = PIND;             // PIND indicates the state of each PIN for the arduino port dealing with [D0-D7] digital pins (8 bits variable)
-    #endif
-    #if defined(PROMICRO)
-      pin = PINB;             // PINB indicates the state of each PIN for the arduino port dealing with [B1-B4] digital pins (8 bits variable)
-    #endif
-    #if defined(MEGA)
-      pin = PINK;             // PINK indicates the state of each PIN for the arduino port dealing with [A8-A15] digital pins (8 bits variable)
-    #endif
+    pin = RX_PCINT_PIN_PORT; // RX_PCINT_PIN_PORT indicates the state of each PIN for the arduino port dealing with Ports digital pins
+   
     mask = pin ^ PCintLast;   // doing a ^ between the current interruption and the last one indicates wich pin changed
     sei();                    // re enable other interrupts at this point, the rest of this interrupt is not so time critical and can be interrupted safely
     PCintLast = pin;          // we memorize the current state of all PINs [D0-D7]
   
     cTime = micros();         // micros() return a uint32_t, but it is not usefull to keep the whole bits => we keep only 16 bits
-    #if defined(PROMICRO)
-      if (mask & 1<<2)        //indicates the bit 1 of the arduino port [B1-B4], that is to say digital pin 15, if 1 => this pin has just changed
-        if (!(pin & 1<<2)) {     //indicates if the bit 1 of the arduino port [B1-B4] is not at a high state (so that we match here only descending PPM pulse)
-          dTime = cTime-edgeTime[4]; if (900<dTime && dTime<2200) rcValue[4] = dTime; // just a verification: the value must be in the range [1000;2000] + some margin
-        } else edgeTime[4] = cTime;    // if the bit 1 of the arduino port [B1-B4] is at a high state (ascending PPM pulse), we memorize the time
-      if (mask & 1<<3)   //same principle for other channels   // avoiding a for() is more than twice faster, and it's important to minimize execution time in ISR
-        if (!(pin & 1<<3)) {
-          dTime = cTime-edgeTime[5]; if (900<dTime && dTime<2200) rcValue[5] = dTime;
-        } else edgeTime[5] = cTime;
-      if (mask & 1<<1)
-        if (!(pin & 1<<1)) {
-          dTime = cTime-edgeTime[6]; if (900<dTime && dTime<2200) rcValue[6] = dTime;
-        } else edgeTime[6] = cTime;
-      if (mask & 1<<4)
-        if (!(pin & 1<<4)) {
-          dTime = cTime-edgeTime[7]; if (900<dTime && dTime<2200) rcValue[7] = dTime;
-        } else edgeTime[7] = cTime;  
-      #if defined(RCAUX2PIND17)
-        if (mask & 1<<0)
-          if (!(pin & 1<<0)) {
-            dTime = cTime-edgeTime[0]; if (900<dTime && dTime<2200) rcValue[0] = dTime;
-          } else edgeTime[0] = cTime;       
-      #endif 
+    
+    #if (PCINT_PIN_COUNT > 0)
+      RX_PIN_CHECK(0,2);
     #endif
-    #if defined(PROMINI) || defined(MEGA)      
-    // mask is pins [D0-D7] that have changed // the principle is the same on the MEGA for PORTK and [A8-A15] PINs
-    // chan = pin sequence of the port. chan begins at D2 and ends at D7
-    if (mask & 1<<2) {         //indicates the bit 2 of the arduino port [D0-D7], that is to say digital pin 2, if 1 => this pin has just changed
-      if (!(pin & 1<<2)) {     //indicates if the bit 2 of the arduino port [D0-D7] is not at a high state (so that we match here only descending PPM pulse)
-        dTime = cTime-edgeTime[2]; if (900<dTime && dTime<2200) rcValue[2] = dTime; // just a verification: the value must be in the range [1000;2000] + some margin
-      } else edgeTime[2] = cTime;    // if the bit 2 of the arduino port [D0-D7] is at a high state (ascending PPM pulse), we memorize the time
-    }
-    if (mask & 1<<4) {   //same principle for other channels   // avoiding a for() is more than twice faster, and it's important to minimize execution time in ISR
-      if (!(pin & 1<<4)) {
-        dTime = cTime-edgeTime[4]; if (900<dTime && dTime<2200) rcValue[4] = dTime;
-      } else edgeTime[4] = cTime;
-    }
-    if (mask & 1<<5) {
-      if (!(pin & 1<<5)) {
-        dTime = cTime-edgeTime[5]; if (900<dTime && dTime<2200) rcValue[5] = dTime;
-      } else edgeTime[5] = cTime;
-    }
-    if (mask & 1<<6) {
-      if (!(pin & 1<<6)) {
-        dTime = cTime-edgeTime[6]; if (900<dTime && dTime<2200) rcValue[6] = dTime;
-      } else edgeTime[6] = cTime;
-    }
-    if (mask & 1<<7) {
-      if (!(pin & 1<<7)) {
-        dTime = cTime-edgeTime[7]; if (900<dTime && dTime<2200) rcValue[7] = dTime;
-      } else edgeTime[7] = cTime;
-    }
+    #if (PCINT_PIN_COUNT > 1)
+      RX_PIN_CHECK(1,4);
     #endif
-    #if defined(MEGA)
-      if (mask & 1<<0) {
-        if (!(pin & 1<<0)) {
-          dTime = cTime-edgeTime[0]; if (900<dTime && dTime<2200) rcValue[0] = dTime; 
-        } else edgeTime[0] = cTime;
-      }
-      if (mask & 1<<1) {    
-        if (!(pin & 1<<1)) {
-          dTime = cTime-edgeTime[1]; if (900<dTime && dTime<2200) rcValue[1] = dTime; 
-        } else edgeTime[1] = cTime;
-      }
-      if (mask & 1<<3) {
-        if (!(pin & 1<<3)) {
-          dTime = cTime-edgeTime[3]; if (900<dTime && dTime<2200) rcValue[3] = dTime;
-        } else edgeTime[3] = cTime;
-      }
+    #if (PCINT_PIN_COUNT > 2)
+      RX_PIN_CHECK(2,5);
     #endif
+    #if (PCINT_PIN_COUNT > 3)
+      RX_PIN_CHECK(3,6);
+    #endif
+    #if (PCINT_PIN_COUNT > 4)
+      RX_PIN_CHECK(4,7);
+    #endif
+    #if (PCINT_PIN_COUNT > 5)
+      RX_PIN_CHECK(5,0);
+    #endif
+    #if (PCINT_PIN_COUNT > 6)
+      RX_PIN_CHECK(6,1);
+    #endif
+    #if (PCINT_PIN_COUNT > 7)
+      RX_PIN_CHECK(7,3);
+    #endif
+    
     #if defined(FAILSAFE) && !defined(PROMICRO)
-      if (mask & 1<<THROTTLEPIN) {    // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
+      if (mask & 1<<THROTTLEPIN) {  // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
         if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
     #endif
   }
-  
-  #if defined(RCAUXPIN)
-  /* this ISR is a simplification of the previous one for PROMINI on port D
-     it's simplier because we know the interruption deals only with one PIN:
-     bit 0 of PORT B, ie Arduino PIN 8
-     or bit 4 of PORTB, ie Arduino PIN 12
-   => no need to check which PIN has changed */
-  ISR(PCINT0_vect) {
-    uint8_t pin;
-    uint16_t cTime,dTime;
-    static uint16_t edgeTime;
-  
-    pin = PINB;
-    sei();
-    cTime = micros();
-    #if defined(RCAUXPIN8)
-     if (!(pin & 1<<0)) {     //indicates if the bit 0 of the arduino port [B0-B7] is not at a high state (so that we match here only descending PPM pulse)
+  /*********************      atmega328P's Aux2 Pins      *************************/
+  #if defined(PROMINI)
+    #if defined(RCAUXPIN)
+    /* this ISR is a simplification of the previous one for PROMINI on port D
+       it's simplier because we know the interruption deals only with one PIN:
+       bit 0 of PORT B, ie Arduino PIN 8
+       or bit 4 of PORTB, ie Arduino PIN 12
+     => no need to check which PIN has changed */
+    ISR(PCINT0_vect) {
+      uint8_t pin;
+      uint16_t cTime,dTime;
+      static uint16_t edgeTime;
+    
+      pin = PINB;
+      sei();
+      cTime = micros();
+      #if defined(RCAUXPIN8)
+       if (!(pin & 1<<0)) {     //indicates if the bit 0 of the arduino port [B0-B7] is not at a high state (so that we match here only descending PPM pulse)
+      #endif
+      #if defined(RCAUXPIN12)
+       if (!(pin & 1<<4)) {     //indicates if the bit 4 of the arduino port [B0-B7] is not at a high state (so that we match here only descending PPM pulse)
+      #endif
+        dTime = cTime-edgeTime; if (900<dTime && dTime<2200) rcValue[0] = dTime; // just a verification: the value must be in the range [1000;2000] + some margin
+      } else edgeTime = cTime;    // if the bit 2 is at a high state (ascending PPM pulse), we memorize the time
+    }
     #endif
-    #if defined(RCAUXPIN12)
-     if (!(pin & 1<<4)) {     //indicates if the bit 4 of the arduino port [B0-B7] is not at a high state (so that we match here only descending PPM pulse)
-    #endif
-      dTime = cTime-edgeTime; if (900<dTime && dTime<2200) rcValue[0] = dTime; // just a verification: the value must be in the range [1000;2000] + some margin
-    } else edgeTime = cTime;    // if the bit 2 is at a high state (ascending PPM pulse), we memorize the time
-  }
   #endif
-#endif
-
-#if defined(PROMICRO) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(RCSERIAL) && !defined(SERIAL_SUM_PPM)
-  // trottle
-  ISR(INT6_vect){ 
-    static uint16_t now,diff;
-    static uint16_t last = 0;
-    now = micros();  
-    diff = now - last;
-    last = now;
-    if(900<diff && diff<2200){ 
-      rcValue[2] = diff;
-      #if defined(FAILSAFE)
-        if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
-      #endif 
-    }  
-  }
-  // Aux 2
-  #if defined(RCAUX2PINRXO)
-    ISR(INT2_vect){
+  
+  /****************      atmega32u4's Throttle & Aux2 Pin      *******************/
+  #if defined(PROMICRO)
+    // throttle
+    ISR(INT6_vect){ 
       static uint16_t now,diff;
-      static uint16_t last = 0; 
+      static uint16_t last = 0;
       now = micros();  
       diff = now - last;
       last = now;
-      if(900<diff && diff<2200) rcValue[0] = diff;
+      if(900<diff && diff<2200){ 
+        rcValue[3] = diff;
+        #if defined(FAILSAFE)
+          if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
+        #endif 
+      }  
     }
+    // Aux 2
+    #if defined(RCAUX2PINRXO)
+      ISR(INT2_vect){
+        static uint16_t now,diff;
+        static uint16_t last = 0; 
+        now = micros();  
+        diff = now - last;
+        last = now;
+        if(900<diff && diff<2200) rcValue[7] = diff;
+      }
+    #endif  
   #endif
 #endif
 
-#if defined(SERIAL_SUM_PPM)
-  #if !defined(PROMICRO)
-    void rxInt() {
-  #else
-    ISR(INT6_vect){
-  #endif
-  uint16_t now,diff;
-  static uint16_t last = 0;
-  static uint8_t chan = 0;
 
-  now = micros();
-  diff = now - last;
-  last = now;
-  if(diff>3000) chan = 0;
-  else {
-    if(900<diff && diff<2200 && chan<8 ) {   //Only if the signal is between these values it is valid, otherwise the failsafe counter should move up
-      rcValue[chan] = diff;
-      #if defined(FAILSAFE)
-        if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // clear FailSafe counter - added by MIS  //incompatible to quadroppm
-      #endif
-    }
+/**************************************************************************************/
+/***************                PPM SUM RX Pin reading             ********************/
+/**************************************************************************************/
+// attachInterrupt fix for promicro
+#if defined(PROMICRO) && defined(SERIAL_SUM_PPM)
+  ISR(INT6_vect){rxInt();}
+#endif
+
+// Read PPM SUM RX Data
+#if defined(SERIAL_SUM_PPM)
+  void rxInt() {
+    uint16_t now,diff;
+    static uint16_t last = 0;
+    static uint8_t chan = 0;
+  
+    now = micros();
+    diff = now - last;
+    last = now;
+    if(diff>3000) chan = 0;
+    else {
+      if(900<diff && diff<2200 && chan<8 ) {   //Only if the signal is between these values it is valid, otherwise the failsafe counter should move up
+        rcValue[chan] = diff;
+        #if defined(FAILSAFE)
+          if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // clear FailSafe counter - added by MIS  //incompatible to quadroppm
+        #endif
+      }
     chan++;
   }
 }
 #endif
 
+/**************************************************************************************/
+/***************            Spektrum Satellite RX Data             ********************/
+/**************************************************************************************/
 #if defined(SPEKTRUM)
   ISR(SPEK_SERIAL_VECT) {
     uint32_t spekTime;
@@ -292,6 +259,9 @@ void configureReceiver() {
   }
 #endif
 
+/**************************************************************************************/
+/***************                   SBUS RX Data                    ********************/
+/**************************************************************************************/
 #if defined(SBUS)
 void  readSBus(){
   #define SBUS_SYNCBYTE 0x0F // Not 100% sure: at the beginning of coding it was 0xF0 !!!
@@ -334,6 +304,10 @@ void  readSBus(){
 }
 #endif
 
+
+/**************************************************************************************/
+/***************          combine and sort the RX Datas            ********************/
+/**************************************************************************************/
 uint16_t readRawRC(uint8_t chan) {
   uint16_t data;
   uint8_t oldSREG;
@@ -365,12 +339,15 @@ uint16_t readRawRC(uint8_t chan) {
   #endif
   return data; // We return the value correctly copied when the IRQ's where disabled
 }
-    
+
+/**************************************************************************************/
+/***************          compute and Filter the RX data           ********************/
+/**************************************************************************************/
 void computeRC() {
   static int16_t rcData4Values[8][4], rcDataMean[8];
   static uint8_t rc4ValuesIndex = 0;
   uint8_t chan,a;
-  //#if (defined(SPEKTRUM) || defined(RCSERIAL) || defined(OPENLRSv2MULTI))
+  #if !(defined(RCSERIAL) || defined(OPENLRSv2MULTI)) // dont know if this is right here
     #if defined(SBUS)
       readSBus();
     #endif
@@ -383,10 +360,15 @@ void computeRC() {
       if ( rcDataMean[chan] < rcData[chan] -3)  rcData[chan] = rcDataMean[chan]+2;
       if ( rcDataMean[chan] > rcData[chan] +3)  rcData[chan] = rcDataMean[chan]-2;
     }
-  //#endif
+  #endif
 }
 
 
+/**************************************************************************************/
+/***************                     OPENLRS                       ********************/
+/**************************************************************************************/
+
+//note: this dont feels right in RX.pde
 
 #if defined(OPENLRSv2MULTI) 
 // **********************************************************

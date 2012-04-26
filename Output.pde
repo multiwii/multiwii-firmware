@@ -1,3 +1,8 @@
+/**************************************************************************************/
+/***************                  Motor Pin order                  ********************/
+/**************************************************************************************/
+// since we are uing the PWM generation in a direct way, the pin order is just to inizialie the right pins 
+// its not possible to change a PWM output pin just by changing the order
 #if defined(PROMINI)
   uint8_t PWM_PIN[8] = {9,10,11,3,6,5,A2,12};   //for a quad+: rear,right,left,front
 #endif
@@ -11,38 +16,56 @@
 #if defined(MEGA)
   uint8_t PWM_PIN[8] = {3,5,6,2,7,8,9,10};      //for a quad+: rear,right,left,front   //+ for y6: 7:under right  8:under left
 #endif
-#if !defined(PROMICRO) || defined(HWPWM6)
 
-  #if defined(AIRPLANE)
-    // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
-    volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,5}; 
-  #else
-    volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
+/**************************************************************************************/
+/***************         Software PWM & Servo variables            ********************/
+/**************************************************************************************/
+#if !defined(PROMICRO) || defined(HWPWM6)
+  #if defined(SERVO)
+    #if defined(AIRPLANE)
+      // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
+      volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,5}; 
+    #else
+      volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
+    #endif
   #endif
-  //for HEX Y6 and HEX6/HEX6X flat for promini
-  volatile uint8_t atomicPWM_PIN5_lowState;
-  volatile uint8_t atomicPWM_PIN5_highState;
-  volatile uint8_t atomicPWM_PIN6_lowState;
-  volatile uint8_t atomicPWM_PIN6_highState;
-  //for OCTO on promini
-  volatile uint8_t atomicPWM_PINA2_lowState;
-  volatile uint8_t atomicPWM_PINA2_highState;
-  volatile uint8_t atomicPWM_PIN12_lowState;
-  volatile uint8_t atomicPWM_PIN12_highState;
+  #if (NUMBER_MOTOR > 4)
+    //for HEX Y6 and HEX6/HEX6X flat for promini
+    volatile uint8_t atomicPWM_PIN5_lowState;
+    volatile uint8_t atomicPWM_PIN5_highState;
+    volatile uint8_t atomicPWM_PIN6_lowState;
+    volatile uint8_t atomicPWM_PIN6_highState;
+  #endif
+  #if (NUMBER_MOTOR > 6)
+    //for OCTO on promini
+    volatile uint8_t atomicPWM_PINA2_lowState;
+    volatile uint8_t atomicPWM_PINA2_highState;
+    volatile uint8_t atomicPWM_PIN12_lowState;
+    volatile uint8_t atomicPWM_PIN12_highState;
+  #endif
 #else
-  volatile uint16_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,8000};
-  //for HEX Y6 and HEX6/HEX6X and for Promicro
-  volatile uint16_t atomicPWM_PIN5_lowState;
-  volatile uint16_t atomicPWM_PIN5_highState;
-  volatile uint16_t atomicPWM_PIN6_lowState;
-  volatile uint16_t atomicPWM_PIN6_highState;
-  //for OCTO on Promicro
-  volatile uint16_t atomicPWM_PINA2_lowState;
-  volatile uint16_t atomicPWM_PINA2_highState;
-  volatile uint16_t atomicPWM_PIN12_lowState;
-  volatile uint16_t atomicPWM_PIN12_highState;
+  #if defined(SERVO)
+    volatile uint16_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,8000};
+  #endif
+  #if (NUMBER_MOTOR > 4)
+    //for HEX Y6 and HEX6/HEX6X and for Promicro
+    volatile uint16_t atomicPWM_PIN5_lowState;
+    volatile uint16_t atomicPWM_PIN5_highState;
+    volatile uint16_t atomicPWM_PIN6_lowState;
+    volatile uint16_t atomicPWM_PIN6_highState;
+  #endif
+  #if (NUMBER_MOTOR > 6)
+    //for OCTO on Promicro
+    volatile uint16_t atomicPWM_PINA2_lowState;
+    volatile uint16_t atomicPWM_PINA2_highState;
+    volatile uint16_t atomicPWM_PIN12_lowState;
+    volatile uint16_t atomicPWM_PIN12_highState;
+  #endif
 #endif
 
+/**************************************************************************************/
+/***************   Writes the Servos values to the needed format   ********************/
+/**************************************************************************************/
 void writeServos() {
   #if defined(SERVO)
     #if defined(PRI_SERVO_FROM)    // write primary servos
@@ -86,7 +109,12 @@ void writeServos() {
   #endif
 }
 
+/**************************************************************************************/
+/************  Writes the Motors values to the PWM compare register  ******************/
+/**************************************************************************************/
 void writeMotors() { // [1000;2000] => [125;250]
+
+/****************  Specific PWM Timers & Registers for the MEGA's   *******************/
   #if defined(MEGA)// [1000:2000] => [8000:16000] for timer 3 & 4 for mega
     #if (NUMBER_MOTOR > 0) 
       #ifndef EXT_MOTOR_RANGE 
@@ -135,6 +163,8 @@ void writeMotors() { // [1000;2000] => [125;250]
       #endif
     #endif
   #endif
+  
+/******** Specific PWM Timers & Registers for the atmega32u4 (Promicro)   ************/
   #if defined(PROMICRO)
     #if (NUMBER_MOTOR > 0) // Timer 1 A & B [1000:2000] => [8000:16000]
       OCR1A = motor[0]<<3; //  pin 9
@@ -206,6 +236,8 @@ void writeMotors() { // [1000;2000] => [125;250]
       #endif
     #endif
   #endif
+  
+/********  Specific PWM Timers & Registers for the atmega328P (Promini)   ************/
   #if defined(PROMINI)
     #if (NUMBER_MOTOR > 0)
       #ifndef EXT_MOTOR_RANGE 
@@ -262,15 +294,25 @@ void writeMotors() { // [1000;2000] => [125;250]
   #endif
 }
 
+/**************************************************************************************/
+/************          Writes the mincommand to all Motors           ******************/
+/**************************************************************************************/
 void writeAllMotors(int16_t mc) {   // Sends commands to all motors
   for (uint8_t i =0;i<NUMBER_MOTOR;i++)
     motor[i]=mc;
   writeMotors();
 }
 
+/**************************************************************************************/
+/************        Initialize the PWM Timers and Registers         ******************/
+/**************************************************************************************/
 void initOutput() {
+  
+/****************            mark all PWM pins as Output             ******************/
   for(uint8_t i=0;i<NUMBER_MOTOR;i++)
     pinMode(PWM_PIN[i],OUTPUT);
+    
+/****************  Specific PWM Timers & Registers for the MEGA's    ******************/
   #if defined(MEGA)
     #if (NUMBER_MOTOR > 0)
       // init 16bit timer 3
@@ -308,6 +350,8 @@ void initOutput() {
       TCCR2A |= _BV(COM2A1); // connect pin 10 to timer 2 channel A
     #endif
   #endif
+  
+/******** Specific PWM Timers & Registers for the atmega32u4 (Promicro)   ************/
   #if defined(PROMICRO)
     #if (NUMBER_MOTOR > 0)
       TCCR1A |= (1<<WGM11); TCCR1A &= ~(1<<WGM10); TCCR1B |= (1<<WGM13);  // phase correct mode
@@ -351,6 +395,8 @@ void initOutput() {
       #endif
     #endif
   #endif
+  
+ /********  Specific PWM Timers & Registers for the atmega328P (Promini)   ************/
   #if defined(PROMINI)
     #if (NUMBER_MOTOR > 0)
       TCCR1A |= _BV(COM1A1); // connect pin 9 to timer 1 channel A
@@ -380,7 +426,11 @@ void initOutput() {
   #endif
 }
 
+
 #if defined(SERVO)
+/**************************************************************************************/
+/************                Initialize the PWM Servos               ******************/
+/**************************************************************************************/
 void initializeServo() {
   #if (PRI_SERVO_FROM == 1) || (SEC_SERVO_FROM == 1)
     SERVO_1_PINMODE;
@@ -417,6 +467,9 @@ void initializeServo() {
   #endif
 }
 
+/**************************************************************************************/
+/************              Servo software PWM generation             ******************/
+/**************************************************************************************/
 #if !defined(PROMICRO) || defined(HWPWM6)
   #define SERVO_ISR TIMER0_COMPA_vect
   #define SERVO_CHANNEL OCR0A
@@ -541,8 +594,14 @@ ISR(SERVO_ISR) {
 }
 #endif
 
+/**************************************************************************************/
+/************             Motor software PWM generation              ******************/
+/**************************************************************************************/
+// SW PWM is only used if there are not enough HW PWM pins (for exampe hexa on a promini)
+
 #if (NUMBER_MOTOR > 4) && (defined(PROMINI) || defined(PROMICRO))
 
+/****************    Pre define the used ISR's and Timerchannels     ******************/
   #if !defined(PROMICRO)
     #define SOFT_PWM_ISR1 TIMER0_COMPB_vect
     #define SOFT_PWM_ISR2 TIMER0_COMPA_vect
@@ -557,7 +616,8 @@ ISR(SERVO_ISR) {
     #define SOFT_PWM_ISR2 TIMER0_COMPB_vect  
     #define SOFT_PWM_CHANNEL2 OCR0B 
   #endif
-
+  
+/****************         Initialize Timers and PWM Channels         ******************/
   void initializeSoftPWM() {
     #if !defined(PROMICRO)
       TCCR0A = 0; // normal counting mode
@@ -581,6 +641,8 @@ ISR(SERVO_ISR) {
       TIMSK0 |= (1<<OCIE0B); // Enable CTC interrupt 
     #endif
   }
+  
+/****************               Motor SW PWM ISR's                 ******************/
   // hexa with old but sometimes better SW PWM method
   // for setups without servos
   #if (NUMBER_MOTOR == 6) && (!defined(SERVO) && !defined(HWPWM6))
@@ -644,7 +706,6 @@ ISR(SERVO_ISR) {
         }
       } 
     #endif
-  
     //the same with digital PIN A2 & 12 OCR0A counter for OCTO
     #if (NUMBER_MOTOR > 6)
       ISR(SOFT_PWM_ISR2) {
@@ -671,6 +732,10 @@ ISR(SERVO_ISR) {
   #endif
 #endif
 
+
+/**************************************************************************************/
+/********** Mixes the Computed stabilize values to the Motors & Servos  ***************/
+/**************************************************************************************/
 void mixTable() {
   int16_t maxMotor;
   uint8_t i;
@@ -681,6 +746,7 @@ void mixTable() {
     //prevent "yaw jump" during yaw correction
     axisPID[YAW] = constrain(axisPID[YAW],-100-abs(rcCommand[YAW]),+100+abs(rcCommand[YAW]));
   #endif
+  /****************                   main Mix Table                ******************/
   #ifdef BI
     motor[0] = PIDMIX(+1, 0, 0); //LEFT
     motor[1] = PIDMIX(-1, 0, 0); //RIGHT        
@@ -692,7 +758,6 @@ void mixTable() {
     motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
     motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
     servo[5] = constrain(tri_yaw_middle + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
-
   #endif
   #ifdef QUADP
     motor[0] = PIDMIX( 0,+1,-1); //REAR
@@ -773,6 +838,7 @@ void mixTable() {
     motor[3] = PIDMIX(+1, -1, -2/10); //FRONT_L
   #endif
 
+  /****************                Cam stabilize Sevos             ******************/
   #if defined(SERVO_TILT)
     #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
       #define S_PITCH servo[2]
@@ -871,7 +937,8 @@ void mixTable() {
  /************************************************************************************************************/ 
  // End of PatrikE Experimentals
  /************************************************************************************************************/ 
-  
+ 
+  /****************                    Cam trigger Sevo                ******************/
   #if defined(CAMTRIG)
     static uint8_t camCycle = 0;
     static uint8_t camState = 0;
@@ -896,7 +963,8 @@ void mixTable() {
     }
     if (rcOptions[BOXCAMTRIG]) camCycle=1;
   #endif
-
+  
+  /****************                Filter the Motors values                ******************/
   maxMotor=motor[0];
   for(i=1;i< NUMBER_MOTOR;i++)
     if (motor[i]>maxMotor) maxMotor=motor[i];
@@ -913,7 +981,7 @@ void mixTable() {
     if (armed == 0)
       motor[i] = MINCOMMAND;
   }
-
+  /****************                      Powermeter Log                    ******************/
   #if (LOG_VALUES == 2) || defined(POWERMETER_SOFT)
     uint32_t amp;
     /* true cubic function; when divided by vbat_max=126 (12.6V) for 3 cell battery this gives maximum value of ~ 500 */

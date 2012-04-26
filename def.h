@@ -1,3 +1,7 @@
+/**************************************************************************************/
+/***************             Porc specific definitions             ********************/
+/**************************************************************************************/
+// Proc auto detection
 #if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
   #define PROMINI
 #endif
@@ -8,15 +12,20 @@
   #define MEGA
 #endif
 
-#if defined(PROMINI) && !defined(MONGOOSE1_0)
-  #define LEDPIN_PINMODE             pinMode (13, OUTPUT);
-  #define LEDPIN_TOGGLE              PINB |= 1<<5;     //switch LEDPIN state (digital PIN 13)
-  #define LEDPIN_OFF                 PORTB &= ~(1<<5);
-  #define LEDPIN_ON                  PORTB |= (1<<5);
-  #if !defined(RCAUXPIN8)
-    #define BUZZERPIN_PINMODE          pinMode (8, OUTPUT);
-    #define BUZZERPIN_ON               PORTB |= 1;
-    #define BUZZERPIN_OFF              PORTB &= ~1;
+/**************************   atmega328P (Promini)  ************************************/
+#if defined(PROMINI)
+  #if !defined(MONGOOSE1_0)
+    #define LEDPIN_PINMODE             pinMode (13, OUTPUT);
+    #define LEDPIN_TOGGLE              PINB |= 1<<5;     //switch LEDPIN state (digital PIN 13)
+    #define LEDPIN_OFF                 PORTB &= ~(1<<5);
+    #define LEDPIN_ON                  PORTB |= (1<<5);
+  #endif
+  #if !defined(RCAUXPIN8) 
+    #if !defined(MONGOOSE1_0)
+      #define BUZZERPIN_PINMODE          pinMode (8, OUTPUT);
+      #define BUZZERPIN_ON               PORTB |= 1;
+      #define BUZZERPIN_OFF              PORTB &= ~1;
+    #endif
   #else
     #define BUZZERPIN_PINMODE          ;
     #define BUZZERPIN_ON               ;
@@ -37,12 +46,14 @@
   #endif
   #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5;   // PIN A4&A5 (SDA&SCL)
   #define I2C_PULLUPS_DISABLE        PORTC &= ~(1<<4); PORTC &= ~(1<<5);
-  #define PINMODE_LCD                pinMode(0, OUTPUT);
-  #define LCDPIN_OFF                 PORTD &= ~1; //switch OFF digital PIN 0
-  #define LCDPIN_ON                  PORTD |= 1;
-  #define STABLEPIN_PINMODE          ;
-  #define STABLEPIN_ON               ;
-  #define STABLEPIN_OFF              ;
+  #if !defined(MONGOOSE1_0)
+    #define PINMODE_LCD                pinMode(0, OUTPUT);
+    #define LCDPIN_OFF                 PORTD &= ~1; //switch OFF digital PIN 0
+    #define LCDPIN_ON                  PORTD |= 1;
+    #define STABLEPIN_PINMODE          ;
+    #define STABLEPIN_ON               ;
+    #define STABLEPIN_OFF              ;
+  #endif 
   #define PPM_PIN_INTERRUPT          attachInterrupt(0, rxInt, RISING); //PIN 0
   #define SPEK_SERIAL_VECT           USART_RX_vect
   #define SPEK_DATA_REG              UDR0
@@ -55,6 +66,14 @@
   #define AUX2PIN                    0 // optional PIN 8 or PIN 12
   #define AUX3PIN                    1 // unused 
   #define AUX4PIN                    3 // unused 
+    
+  #define PCINT_PIN_COUNT            5
+  #define PCINT_RX_BITS              (1<<2),(1<<4),(1<<5),(1<<6),(1<<7)
+  #define PCINT_RX_PORT              PORTD
+  #define PCINT_RX_MASK              PCMSK2
+  #define PCIR_PORT_BIT              (1<<2)
+  #define RX_PC_INTERRUPT            PCINT2_vect
+  #define RX_PCINT_PIN_PORT          PIND
   #define ISR_UART                   ISR(USART_UDRE_vect)
   #define V_BATPIN                   A3    // Analog PIN 3
   #define PSENSORPIN                 A2    // Analog PIN 2
@@ -84,9 +103,11 @@
   #define SERVO_3_PINMODE            pinMode(A2,OUTPUT); // CAM TRIG  - alt TILT_PITCH
   #define SERVO_3_PIN_HIGH           PORTC |= 1<<2;
   #define SERVO_3_PIN_LOW            PORTC &= ~(1<<2);
-  #define SERVO_4_PINMODE            pinMode(12,OUTPUT); // new       - alt TILT_ROLL
-  #define SERVO_4_PIN_HIGH           PORTB |= 1<<4;
-  #define SERVO_4_PIN_LOW            PORTB &= ~(1<<4);
+  #if !defined(MONGOOSE1_0)
+    #define SERVO_4_PINMODE            pinMode(12,OUTPUT); // new       - alt TILT_ROLL
+    #define SERVO_4_PIN_HIGH           PORTB |= 1<<4;
+    #define SERVO_4_PIN_LOW            PORTB &= ~(1<<4);
+  #endif
   #define SERVO_5_PINMODE            pinMode(11,OUTPUT); // BI LEFT
   #define SERVO_5_PIN_HIGH           PORTB |= 1<<3;
   #define SERVO_5_PIN_LOW            PORTB &= ~(1<<3);
@@ -101,6 +122,7 @@
   #define SERVO_8_PIN_LOW            PORTB &= ~(1<<1);
 #endif
 
+/**************************  atmega32u4 (Promicro)  ***********************************/
 #if defined(PROMICRO)
   #define LEDPIN_PINMODE             //
   #define LEDPIN_TOGGLE              PIND |= 1<<5;     //switch LEDPIN state (Port D5)
@@ -135,7 +157,7 @@
   #define STABLEPIN_PINMODE          ;
   #define STABLEPIN_ON               ;
   #define STABLEPIN_OFF              ;
-  #define PPM_PIN_INTERRUPT          //attachInterrupt(3, rxInt, RISING);// not used
+  #define PPM_PIN_INTERRUPT          pinMode(7,INPUT);PORTE |= (1 << 6);EIMSK |= (1 << INT6);EICRB |= (1 << ISC61)|(1 << ISC60);
   #define SPEK_SERIAL_VECT           USART1_RX_vect
   #define SPEK_DATA_REG              UDR1
   #define USB_CDC_TX                 3
@@ -183,30 +205,45 @@
   #define SERVO_8_PIN_HIGH  PORTB |= 1<<5;
   #define SERVO_8_PIN_LOW   PORTB &= ~(1<<5);
   
-  #define THROTTLEPIN                2
-  #if !defined(A32U4ALLPINS)
+  //Standart RX
+  #define THROTTLEPIN                  3
+  #if defined(A32U4ALLPINS)
+    #define ROLLPIN                    6
+    #define PITCHPIN                   2
+    #define YAWPIN                     4
+    #define AUX1PIN                    5
+  #else
     #define ROLLPIN                    4
     #define PITCHPIN                   5
-    #define YAWPIN                     6
-    #define AUX1PIN                    7
-  #else
-    #define ROLLPIN                    7
-    #define PITCHPIN                   6
-    #define YAWPIN                     4
-    #define AUX1PIN                    5 
+    #define YAWPIN                     2
+    #define AUX1PIN                    6
   #endif
-  #define AUX2PIN                    0 
-  #define AUX3PIN                    1 // unused 
-  #define AUX4PIN                    3 // unused 
-  #define ISR_UART                   ISR(USART_UDRE_vect)
+  #define AUX2PIN                      7 
+  #define AUX3PIN                      1 // unused 
+  #define AUX4PIN                      0 // unused 
+  #if !defined(RCAUX2PIND17)
+    #define PCINT_PIN_COUNT          4
+    #define PCINT_RX_BITS            (1<<1),(1<<2),(1<<3),(1<<4)
+  #else
+    #define PCINT_PIN_COUNT          5 // one more bit (PB0) is added in RX code
+    #define PCINT_RX_BITS            (1<<1),(1<<2),(1<<3),(1<<4),(1<<0)
+  #endif
+  #define PCINT_RX_PORT                PORTB
+  #define PCINT_RX_MASK                PCMSK0
+  #define PCIR_PORT_BIT                (1<<0)
+  #define RX_PC_INTERRUPT              PCINT0_vect
+  #define RX_PCINT_PIN_PORT            PINB
+  
+  #define ISR_UART                    ISR(USART_UDRE_vect)
   #if !defined(A32U4ALLPINS)
-    #define V_BATPIN                   A3    // Analog PIN 3
+    #define V_BATPIN                  A3    // Analog PIN 3
   #else
-    #define V_BATPIN                   A4    // Analog PIN 4
+    #define V_BATPIN                  A4    // Analog PIN 4
   #endif
-  #define PSENSORPIN                 A2    // Analog PIN 2 
+  #define PSENSORPIN                  A2    // Analog PIN 2 
 #endif
 
+/**************************  all the Mega types  ***********************************/
 #if defined(MEGA)
   #define LEDPIN_PINMODE             pinMode (13, OUTPUT);pinMode (30, OUTPUT);
   #define LEDPIN_TOGGLE              PINB  |= (1<<7); PINC  |= (1<<7);
@@ -245,9 +282,17 @@
   #define AUX2PIN                    5  //PIN 67 =  PIN A13
   #define AUX3PIN                    6  //PIN 68 =  PIN A14
   #define AUX4PIN                    7  //PIN 69 =  PIN A15
-  #define ISR_UART                   ISR(USART0_UDRE_vect)
   #define V_BATPIN                   A0    // Analog PIN 0
   #define PSENSORPIN                 A2    // Analog PIN 2
+  #define PCINT_PIN_COUNT            8
+  #define PCINT_RX_BITS              (1<<0),(1<<1),(1<<2),(1<<3),(1<<4),(1<<5),(1<<6),(1<<7)
+  #define PCINT_RX_PORT              PORTK
+  #define PCINT_RX_MASK              PCMSK2
+  #define PCIR_PORT_BIT              (1<<2)
+  #define RX_PC_INTERRUPT            PCINT2_vect
+  #define RX_PCINT_PIN_PORT          PINK
+   
+  #define ISR_UART                   ISR(USART0_UDRE_vect)
   
   #define SERVO_1_PINMODE            pinMode(34,OUTPUT);pinMode(44,OUTPUT); // TILT_PITCH - WING left
   #define SERVO_1_PIN_HIGH           PORTC |= 1<<3;PORTL |= 1<<5;
@@ -275,20 +320,19 @@
   #define SERVO_8_PIN_LOW            PORTE &= ~(1<<5);
 #endif
 
+
+// special defines for the Mongose IMU board 
+// note: that may be moved to the IMU Orientations because this are board defines .. not Proc
+
 #if defined(MONGOOSE1_0)  // basically it's a PROMINI without some PINS => same code as a PROMINI board except PIN definition
+                          // note: to avoid too much dubble code there are now just the differencies
   // http://www.multiwii.com/forum/viewtopic.php?f=6&t=627
-  
   #define LEDPIN_PINMODE             pinMode (4, OUTPUT);
   #define LEDPIN_TOGGLE              PIND |= 1<<4;     //switch LEDPIN state (digital PIN 13)
   #define LEDPIN_OFF                 PORTD &= ~(1<<4);  
   #define LEDPIN_ON                  PORTD |= (1<<4);     
-  #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5; 
-  #define I2C_PULLUPS_DISABLE        PORTC &= ~(1<<4); PORTC &= ~(1<<5);  
-  #define PPM_PIN_INTERRUPT          attachInterrupt(0, rxInt, RISING); //PIN 0
-  #define SPEK_SERIAL_VECT           USART_RX_vect
   #define SPEK_BAUD_SET              UCSR0A  = (1<<U2X0); UBRR0H = ((F_CPU  / 4 / 115200 -1) / 2) >> 8; UBRR0L = ((F_CPU  / 4 / 115200 -1) / 2);
   #define SPEK_SERIAL_INTERRUPT      UCSR0B |= (1<<RXEN0)|(1<<RXCIE0);
-  #define SPEK_DATA_REG              UDR0
 
   /* Unavailable pins on MONGOOSE1_0 */
   #define BUZZERPIN_PINMODE          ; // D8
@@ -304,60 +348,19 @@
   #define LCDPIN_OFF                 ;
   #define LCDPIN_ON                  ; 
   
-  //RX PIN assignment inside the port //for PORTD
-  #define THROTTLEPIN                2
-  #define ROLLPIN                    4
-  #define PITCHPIN                   5
-  #define YAWPIN                     6
-  #define AUX1PIN                    7
-  #define AUX2PIN                    0 // optional PIN 8 or PIN 12
-  #define AUX3PIN                    1 // unused 
-  #define AUX4PIN                    3 // unused 
-  #define ISR_UART                   ISR(USART_UDRE_vect)
-  #define V_BATPIN                   A3    // Analog PIN 3
-  #define PSENSORPIN                 A2    // Analog PIN 2
   
-  #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR < 8)
-    #define SOFT_PWM_1_PIN_HIGH        PORTC |= 1<<0;
-    #define SOFT_PWM_1_PIN_LOW         PORTC &= ~(1<<0);
-    #define SOFT_PWM_2_PIN_HIGH        PORTC |= 1<<1;
-    #define SOFT_PWM_2_PIN_LOW         PORTC &= ~(1<<1);  
-  #else
-    #define SOFT_PWM_1_PIN_HIGH        PORTD |= 1<<5;
-    #define SOFT_PWM_1_PIN_LOW         PORTD &= ~(1<<5);
-    #define SOFT_PWM_2_PIN_HIGH        PORTD |= 1<<6;
-    #define SOFT_PWM_2_PIN_LOW         PORTD &= ~(1<<6);
-  #endif
-  #define SOFT_PWM_3_PIN_HIGH        PORTC |= 1<<2;
-  #define SOFT_PWM_3_PIN_LOW         PORTC &= ~(1<<2);
-  #define SOFT_PWM_4_PIN_HIGH        PORTB |= 1<<4;
-  #define SOFT_PWM_4_PIN_LOW         PORTB &= ~(1<<4);
-  
-  #define SERVO_1_PINMODE            pinMode(A0,OUTPUT); // TILT_PITCH
-  #define SERVO_1_PIN_HIGH           PORTC |= 1<<0;
-  #define SERVO_1_PIN_LOW            PORTC &= ~(1<<0);
-  #define SERVO_2_PINMODE            pinMode(A1,OUTPUT); // TILT_ROLL
-  #define SERVO_2_PIN_HIGH           PORTC |= 1<<1;
-  #define SERVO_2_PIN_LOW            PORTC &= ~(1<<1);
-  #define SERVO_3_PINMODE            pinMode(A2,OUTPUT); // CAM TRIG
-  #define SERVO_3_PIN_HIGH           PORTC |= 1<<2;
-  #define SERVO_3_PIN_LOW            PORTC &= ~(1<<2); 
   #define SERVO_4_PINMODE            ;                   // Not available
   #define SERVO_4_PIN_HIGH           ;
   #define SERVO_4_PIN_LOW            ;
-  #define SERVO_5_PINMODE            pinMode(11,OUTPUT); // BI LEFT
-  #define SERVO_5_PIN_HIGH           PORTD|= 1<<3;
-  #define SERVO_5_PIN_LOW            PORTD &= ~(1<<3);
-  #define SERVO_6_PINMODE            pinMode(3,OUTPUT); // TRI REAR
-  #define SERVO_6_PIN_HIGH           PORTB |= 1<<3;
-  #define SERVO_6_PIN_LOW            PORTB &= ~(1<<3);
-  #define SERVO_7_PINMODE            pinMode(10,OUTPUT); // new motor pin 10
-  #define SERVO_7_PIN_HIGH           PORTB |= 1<<2;
-  #define SERVO_7_PIN_LOW            PORTB &= ~(1<<2);
-  #define SERVO_8_PINMODE            pinMode(9,OUTPUT); //new motor pin 9
-  #define SERVO_8_PIN_HIGH           PORTB |= 1<<1;
-  #define SERVO_8_PIN_LOW            PORTB &= ~(1<<1);
 #endif
+
+
+
+
+/**************************************************************************************/
+/***************      IMU Orientations and Sensor definitions      ********************/
+/**************************************************************************************/
+
 
 //please submit any correction to this list.
 #if defined(FFIMUv1)
@@ -692,6 +695,12 @@
   FlagType               Flag;   
 #endif
 
+
+
+/**************************************************************************************/
+/***************              Sensor Type definitions              ********************/
+/**************************************************************************************/
+
 #if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LIS3LV02) || defined(LSM303DLx_ACC) || defined(MPU6050)
   #define ACC 1
 #else
@@ -728,18 +737,10 @@
   #define SONAR 0
 #endif
 
-#if defined (AIRPLANE) || defined(HELICOPTER) && defined(PROMINI) 
-  #if defined(D12_POWER)
-    #define SERVO_4_PINMODE            ;  // D12
-    #define SERVO_4_PIN_HIGH           ;
-    #define SERVO_4_PIN_LOW            ;
-  #else
-    #define POWERPIN_PINMODE           ;
-    #define POWERPIN_ON                ;
-    #define POWERPIN_OFF               ;
-  #endif
-#endif
 
+/**************************************************************************************/
+/***************      Multitype decleration for the GUI's          ********************/
+/**************************************************************************************/
 #if defined(TRI)
   #define MULTITYPE 1
 #elif defined(QUADP)
@@ -776,6 +777,22 @@
  #define MULTITYPE 17
 #endif
 
+/**************************************************************************************/
+/***************          Some unsorted "chain" defines            ********************/
+/**************************************************************************************/
+
+#if defined (AIRPLANE) || defined(HELICOPTER) && defined(PROMINI) 
+  #if defined(D12_POWER)
+    #define SERVO_4_PINMODE            ;  // D12
+    #define SERVO_4_PIN_HIGH           ;
+    #define SERVO_4_PIN_LOW            ;
+  #else
+    #define POWERPIN_PINMODE           ;
+    #define POWERPIN_ON                ;
+    #define POWERPIN_OFF               ;
+  #endif
+#endif
+
 #if defined(HELI_120_CCPM) || defined(HELI_90_DEG)
   #define HELI
 #endif
@@ -784,8 +801,31 @@
   #define POWERMETER
 #endif
 
-/* motor and servo numbers */
+//all new Special RX's must be added here
+//this is to avoid confusion :)
+#if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(RCSERIALERIAL)
+  #define STANDARD_RX
+#endif
 
+
+// Spektrum Satellite
+#if defined(SPEKTRUM)
+  #define SPEK_MAX_CHANNEL 7
+  #define SPEK_FRAME_SIZE 16
+  #if (SPEKTRUM == 1024)
+    #define SPEK_CHAN_SHIFT  2       // Assumes 10 bit frames, that is 1024 mode.
+    #define SPEK_CHAN_MASK   0x03    // Assumes 10 bit frames, that is 1024 mode.
+  #endif
+  #if (SPEKTRUM == 2048)
+    #define SPEK_CHAN_SHIFT  3       // Assumes 11 bit frames, that is 2048 mode.
+    #define SPEK_CHAN_MASK   0x07    // Assumes 11 bit frames, that is 2048 mode.
+  #endif
+#endif
+
+
+/**************************************************************************************/
+/***************             motor and servo numbers               ********************/
+/**************************************************************************************/
 #if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(AIRPLANE) || defined(CAMTRIG) || defined(HELI)
   #define SERVO
 #endif
@@ -847,9 +887,12 @@
   #endif
 #endif
 
+/**************************************************************************************/
+/***************                       I2C GPS                     ********************/
+/**************************************************************************************/
 #if defined(I2C_GPS)
   #define I2C_GPS_ADDRESS                         0x40       
-  /*************** I2C GSP register definitions *********************************/
+  /*************** I2C GPS register definitions *********************************/
   
   #define I2C_GPS_STATUS                          0x00   //(Read only)
           #define I2C_GPS_STATUS_NEW_DATA         0x01
@@ -904,9 +947,10 @@
   #endif
 #endif
 
-/**************************/
-/* Error Checking Section */
-/**************************/
+
+/**************************************************************************************/
+/***************               Error Checking Section              ********************/
+/**************************************************************************************/
 
 #if (defined(LCD_CONF) || defined(LCD_TELEMETRY)) && !(defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) )
   #error "LCD_CONF or LCD_TELEMETRY defined, and choice of LCD not defined.  Uncomment one of LCD_SERIAL3W or LCD_TEXTSTAR or LCD_VT100 or LCD_ETPP or LCD_LCD03 or OLED_I2C_128x64"
@@ -919,3 +963,5 @@
 #if defined(LCD_TELEMETRY_AUTO) && !(defined(LCD_TELEMETRY))
         #error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
 #endif
+
+
