@@ -10,6 +10,7 @@
 //#define MINTHROTTLE 1220
 #define MINTHROTTLE 1150 
 
+
 /**************************    The type of multicopter    ****************************/
 //#define GIMBAL
 //#define BI
@@ -542,7 +543,7 @@
 
 #define SERVO_OFFSET     {  0,   0,   0,  0,   0,   0,  0,   0 } // Adjust Servo MID Offset & Swash angles 
 #define SERVO_RATES      {100, 100, 100, 100, 100, 100, 100, 100} // Rates in 0-100% 
-#define SERVO_DIRECTION  { -1,   1,   1,   1,  1,   1,   1,   1 } // Invert servos by setting -1 
+#define SERVO_DIRECTION  { -1,   1,   1,   -1,  1,   1,   1,   1 } // Invert servos by setting -1 
  
 //#define FLAP_CHANNEL     AUX4       // Define the Channel to controll Flaps with.If used.
 #define FLAP_EP      { 1500, 1650 } // Endpooints for flaps on a 2 way switch else set {1020,2000} and program in radio.
@@ -552,25 +553,25 @@
 //*************************** !!!!  Common for Heli & Airplane  !!!! ****************************//
 //***********************************************************************************************//
 
-//#define D12_POWER            // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12 
+//#define D12_POWER      // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12 
+// Selectable channels:=    ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4
 
 //***********************************************************************************************//
 //****************************** !!!!  Hellicopter Settings  !!!! *******************************//
 //***********************************************************************************************//
 // Channel to controll CollectivePitch
-#define CollectivePitch AUX1   // Selectable channels: ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4
-
+#define COLLECTIVE_PITCH      THROTTLE   
 // Set Maximum available movement for the servos. Depending on modell.
 #define SERVO_ENDPOINT_HIGH {2000,2000,2000,2000,2000,2000,2000,2000};
 #define SERVO_ENDPOINT_LOW  {1020,1020,1020,1020,1020,1020,1020,1020};
 
 // Limit the range of Collective Pitch. 100% is Full Range each way and position for Zero Pitch
-#define CollectiveRange { 80, 1500, 80 }// {Min%, ZeroPitch, Max%}.
-#define YAWCenter             1500      // Use servo[5] SERVO_ENDPOINT_HIGH/LOW for the endpoits.
+#define COLLECTIVE_RANGE { 80, 1500, 80 }// {Min%, ZeroPitch, Max%}.
+#define YAW_CENTER             1500      // Use servo[5] SERVO_ENDPOINT_HIGH/LOW for the endpoits.
 #define YAWMOTOR                0       // If a motor is use as YAW Set to 1 else set to 0.
 
 // Limit Maximum controll for Roll & Nick  in 0-100%  
-#define ControllRange   { 100, 100 }      //  { ROLL,PITCH }
+#define CONTROLL_RANGE   { 100, 100 }      //  { ROLL,PITCH }
 //*************************************************************************************************// 
 
 /********************************************************************/

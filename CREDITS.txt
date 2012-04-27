@@ -84,6 +84,12 @@ N: Mis
 E:
 W:
 
+S: Helicopter mode - Experimental
+D: Support for 120 & 90 degree swash
+N: PatrikE
+E:
+W: http://fotoflygarn.blogspot.se/2012/04/multiwii-helicopter.html
+
 S: i2c LCD03
 D:
 N: 
