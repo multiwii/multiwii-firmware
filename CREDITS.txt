@@ -26,8 +26,8 @@ N: PatrikE
 E:
 W: http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
 
-S: BTSERIAL
-D:
+S: RCSERIAL
+D: input RC signal with the serial port
 N: Luis Correia
 E:
 W: http://www.multiwii.com/forum/viewtopic.php?f=18&t=828

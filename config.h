@@ -283,6 +283,9 @@
 
 /**************************    Disable WMP power pin     *******************************/
 /* disable use of the POWER PIN */
+/* sorry, but this needs clarification about purpose and side effects */
+/* what happens when enabled/disabled? what to set it to for using D12 as aux2 input? need it be set or left alone or does not matter?*/
+/* is this not equal to D12_POWER? */
 //#define DISABLE_POWER_PIN
 
 
@@ -660,6 +663,22 @@
 //#define LCD_TELEMETRY_DEBUG  //This form rolls between all screens, LCD_TELEMETRY_AUTO must also be defined.
 //#define LCD_TELEMETRY_DEBUG 6  //This form stays on the screen specified.
 
+/********************************************************************/
+/****           ESCs calibration                                 ****/
+/********************************************************************/
+
+/* to calibrate all ESCs connected to MWii at the same time (useful to avoid unplugging/re-plugging each ESC)  */
+/* Warning: this creates a special version of MultiWii Code */
+/* You cannot fly with this special version. It is only to be used for calibrating ESCs */
+/* How To: */
+/* 1. activate the define, possibly set high and low values for ESC calibration, if you know what you are doing */
+/* 2. setup all options in config.h to whatever suits your copter */
+/* 3. compile, upload, run --- cannot fly and will use Buzzer to indicate finished calibration */
+/* 4. comment the define, compile, upload */
+/* 5. test carefully, fly and have fun */
+#define ESC_CALIB_LOW  MINCOMMAND
+#define ESC_CALIB_HIGH 2000
+//#define ESC_CALIB_CANNOT_FLY
 
 //****** end of advanced users settings ***********************************
 /* ===================================================================== */
