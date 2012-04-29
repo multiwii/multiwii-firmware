@@ -55,17 +55,17 @@ void configureReceiver() {
     /***************   atmega32u4's Specific RX Pin Setup   **********************/
     #if defined(PROMICRO)
       //Trottle on pin 7
-      pinMode(7,INPUT); // set to input
+      DDRE &= ~(1 << 6); // pin 7 to input
       PORTE |= (1 << 6); // enable pullups
       EIMSK |= (1 << INT6); // enable interuppt
       EICRB |= (1 << ISC60);
       // Aux2 pin on PBO (D17/RXLED)
       #if defined(RCAUX2PIND17)
-        pinMode(17,INPUT);  
+        DDRB &= ~(1 << 0); // set D17 to input 
       #endif
       // Aux2 pin on PD2 (RX0)
       #if defined(RCAUX2PINRXO)
-        pinMode(0,INPUT); // set to input
+        DDRD &= ~(1 << 2); // RX to input
         PORTD |= (1 << 2); // enable pullups
         EIMSK |= (1 << INT2); // enable interuppt
         EICRA |= (1 << ISC20);

@@ -8,9 +8,17 @@
 #endif
 #if defined(PROMICRO)
   #if !defined(HWPWM6)
-    uint8_t PWM_PIN[8] = {9,10,5,6,4,A2,A0,A1};   //for a quad+: rear,right,left,front
+    #if !defined(TEENSY20)
+      uint8_t PWM_PIN[8] = {9,10,5,6,4,A2,A0,A1};   //for a quad+: rear,right,left,front
+    #else
+      uint8_t PWM_PIN[8] = {14,15,9,12,22,18,16,17};   //for a quad+: rear,right,left,front
+    #endif
   #else
-    uint8_t PWM_PIN[8] = {9,10,5,6,11,13,A0,A1};   //for a quad+: rear,right,left,front
+    #if !defined(TEENSY20)
+      uint8_t PWM_PIN[8] = {9,10,5,6,11,13,A0,A1};   //for a quad+: rear,right,left,front
+    #else
+      uint8_t PWM_PIN[8] = {14,15,9,12,4,10,16,17};   //for a quad+: rear,right,left,front
+    #endif
   #endif
 #endif
 #if defined(MEGA)
@@ -354,8 +362,11 @@ void initOutput() {
 /******** Specific PWM Timers & Registers for the atmega32u4 (Promicro)   ************/
   #if defined(PROMICRO)
     #if (NUMBER_MOTOR > 0)
-      TCCR1A |= (1<<WGM11); TCCR1A &= ~(1<<WGM10); TCCR1B |= (1<<WGM13);  // phase correct mode
-      TCCR1B &= ~(1<<CS11); ICR1 |= 0x3FFF; // no prescaler & TOP to 16383;
+      TCCR1A |= (1<<WGM11); // phase correct mode & no prescaler
+      TCCR1A &= ~(1<<WGM10);
+      TCCR1B &= ~(1<<WGM12) &  ~(1<<CS11) & ~(1<<CS12);
+      TCCR1B |= (1<<WGM13) | (1<<CS10); 
+      ICR1   |= 0x3FFF; // TOP to 16383;     
       TCCR1A |= _BV(COM1A1); // connect pin 9 to timer 1 channel A
     #endif
     #if (NUMBER_MOTOR > 1)
@@ -368,8 +379,11 @@ void initOutput() {
         TCCR4D |= (1<<WGM40); TC4H = 0x3; OCR4C = 0xFF; // phase and frequency correct mode & top to 1023 but with enhanced pwm mode we have 2047
         TCCR4A |= (1<<COM4A0)|(1<<PWM4A); // connect pin 5 to timer 4 channel A 
       #else // timer 3A
-        TCCR3A |= (1<<WGM31); TCCR3A &= ~(1<<WGM30); TCCR3B |= (1<<WGM33);  // phase correct mode
-        TCCR3B &= ~(1<<CS31); ICR3 |= 0x3FFF; // no prescaler & TOP to 16383;
+        TCCR3A |= (1<<WGM31); // phase correct mode & no prescaler
+        TCCR3A &= ~(1<<WGM30);
+        TCCR3B &= ~(1<<WGM32) &  ~(1<<CS31) & ~(1<<CS32);
+        TCCR3B |= (1<<WGM33) | (1<<CS30); 
+        ICR3   |= 0x3FFF; // TOP to 16383;     
         TCCR3A |= _BV(COM3A1); // connect pin 5 to timer 3 channel A    
       #endif 
     #endif
@@ -461,8 +475,9 @@ void initializeServo() {
     TCCR0A = 0; // normal counting mode
     TIMSK0 |= (1<<OCIE0A); // Enable CTC interrupt
   #else
-    TCCR3A &= ~(1<<WGM30); // normal counting mode
-    TCCR3B &= ~(1<<CS31); // no prescaler
+    TCCR3A &= ~(1<<WGM30) & ~(1<<WGM31); //normal counting & no prescaler
+    TCCR3B &= ~(1<<WGM32) & ~(1<<CS31) & ~(1<<CS32) & ~(1<<WGM33);
+    TCCR3B |= (1<<CS30);   
     TIMSK3 |= (1<<OCIE3A); // Enable CTC interrupt   
   #endif
 }
@@ -607,7 +622,7 @@ ISR(SERVO_ISR) {
     #define SOFT_PWM_ISR2 TIMER0_COMPA_vect
     #define SOFT_PWM_CHANNEL1 OCR0B
     #define SOFT_PWM_CHANNEL2 OCR0A 
-  #elseif !defined(HWPWM6)
+  #elif !defined(HWPWM6)
     #define SOFT_PWM_ISR1 TIMER3_COMPB_vect
     #define SOFT_PWM_ISR2 TIMER3_COMPC_vect
     #define SOFT_PWM_CHANNEL1 OCR3B
@@ -628,17 +643,19 @@ ISR(SERVO_ISR) {
 
         TIMSK0 |= (1<<OCIE0A);
       #endif
-    #elseif !defined(HWPWM6)
-        TCCR3A &= ~(1<<WGM30); // normal counting mode
-        TCCR3B &= ~(1<<CS31); // no prescaler
+    #else
+      #if !defined(HWPWM6)
+        TCCR3A &= ~(1<<WGM30) & ~(1<<WGM31); //normal counting & no prescaler
+        TCCR3B &= ~(1<<WGM32) & ~(1<<CS31) & ~(1<<CS32) & ~(1<<WGM33);
+        TCCR3B |= (1<<CS30);   
         TIMSK3 |= (1<<OCIE3B); // Enable CTC interrupt  
         #if (NUMBER_MOTOR > 6) || ((NUMBER_MOTOR == 6) && !defined(SERVO))
-
           TIMSK3 |= (1<<OCIE3C);
         #endif   
-    #else
-      TCCR0A = 0; // normal counting mode
-      TIMSK0 |= (1<<OCIE0B); // Enable CTC interrupt 
+      #else
+        TCCR0A = 0; // normal counting mode
+        TIMSK0 |= (1<<OCIE0B); // Enable CTC interrupt 
+      #endif
     #endif
   }
   
@@ -683,7 +700,7 @@ ISR(SERVO_ISR) {
       }
     }
   #else
-    #if (NUMBER_MOTOR == 6)
+    #if (NUMBER_MOTOR > 4) && !defined(HWPWM6)
       // HEXA with just OCR0B 
       ISR(SOFT_PWM_ISR1) { 
         static uint8_t state = 0;

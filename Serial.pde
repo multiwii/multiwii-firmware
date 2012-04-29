@@ -283,6 +283,17 @@ void oldSerialCom(uint8_t sr) {
   }
 }
 
+// *******************************************************
+// For Teensy 2.0, these function emulate the API used for ProMicro
+// it cant have the same name as in the arduino API because it wont compile for the promini (eaven if it will be not compiled)
+// *******************************************************
+#if defined(TEENSY20)
+  unsigned char T_USB_Available(unsigned char ignored){
+    int n = Serial.available();
+    if (n > 255) n = 255;
+    return n;
+  }
+#endif
 
 // *******************************************************
 // Interrupt driven UART transmitter - using a ring buffer
@@ -324,7 +335,11 @@ void serialize8(uint8_t a)  {
 
 void UartSendData() {
   #if defined(PROMICRO)
-    USB_Send(USB_CDC_TX,bufTX,headTX);
+    #if !defined(TEENSY20)
+      USB_Send(USB_CDC_TX,bufTX,headTX);
+    #else
+      Serial.write(bufTX, headTX);
+    #endif
     headTX = 0;
   #endif
 }
@@ -396,7 +411,11 @@ ISR(USART_RX_vect){
 
 uint8_t SerialRead(uint8_t port) {
   #if defined(PROMICRO)
-    if(port == 0) return USB_Recv(USB_CDC_RX);
+    #if !defined(TEENSY20)
+      if(port == 0) return USB_Recv(USB_CDC_RX);
+    #else
+      if(port == 0) return Serial.read();
+    #endif
     port = 0;
   #endif
   uint8_t c = serialBufferRX[serialTailRX[port]][port];
@@ -406,7 +425,11 @@ uint8_t SerialRead(uint8_t port) {
 
 uint8_t SerialAvailable(uint8_t port) {
   #if defined(PROMICRO)
-    if(port == 0) return USB_Available(USB_CDC_RX);
+    #if !defined(TEENSY20)
+      if(port == 0) return USB_Available(USB_CDC_RX);
+    #else
+      if(port == 0) return T_USB_Available(USB_CDC_RX);
+    #endif
     port = 0;
   #endif
   return serialHeadRX[port] - serialTailRX[port];

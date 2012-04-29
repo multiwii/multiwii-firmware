@@ -46,7 +46,7 @@
 
 /***************************    Internal i2c Pullups   ********************************/
 //enable internal I2C pull ups
-#define INTERNAL_I2C_PULLUPS
+//#define INTERNAL_I2C_PULLUPS
 
 /*****************************    Serial com speed    *********************************/
 /* This is the speed of the serial interface. 115200 kbit/s is the best option for a USB connection.*/
@@ -59,6 +59,14 @@
 /**************************************************************************************/
 
 
+
+/**************************************************************************************/
+/*****************             Teensy 2.0 Support(BETA)              ******************/
+/**************************************************************************************/
+
+// uncomment this if you use a teensy 2.0 with teensduino
+// it needs to run at 16MHz
+//#define TEENSY20
  
 /**************************************************************************************/
 /*****************          boards and sensor definitions            ******************/
