@@ -46,7 +46,7 @@
 
 /***************************    Internal i2c Pullups   ********************************/
 //enable internal I2C pull ups
-//#define INTERNAL_I2C_PULLUPS
+#define INTERNAL_I2C_PULLUPS
 
 /*****************************    Serial com speed    *********************************/
 /* This is the speed of the serial interface. 115200 kbit/s is the best option for a USB connection.*/
