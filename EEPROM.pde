@@ -20,6 +20,8 @@ static eep_entry_t eep_entry[] = {
 , {&rollPitchRate, sizeof(rollPitchRate)}
 , {&yawRate, sizeof(yawRate)}
 , {&dynThrPID, sizeof(dynThrPID)}
+, {&thrMid8, sizeof(thrMid8)}
+, {&thrExpo8, sizeof(thrExpo8)}
 , {&accZero, sizeof(accZero)}
 , {&magZero, sizeof(magZero)}
 , {&accTrim, sizeof(accTrim)}
@@ -41,11 +43,23 @@ void readEEPROM() {
   uint8_t i, _address = eep_entry[0].size;
   for(i=1; i<EEBLOCK_SIZE; i++) {
     eeprom_read_block(eep_entry[i].var, (void*)(_address), eep_entry[i].size); _address += eep_entry[i].size;
-  }  
+  }
+
+  for(i=0;i<6;i++) {
+    lookupPitchRollRC[i] = (2500+rcExpo8*(i*i-25))*i*(int32_t)rcRate8/2500;
+  }
+  for(i=0;i<11;i++) {
+    int16_t tmp = 10*i-thrMid8;
+    uint8_t y = 1;
+    if (tmp>0) y = 100-thrMid8;
+    if (tmp<0) y = thrMid8;
+    lookupThrottleRC[i] = 10*thrMid8 + tmp*( 100-thrExpo8+(int32_t)thrExpo8*(tmp*tmp)/(y*y) )/10;     // [0;1000]
+    lookupThrottleRC[i] = MINTHROTTLE + (int32_t)(MAXTHROTTLE-MINTHROTTLE)* lookupThrottleRC[i]/1000; // [0;1000] -> [MINTHROTTLE;MAXTHROTTLE]
+  }
+
   #if defined(POWERMETER)
     pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
   #endif
-  for(i=0;i<7;i++) lookupRX[i] = (2500+rcExpo8*(i*i-25))*i*(int32_t)rcRate8/2500;
   #ifdef FLYING_WING
     wing_left_mid  = constrain(wing_left_mid, WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT 
     wing_right_mid = constrain(wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
@@ -75,11 +89,11 @@ void checkFirstTime() {
   P8[PIDVEL]   =  0; I8[PIDVEL]   = 0;  D8[PIDVEL]   = 0;
   P8[PIDLEVEL] = 90; I8[PIDLEVEL] = 45; D8[PIDLEVEL] = 100;
   P8[PIDMAG] = 40;
-  rcRate8 = 90;
-  rcExpo8 = 65;
+  rcRate8 = 90; rcExpo8 = 65;
   rollPitchRate = 0;
   yawRate = 0;
   dynThrPID = 0;
+  thrMid8 = 50; thrExpo8 = 0;
   for(uint8_t i=0;i<CHECKBOXITEMS;i++) {activate[i] = 0;}
   accTrim[0] = 0; accTrim[1] = 0;
   powerTrigger1 = 0;
@@ -92,4 +106,3 @@ void checkFirstTime() {
   #endif
   writeParams(0);
 }
-

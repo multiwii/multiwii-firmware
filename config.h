@@ -90,13 +90,13 @@
 //#define PIPO            // 9DOF board from erazz
 //#define QUADRINO        // full FC board 9DOF+baro board from witespy  with BMP085 baro     <- confirmed by Alex
 //#define QUADRINO_ZOOM   // full FC board 9DOF+baro board from witespy  second edition
-//#define QUADRINO_ZOOM_MS    // full FC board 9DOF+baro board from witespy  second edition       <- confirmed by Alex
+//#define QUADRINO_ZOOM_MS// full FC board 9DOF+baro board from witespy  second edition       <- confirmed by Alex
 //#define ALLINONE        // full FC board or standalone 9DOF+baro board from CSG_EU
 //#define AEROQUADSHIELDv2
 //#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). requires 3.3V power.
 //#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
 //#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
-//#define MINIWII         // Jussi's MiniWii Flight Controller
+//#define MINIWII         // Jussi's MiniWii Flight Controller                                <- confirmed by Alex
 //#define CITRUSv2_1      // CITRUS from qcrc.ca
 //#define CHERRY6DOFv1_0
 //#define DROTEK_10DOF    // Drotek 10DOF with ITG3200, BMA180, HMC5883, BMP085, w or w/o LLC
@@ -107,6 +107,8 @@
 //#define CRIUS_LITE      // Crius MultiWii Lite
 //#define CRIUS_SE        // Crius MultiWii SE
 //#define OPENLRSv2MULTI  // OpenLRS v2 Multi Rc Receiver board including ITG3205 and ADXL345
+//#define BOARD_PROTO_1   // with MPU6050 + HMC5883L + MS baro
+//#define BOARD_PROTO_2   // with MPU6050 + slave  MAG3110 + MS baro
 
 
 /***************************    independent sensors    ********************************/
@@ -175,7 +177,9 @@
 //#define MPU6050_LPF_98HZ
 //#define MPU6050_LPF_42HZ
 //#define MPU6050_LPF_20HZ
-//#define MPU6050_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
+//#define MPU6050_LPF_10HZ      
+//#define MPU6050_LPF_5HZ       // Use this only in extreme cases, rather change motors and/or props
+
 
 
 /*****************************    Gyro smoothing    **********************************/

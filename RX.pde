@@ -693,7 +693,7 @@ void frequency_configurator(uint32_t frequency) {
   // original formulation is working with mHz values and floating numbers, I replaced them with kHz values.
   frequency = frequency / 10;
   frequency = frequency - 24000;
-  frequency = frequency - 19000; // 19 for 430–439.9 MHz band from datasheet
+  frequency = frequency - 19000; // 19 for 430â€“439.9 MHz band from datasheet
   frequency = frequency * 64; // this is the Nominal Carrier Frequency (fc) value for register setting
   
   uint8_t byte0 = (uint8_t) frequency;
@@ -724,4 +724,3 @@ void checkPots() {
   pot_I = pot_I / 25; //+-20
 }
 #endif
-

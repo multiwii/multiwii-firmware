@@ -128,7 +128,10 @@ static int16_t rcData[8];          // interval [1000;2000]
 static int16_t rcCommand[4];       // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW 
 static uint8_t rcRate8;
 static uint8_t rcExpo8;
-static int16_t lookupRX[7];       // lookup table for expo & RC rate
+static uint8_t thrMid8;
+static uint8_t thrExpo8;
+static int16_t lookupPitchRollRC[6];// lookup table for expo & RC rate PITCH+ROLL
+static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 volatile uint8_t rcFrameComplete; // for serial rc receiver Spektrum
 static uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim or other usages
 
@@ -194,45 +197,31 @@ void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
 
 void annexCode() { // this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
   static uint32_t buzzerTime,calibratedAccTime;
-  #if defined(LCD_TELEMETRY)
-   static uint16_t telemetryTimer = 0, telemetryAutoTimer = 0;
-  #endif
-  #if defined(LCD_TELEMETRY_AUTO)
-   static uint8_t telemetryAutoIndex = 0;
-   static char telemetryAutoSequence []  = LCD_TELEMETRY_AUTO;
-  #endif
-  #ifdef VBAT
-    static uint8_t vbatTimer = 0;
-  #endif
+  uint16_t tmp,tmp2;
   static uint8_t  buzzerFreq;         // delay between buzzer ring
   uint8_t axis,prop1,prop2;
-  #if defined(POWERMETER_HARD)
-    uint16_t pMeterRaw;               // used for current reading
-    static uint16_t psensorTimer = 0;
-  #endif
 
+  #define BREAKPOINT 1500
   // PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
-  uint16_t Breakpoint=1500;
-
-  if   (rcData[THROTTLE]<Breakpoint) {
+  if   (rcData[THROTTLE]<BREAKPOINT) {
     prop2 = 100;
   } else {
     if (rcData[THROTTLE]<2000) {
-      prop2 = 100 - (uint16_t)dynThrPID*(rcData[THROTTLE]-Breakpoint)/(2000-Breakpoint);
+      prop2 = 100 - (uint16_t)dynThrPID*(rcData[THROTTLE]-BREAKPOINT)/(2000-BREAKPOINT);
     } else {
       prop2 = 100 - dynThrPID;
     }
   }
 
   for(axis=0;axis<3;axis++) {
-    uint16_t tmp = min(abs(rcData[axis]-MIDRC),500);
+    tmp = min(abs(rcData[axis]-MIDRC),500);
     #if defined(DEADBAND)
       if (tmp>DEADBAND) { tmp -= DEADBAND; }
       else { tmp=0; }
     #endif
     if(axis!=2) { //ROLL & PITCH
-      uint16_t tmp2 = tmp/100;
-      rcCommand[axis] = lookupRX[tmp2] + (tmp-tmp2*100) * (lookupRX[tmp2+1]-lookupRX[tmp2]) / 100;
+      tmp2 = tmp/100;
+      rcCommand[axis] = lookupPitchRollRC[tmp2] + (tmp-tmp2*100) * (lookupPitchRollRC[tmp2+1]-lookupPitchRollRC[tmp2]) / 100;
       prop1 = 100-(uint16_t)rollPitchRate*tmp/500;
       prop1 = (uint16_t)prop1*prop2/100;
     } else {      // YAW
@@ -243,9 +232,12 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     dynD8[axis] = (uint16_t)D8[axis]*prop1/100;
     if (rcData[axis]<MIDRC) rcCommand[axis] = -rcCommand[axis];
   }
-  rcCommand[THROTTLE] = MINTHROTTLE + (int32_t)(MAXTHROTTLE-MINTHROTTLE)* (rcData[THROTTLE]-MINCHECK)/(2000-MINCHECK);
+  tmp = constrain(rcData[THROTTLE],MINCHECK,2000);
+  tmp = (uint32_t)(tmp-MINCHECK)*1000/(2000-MINCHECK); // [MINCHECK;2000] -> [0;1000]
+  tmp2 = tmp/100;
+  rcCommand[THROTTLE] = lookupThrottleRC[tmp2] + (tmp-tmp2*100) * (lookupThrottleRC[tmp2+1]-lookupThrottleRC[tmp2]) / 100; // [0;1000] -> expo -> [MINTHROTTLE;MAXTHROTTLE]
 
-  if(headFreeMode) {
+  if(headFreeMode) { //to optimize
     float radDiff = (heading - headFreeModeHold) * 0.0174533f; // where PI/180 ~= 0.0174533
     float cosDiff = cos(radDiff);
     float sinDiff = sin(radDiff);
@@ -255,21 +247,24 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   }
 
   #if defined(POWERMETER_HARD)
+    uint16_t pMeterRaw;               // used for current reading
+    static uint16_t psensorTimer = 0;
     if (! (++psensorTimer % PSENSORFREQ)) {
-     pMeterRaw =  analogRead(PSENSORPIN);
-     powerValue = ( PSENSORNULL > pMeterRaw ? PSENSORNULL - pMeterRaw : pMeterRaw - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
-     if ( powerValue < 333) {  // only accept reasonable values. 333 is empirical
-     #ifdef LOG_VALUES
+      pMeterRaw =  analogRead(PSENSORPIN);
+      powerValue = ( PSENSORNULL > pMeterRaw ? PSENSORNULL - pMeterRaw : pMeterRaw - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
+      if ( powerValue < 333) {  // only accept reasonable values. 333 is empirical
+      #ifdef LOG_VALUES
         if (powerValue > powerMax) powerMax = powerValue;
-     #endif
-     } else {
+      #endif
+      } else {
         powerValue = 333;
-     }        
-     pMeter[PMOTOR_SUM] += (uint32_t) powerValue;
-  }
+      }        
+      pMeter[PMOTOR_SUM] += (uint32_t) powerValue;
+    }
   #endif
 
   #if defined(VBAT)
+    static uint8_t vbatTimer = 0;
     static uint8_t ind = 0;
     uint16_t vbatRaw = 0;
     static uint16_t vbatRawArray[8];
@@ -331,12 +326,16 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #endif
 
   #ifdef LCD_TELEMETRY_AUTO
+    static char telemetryAutoSequence []  = LCD_TELEMETRY_AUTO;
+    static uint8_t telemetryAutoIndex = 0;
+    static uint16_t telemetryAutoTimer = 0;
     if ( (telemetry_auto) && (! (++telemetryAutoTimer % LCD_TELEMETRY_AUTO_FREQ) )  ){
       telemetry = telemetryAutoSequence[++telemetryAutoIndex % strlen(telemetryAutoSequence)];
       LCDclear(); // make sure to clear away remnants
     }
   #endif  
   #ifdef LCD_TELEMETRY
+    static uint16_t telemetryTimer = 0;
     if (! (++telemetryTimer % LCD_TELEMETRY_FREQ)) {
       #if (LCD_TELEMETRY_DEBUG+0 > 0)
         telemetry = LCD_TELEMETRY_DEBUG;
@@ -377,7 +376,7 @@ void setup() {
   BUZZERPIN_PINMODE;
   STABLEPIN_PINMODE;
   POWERPIN_OFF;
-  #if defined(ESC_CALIB_CANNOT_FLY)
+  #if defined(ESC_CALIB_CANNOT_FLY) // <- to move in Output.pde, nothing to do here
     /* this turns into a special version of MultiWii. Its only purpose it to try and calib all attached ESCs */
     writeAllMotors(ESC_CALIB_HIGH);
     delay(3000);

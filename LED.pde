@@ -44,30 +44,28 @@ void blinkLedRing() {
   for(uint8_t i=0;i<3;i++)
     i2c_write(b[i]);
   i2c_stop();
-}
 
+}
 #endif
 
 #if defined(LED_FLASHER)
-
 static uint8_t led_flasher_sequence = 0;
 
 void init_led_flasher() {
-	LED_FLASHER_DDR |= (1<<LED_FLASHER_BIT);
-	LED_FLASHER_PORT &= ~(1<<LED_FLASHER_BIT);
+  LED_FLASHER_DDR |= (1<<LED_FLASHER_BIT);
+  LED_FLASHER_PORT &= ~(1<<LED_FLASHER_BIT);
 }
 
 void led_flasher_set_sequence(uint8_t s) {
-	led_flasher_sequence = s;
+  led_flasher_sequence = s;
 }
 
 void switch_led_flasher() {
-	uint8_t seg = (currentTime/1000/125)%8;
-	if (led_flasher_sequence & 1<<seg) {
-		LED_FLASHER_PORT |= (1<<LED_FLASHER_BIT);
-	} else {
-		LED_FLASHER_PORT &= ~(1<<LED_FLASHER_BIT);
-	}
+  uint8_t seg = (currentTime/1000/125)%8;
+  if (led_flasher_sequence & 1<<seg) {
+    LED_FLASHER_PORT |= (1<<LED_FLASHER_BIT);
+  } else {
+    LED_FLASHER_PORT &= ~(1<<LED_FLASHER_BIT);
+  }
 }
-
 #endif

@@ -448,7 +448,7 @@
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
-  #define MPU6050_EN_I2C_BYPASS // MAG connected to the AUX I2C bus of MPU6050
+  #define MPU6050_I2C_AUX_MASTER // MAG connected to the AUX I2C bus of MPU6050
   #undef INTERNAL_I2C_PULLUPS
 #endif
 
@@ -566,7 +566,7 @@
 #if defined(MINIWII)
   #define ITG3200
   #define BMA180
-  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH]  = -Y; accADC[YAW]  = -Z;}
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
 #endif
 
@@ -577,7 +577,7 @@
   #define HMC5883
   #define ACC_ORIENTATION(X, Y, Z) {accADC[ROLL] = -X; accADC[PITCH] = -Y; accADC[YAW] = Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
-  #define MAG_ORIENTATION(X, Y, Z) {magADC[ROLL] = Y; magADC[PITCH] = Z; magADC[YAW] = X;}
+  #define MAG_ORIENTATION(X, Y, Z) {magADC[ROLL] = X; magADC[PITCH] = Y; magADC[YAW] = -Z;}
   #define ITG3200_ADDRESS 0XD0
   #undef INTERNAL_I2C_PULLUPS
 #endif
@@ -649,6 +649,33 @@
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
+#endif
+
+#if defined(BOARD_PROTO_1)
+  #define MPU6050
+  #define HMC5883
+  #define MS561101BA
+  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  = -X; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(Y, X, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = -Y; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
+  #define MS561101BA_ADDRESS 0xEC
+  #define STABLEPIN_PINMODE pinMode (A2, OUTPUT);
+  #define STABLEPIN_ON PORTC |= (1<<2);
+  #define STABLEPIN_OFF PORTC &= ~(1<<2);
+#endif
+
+#if defined(BOARD_PROTO_2)
+  #define MPU6050
+  #define MAG3110
+  #define MS561101BA
+  #define ACC_ORIENTATION(Y, X, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  = -X; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(Y, X, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = -Y; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  =  Z;}
+  #define MPU6050_I2C_AUX_MASTER
+  #define MS561101BA_ADDRESS 0xEC
+  #define STABLEPIN_PINMODE pinMode (A2, OUTPUT);
+  #define STABLEPIN_ON PORTC |= (1<<2);
+  #define STABLEPIN_OFF PORTC &= ~(1<<2);
 #endif
 
 #if defined(OPENLRSv2MULTI)

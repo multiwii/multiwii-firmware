@@ -44,8 +44,8 @@ static uint8_t checksum,stateMSP,indRX,inBuf[64];
 uint32_t read32() {
   uint32_t t = inBuf[indRX++];
   t+= inBuf[indRX++]<<8;
-  t+= inBuf[indRX++]<<16;
-  t+= inBuf[indRX++]<<24;
+  t+= (uint32_t)inBuf[indRX++]<<16;
+  t+= (uint32_t)inBuf[indRX++]<<24;
   return t;
 }
 
@@ -97,7 +97,9 @@ void serialCom() {
               rcExpo8 = read8();
               rollPitchRate = read8();
               yawRate = read8();
-              dynThrPID = read8(); break;
+              dynThrPID = read8();
+              thrMid8 = read8();
+              thrExpo8 = read8();break;
             case MSP_SET_MISC:
               #if defined(POWERMETER)
                 powerTrigger1 = read16() / PLEVELSCALE; // we rely on writeParams() to compute corresponding pAlarm value
@@ -186,12 +188,14 @@ void serialCom() {
               serialize16(intPowerMeterSum);
               tailSerialReply();break;
             case MSP_RC_TUNING:
-              headSerialReply(c,5);
+              headSerialReply(c,7);
               serialize8(rcRate8);
               serialize8(rcExpo8);
               serialize8(rollPitchRate);
               serialize8(yawRate);
               serialize8(dynThrPID);
+              serialize8(thrMid8);
+              serialize8(thrExpo8);
               tailSerialReply();break;
             case MSP_PID:
               headSerialReply(c,3*PIDITEMS);

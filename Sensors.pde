@@ -75,34 +75,30 @@
 #endif
 
 //MPU6050 Gyro LPF setting
-#if defined(MPU6050_LPF_256HZ) || defined(MPU6050_LPF_188HZ) || defined(MPU6050_LPF_98HZ) || defined(MPU6050_LPF_42HZ) || defined(MPU6050_LPF_20HZ) || defined(MPU6050_LPF_10HZ)
+#if defined(MPU6050_LPF_256HZ) || defined(MPU6050_LPF_188HZ) || defined(MPU6050_LPF_98HZ) || defined(MPU6050_LPF_42HZ) || defined(MPU6050_LPF_20HZ) || defined(MPU6050_LPF_10HZ) || defined(MPU6050_LPF_5HZ)
   #if defined(MPU6050_LPF_256HZ)
-    #define MPU6050_SMPLRT_DIV 0  //8000Hz
     #define MPU6050_DLPF_CFG   0
   #endif
   #if defined(MPU6050_LPF_188HZ)
-    #define MPU6050_SMPLRT_DIV 0  //1000Hz
     #define MPU6050_DLPF_CFG   1
   #endif
   #if defined(MPU6050_LPF_98HZ)
-    #define MPU6050_SMPLRT_DIV 0
     #define MPU6050_DLPF_CFG   2
   #endif
   #if defined(MPU6050_LPF_42HZ)
-    #define MPU6050_SMPLRT_DIV 0
     #define MPU6050_DLPF_CFG   3
   #endif
   #if defined(MPU6050_LPF_20HZ)
-    #define MPU6050_SMPLRT_DIV 0
     #define MPU6050_DLPF_CFG   4
   #endif
   #if defined(MPU6050_LPF_10HZ)
-    #define MPU6050_SMPLRT_DIV 0
     #define MPU6050_DLPF_CFG   5
+  #endif
+  #if defined(MPU6050_LPF_5HZ)
+    #define MPU6050_DLPF_CFG   6
   #endif
 #else
     //Default settings LPF 256Hz/8000Hz sample
-    #define MPU6050_SMPLRT_DIV 0  //8000Hz
     #define MPU6050_DLPF_CFG   0
 #endif
 
@@ -967,19 +963,17 @@ void Mag_getADC() {
     delay(100);
     i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG2,0x80);  //Automatic Magnetic Sensor Reset
     delay(100);
-    i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG1,0x12);  //Trigger immediate with 20 Hz (64 samples) and then return to standby mode
+    i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG1,0x11); // DR = 20Hz ; OS ratio = 64 ; mode = Active
     delay(100);
     magInit = 1;
   }
   
-  #if not defined(MPU6050_EN_I2C_BYPASS)
+  #if not defined(MPU6050_I2C_AUX_MASTER)
     void Device_Mag_getADC() {
       i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
       MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,          
                        ((rawADC[2]<<8) | rawADC[3]) ,     
                        ((rawADC[4]<<8) | rawADC[5]) );
-      //Start a new meassurement
-      i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG1,0x12);  //Trigger immediate with 20 Hz (64 samples) and then return to standby mode
     }
   #endif
 #endif
@@ -1034,7 +1028,7 @@ void getADC() {
   #endif
 }
 
-#if not defined(MPU6050_EN_I2C_BYPASS)
+#if not defined(MPU6050_I2C_AUX_MASTER)
 void Device_Mag_getADC() {
   getADC();
 }
@@ -1056,17 +1050,15 @@ void Device_Mag_getADC() {
     delay(100);
     magInit = 1;
   }
-  
-  #if not defined(MPU6050_EN_I2C_BYPASS)
-    void Device_Mag_getADC() {
-      i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
-      MAG_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,          
-                       ((rawADC[3]<<8) | rawADC[2]) ,     
-                       ((rawADC[5]<<8) | rawADC[4]) );
-      //Start another meassurement
-      i2c_writeReg(MAG_ADDRESS,0x0a,0x01);
-    }
-  #endif
+
+  void Device_Mag_getADC() {
+    i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
+    MAG_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,          
+                     ((rawADC[3]<<8) | rawADC[2]) ,     
+                     ((rawADC[5]<<8) | rawADC[4]) );
+    //Start another meassurement
+    i2c_writeReg(MAG_ADDRESS,0x0a,0x01);
+  }
 #endif
 
 // ************************************************************************************************************
@@ -1078,14 +1070,12 @@ void Gyro_init() {
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   i2c_writeReg(MPU6050_ADDRESS, 0x6B, 0x80);             //PWR_MGMT_1    -- DEVICE_RESET 1
   delay(5);
-  i2c_writeReg(MPU6050_ADDRESS, 0x19, 0x00);             //SMPLRT_DIV    -- SMPLRT_DIV = 0  Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV)
-  i2c_writeReg(MPU6050_ADDRESS, 0x1A, MPU6050_DLPF_CFG); //CONFIG        -- EXT_SYNC_SET 0 (disable input pin for data sync) ; default DLPF_CFG = 0 => ACC bandwidth = 260Hz  GYRO bandwidth = 256Hz)
   i2c_writeReg(MPU6050_ADDRESS, 0x6B, 0x03);             //PWR_MGMT_1    -- SLEEP 0; CYCLE 0; TEMP_DIS 0; CLKSEL 3 (PLL with Z Gyro reference)
+  i2c_writeReg(MPU6050_ADDRESS, 0x1A, MPU6050_DLPF_CFG); //CONFIG        -- EXT_SYNC_SET 0 (disable input pin for data sync) ; default DLPF_CFG = 0 => ACC bandwidth = 260Hz  GYRO bandwidth = 256Hz)
   i2c_writeReg(MPU6050_ADDRESS, 0x1B, 0x18);             //GYRO_CONFIG   -- FS_SEL = 3: Full scale set to 2000 deg/sec
   // enable I2C bypass for AUX I2C
   #if defined(MAG)
-    i2c_writeReg(MPU6050_ADDRESS, 0x6A, 0x00);             //USER_CTRL     -- DMP_EN=0 ; FIFO_EN=0 ; I2C_MST_EN=0 (I2C bypass mode) ; I2C_IF_DIS=0 ; FIFO_RESET=0 ; I2C_MST_RESET=0 ; SIG_COND_RESET=0
-    i2c_writeReg(MPU6050_ADDRESS, 0x37, 0x02);             //INT_PIN_CFG   -- INT_LEVEL=0 ; INT_OPEN=0 ; LATCH_INT_EN=0 ; INT_RD_CLEAR=0 ; FSYNC_INT_LEVEL=0 ; FSYNC_INT_EN=0 ; I2C_BYPASS_EN=1 ; CLKOUT_EN=0
+    i2c_writeReg(MPU6050_ADDRESS, 0x37, 0x02);           //INT_PIN_CFG   -- INT_LEVEL=0 ; INT_OPEN=0 ; LATCH_INT_EN=0 ; INT_RD_CLEAR=0 ; FSYNC_INT_LEVEL=0 ; FSYNC_INT_EN=0 ; I2C_BYPASS_EN=1 ; CLKOUT_EN=0
   #endif
 }
 
@@ -1107,7 +1097,7 @@ void ACC_init () {
     acc_1G = 512;
   #endif
 
-  #if defined(MPU6050_EN_I2C_BYPASS)
+  #if defined(MPU6050_I2C_AUX_MASTER)
     //at this stage, the MAG is configured via the original MAG init function in I2C bypass mode
     //now we configure MPU as a I2C Master device to handle the MAG via the I2C AUX port (done here for HMC5883)
     i2c_writeReg(MPU6050_ADDRESS, 0x6A, 0b00100000);       //USER_CTRL     -- DMP_EN=0 ; FIFO_EN=0 ; I2C_MST_EN=1 (I2C master mode) ; I2C_IF_DIS=0 ; FIFO_RESET=0 ; I2C_MST_RESET=0 ; SIG_COND_RESET=0
@@ -1128,7 +1118,7 @@ void ACC_getADC () {
 }
 
 //The MAG acquisition function must be replaced because we now talk to the MPU device
-  #if defined(MPU6050_EN_I2C_BYPASS)
+  #if defined(MPU6050_I2C_AUX_MASTER)
     void Device_Mag_getADC() {
       i2c_getSixRawADC(MPU6050_ADDRESS, 0x49);               //0x49 is the first memory room for EXT_SENS_DATA
       #if defined(HMC5843)
@@ -1141,10 +1131,10 @@ void ACC_getADC () {
                          ((rawADC[4]<<8) | rawADC[5]) ,
                          ((rawADC[2]<<8) | rawADC[3]) );
       #endif
-      #if defined (AK8975)
-        MAG_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,          
-                         ((rawADC[3]<<8) | rawADC[2]) ,     
-                         ((rawADC[5]<<8) | rawADC[4]) );
+      #if defined (MAG3110)
+        MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,          
+                         ((rawADC[2]<<8) | rawADC[3]) ,     
+                         ((rawADC[4]<<8) | rawADC[5]) );
       #endif
     }
   #endif
