@@ -428,13 +428,14 @@
 //#define LCD_LCD03       // LCD03, which is i2c
 //#define OLED_I2C_128x64 // OLED http://www.multiwii.com/forum/viewtopic.php?f=7&t=1350
 
-/******************************   Font settings     ***********************************/
-//#define NEW_OLED_FONT	// OLED use other font (more lines)
+/******************************   Logo settings     ***********************************/
+//#define SUPPRESS_OLED_I2C_128x64LOGO	// suppress display of OLED logo to save memory
 
 /* style of display - AUTODETECTED via LCD_ setting - only activate to overwrite defaults */
 //#define DISPLAY_2LINES
 //#define DISPLAY_MULTILINE
-
+//#define MULTILINE_PRE 2  // multiline configMenu # pref lines
+//#define MULTILINE_POST 6 // multiline configMenu # post lines
 /********************************    Navigation     ***********************************/
 /* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
 #define LCD_MENU_PREV 'a'

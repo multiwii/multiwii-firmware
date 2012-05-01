@@ -983,6 +983,22 @@
   #endif
 #endif
 
+#if (defined(LCD_VT100))
+  #if !(defined(MULTILINE_PRE))
+    #define MULTILINE_PRE 6
+  #endif
+  #if !(defined(MULTILINE_POST))
+    #define MULTILINE_POST 9
+  #endif
+#elif (defined(OLED_I2C_128x64))
+  #if !(defined(MULTILINE_PRE))
+    #define MULTILINE_PRE 3
+  #endif
+  #if !(defined(MULTILINE_POST))
+    #define MULTILINE_POST 5
+  #endif
+#endif
+
 
 /**************************************************************************************/
 /***************               Error Checking Section              ********************/
