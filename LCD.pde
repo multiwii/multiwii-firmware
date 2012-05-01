@@ -779,6 +779,8 @@ PROGMEM prog_char lcd_param_text19 [] = "Mag P";
 #endif
 PROGMEM prog_char lcd_param_text20 [] = "RC Rate";
 PROGMEM prog_char lcd_param_text21 [] = "RC Expo";
+PROGMEM prog_char lcd_param_text20t [] = "ThrottleMid";
+PROGMEM prog_char lcd_param_text21t [] = "ThrottleExpo";
 PROGMEM prog_char lcd_param_text22 [] = "Pitch&Roll Rate";
 PROGMEM prog_char lcd_param_text23 [] = "Yaw Rate";
 PROGMEM prog_char lcd_param_text24 [] = "Throttle PID";
@@ -854,6 +856,8 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #if MAG
   &lcd_param_text19, &P8[PIDMAG], &__P,
 #endif
+  &lcd_param_text20t, &thrMid8, &__RC,
+  &lcd_param_text21t, &thrExpo8, &__RC,
   &lcd_param_text20, &rcRate8, &__RC,
   &lcd_param_text21, &rcExpo8, &__RC,
   &lcd_param_text22, &rollPitchRate, &__RC,
