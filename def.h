@@ -298,7 +298,7 @@
   #define V_BATPIN                   A0    // Analog PIN 0
   #define PSENSORPIN                 A2    // Analog PIN 2
   #define PCINT_PIN_COUNT            8
-  #define PCINT_RX_BITS              (1<<0),(1<<1),(1<<2),(1<<3),(1<<4),(1<<5),(1<<6),(1<<7)
+  #define PCINT_RX_BITS              (1<<2),(1<<4),(1<<5),(1<<6),(1<<7),(1<<0),(1<<1),(1<<3)
   #define PCINT_RX_PORT              PORTK
   #define PCINT_RX_MASK              PCMSK2
   #define PCIR_PORT_BIT              (1<<2)
