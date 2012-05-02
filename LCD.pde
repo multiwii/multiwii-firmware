@@ -486,6 +486,9 @@ void LCDsetLine(byte line) { // Line = 1 or 2 - vt100 has lines 1-99
 #elif defined(LCD_TEXTSTAR)
   LCDcrlf(); LCDprint(0xfe);LCDprint('L');LCDprint(line);
 #elif defined(LCD_VT100)
+  #ifndef DEBUG // sanity check for production only. Debug runs with all possible side effects
+    if (line<1 || line>(MULTILINE_PRE+MULTILINE_POST)) line = 1;
+  #endif
   LCDcrlf();
   LCDprint(0x1b); LCDprint(0x5b);
   LCDprint( digit10(line) );
@@ -497,6 +500,9 @@ void LCDsetLine(byte line) { // Line = 1 or 2 - vt100 has lines 1-99
 #elif defined(LCD_LCD03)
   i2c_LCD03_set_cursor(0,line-1);
 #elif defined(OLED_I2C_128x64)
+  #ifndef DEBUG // sanity check for production only. Debug runs with all possible side effects
+    if (line<1 || line>(MULTILINE_PRE+MULTILINE_POST)) line = 1;
+  #endif
   i2c_OLED_set_line(line-1);
 #endif
 }
@@ -1525,13 +1531,25 @@ void lcd_telemetry() {
 #ifndef SUPPRESS_TELEMETRY_PAGE_3
     case 3: // checkboxes and modes
     case '3':
-    i = linenr++ % CHECKBOXITEMS;
-    LCDsetLine(i+1);
-    LCDprintChar(checkboxitemNames[i]);
-    LCDprint(' ');
-    LCDprint( rcOptions[i] ? 'X' : '.');
-    LCDcrlf();
-    break;
+    {
+      static uint8_t index = 0;
+      index %= CHECKBOXITEMS;
+      if (index == 0) linenr = 1; //vt100 starts linenumbering @1
+      if (!ACC && (index==0)) index++;
+      if (!BARO && (index==1)) index++;
+      if (!MAG && (index==2)) index++;
+      #if !( defined(SERVO_TILT)|| defined(SERVO_MIX_TILT) || defined(CAMTRIG) || defined(GIMBAL) )
+        if ( (index==3)) index+=2;
+      #endif
+      if (!GPS && (index==6)) index+=2;
+      LCDsetLine(linenr++);
+      LCDprintChar(checkboxitemNames[index]);
+      LCDprint(' ');
+      LCDprint( rcOptions[index] ? 'X' : '.');
+      LCDcrlf();
+      index++;
+      break;
+    }
 #endif
 #ifndef SUPPRESS_TELEMETRY_PAGE_4
     case 4: // RX inputs
@@ -1552,65 +1570,67 @@ void lcd_telemetry() {
     LCDprint( digit1(unit) );
     LCDprint(' ');
     unit = constrain(rcData[i],1000,2000);
-    LCDbar(12, (unit-1000)/10 );
+    LCDbar(10, (unit-1000)/10 );
     LCDcrlf();
     break;
 #endif
 #ifndef SUPPRESS_TELEMETRY_PAGE_5
     case 5: // outputs motors+sensors
     case '5':
-    static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
-      "S1", "S2","S3", "S4", "S5", "S6", "S7", "S8",};
-    static uint8_t index = 0;
-    i = index++ % 16;
-    if (i == 0) linenr = 1; //vt100 starts linenumbering @1
-    LCDsetLine(linenr);
-    if (i < 8) {
-      if (i < NUMBER_MOTOR) {
-        LCDprintChar(outputNames[i]);
-        LCDprint(' ');
-        unit = motor[i]; // [1000 ; 2000]
-        LCDprint( digit1000(unit) );
-        LCDprint( digit100(unit) );
-        LCDprint( digit10(unit) );
-        LCDprint( digit1(unit) );
-        LCDprint(' ');
-        unit = constrain(motor[i],1000,2000);
-        LCDbar(12, (unit-1000)/10 );
-        LCDcrlf();
-        linenr++;
+    {
+      static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
+          "S1", "S2","S3", "S4", "S5", "S6", "S7", "S8",};
+      static uint8_t index = 0;
+      i = index++ % 16;
+      if (i == 0) linenr = 1; //vt100 starts linenumbering @1
+      LCDsetLine(linenr);
+      if (i < 8) {
+        if (i < NUMBER_MOTOR) {
+          LCDprintChar(outputNames[i]);
+          LCDprint(' ');
+          unit = motor[i]; // [1000 ; 2000]
+          LCDprint( digit1000(unit) );
+          LCDprint( digit100(unit) );
+          LCDprint( digit10(unit) );
+          LCDprint( digit1(unit) );
+          LCDprint(' ');
+          unit = constrain(motor[i],1000,2000);
+          LCDbar(12, (unit-1000)/10 );
+          LCDcrlf();
+          linenr++;
+        } else {
+          index = 8;
+        }
       } else {
-        index = 8;
-      }
-    } else {
-      uint8_t j = i-7; // [8;15] -> [1;8]
-#if defined(PRI_SERVO_FROM) && defined(SEC_SERVO_FROM)
-      if ((PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j) || (SEC_SERVO_FROM <= j && SEC_SERVO_TO >= j))
-#elif defined(PRI_SERVO_FROM)
-      if (j < PRI_SERVO_FROM) index = 7 + PRI_SERVO_FROM;
-      else if (j > PRI_SERVO_TO) index = 16;
-      else // (PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j)
-#endif
-#if defined(PRI_SERVO_FROM) || defined(SEC_SERVO_FROM)
-      {
-        LCDprintChar(outputNames[i]);
-        LCDprint(' ');
-        unit = servo[j-1]; // [1000 ; 2000]
-        LCDprint( digit1000(unit) );
-        LCDprint( digit100(unit) );
-        LCDprint( digit10(unit) );
-        LCDprint( digit1(unit) );
-        LCDprint(' ');
-        unit = constrain(servo[j-1],1000,2000);
-        LCDbar(12, (unit-1000)/10 );
-        LCDcrlf();
-        linenr++;
-        break;
-      }
-#endif
+        uint8_t j = i-7; // [8;15] -> [1;8]
+        #if defined(PRI_SERVO_FROM) && defined(SEC_SERVO_FROM)
+          if ((PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j) || (SEC_SERVO_FROM <= j && SEC_SERVO_TO >= j))
+        #elif defined(PRI_SERVO_FROM)
+          if (j < PRI_SERVO_FROM) index = 7 + PRI_SERVO_FROM;
+          else if (j > PRI_SERVO_TO) index = 16;
+          else // (PRI_SERVO_FROM <= j && PRI_SERVO_TO >= j)
+        #endif
+        #if defined(PRI_SERVO_FROM) || defined(SEC_SERVO_FROM)
+          {
+            LCDprintChar(outputNames[i]);
+            LCDprint(' ');
+            unit = servo[j-1]; // [1000 ; 2000]
+            LCDprint( digit1000(unit) );
+            LCDprint( digit100(unit) );
+            LCDprint( digit10(unit) );
+            LCDprint( digit1(unit) );
+            LCDprint(' ');
+            unit = constrain(servo[j-1],1000,2000);
+            LCDbar(12, (unit-1000)/10 );
+            LCDcrlf();
+            linenr++;
+            break;
+          }
+        #endif
 
+      }
+      break;
     }
-    break;
 #endif // page 5
 #ifndef SUPPRESS_TELEMETRY_PAGE_9
     case 9: // diagnostics
