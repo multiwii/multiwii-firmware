@@ -1006,12 +1006,19 @@ void ConfigRefresh(uint8_t p) {
     deft->type->fmt((void*)pgm_read_word(&(lcd_param_ptr_table[(j * 3) + 1])), deft->multiplier, deft->decimal);
 
     LCDsetLine(l++);
-    if (j == p) {LCDattributesReverse(); /*LCDprint('>'); LCDattributesBold();*/ }
-    LCDprintChar(line1);
-    if (j == p) {LCDattributesOff(); /*LCDattributesReverse();*/}
+    if (j == p) {
+      #ifndef OLED_I2C_128x64
+        LCDprint('>');
+      #endif
+      LCDattributesReverse();
+    }
+    LCDprintChar(line1); // the label
+    if (j == p) {LCDattributesOff(); /*LCDattributesBold();*/}
     //LCDprint(' ');
-    LCDprintChar(line2);
-    //if (j == p) {LCDattributesOff(); LCDprint('<');}
+    LCDprintChar(line2); // the value
+    #ifndef OLED_I2C_128x64
+      if (j == p) {LCDattributesOff(); LCDprint('<');}
+    #endif
     LCD_FLUSH;
   }
   LCDcrlf();
