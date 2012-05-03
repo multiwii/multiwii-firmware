@@ -651,7 +651,7 @@ void ACC_init () {
   i2c_writeReg(ADXL345_ADDRESS,0x2D,1<<3); //  register: Power CTRL  -- value: Set measure bit 3 on
   i2c_writeReg(ADXL345_ADDRESS,0x31,0x0B); //  register: DATA_FORMAT -- value: Set bits 3(full range) and 1 0 on (+/- 16g-range)
   i2c_writeReg(ADXL345_ADDRESS,0x2C,0x09); //  register: BW_RATE     -- value: rate=50hz, bw=20hz
-  acc_1G = 256;
+  acc_1G = 265;
 }
 
 void ACC_getADC () {
@@ -1002,9 +1002,15 @@ void Mag_getADC() {
     delay(100);
       getADC();
     delay(10);
-    magCal[ROLL]  =  1000.0 / abs(magADC[ROLL]);
-    magCal[PITCH] =  1000.0 / abs(magADC[PITCH]);
-    magCal[YAW]   =  1000.0 / abs(magADC[YAW]);
+    #if defined(HMC5883)
+      magCal[ROLL]  =  1160.0 / abs(magADC[ROLL]);
+      magCal[PITCH] =  1160.0 / abs(magADC[PITCH]);
+      magCal[YAW]   =  1080.0 / abs(magADC[YAW]);
+    #else
+      magCal[ROLL]  =  1000.0 / abs(magADC[ROLL]);
+      magCal[PITCH] =  1000.0 / abs(magADC[PITCH]);
+      magCal[YAW]   =  1000.0 / abs(magADC[YAW]);
+    #endif
 
     // leave test mode
     i2c_writeReg(MAG_ADDRESS ,0x00 ,0x70 ); //Configuration Register A  -- 0 11 100 00  num samples: 8 ; output rate: 15Hz ; normal measurement mode

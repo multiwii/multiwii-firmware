@@ -92,8 +92,7 @@ void computeIMU () {
 /* Set the Low Pass Filter factor for ACC */
 /* Increasing this value would reduce ACC noise (visible in GUI), but would increase ACC lag time*/
 /* Comment this if  you do not want filter at all.*/
-/* Default WMC value: 8*/
-#define ACC_LPF_FACTOR 4
+#define ACC_LPF_FACTOR 100
 
 /* Set the Low Pass Filter factor for Magnetometer */
 /* Increasing this value would reduce Magnetometer noise (not visible in GUI), but would increase Magnetometer lag time*/
@@ -104,7 +103,7 @@ void computeIMU () {
 /* Set the Gyro Weight for Gyro/Acc complementary filter */
 /* Increasing this value would reduce and delay Acc influence on the output of the filter*/
 /* Default WMC value: 300*/
-#define GYR_CMPF_FACTOR 310.0f
+#define GYR_CMPF_FACTOR 400.0f
 
 /* Set the Gyro Weight for Gyro/Magnetometer complementary filter */
 /* Increasing this value would reduce and delay Magnetometer influence on the output of the filter*/
@@ -181,7 +180,7 @@ void getEstimatedAttitude(){
   static int16_t mgSmooth[3]; 
 #endif
 #if defined(ACC_LPF_FACTOR)
-  static int16_t accTemp[3];  //projection of smoothed and normalized magnetic vector on x/y/z axis, as measured by magnetometer
+  static float accLPF[3];
 #endif
   static uint16_t previousT;
   uint16_t currentT = micros();
@@ -194,8 +193,8 @@ void getEstimatedAttitude(){
   for (axis = 0; axis < 3; axis++) {
     deltaGyroAngle[axis] = gyroADC[axis]  * scale;
     #if defined(ACC_LPF_FACTOR)
-      accTemp[axis] = (accTemp[axis] - (accTemp[axis] >>ACC_LPF_FACTOR)) + accADC[axis];
-      accSmooth[axis] = accTemp[axis]>>ACC_LPF_FACTOR;
+      accLPF[axis] = accLPF[axis] * (1.0f - (1.0f/ACC_LPF_FACTOR)) + accADC[axis] * (1.0f/ACC_LPF_FACTOR);
+      accSmooth[axis] = accLPF[axis];
       #define ACC_VALUE accSmooth[axis]
     #else  
       accSmooth[axis] = accADC[axis];

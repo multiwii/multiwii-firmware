@@ -437,11 +437,11 @@
   #endif
 #endif
 
-#if defined(FREEIMUv043)
- #define FREEIMUv04
+#if defined(FREEIMUv04)
+ #define FREEIMUv043
 #endif
 
-#if defined(FREEIMUv04)
+#if defined(FREEIMUv043)
   #define MPU6050
   #define HMC5883
   #define MS561101BA
@@ -998,7 +998,6 @@
     #define MULTILINE_POST 5
   #endif
 #endif
-
 
 /**************************************************************************************/
 /***************               Error Checking Section              ********************/
