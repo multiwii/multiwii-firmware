@@ -183,27 +183,13 @@ void writeMotors() { // [1000;2000] => [125;250]
     #if (NUMBER_MOTOR > 2) // Timer 4 A & D [1000:2000] => [1000:2000]
       #if !defined(HWPWM6)
         // to write values > 255 to timer 4 A/B we need to split the bytes
-        static uint8_t pwm4_HBA;
-        static uint16_t pwm4_LBA; // high and low byte for timer 4 A
-        pwm4_LBA = 2047-motor[2]; pwm4_HBA = 0; // channel A is inverted
-        while(pwm4_LBA > 255){
-          pwm4_HBA++;
-          pwm4_LBA-=256;
-        }     
-        TC4H = pwm4_HBA; OCR4A = pwm4_LBA; //  pin 5
+        TC4H = (2047-motor[2])>>8; OCR4A = ((2047-motor[2])&0xFF); //  pin 5
       #else
         OCR3A = motor[2]<<3; //  pin 5
       #endif
     #endif
     #if (NUMBER_MOTOR > 3)
-      static uint8_t pwm4_HBD;
-      static uint16_t pwm4_LBD; // high and low byte for timer 4 D
-      pwm4_LBD = motor[3]; pwm4_HBD = 0;
-      while(pwm4_LBD > 255){
-        pwm4_HBD++;
-        pwm4_LBD-=256;
-      }     
-      TC4H = pwm4_HBD; OCR4D = pwm4_LBD; //  pin 6
+      TC4H = motor[3]>>8; OCR4D = (motor[3]&0xFF); //  pin 6
     #endif    
     #if (NUMBER_MOTOR > 4)
       #if !defined(HWPWM6)
@@ -220,14 +206,7 @@ void writeMotors() { // [1000;2000] => [125;250]
         #endif
       #else
         OCR1C = motor[4]<<3; //  pin 11
-        static uint8_t pwm4_HBA;
-        static uint16_t pwm4_LBA; // high and low byte for timer 4 A
-        pwm4_LBA = motor[5]; pwm4_HBA = 0;
-        while(pwm4_LBA > 255){
-          pwm4_HBA++;
-          pwm4_LBA-=256;
-        }     
-        TC4H = pwm4_HBA; OCR4A = pwm4_LBA; //  pin 13      
+        TC4H = motor[5]>>8; OCR4A = (motor[5]&0xFF); //  pin 13    
       #endif
     #endif
     #if (NUMBER_MOTOR > 6)
@@ -289,7 +268,7 @@ void writeMotors() { // [1000;2000] => [125;250]
       #else //note: EXT_MOTOR_RANGE not possible here
         atomicPWM_PIN6_highState = ((motor[4]-1000)>>2)+5;
         atomicPWM_PIN6_lowState  = 245-atomicPWM_PIN6_highState;
-        atomicPWM_PIN5_highState = ((motor[5]-1000)>>2)+100;
+        atomicPWM_PIN5_highState = ((motor[5]-1000)>>2)+5;
         atomicPWM_PIN5_lowState  = 245-atomicPWM_PIN5_highState;
       #endif
     #endif
@@ -498,6 +477,7 @@ void initializeServo() {
 // prescaler is set by default to 64 on Timer0
 // Duemilanove : 16MHz / 64 => 4 us
 // 256 steps = 1 counter cycle = 1024 us
+
 ISR(SERVO_ISR) {
   static uint8_t state = 0;
   static uint8_t count;
@@ -607,6 +587,7 @@ ISR(SERVO_ISR) {
     SERVO_CHANNEL+= SERVO_1K_US;
   }
 }
+
 #endif
 
 /**************************************************************************************/
