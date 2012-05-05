@@ -108,7 +108,7 @@
 //#define OPENLRSv2MULTI  // OpenLRS v2 Multi Rc Receiver board including ITG3205 and ADXL345
 //#define BOARD_PROTO_1   // with MPU6050 + HMC5883L + MS baro
 //#define BOARD_PROTO_2   // with MPU6050 + slave  MAG3110 + MS baro
-
+//#define GY_80           // Chinese 10 DOF with  L3G4200D ADXL345 HMC5883L BMP085, LLC
 
 /***************************    independent sensors    ********************************/
 //leave it commented if you already checked a specific board above
