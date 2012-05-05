@@ -63,11 +63,10 @@
 /**************************************************************************************/
 /*****************             Teensy 2.0 Support(BETA)              ******************/
 /**************************************************************************************/
-
 // uncomment this if you use a teensy 2.0 with teensyduino
 // it needs to run at 16MHz
 //#define TEENSY20
- 
+
 /**************************************************************************************/
 /*****************          boards and sensor definitions            ******************/
 /**************************************************************************************/
@@ -512,6 +511,7 @@
 /* some radios have not a neutral point centered on 1500. can be changed here */
 #define MIDRC 1500
 
+/***********************          Cam Stabilisation             ***********************/
 /* The following lines apply only for a pitch/roll tilt stabilization system
    Uncomment the first line to activate it */
 //#define SERVO_MIX_TILT              //  Simple CameraGimbal By Bledy http://youtu.be/zKGr6iR54vM
@@ -524,6 +524,22 @@
 #define TILT_ROLL_MAX     2000
 #define TILT_ROLL_MIDDLE  1500
 #define TILT_ROLL_PROP    10
+
+
+
+/***********************         Servo Refreshrates            ***********************/
+/* Default 50Hz Servo refresh rate*/
+#define SERVO_RFR_50HZ
+
+/* up to 160Hz servo refreshrate .. works with the most analog servos*/
+//#define SERVO_RFR_160HZ
+
+/* up to 300Hz refreshrate it is as fast as possible (100-300Hz depending on the cound of used servos and the servos state).
+   for use with digital servos
+   dont use it with analog servos! thay may get damage. (some will work but be careful)*/
+//#define SERVO_RFR_300HZ
+
+
 
 /* experimental
    camera trigger function : activated via Rc Options in the GUI, servo output=A2 on promini */

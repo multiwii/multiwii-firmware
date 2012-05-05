@@ -28,7 +28,7 @@
 /**************************************************************************************/
 /***************         Software PWM & Servo variables            ********************/
 /**************************************************************************************/
-#if !defined(PROMICRO) || defined(HWPWM6)
+#if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6))
   #if defined(SERVO)
     #if defined(AIRPLANE)|| defined(HELICOPTER)
       // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
@@ -53,7 +53,12 @@
   #endif
 #else
   #if defined(SERVO)
-    volatile uint16_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,8000};
+    #if defined(AIRPLANE)|| defined(HELICOPTER)
+      // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
+      volatile uint8_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,8000}; 
+    #else
+      volatile uint16_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,320};
+    #endif
   #endif
   #if (NUMBER_MOTOR > 4)
     //for HEX Y6 and HEX6/HEX6X and for Promicro
@@ -78,7 +83,7 @@ void writeServos() {
   #if defined(SERVO)
     #if defined(PRI_SERVO_FROM)    // write primary servos
       for(uint8_t i = (PRI_SERVO_FROM-1); i < PRI_SERVO_TO; i++){
-        #if !defined(PROMICRO) || defined(HWPWM6)
+        #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6))
           atomicServo[i] = (servo[i]-1000)>>2;
         #else
           atomicServo[i] = (servo[i]-1000)<<4;
@@ -98,7 +103,7 @@ void writeServos() {
           mediaMobileServoGimbalADCSum[axis] -= mediaMobileServoGimbalADC[axis][mediaMobileServoGimbalIDX];
           mediaMobileServoGimbalADC[axis][mediaMobileServoGimbalIDX] = servo[axis];
           mediaMobileServoGimbalADCSum[axis] += mediaMobileServoGimbalADC[axis][mediaMobileServoGimbalIDX];
-          #if !defined(PROMICRO) || defined(HWPWM6)
+          #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6))
             atomicServo[axis] = (mediaMobileServoGimbalADCSum[axis] / MMSERVOGIMBALVECTORLENGHT - 1000)>>2;
           #else
             atomicServo[axis] = (mediaMobileServoGimbalADCSum[axis] / MMSERVOGIMBALVECTORLENGHT - 1000)<<4;
@@ -106,7 +111,7 @@ void writeServos() {
         }
       #else
         for(uint8_t i = (SEC_SERVO_FROM-1); i < SEC_SERVO_TO; i++){
-          #if !defined(PROMICRO) || defined(HWPWM6)
+          #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6))
             atomicServo[i] = (servo[i]-1000)>>2;
           #else
             atomicServo[i] = (servo[i]-1000)<<4;
@@ -450,144 +455,121 @@ void initializeServo() {
     SERVO_8_PINMODE;
   #endif
   
-  #if !defined(PROMICRO) || defined(HWPWM6)
+  #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) // uses timer 0 Comperator A (8 bit)
     TCCR0A = 0; // normal counting mode
     TIMSK0 |= (1<<OCIE0A); // Enable CTC interrupt
-  #else
+    #define SERVO_ISR TIMER0_COMPA_vect
+    #define SERVO_CHANNEL OCR0A
+    #define SERVO_1K_US 250
+  #endif
+  #if (defined(PROMICRO) && !defined(HWPWM6)) // uses timer 3 Comperator A (11 bit)
     TCCR3A &= ~(1<<WGM30) & ~(1<<WGM31); //normal counting & no prescaler
     TCCR3B &= ~(1<<WGM32) & ~(1<<CS31) & ~(1<<CS32) & ~(1<<WGM33);
     TCCR3B |= (1<<CS30);   
-    TIMSK3 |= (1<<OCIE3A); // Enable CTC interrupt   
+    TIMSK3 |= (1<<OCIE3A); // Enable CTC interrupt 
+    #define SERVO_ISR TIMER3_COMPA_vect
+    #define SERVO_CHANNEL OCR3A
+    #define SERVO_1K_US 16000 
+  #endif
+  #if defined(MEGA) // uses timer 5 Comperator A (11 bit)
+    TCCR5A &= ~(1<<WGM50) & ~(1<<WGM51); //normal counting & no prescaler
+    TCCR5B &= ~(1<<WGM52) & ~(1<<CS51) & ~(1<<CS52) & ~(1<<WGM53);
+    TCCR5B |= (1<<CS50);   
+    TIMSK5 |= (1<<OCIE5A); // Enable CTC interrupt  
+    #define SERVO_ISR TIMER5_COMPA_vect
+    #define SERVO_CHANNEL OCR5A
+    #define SERVO_1K_US 16000 
   #endif
 }
 
 /**************************************************************************************/
 /************              Servo software PWM generation             ******************/
 /**************************************************************************************/
-#if !defined(PROMICRO) || defined(HWPWM6)
-  #define SERVO_ISR TIMER0_COMPA_vect
-  #define SERVO_CHANNEL OCR0A
-  #define SERVO_1K_US 250
-#else
-  #define SERVO_ISR TIMER3_COMPA_vect
-  #define SERVO_CHANNEL OCR3A
-  #define SERVO_1K_US 16000
-#endif
 
 // prescaler is set by default to 64 on Timer0
 // Duemilanove : 16MHz / 64 => 4 us
 // 256 steps = 1 counter cycle = 1024 us
 
-ISR(SERVO_ISR) {
-  static uint8_t state = 0;
-  static uint8_t count;
-  if (state == 0) {
-    #if (PRI_SERVO_FROM == 1) || (SEC_SERVO_FROM == 1)
-      SERVO_1_PIN_HIGH;
-    #endif
-    SERVO_CHANNEL+= SERVO_1K_US; // 1000 us
-    state++ ;
-  } else if (state == 1) {
-    SERVO_CHANNEL+= atomicServo[0]; // 1000 + [0-1020] us
-    state++;
-  } else if (state == 2) {
-    #if (PRI_SERVO_FROM == 1) || (SEC_SERVO_FROM == 1)
-      SERVO_1_PIN_LOW;
-    #endif
-    #if (PRI_SERVO_FROM <= 2 && PRI_SERVO_TO >= 2) || (SEC_SERVO_FROM <= 2 && SEC_SERVO_TO >= 2) 
-      SERVO_2_PIN_HIGH;
-    #endif
-    SERVO_CHANNEL+= SERVO_1K_US; // 1000 us
-    state++;
-  } else if (state == 3) {
-    SERVO_CHANNEL+= atomicServo[1]; // 1000 + [0-1020] us
-    state++;
-  } else if (state == 4) {
-    #if (PRI_SERVO_FROM <= 2 && PRI_SERVO_TO >= 2) || (SEC_SERVO_FROM <= 2 && SEC_SERVO_TO >= 2)  
-      SERVO_2_PIN_LOW;
-    #endif
-    #if (PRI_SERVO_FROM <= 3 && PRI_SERVO_TO >= 3) || (SEC_SERVO_FROM <= 3 && SEC_SERVO_TO >= 3)   
-      SERVO_3_PIN_HIGH;
-    #endif
-    state++;
-    SERVO_CHANNEL+= SERVO_1K_US; // 1000 us
-  } else if (state == 5) {
-    SERVO_CHANNEL+= atomicServo[2]; // 1000 + [0-1020] us
-    state++;
-  } else if (state == 6) {
-    #if (PRI_SERVO_FROM <= 3 && PRI_SERVO_TO >= 3) || (SEC_SERVO_FROM <= 3 && SEC_SERVO_TO >= 3)      
-      SERVO_3_PIN_LOW;
-    #endif
-    #if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4) || (SEC_SERVO_FROM <= 4 && SEC_SERVO_TO >= 4)   
-      SERVO_4_PIN_HIGH;
-    #endif
-    state++;
-    SERVO_CHANNEL+= SERVO_1K_US; // 1000 us
-  } else if (state == 7) {
-    SERVO_CHANNEL+= atomicServo[3]; // 1000 + [0-1020] us
-    state++;
-  } else if (state == 8) {
-    #if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4) || (SEC_SERVO_FROM <= 4 && SEC_SERVO_TO >= 4)    
-      SERVO_4_PIN_LOW;
-    #endif  
-    #if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5) || (SEC_SERVO_FROM <= 5 && SEC_SERVO_TO >= 5)   
-      SERVO_5_PIN_HIGH;;
-    #endif 
-    state++;
-    SERVO_CHANNEL+= SERVO_1K_US; // 1000 us
-  } else if (state == 9) {
-    SERVO_CHANNEL+= atomicServo[4]; // 1000 + [0-1020] us
-    state++;
-  } else if (state == 10) {
-    #if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5) || (SEC_SERVO_FROM <= 5 && SEC_SERVO_TO >= 5)    
-      SERVO_5_PIN_LOW;
-    #endif 
-    #if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6) || (SEC_SERVO_FROM <= 6 && SEC_SERVO_TO >= 6)    
-      SERVO_6_PIN_HIGH;;
-    #endif 
-    state++;
-    SERVO_CHANNEL+= SERVO_1K_US; // 1000 us
-  } else if (state == 11) {
-    SERVO_CHANNEL+= atomicServo[5]; // 1000 + [0-1020] us
-    state++;
-  } else if (state == 12) {
-    #if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6) || (SEC_SERVO_FROM <= 6 && SEC_SERVO_TO >= 6)       
-      SERVO_6_PIN_LOW;
-    #endif 
-    #if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7) || (SEC_SERVO_FROM <= 7 && SEC_SERVO_TO >= 7)       
-      SERVO_7_PIN_HIGH;
-    #endif 
-    state++;
-    SERVO_CHANNEL+= SERVO_1K_US; // 1000 us
-  } else if (state == 13) {
-    SERVO_CHANNEL+= atomicServo[6]; // 1000 + [0-1020] us
-    state++;
-  } else if (state == 14) {
-    #if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7) || (SEC_SERVO_FROM <= 7 && SEC_SERVO_TO >= 7)       
-      SERVO_7_PIN_LOW;
-    #endif 
-    #if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8)    
-      SERVO_8_PIN_HIGH;
-    #endif     
-    state++;
-    SERVO_CHANNEL+= SERVO_1K_US; // 1000 us
-  } else if (state == 15) {
-    SERVO_CHANNEL+= atomicServo[7]; // 1000 + [0-1020] us
-    state++;
-  } else if (state == 16) {
-    #if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8)     
-      SERVO_8_PIN_LOW;
-    #endif 
-    count = 2;
-    state++;
-    SERVO_CHANNEL+= SERVO_1K_US; // 1000 us
-  } else if (state == 17) {
-    if (count > 0) count--;
-    else state = 0;
-    SERVO_CHANNEL+= SERVO_1K_US;
-  }
-}
+// for servo 2-8
+// its almost the same as for servo 1
+#define SERVO_PULSE(PIN_HIGH,ACT_STATE,SERVO_NUM,LAST_PIN_LOW) \
+  }else if(state == ACT_STATE){                                \
+    LAST_PIN_LOW;                                              \
+    PIN_HIGH;                                                  \
+    SERVO_CHANNEL+=SERVO_1K_US;                                \
+    state++;                                                   \
+  }else if(state == ACT_STATE+1){                              \
+    SERVO_CHANNEL+=atomicServo[SERVO_NUM];                     \
+    state++;                                                   \
 
+ISR(SERVO_ISR) {
+  static uint8_t state = 0; // indicates the current state of the chain
+  if(state == 0){
+    SERVO_1_HIGH; // set servo 1's pin high 
+    SERVO_CHANNEL+=SERVO_1K_US; // wait 1000us
+    state++; // count up the state
+  }else if(state==1){
+    SERVO_CHANNEL+=atomicServo[SERVO_1_ARR_POS]; // load the servo's value (0-1000us)
+    state++; // count up the state
+  #if defined(SERVO_2_HIGH)
+    SERVO_PULSE(SERVO_2_HIGH,2,SERVO_2_ARR_POS,SERVO_1_LOW); // the same here
+  #endif
+  #if defined(SERVO_3_HIGH)
+    SERVO_PULSE(SERVO_3_HIGH,4,SERVO_3_ARR_POS,SERVO_2_LOW);
+  #endif
+  #if defined(SERVO_4_HIGH)
+    SERVO_PULSE(SERVO_4_HIGH,6,SERVO_4_ARR_POS,SERVO_3_LOW);
+  #endif
+  #if defined(SERVO_5_HIGH)
+    SERVO_PULSE(SERVO_5_HIGH,8,SERVO_5_ARR_POS,SERVO_4_LOW);
+  #endif
+  #if defined(SERVO_6_HIGH)
+    SERVO_PULSE(SERVO_6_HIGH,10,SERVO_6_ARR_POS,SERVO_5_LOW);
+  #endif
+  #if defined(SERVO_7_HIGH)
+    SERVO_PULSE(SERVO_7_HIGH,12,SERVO_7_ARR_POS,SERVO_6_LOW);
+  #endif
+  #if defined(SERVO_8_HIGH)
+    SERVO_PULSE(SERVO_8_HIGH,14,SERVO_8_ARR_POS,SERVO_7_LOW);
+  #endif
+  }else{
+    LAST_LOW;
+    #if defined(SERVO_RFR_300HZ)
+      #if defined(SERVO_3_HIGH)  // if there are 3 or more servos we dont need to slow it down
+        SERVO_CHANNEL+=(SERVO_1K_US>>3); // 0 would be better but it causes bad jitter
+        state=0; 
+      #else // if there are less then 3 servos we need to slow it to not go over 300Hz (the highest working refresh rate for the digital servos for what i know..)
+        SERVO_CHANNEL+=SERVO_1K_US;
+        if(state<4){
+          state+=2;
+        }else{
+          state=0;
+        }
+      #endif
+    #endif
+    #if defined(SERVO_RFR_160HZ)
+      #if defined(SERVO_4_HIGH)  // if there are 4 or more servos we dont need to slow it down
+        SERVO_CHANNEL+=(SERVO_1K_US>>3); // 0 would be better but it causes bad jitter
+        state=0; 
+      #else // if there are less then 4 servos we need to slow it to not go over ~170Hz (the highest working refresh rate for analog servos)
+        SERVO_CHANNEL+=SERVO_1K_US;
+        if(state<8){
+          state+=2;
+        }else{
+          state=0;
+        }
+      #endif
+    #endif   
+    #if defined(SERVO_RFR_50HZ) // to have ~ 50Hz for all servos
+      SERVO_CHANNEL+=SERVO_1K_US;
+      if(state<30){
+        state+=2;
+      }else{
+        state=0;
+      }     
+    #endif
+  }
+} 
 #endif
 
 /**************************************************************************************/

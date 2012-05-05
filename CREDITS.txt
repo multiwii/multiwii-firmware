@@ -238,3 +238,27 @@ N: Stefan Tomanek
 N: Jevermeister (Nils Ivo von Aswege)
 E:
 W:http://ncopters.blogspot.com
+
+S: Atmega32u4 support
+D: so it works on Promicro, & Teensy20
+N: Felix Niessen (ronco)
+E: felix.niessen@googlemail.com
+W:
+
+S: 11-bit PWM
+D: Better Signal resolution for the ESC's on MEGA's and 32u4's
+N: Felix Niessen (ronco)
+E: felix.niessen@googlemail.com
+W:
+
+S: Hexa with Servos and Octo on Promini
+D: 
+N: Felix Niessen (ronco)
+E: felix.niessen@googlemail.com
+W:
+
+S: Faster Servo refreshrate & 11-bit PWM (for servos on the MEGA & 32u4)
+D: 
+N: Felix Niessen (ronco)
+E: felix.niessen@googlemail.com
+W:
