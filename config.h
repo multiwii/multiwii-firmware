@@ -355,6 +355,18 @@
 //#define PROMICRO10
 
 
+/**************************************************************************************/
+/***********************                  TX-related         **************************/
+/**************************************************************************************/
+
+/* introduce a deadband around the stick center
+   Must be greater than zero, comment if you dont want a deadband on roll, pitch and yaw */
+//#define DEADBAND 6
+
+/* optionally disable stick combinations to arm/disarm the motors.
+ * In most cases one of the two options to arm/disarm via TX stick is sufficient */
+#define ALLOW_ARM_DISARM_VIA_TX_YAW
+#define ALLOW_ARM_DISARM_VIA_TX_ROLL
 
 /**************************************************************************************/
 /***********************                  GPS                **************************/
@@ -385,9 +397,6 @@
    Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
 //#define LEVEL_PDF
 
-/* introduce a deadband around the stick center
-   Must be greater than zero, comment if you dont want a deadband on roll, pitch and yaw */
-//#define DEADBAND 6
 
 /* interleaving delay in micro seconds between 2 readings WMP/NK in a WMP+NK config
    if the ACC calibration time is very long (20 or 30s), try to increase this delay up to 4000
@@ -699,12 +708,7 @@
 /* to calibrate all ESCs connected to MWii at the same time (useful to avoid unplugging/re-plugging each ESC)  */
 /* Warning: this creates a special version of MultiWii Code */
 /* You cannot fly with this special version. It is only to be used for calibrating ESCs */
-/* How To: */
-/* 1. activate the define, possibly set high and low values for ESC calibration, if you know what you are doing */
-/* 2. setup all options in config.h to whatever suits your copter */
-/* 3. compile, upload, run --- cannot fly and will use Buzzer to indicate finished calibration */
-/* 4. comment the define, compile, upload */
-/* 5. test carefully, fly and have fun */
+/* Read How To at http://code.google.com/p/multiwii/wiki/ESCsCalibration */
 #define ESC_CALIB_LOW  MINCOMMAND
 #define ESC_CALIB_HIGH 2000
 //#define ESC_CALIB_CANNOT_FLY

@@ -1,8 +1,11 @@
+static uint8_t buzzerIsOn = 0;
+
+uint8_t isBuzzerON() { return buzzerIsOn; } // returns true while buzzer is buzzing; returns 0 for silent periods
+
 void buzzer(uint8_t warn_vbat){
   static uint16_t ontime, offtime, beepcount, repeat, repeatcounter;
   static uint32_t buzzerLastToggleTime;
-  static uint8_t buzzerIsOn = 0,
-                 activateBuzzer,
+  static uint8_t activateBuzzer,
                  beeperOnBox,
                  i,
                  last_rcOptions[CHECKBOXITEMS], 

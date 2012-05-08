@@ -210,8 +210,7 @@ void serialCom() {
               serialize16(intPowerTrigger1);
               tailSerialReply();break;
             case MSP_RESET_CONF:
-              checkNewConf++;checkFirstTime();
-              checkNewConf--;checkFirstTime();break;
+              checkNewConf++;checkFirstTime();break;
             case MSP_ACC_CALIBRATION:
               calibratingA=400;break;
             case MSP_MAG_CALIBRATION:

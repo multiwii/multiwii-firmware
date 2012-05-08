@@ -1163,7 +1163,7 @@ void fill_line2_AmaxA() {
 }
 void fill_line1_VmA() {
   strcpy_P(line1,PSTR("--.-V   -----mAh")); // uint8_t vbat, intPowerMeterSum
-  // 0123456789.12345
+  //                   0123456789.12345
 #ifdef VBAT
   line1[0] = digit100(vbat);
   line1[1] = digit10(vbat);
@@ -1176,7 +1176,7 @@ void fill_line1_VmA() {
   line1[11] = digit10(intPowerMeterSum);
   line1[12] = digit1(intPowerMeterSum);
 #endif
-  if (buzzerState) { // buzzer on? then add some blink for attention
+  if (isBuzzerON()) { // buzzer on? then add some blink for attention
     line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
   }
   // set mark, if we had i2c errors, failsafes or annex650 overruns
@@ -1467,11 +1467,13 @@ void lcd_telemetry() {
       case 0:// V, mAh
       LCDsetLine(1);
       fill_line1_VmA();
+      if (isBuzzerON()) { LCDattributesReverse(); } // buzzer on? then add some blink for attention
       LCDprintChar(line1);
       break;
       case 1:// V, mAh bars
       LCDsetLine(2);
       output_VmAbars();
+      LCDattributesOff(); // turn Reverse off for rest of display
       break;
       case 2:// A, maxA
       LCDsetLine(3);

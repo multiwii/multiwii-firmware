@@ -1,6 +1,7 @@
 #include <avr/eeprom.h>
 
-static uint8_t checkNewConf = 154;
+#define EEPROM_CONF_VERSION 155
+static uint8_t checkNewConf;
 
 struct eep_entry_t{
   void *  var;
@@ -11,7 +12,7 @@ struct eep_entry_t{
 // EEPROM Layout definition
 // ************************************************************************************************************
 static eep_entry_t eep_entry[] = {
-  {&checkNewConf, sizeof(checkNewConf)}
+  {&checkNewConf, sizeof(checkNewConf)} // this is only left here to keep the read/write logic intact
 , {&P8, sizeof(P8)}
 , {&I8, sizeof(I8)} 
 , {&D8, sizeof(D8)} 
@@ -34,7 +35,7 @@ static eep_entry_t eep_entry[] = {
 #ifdef TRI
 , {&tri_yaw_middle,  sizeof(tri_yaw_middle)}
 #endif
-
+, {&checkNewConf, sizeof(checkNewConf)} // this _must_ be the last entry always.
 };  
 #define EEBLOCK_SIZE sizeof(eep_entry)/sizeof(eep_entry_t)
 // ************************************************************************************************************
@@ -61,16 +62,26 @@ void readEEPROM() {
     pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
   #endif
   #ifdef FLYING_WING
-    wing_left_mid  = constrain(wing_left_mid, WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT 
-    wing_right_mid = constrain(wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+    #ifdef LCD_CONF
+      wing_left_mid  = constrain(wing_left_mid, WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
+      wing_right_mid = constrain(wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+    #else // w.o LCD support user may not find this value stored in eeprom, so always use the define value
+      wing_left_mid  = WING_LEFT_MID;
+      wing_right_mid = WING_RIGHT_MID;
+    #endif
   #endif
   #ifdef TRI
-    tri_yaw_middle = constrain(tri_yaw_middle, TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
+    #ifdef LCD_CONF
+      tri_yaw_middle = constrain(tri_yaw_middle, TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
+    #else // w.o LCD support user may not find this value stored in eeprom, so always use the define value
+      tri_yaw_middle = TRI_YAW_MIDDLE;
+    #endif
   #endif
 }
 
 void writeParams(uint8_t b) {
   uint8_t i, _address = 0;
+  checkNewConf = EEPROM_CONF_VERSION; // make sure we write the current version into eeprom
   for(i=0; i<EEBLOCK_SIZE; i++) {
     eeprom_write_block(eep_entry[i].var, (void*)(_address), eep_entry[i].size); _address += eep_entry[i].size;
   }  
@@ -79,8 +90,7 @@ void writeParams(uint8_t b) {
 }
 
 void checkFirstTime() {
-  uint8_t test_val; eeprom_read_block((void*)&test_val, (void*)(0), sizeof(test_val));
-  if (test_val == checkNewConf) return;
+  if (EEPROM_CONF_VERSION == checkNewConf) return;
   P8[ROLL] = 40; I8[ROLL] = 30; D8[ROLL] = 23;
   P8[PITCH] = 40; I8[PITCH] = 30; D8[PITCH] = 23;
   P8[YAW]  = 85; I8[YAW]  = 45;  D8[YAW]  = 0;
@@ -104,5 +114,5 @@ void checkFirstTime() {
   #ifdef TRI
     tri_yaw_middle = TRI_YAW_MIDDLE; 
   #endif
-  writeParams(0);
+  writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }
