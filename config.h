@@ -432,7 +432,7 @@
 
 /*****************************   The type of LCD     **********************************/
 /* choice of LCD attached for configuration and telemetry, see notes below */
-//#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
+#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
 /* serial (wired or wireless via BT etc.) */
 //#define LCD_TEXTSTAR    // Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
 //#define LCD_VT100       // vt100 compatible terminal emulation (blueterm, putty, etc.)
