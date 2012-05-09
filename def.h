@@ -11,7 +11,6 @@
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)
   #define MEGA
 #endif
-
 /**************************   atmega328P (Promini)  ************************************/
 #if defined(PROMINI)
   #if !defined(MONGOOSE1_0)
@@ -832,6 +831,17 @@
 /**************************************************************************************/
 /***************          Some unsorted "chain" defines            ********************/
 /**************************************************************************************/
+#if defined(PROMICRO)
+  #if defined(PROMICRO_LCD)
+    #if !defined(LCD_CONF)
+      #define LCD_CONF
+    #endif
+  #else
+    #if defined(LCD_CONF)
+      #undef LCD_CONF
+    #endif
+  #endif
+#endif
 
 #if defined (AIRPLANE) || defined(HELICOPTER) && defined(PROMINI) 
   #if defined(D12_POWER)

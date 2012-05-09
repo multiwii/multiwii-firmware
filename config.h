@@ -327,6 +327,11 @@
 // activate this for a better pinlayout if all pins can be used => not possible on ProMicro!
 //#define A32U4ALLPINS
 
+/***********************         Promicro LCD usage        ****************************/
+// the promicro has ~3kb less flash memorie then the promini because of the arduino usb code
+// because of this the LCD is inactive on default for it and needs to be activated here
+//#define PROMICRO_LCD
+
 /**********************************    PWM Setup     **********************************/
 // activate all 6 hardware PWM outputs Motor 5 = D11 and 6 = D13. => not possible on ProMicro! (untested!) 
 // if activated: 
@@ -427,7 +432,7 @@
 
 /*****************************   The type of LCD     **********************************/
 /* choice of LCD attached for configuration and telemetry, see notes below */
-#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
+//#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
 /* serial (wired or wireless via BT etc.) */
 //#define LCD_TEXTSTAR    // Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
 //#define LCD_VT100       // vt100 compatible terminal emulation (blueterm, putty, etc.)
