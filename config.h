@@ -275,11 +275,6 @@
       // activate this for a better pinlayout if all pins can be used => not possible on ProMicro!
       //#define A32U4ALLPINS
 
-    /***********************         Promicro LCD usage        ****************************/
-      // the promicro has ~3kb less flash memorie then the promini because of the arduino usb code
-      // because of this the LCD is inactive on default for it and needs to be activated here
-      //#define PROMICRO_LCD
-
     /**********************************    PWM Setup     **********************************/
       // activate all 6 hardware PWM outputs Motor 5 = D11 and 6 = D13. => not possible on ProMicro! (untested!)
       // if activated:

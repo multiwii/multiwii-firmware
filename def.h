@@ -843,17 +843,6 @@
 /**************************************************************************************/
 /***************          Some unsorted "chain" defines            ********************/
 /**************************************************************************************/
-#if defined(PROMICRO)
-  #if defined(PROMICRO_LCD)
-    #if !defined(LCD_CONF)
-      #define LCD_CONF
-    #endif
-  #else
-    #if defined(LCD_CONF)
-      #undef LCD_CONF
-    #endif
-  #endif
-#endif
 
 #if defined (AIRPLANE) || defined(HELICOPTER) && defined(PROMINI) 
   #if defined(D12_POWER)
