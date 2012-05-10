@@ -52,12 +52,12 @@
     #define MINTHROTTLE 1150
 
   /**********************************    I2C speed   ************************************/
-    #define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
-    //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
+    //#define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
+    #define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones and with most current boards
 
   /***************************    Internal i2c Pullups   ********************************/
-    //enable internal I2C pull ups
-    #define INTERNAL_I2C_PULLUPS
+    //enable internal I2C pull ups (in most cases it is better to use external pullups)
+    //#define INTERNAL_I2C_PULLUPS
 
   /**************************************************************************************/
   /*****************          boards and sensor definitions            ******************/
@@ -190,7 +190,8 @@
     #define CAM_TIME_HIGH 1000   // the duration of HIGH state servo expressed in ms
     #define CAM_TIME_LOW 1000    // the duration of LOW state servo expressed in ms
 
-  /* Flying Wing: you can change change servo orientation and servo min/max values here */
+  /***********************          Flying Wing                   ***********************/
+    /* you can change change servo orientation and servo min/max values here */
     /* valid for all flight modes, even passThrough mode */
     /* need to setup servo directions here; no need to swap servos amongst channels at rx */
     #define PITCH_DIRECTION_L 1 // left servo - pitch orientation
@@ -313,6 +314,15 @@
     /* This is the speed of the serial interface. 115200 kbit/s is the best option for a USB connection.*/
     #define SERIAL_COM_SPEED 115200
 
+    /* interleaving delay in micro seconds between 2 readings WMP/NK in a WMP+NK config
+       if the ACC calibration time is very long (20 or 30s), try to increase this delay up to 4000
+       it is relevent only for a conf with NK */
+    #define INTERLEAVING_DELAY 3000
+
+    /* when there is an error on I2C bus, we neutralize the values during a short time. expressed in microseconds
+       it is relevent only for a conf with at least a WMP */
+    #define NEUTRALIZE_DELAY 100000
+
   /**************************************************************************************/
   /********                              Gyro filters                ********************/
   /**************************************************************************************/
@@ -395,6 +405,14 @@
 
     /*******************  to input RC signal with the serial port  ************************/
       //#define RCSERIAL
+
+  /**************************************************************************************/
+  /********          special ESC (wii-ESC) with extended range       ********************/
+  /**************************************************************************************/
+//#define MINCOMMAND 1000
+//#define MINTHROTTLE 1080
+//#define MAXTHROTTLE 2000
+//#define EXT_MOTOR_RANGE
 
 
 /*************************************************************************************************/
@@ -481,16 +499,6 @@
     /* Pseudo-derivative conrtroller for level mode (experimental)
        Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
     //#define LEVEL_PDF
-
-
-    /* interleaving delay in micro seconds between 2 readings WMP/NK in a WMP+NK config
-       if the ACC calibration time is very long (20 or 30s), try to increase this delay up to 4000
-       it is relevent only for a conf with NK */
-    #define INTERLEAVING_DELAY 3000
-
-    /* when there is an error on I2C bus, we neutralize the values during a short time. expressed in microseconds
-       it is relevent only for a conf with at least a WMP */
-    #define NEUTRALIZE_DELAY 100000
 
 
   /**************************************************************************************/
@@ -593,6 +601,22 @@
     //#define SUPPRESS_TELEMETRY_PAGE_9
 
   /********************************************************************/
+  /****           battery voltage monitoring                       ****/
+  /********************************************************************/
+
+    /* for V BAT monitoring
+       after the resistor divisor we should get [0V;5V]->[0;1023] on analog V_BATPIN
+       with R1=33k and R2=51k
+       vbat = [0;1023]*16/VBATSCALE */
+    //#define VBAT              // uncomment this line to activate the vbat code
+    #define VBATSCALE     131 // change this value if readed Battery voltage is different than real voltage
+    #define VBATLEVEL1_3S 107 // 10,7V
+    #define VBATLEVEL2_3S 103 // 10,3V
+    #define VBATLEVEL3_3S 99  // 9.9V
+    #define NO_VBAT       16 // Avoid beeping without any battery
+
+
+  /********************************************************************/
   /****           powermeter (battery capacity monitoring)         ****/
   /********************************************************************/
 
@@ -640,22 +664,6 @@
     /* set to analogRead() value for zero current */
     #define PSENSORNULL 510 // for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt
     #define PINT2mA 13 // for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
-
-
-  /********************************************************************/
-  /****           battery voltage monitoring                       ****/
-  /********************************************************************/
-
-    /* for V BAT monitoring
-       after the resistor divisor we should get [0V;5V]->[0;1023] on analog V_BATPIN
-       with R1=33k and R2=51k
-       vbat = [0;1023]*16/VBATSCALE */
-    //#define VBAT              // uncomment this line to activate the vbat code
-    #define VBATSCALE     131 // change this value if readed Battery voltage is different than real voltage
-    #define VBATLEVEL1_3S 107 // 10,7V
-    #define VBATLEVEL2_3S 103 // 10,3V
-    #define VBATLEVEL3_3S 99  // 9.9V
-    #define NO_VBAT       16 // Avoid beeping without any battery
 
 
 /*************************************************************************************************/
