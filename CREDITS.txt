@@ -91,10 +91,10 @@ E:
 W: http://fotoflygarn.blogspot.se/2012/04/multiwii-helicopter.html
 
 S: i2c LCD03
-D:
-N: 
+D: Support for the cheap i2c LCD03
+N: Th0rsten
 E:
-W:
+W: http://www.multiwii.com/forum/viewtopic.php?f=8&t=1094
 
 S: i2c OLED  128x64 display
 D: support for OLED as alternatative to LCD
