@@ -168,13 +168,13 @@ static uint16_t activate[CHECKBOXITEMS];
 // GPS
 // **********************
 static int32_t  GPS_latitude,GPS_longitude;
-static int32_t  GPS_latitude_home,GPS_longitude_home;
-static int32_t  GPS_latitude_hold,GPS_longitude_hold;
+static int32_t  GPS_latitude_home,GPS_longitude_home,GPS_altitude_home;
+static int32_t  GPS_latitude_hold,GPS_longitude_hold,GPS_altitude_hold;
 static uint8_t  GPS_fix , GPS_fix_home = 0;
 static uint8_t  GPS_numSat;
 static uint16_t GPS_distanceToHome,GPS_distanceToHold;       // distance to home or hold point in meters
 static int16_t  GPS_directionToHome,GPS_directionToHold;     // direction to home or hol point in degrees
-static uint16_t GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s
+static int16_t  GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s
 static uint8_t  GPS_update = 0;                              // it's a binary toogle to distinct a GPS position update
 static int16_t  GPS_angle[2] = { 0, 0};                      // it's the angles that must be applied for GPS correction
 
@@ -651,7 +651,11 @@ void loop () {
       }
     #endif
     if (rcOptions[BOXPASSTHRU]) {passThruMode = 1;}
-    else passThruMode = 0;
+    else {passThruMode = 0;}
+    
+    #ifdef FIXEDWING 
+      headFreeMode = 0;
+    #endif
   } else { // not in rc loop
     static uint8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
     switch (taskOrder++ % 5) {
