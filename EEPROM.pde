@@ -111,6 +111,10 @@ void checkFirstTime() {
     wing_left_mid  = WING_LEFT_MID; 
     wing_right_mid = WING_RIGHT_MID; 
   #endif
+  #ifdef FIXEDWING
+   dynThrPID = 50;
+   rcExpo8   =  0;
+  #endif
   #ifdef TRI
     tri_yaw_middle = TRI_YAW_MIDDLE; 
   #endif

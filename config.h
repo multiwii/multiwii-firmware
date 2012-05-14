@@ -52,8 +52,8 @@
     #define MINTHROTTLE 1150
 
   /**********************************    I2C speed   ************************************/
-    //#define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
-    #define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones and with most current boards
+    #define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
+    //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones and with most current boards
 
   /***************************    Internal i2c Pullups   ********************************/
     //enable internal I2C pull ups (in most cases it is better to use external pullups)
@@ -163,7 +163,7 @@
    /********************************    ARM/DISARM    *********************************/
    /* optionally disable stick combinations to arm/disarm the motors.
      * In most cases one of the two options to arm/disarm via TX stick is sufficient */
-    //#define ALLOW_ARM_DISARM_VIA_TX_YAW
+    #define ALLOW_ARM_DISARM_VIA_TX_YAW
     #define ALLOW_ARM_DISARM_VIA_TX_ROLL
 
 
@@ -208,7 +208,6 @@
   //******************************* !!!!  Airplane Settings  !!!! *********************************//
     // Howto setup =>>> http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
 
-    #define SERVO_OFFSET     {  0,   0,   0,  0,   0,   0,  0,   0 } // Adjust Servo MID Offset & Swash angles
     #define SERVO_RATES      {100, 100, 100, 100, 100, 100, 100, 100} // Rates in 0-100%
     #define SERVO_DIRECTION  { -1,   1,   1,   -1,  1,   1,   1,   1 } // Invert servos by setting -1
 
@@ -219,6 +218,8 @@
   //*************************** !!!!  Common for Heli & Airplane  !!!! ****************************//
 
     //#define D12_POWER      // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12
+	
+    #define SERVO_OFFSET     {  0,   0,   0,  0,   0,   0,  0,   0 } // Adjust Servo MID Offset & Swash angles
     // Selectable channels:=    ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4
 
   //****************************** !!!!  Hellicopter Settings  !!!! *******************************//
@@ -231,8 +232,18 @@
     // Limit the range of Collective Pitch. 100% is Full Range each way and position for Zero Pitch
     #define COLLECTIVE_RANGE { 80, 1500, 80 }// {Min%, ZeroPitch, Max%}.
     #define YAW_CENTER             1500      // Use servo[5] SERVO_ENDPOINT_HIGH/LOW for the endpoits.
-    #define YAWMOTOR                0       // If a motor is use as YAW Set to 1 else set to 0.
+    #define YAWMOTOR                0       // If a motor is useed as YAW Set to 1 else set to 0.
 
+    // Servo mixing for heli 120 Use 1/10 fractions (ex.5 = 5/10 = 1/2)
+    //                   {Coll,Nick,Roll}
+    #define SERVO_NICK   { +10, -10, -0 }
+    #define SERVO_LEFT   { +10, +5, +10 } 
+    #define SERVO_RIGHT  { +10, +5, -10 } 
+
+    // Servo mixing for heli 90 
+    //                      {Coll,Nick,Roll}
+    #define SERVO_DIRECTIONS { +1, -1, -1 } // -1 will invert servo
+	
     // Limit Maximum controll for Roll & Nick  in 0-100%
     #define CONTROLL_RANGE   { 100, 100 }      //  { ROLL,PITCH }
 

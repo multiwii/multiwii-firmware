@@ -843,6 +843,9 @@
 /**************************************************************************************/
 /***************          Some unsorted "chain" defines            ********************/
 /**************************************************************************************/
+#if defined (AIRPLANE) || defined(FLYING_WING)
+  #define FIXEDWING
+#endif
 
 #if defined (AIRPLANE) || defined(HELICOPTER) && defined(PROMINI) 
   #if defined(D12_POWER)
