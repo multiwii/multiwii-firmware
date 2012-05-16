@@ -39,11 +39,11 @@
     // Heli is  beta test ......!
     // Howto setup =>>> http://fotoflygarn.blogspot.se/2012/04/multiwii-helicopter.html
     //#define HELI_120_CCPM  // PatrikE Experimental
-    //#define HELI_90_DEG  // PatrikE Experimental
+    //#define HELI_90_DEG    // PatrikE Experimental
     //*******************************************************
 
 
-  /******                Motor minthrottle    *******************************/
+  /****************************    Motor minthrottle    *******************************/
     /* Set the minimum throttle command sent to the ESC (Electronic Speed Controller)
        This is the minimum value that allow motors to run at a idle speed  */
     //#define MINTHROTTLE 1300 // for Turnigy Plush ESCs 10A
@@ -101,6 +101,7 @@
       //#define BOARD_PROTO_1   // with MPU6050 + HMC5883L + MS baro
       //#define BOARD_PROTO_2   // with MPU6050 + slave  MAG3110 + MS baro
       //#define GY_80           // Chinese 10 DOF with  L3G4200D ADXL345 HMC5883L BMP085, LLC
+	  //#define GY_85           // Chinese 9 DOF with  ITG3205 ADXL345 HMC5883L LLC
       //#define GY_86           // Chinese 10 DOF with  MPU6050 HMC5883L MS5611, LLC
 
     /***************************    independent sensors    ********************************/
