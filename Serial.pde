@@ -23,6 +23,7 @@
 #define MSP_PID                  112   //out message         up to 16 P I D (8 are used)
 #define MSP_BOX                  113   //out message         up to 16 checkbox (11 are used)
 #define MSP_MISC                 114   //out message         powermeter trig + 8 free for future use
+#define MSP_MOTOR_PINS           115   //out message         which pins are in use for motors & servos, for GUI 
 
 #define MSP_SET_RAW_RC           200   //in message          8 rc chan
 #define MSP_SET_RAW_GPS          201   //in message          fix, numsat, lat, lon, alt, speed
@@ -208,6 +209,10 @@ void serialCom() {
             case MSP_MISC:
               headSerialReply(c,2);
               serialize16(intPowerTrigger1);
+              tailSerialReply();break;
+            case MSP_MOTOR_PINS:
+              headSerialReply(c,8);
+              for(i=0;i<8;i++) {serialize8(PWM_PIN[i]);}
               tailSerialReply();break;
             case MSP_RESET_CONF:
               checkNewConf++;checkFirstTime();break;
