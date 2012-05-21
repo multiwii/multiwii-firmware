@@ -606,6 +606,7 @@ typedef void (*inc_func_ptr)(void *, int16_t);
 
 static lcd_type_desc_t LTU8 = {&__u8Fmt, &__u8Inc};
 static lcd_type_desc_t LTU16 = {&__u16Fmt, &__u16Inc};
+static lcd_type_desc_t LTS16 = {&__s16Fmt, &__s16Inc};
 static lcd_type_desc_t LPMM = {&__upMFmt, &__nullInc};
 static lcd_type_desc_t LPMS = {&__upSFmt, &__nullInc};
 static lcd_type_desc_t LAUX1 = {&__uAuxFmt1, &__u16Inc};
@@ -641,6 +642,7 @@ static lcd_param_def_t __VB = {&LTU8, 1, 1, 0};
 static lcd_param_def_t __L = {&LTU8, 0, 1, 0};
 static lcd_param_def_t __FS = {&LTU8, 1, 1, 0};
 static lcd_param_def_t __SE = {&LTU16, 0, 1, 10};
+static lcd_param_def_t __ST = {&LTS16, 0, 1, 10};
 static lcd_param_def_t __AUX1 = {&LAUX1, 0, 1, 1};
 static lcd_param_def_t __AUX2 = {&LAUX2, 0, 1, 8};
 static lcd_param_def_t __AUX3 = {&LAUX3, 0, 1, 64};
@@ -723,6 +725,12 @@ PROGMEM prog_char lcd_param_text50 [] = "AUX passth";
 PROGMEM prog_char lcd_param_text51 [] = "AUX headfr";
 PROGMEM prog_char lcd_param_text52 [] = "AUX beeper";
 // 53 to 61 reserved
+#endif
+#ifdef HELI_120_CCPM //                  0123456789
+PROGMEM prog_char lcd_param_text73 [] = "Trim Ser N";
+PROGMEM prog_char lcd_param_text74 [] = "Trim Ser L";
+PROGMEM prog_char lcd_param_text75 [] = "Trim Ser T";
+PROGMEM prog_char lcd_param_text76 [] = "Trim Ser R";
 #endif
 //                                        0123456789.12345
 
@@ -881,6 +889,12 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #ifdef TRI
   &lcd_param_text38, &tri_yaw_middle, &__SE,
 #endif
+#ifdef HELI_120_CCPM
+  &lcd_param_text73, &servoTrim[3], &__ST,
+  &lcd_param_text74, &servoTrim[4], &__ST,
+  &lcd_param_text75, &servoTrim[5], &__ST,
+  &lcd_param_text76, &servoTrim[6], &__ST,
+#endif
 #ifdef LOG_VALUES
   &lcd_param_text39, &failsafeEvents, &__L,
   &lcd_param_text40, &i2c_errors_count, &__L,
@@ -892,6 +906,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 
 void __u8Inc(void * var, int16_t inc) {*(uint8_t*)var += (uint8_t)inc;};
 void __u16Inc(void * var, int16_t inc) {*(uint16_t*)var += inc;};
+void __s16Inc(void * var, int16_t inc) {*(int16_t*)var += inc;};
 void __nullInc(void * var, int16_t inc) {};
 
 void __u8Fmt(void * var, uint8_t mul, uint8_t dec) {
@@ -914,6 +929,16 @@ void __u16Fmt(void * var, uint8_t mul, uint8_t dec) {
   line2[5] = digit100(unit);
   line2[6] = digit10(unit);
   line2[7] = digit1(unit);
+}
+void __s16Fmt(void * var, uint8_t mul, uint8_t dec) {
+  int16_t unit = *(int16_t*)var;
+  if (unit >= 0) {
+    line2[2] = ' ';
+  } else {
+    line2[2] = '-';
+    unit = -unit;
+  }
+  __u16Fmt(&unit, mul, dec);
 }
 void __uAuxFmt1(void * var, uint8_t mul, uint8_t dec) {  __uAuxFmt(var, mul, dec, 1); }
 void __uAuxFmt2(void * var, uint8_t mul, uint8_t dec) {  __uAuxFmt(var, mul, dec, 2); }

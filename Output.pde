@@ -945,7 +945,6 @@ void mixTable() {
     static int16_t   servoEndpiont[8][2];
     static int16_t   servoHigh[8] = SERVO_ENDPOINT_HIGH; // HIGHpoint on servo
     static int16_t   servoLow[8]  = SERVO_ENDPOINT_LOW ; // LOWpoint on servo
-    static int8_t    Mid[8] = SERVO_OFFSET;
 
   /***************************
    * servo settings Heli. 
@@ -979,7 +978,7 @@ void mixTable() {
   #define HeliXPIDMIX(Z,Y,X) collRange[1]+collective*Z + heliNick*Y +  heliRoll*X
 
   // Yaw is common for Heli 90 & 120
-    uint16_t yawControll =  YAW_CENTER + (axisPID[YAW]*YAW_DIRECTION);
+    uint16_t yawControll =  YAW_CENTER + (axisPID[YAW]*YAW_DIRECTION) + servoTrim[5];
 
   /* Throttle & YAW
   ********************
@@ -1001,18 +1000,18 @@ void mixTable() {
     static int8_t leftMix[3] =SERVO_LEFT;
     static int8_t rightMix[3]=SERVO_RIGHT;
 
-    servo[3]  =  HeliXPIDMIX( (nickMix[0]*0.1) , nickMix[1]*0.1, nickMix[2]*0.1) +Mid[3] ;   //    NICK  servo
-    servo[4]  =  HeliXPIDMIX( (leftMix[0]*0.1) , leftMix[1]*0.1, leftMix[2]*0.1) +Mid[4] ;   //    LEFT servo
-    servo[6]  =  HeliXPIDMIX( (rightMix[0]*0.1),rightMix[1]*0.1,rightMix[2]*0.1) +Mid[6] ;   //    RIGHT  servo  
+    servo[3]  =  HeliXPIDMIX( (nickMix[0]*0.1) , nickMix[1]*0.1, nickMix[2]*0.1) +servoTrim[3] ;   //    NICK  servo
+    servo[4]  =  HeliXPIDMIX( (leftMix[0]*0.1) , leftMix[1]*0.1, leftMix[2]*0.1) +servoTrim[4] ;   //    LEFT servo
+    servo[6]  =  HeliXPIDMIX( (rightMix[0]*0.1),rightMix[1]*0.1,rightMix[2]*0.1) +servoTrim[6] ;   //    RIGHT  servo
 
   #endif
 
   /************************************************************************************************************/
   #ifdef HELI_90_DEG   
     static int8_t servoDir[3]=SERVO_DIRECTIONS;   
-    servo[3]  = HeliXPIDMIX( +0, servoDir[1], -0)+Mid[3] ;      //     NICK  servo
-    servo[4]  = HeliXPIDMIX( +0, +0, servoDir[2])+Mid[4] ;      //     ROLL servo
-    servo[6]  = HeliXPIDMIX( servoDir[0], +0, +0)+Mid[6] ;      //     COLLECTIVE  servo  
+    servo[3]  = HeliXPIDMIX( +0, servoDir[1], -0)+servoTrim[3] ;      //     NICK  servo
+    servo[4]  = HeliXPIDMIX( +0, +0, servoDir[2])+servoTrim[4] ;      //     ROLL servo
+    servo[6]  = HeliXPIDMIX( servoDir[0], +0, +0)+servoTrim[6] ;      //     COLLECTIVE  servo
   #endif    
 
     for(uint8_t i=3;i<8;i++){

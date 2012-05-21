@@ -153,6 +153,7 @@ static int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1500};
 static uint16_t wing_left_mid  = WING_LEFT_MID; 
 static uint16_t wing_right_mid = WING_RIGHT_MID; 
 static uint16_t tri_yaw_middle = TRI_YAW_MIDDLE; 
+static int16_t  servoTrim[8] = SERVO_OFFSET;
 
 // **********************
 // EEPROM & LCD functions

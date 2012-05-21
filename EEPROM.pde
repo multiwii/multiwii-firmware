@@ -1,6 +1,6 @@
 #include <avr/eeprom.h>
 
-#define EEPROM_CONF_VERSION 155
+#define EEPROM_CONF_VERSION 156
 static uint8_t checkNewConf;
 
 struct eep_entry_t{
@@ -34,6 +34,9 @@ static eep_entry_t eep_entry[] = {
 #endif
 #ifdef TRI
 , {&tri_yaw_middle,  sizeof(tri_yaw_middle)}
+#endif
+#ifdef HELICOPTER
+, {&servoTrim,  sizeof(servoTrim)}
 #endif
 , {&checkNewConf, sizeof(checkNewConf)} // this _must_ be the last entry always.
 };  
@@ -77,6 +80,11 @@ void readEEPROM() {
       tri_yaw_middle = TRI_YAW_MIDDLE;
     #endif
   #endif
+//#ifdef HELICOPTER
+//  #ifndef LCD_CONF
+//      servoTrim = SERVO_OFFSET;
+//  #endif
+//#endif
 }
 
 void writeParams(uint8_t b) {
@@ -116,7 +124,10 @@ void checkFirstTime() {
    rcExpo8   =  0;
   #endif
   #ifdef TRI
-    tri_yaw_middle = TRI_YAW_MIDDLE; 
+   tri_yaw_middle = TRI_YAW_MIDDLE;
+  #endif
+  #ifdef HELICOPTER
+   //servoTrim[] = SERVO_OFFSET;
   #endif
   writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }
