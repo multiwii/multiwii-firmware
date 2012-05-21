@@ -139,7 +139,8 @@ void serialCom() {
               serialize16(i2c_errors_count);
               serialize16((ACC|nunchuk)|BARO<<1|MAG<<2|GPS<<3|SONAR<<4);
               serialize16(accMode<<BOXACC|baroMode<<BOXBARO|magMode<<BOXMAG|armed<<BOXARM|
-                          GPSModeHome<<BOXGPSHOME|GPSModeHold<<BOXGPSHOLD|headFreeMode<<BOXHEADFREE);
+                          GPSModeHome<<BOXGPSHOME|GPSModeHold<<BOXGPSHOLD|headFreeMode<<BOXHEADFREE|
+                          passThruMode<<BOXPASSTHRU|rcOptions[BOXBEEPERON]<<BOXBEEPERON);
               tailSerialReply();break;
             case MSP_RAW_IMU:
               headSerialReply(c,18);
