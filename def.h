@@ -712,6 +712,27 @@
   #undef INTERNAL_I2C_PULLUPS
 #endif
 
+#if defined(INNOVWORKS_10DOF)
+  #define ITG3200
+  #define BMA180
+  #define BMP085
+  #define HMC5883
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = X; magADC[PITCH]  = Y; magADC[YAW]  = -Z;}
+  #define ITG3200_ADDRESS 0XD0
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+
+#if defined(INNOVWORKS_6DOF)
+  #define ITG3200
+  #define BMA180
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define ITG3200_ADDRESS 0XD0
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+
 #if defined(OPENLRSv2MULTI)
   #define ITG3200
   #define ADXL345
