@@ -278,7 +278,7 @@ void getEstimatedAltitude(){
 
   BaroPID = 0;
   //D
-  temp32 = D8[PIDALT]*(BaroHigh - BaroLow) / 40;
+  temp32 = conf.D8[PIDALT]*(BaroHigh - BaroLow) / 40;
   BaroPID-=temp32;
 
   EstAlt = BaroHigh*10/(BARO_TAB_SIZE/2);
@@ -287,11 +287,11 @@ void getEstimatedAltitude(){
   if (abs(temp32) < 10 && abs(BaroPID) < 10) BaroPID = 0;  //remove small D parametr to reduce noise near zero position
   
   //P
-  BaroPID += P8[PIDALT]*constrain(temp32,(-2)*P8[PIDALT],2*P8[PIDALT])/100;   
+  BaroPID += conf.P8[PIDALT]*constrain(temp32,(-2)*conf.P8[PIDALT],2*conf.P8[PIDALT])/100;   
   BaroPID = constrain(BaroPID,-150,+150); //sum of P and D should be in range 150
 
   //I
-  errorAltitudeI += temp32*I8[PIDALT]/50;
+  errorAltitudeI += temp32*conf.I8[PIDALT]/50;
   errorAltitudeI = constrain(errorAltitudeI,-30000,30000);
   temp32 = errorAltitudeI / 500; //I in range +/-60
   BaroPID+=temp32;

@@ -735,115 +735,115 @@ PROGMEM prog_char lcd_param_text76 [] = "Trim Ser R";
 //                                        0123456789.12345
 
 PROGMEM const prog_void *lcd_param_ptr_table [] = {
-  &lcd_param_text01, &P8[ROLL], &__P,
-  &lcd_param_text02, &P8[ROLL], &__P,
-  &lcd_param_text03, &I8[ROLL], &__I,
-  &lcd_param_text04, &D8[ROLL], &__D,
-  &lcd_param_text05, &P8[PITCH], &__P,
-  &lcd_param_text06, &I8[PITCH], &__I,
-  &lcd_param_text07, &D8[PITCH], &__D,
-  &lcd_param_text08, &P8[YAW], &__P,
-  &lcd_param_text09, &I8[YAW], &__I,
-  &lcd_param_text10, &D8[YAW], &__D,
+  &lcd_param_text01, &conf.P8[ROLL], &__P,
+  &lcd_param_text02, &conf.P8[ROLL], &__P,
+  &lcd_param_text03, &conf.I8[ROLL], &__I,
+  &lcd_param_text04, &conf.D8[ROLL], &__D,
+  &lcd_param_text05, &conf.P8[PITCH], &__P,
+  &lcd_param_text06, &conf.I8[PITCH], &__I,
+  &lcd_param_text07, &conf.D8[PITCH], &__D,
+  &lcd_param_text08, &conf.P8[YAW], &__P,
+  &lcd_param_text09, &conf.I8[YAW], &__I,
+  &lcd_param_text10, &conf.D8[YAW], &__D,
 #if BARO
-  &lcd_param_text11, &P8[PIDALT], &__P,
-  &lcd_param_text12, &I8[PIDALT], &__I,
-  &lcd_param_text13, &D8[PIDALT], &__D,
-  &lcd_param_text14, &P8[PIDVEL], &__P,
-  &lcd_param_text15, &I8[PIDVEL], &__I,
-  &lcd_param_text16, &D8[PIDVEL], &__D,
+  &lcd_param_text11, &conf.P8[PIDALT], &__P,
+  &lcd_param_text12, &conf.I8[PIDALT], &__I,
+  &lcd_param_text13, &conf.D8[PIDALT], &__D,
+  &lcd_param_text14, &conf.P8[PIDVEL], &__P,
+  &lcd_param_text15, &conf.I8[PIDVEL], &__I,
+  &lcd_param_text16, &conf.D8[PIDVEL], &__D,
 #endif
-  &lcd_param_text17, &P8[PIDLEVEL], &__P,
-  &lcd_param_text18, &I8[PIDLEVEL], &__I,
-  &lcd_param_text188, &D8[PIDLEVEL], &__D,
+  &lcd_param_text17, &conf.P8[PIDLEVEL], &__P,
+  &lcd_param_text18, &conf.I8[PIDLEVEL], &__I,
+  &lcd_param_text188, &conf.D8[PIDLEVEL], &__D,
 #if MAG
-  &lcd_param_text19, &P8[PIDMAG], &__P,
+  &lcd_param_text19, &conf.P8[PIDMAG], &__P,
 #endif
-  &lcd_param_text20t, &thrMid8, &__RC,
-  &lcd_param_text21t, &thrExpo8, &__RC,
-  &lcd_param_text20, &rcRate8, &__RC,
-  &lcd_param_text21, &rcExpo8, &__RC,
-  &lcd_param_text22, &rollPitchRate, &__RC,
-  &lcd_param_text23, &yawRate, &__RC,
-  &lcd_param_text24, &dynThrPID, &__RC,
+  &lcd_param_text20t, &conf.thrMid8, &__RC,
+  &lcd_param_text21t, &conf.thrExpo8, &__RC,
+  &lcd_param_text20, &conf.rcRate8, &__RC,
+  &lcd_param_text21, &conf.rcExpo8, &__RC,
+  &lcd_param_text22, &conf.rollPitchRate, &__RC,
+  &lcd_param_text23, &conf.yawRate, &__RC,
+  &lcd_param_text24, &conf.dynThrPID, &__RC,
 #ifdef LCD_CONF_AUX
   #if ACC
-    &lcd_param_text42, &activate[BOXACC], &__AUX1,
-    &lcd_param_text42, &activate[BOXACC], &__AUX2,
+    &lcd_param_text42, &conf.activate[BOXACC], &__AUX1,
+    &lcd_param_text42, &conf.activate[BOXACC], &__AUX2,
     #ifndef SUPPRESS_LCD_CONF_AUX34
-      &lcd_param_text42, &activate[BOXACC], &__AUX3,
-      &lcd_param_text42, &activate[BOXACC], &__AUX4,
+      &lcd_param_text42, &conf.activate[BOXACC], &__AUX3,
+      &lcd_param_text42, &conf.activate[BOXACC], &__AUX4,
     #endif
   #endif
   #if BARO
-    &lcd_param_text43, &activate[BOXBARO], &__AUX1,
-    &lcd_param_text43, &activate[BOXBARO], &__AUX2,
+    &lcd_param_text43, &conf.activate[BOXBARO], &__AUX1,
+    &lcd_param_text43, &conf.activate[BOXBARO], &__AUX2,
     #ifndef SUPPRESS_LCD_CONF_AUX34
-      &lcd_param_text43, &activate[BOXBARO], &__AUX3,
-      &lcd_param_text43, &activate[BOXBARO], &__AUX4,
+      &lcd_param_text43, &conf.activate[BOXBARO], &__AUX3,
+      &lcd_param_text43, &conf.activate[BOXBARO], &__AUX4,
     #endif
   #endif
   #if MAG
-    &lcd_param_text44, &activate[BOXMAG], &__AUX1,
-    &lcd_param_text44, &activate[BOXMAG], &__AUX2,
+    &lcd_param_text44, &conf.activate[BOXMAG], &__AUX1,
+    &lcd_param_text44, &conf.activate[BOXMAG], &__AUX2,
     #ifndef SUPPRESS_LCD_CONF_AUX34
-      &lcd_param_text44, &activate[BOXMAG], &__AUX3,
-      &lcd_param_text44, &activate[BOXMAG], &__AUX4,
+      &lcd_param_text44, &conf.activate[BOXMAG], &__AUX3,
+      &lcd_param_text44, &conf.activate[BOXMAG], &__AUX4,
     #endif
   #endif
   #ifdef GIMBAL
-    &lcd_param_text45, &activate[BOXCAMSTAB], &__AUX1,
-    &lcd_param_text45, &activate[BOXCAMSTAB], &__AUX2,
+    &lcd_param_text45, &conf.activate[BOXCAMSTAB], &__AUX1,
+    &lcd_param_text45, &conf.activate[BOXCAMSTAB], &__AUX2,
     #ifndef SUPPRESS_LCD_CONF_AUX34
-      &lcd_param_text45, &activate[BOXCAMSTAB], &__AUX3,
-      &lcd_param_text45, &activate[BOXCAMSTAB], &__AUX4,
+      &lcd_param_text45, &conf.activate[BOXCAMSTAB], &__AUX3,
+      &lcd_param_text45, &conf.activate[BOXCAMSTAB], &__AUX4,
     #endif
-    &lcd_param_text46, &activate[BOXCAMTRIG], &__AUX1,
-    &lcd_param_text46, &activate[BOXCAMTRIG], &__AUX2,
+    &lcd_param_text46, &conf.activate[BOXCAMTRIG], &__AUX1,
+    &lcd_param_text46, &conf.activate[BOXCAMTRIG], &__AUX2,
     #ifndef SUPPRESS_LCD_CONF_AUX34
-      &lcd_param_text46, &activate[BOXCAMTRIG], &__AUX3,
-      &lcd_param_text46, &activate[BOXCAMTRIG], &__AUX4,
+      &lcd_param_text46, &conf.activate[BOXCAMTRIG], &__AUX3,
+      &lcd_param_text46, &conf.activate[BOXCAMTRIG], &__AUX4,
     #endif
   #endif
-  &lcd_param_text47, &activate[BOXARM], &__AUX1,
-  &lcd_param_text47, &activate[BOXARM], &__AUX2,
+  &lcd_param_text47, &conf.activate[BOXARM], &__AUX1,
+  &lcd_param_text47, &conf.activate[BOXARM], &__AUX2,
   #ifndef SUPPRESS_LCD_CONF_AUX34
-    &lcd_param_text47, &activate[BOXARM], &__AUX3,
-    &lcd_param_text47, &activate[BOXARM], &__AUX4,
+    &lcd_param_text47, &conf.activate[BOXARM], &__AUX3,
+    &lcd_param_text47, &conf.activate[BOXARM], &__AUX4,
   #endif
   #if GPS
-    &lcd_param_text48, &activate[BOXGPSHOME], &__AUX1,
-    &lcd_param_text48, &activate[BOXGPSHOME], &__AUX2,
+    &lcd_param_text48, &conf.activate[BOXGPSHOME], &__AUX1,
+    &lcd_param_text48, &conf.activate[BOXGPSHOME], &__AUX2,
     #ifndef SUPPRESS_LCD_CONF_AUX34
-      &lcd_param_text48, &activate[BOXGPSHOME], &__AUX3,
-      &lcd_param_text48, &activate[BOXGPSHOME], &__AUX4,
+      &lcd_param_text48, &conf.activate[BOXGPSHOME], &__AUX3,
+      &lcd_param_text48, &conf.activate[BOXGPSHOME], &__AUX4,
     #endif
-    &lcd_param_text49, &activate[BOXGPSHOLD], &__AUX1,
-    &lcd_param_text49, &activate[BOXGPSHOLD], &__AUX2,
+    &lcd_param_text49, &conf.activate[BOXGPSHOLD], &__AUX1,
+    &lcd_param_text49, &conf.activate[BOXGPSHOLD], &__AUX2,
     #ifndef SUPPRESS_LCD_CONF_AUX34
-      &lcd_param_text49, &activate[BOXGPSHOLD], &__AUX3,
-      &lcd_param_text49, &activate[BOXGPSHOLD], &__AUX4,
+      &lcd_param_text49, &conf.activate[BOXGPSHOLD], &__AUX3,
+      &lcd_param_text49, &conf.activate[BOXGPSHOLD], &__AUX4,
     #endif
   #endif
-  &lcd_param_text50, &activate[BOXPASSTHRU],&__AUX1,
-  &lcd_param_text50, &activate[BOXPASSTHRU],&__AUX2,
+  &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX1,
+  &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX2,
   #ifndef SUPPRESS_LCD_CONF_AUX34
-    &lcd_param_text50, &activate[BOXPASSTHRU],&__AUX3,
-    &lcd_param_text50, &activate[BOXPASSTHRU],&__AUX4,
+    &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX3,
+    &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX4,
   #endif
   #if MAG
-    &lcd_param_text51, &activate[BOXHEADFREE],&__AUX1,
-    &lcd_param_text51, &activate[BOXHEADFREE],&__AUX2,
+    &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX1,
+    &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX2,
     #ifndef SUPPRESS_LCD_CONF_AUX34
-      &lcd_param_text51, &activate[BOXHEADFREE],&__AUX3,
-      &lcd_param_text51, &activate[BOXHEADFREE],&__AUX4,
+      &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX3,
+      &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX4,
     #endif
   #endif
-  &lcd_param_text52, &activate[BOXBEEPERON],&__AUX1,
-  &lcd_param_text52, &activate[BOXBEEPERON],&__AUX2,
+  &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX1,
+  &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX2,
   #ifndef SUPPRESS_LCD_CONF_AUX34
-    &lcd_param_text52, &activate[BOXBEEPERON],&__AUX3,
-    &lcd_param_text52, &activate[BOXBEEPERON],&__AUX4,
+    &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX3,
+    &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX4,
   #endif
 #endif
 
@@ -883,17 +883,17 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
   &lcd_param_text35, &vbat, &__VB,
 #endif
 #ifdef FLYING_WING
-  &lcd_param_text36, &wing_left_mid, &__SE,
-  &lcd_param_text37, &wing_right_mid, &__SE,
+  &lcd_param_text36, &conf.wing_left_mid, &__SE,
+  &lcd_param_text37, &conf.wing_right_mid, &__SE,
 #endif
 #ifdef TRI
-  &lcd_param_text38, &tri_yaw_middle, &__SE,
+  &lcd_param_text38, &conf.tri_yaw_middle, &__SE,
 #endif
 #ifdef HELI_120_CCPM
-  &lcd_param_text73, &servoTrim[3], &__ST,
-  &lcd_param_text74, &servoTrim[4], &__ST,
-  &lcd_param_text75, &servoTrim[5], &__ST,
-  &lcd_param_text76, &servoTrim[6], &__ST,
+  &lcd_param_text73, &conf.servoTrim[3], &__ST,
+  &lcd_param_text74, &conf.servoTrim[4], &__ST,
+  &lcd_param_text75, &conf.servoTrim[5], &__ST,
+  &lcd_param_text76, &conf.servoTrim[6], &__ST,
 #endif
 #ifdef LOG_VALUES
   &lcd_param_text39, &failsafeEvents, &__L,
@@ -1080,12 +1080,12 @@ void configurationLoop() {
       refreshLCD = 1;
       lcd_param_def_t* deft = (lcd_param_def_t*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 2]));
       deft->type->inc((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), -deft->increment);
-      if (p == 0) P8[PITCH] = P8[ROLL];
+      if (p == 0) conf.P8[PITCH] = conf.P8[ROLL];
     } else if (key == LCD_VALUE_UP || (IsHigh(ROLL))) {
       refreshLCD = 1;
       lcd_param_def_t* deft = (lcd_param_def_t*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 2]));
       deft->type->inc((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), +deft->increment);
-      if (p == 0) P8[PITCH] = P8[ROLL];
+      if (p == 0) conf.P8[PITCH] = conf.P8[ROLL];
     }
   } // while (LCD == 1)
   blinkLED(20,30,1);

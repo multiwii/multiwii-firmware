@@ -90,20 +90,20 @@ void serialCom() {
               GPS_speed = read16();
               GPS_update = 1; break;
             case MSP_SET_PID:
-              for(i=0;i<PIDITEMS;i++) {P8[i]=read8();I8[i]=read8();D8[i]=read8();} break;
+              for(i=0;i<PIDITEMS;i++) {conf.P8[i]=read8();conf.I8[i]=read8();conf.D8[i]=read8();} break;
             case MSP_SET_BOX:
-              for(i=0;i<CHECKBOXITEMS;i++) {activate[i]=read16();} break;
+              for(i=0;i<CHECKBOXITEMS;i++) {conf.activate[i]=read16();} break;
             case MSP_SET_RC_TUNING:
-              rcRate8 = read8();
-              rcExpo8 = read8();
-              rollPitchRate = read8();
-              yawRate = read8();
-              dynThrPID = read8();
-              thrMid8 = read8();
-              thrExpo8 = read8();break;
+              conf.rcRate8 = read8();
+              conf.rcExpo8 = read8();
+              conf.rollPitchRate = read8();
+              conf.yawRate = read8();
+              conf.dynThrPID = read8();
+              conf.thrMid8 = read8();
+              conf.thrExpo8 = read8();break;
             case MSP_SET_MISC:
               #if defined(POWERMETER)
-                powerTrigger1 = read16() / PLEVELSCALE; // we rely on writeParams() to compute corresponding pAlarm value
+                conf.powerTrigger1 = read16() / PLEVELSCALE; // we rely on writeParams() to compute corresponding pAlarm value
               #endif
               break;
           }
@@ -191,21 +191,21 @@ void serialCom() {
               tailSerialReply();break;
             case MSP_RC_TUNING:
               headSerialReply(c,7);
-              serialize8(rcRate8);
-              serialize8(rcExpo8);
-              serialize8(rollPitchRate);
-              serialize8(yawRate);
-              serialize8(dynThrPID);
-              serialize8(thrMid8);
-              serialize8(thrExpo8);
+              serialize8(conf.rcRate8);
+              serialize8(conf.rcExpo8);
+              serialize8(conf.rollPitchRate);
+              serialize8(conf.yawRate);
+              serialize8(conf.dynThrPID);
+              serialize8(conf.thrMid8);
+              serialize8(conf.thrExpo8);
               tailSerialReply();break;
             case MSP_PID:
               headSerialReply(c,3*PIDITEMS);
-              for(i=0;i<PIDITEMS;i++)    {serialize8(P8[i]);serialize8(I8[i]);serialize8(D8[i]);}
+              for(i=0;i<PIDITEMS;i++)    {serialize8(conf.P8[i]);serialize8(conf.I8[i]);serialize8(conf.D8[i]);}
               tailSerialReply();break;
             case MSP_BOX:
               headSerialReply(c,2*CHECKBOXITEMS);
-              for(i=0;i<CHECKBOXITEMS;i++)    {serialize16(activate[i]);}
+              for(i=0;i<CHECKBOXITEMS;i++)    {serialize16(conf.activate[i]);}
               tailSerialReply();break;
             case MSP_MISC:
               headSerialReply(c,2);
@@ -216,7 +216,7 @@ void serialCom() {
               for(i=0;i<8;i++) {serialize8(PWM_PIN[i]);}
               tailSerialReply();break;
             case MSP_RESET_CONF:
-              checkNewConf++;checkFirstTime();break;
+              conf.checkNewConf++;checkFirstTime();break;
             case MSP_ACC_CALIBRATION:
               calibratingA=400;break;
             case MSP_MAG_CALIBRATION:

@@ -1,83 +1,40 @@
 #include <avr/eeprom.h>
 
-#define EEPROM_CONF_VERSION 156
-static uint8_t checkNewConf;
-
-struct eep_entry_t{
-  void *  var;
-  uint8_t size;
-};
-
-// ************************************************************************************************************
-// EEPROM Layout definition
-// ************************************************************************************************************
-static eep_entry_t eep_entry[] = {
-  {&checkNewConf, sizeof(checkNewConf)} // this is only left here to keep the read/write logic intact
-, {&P8, sizeof(P8)}
-, {&I8, sizeof(I8)} 
-, {&D8, sizeof(D8)} 
-, {&rcRate8, sizeof(rcRate8)}
-, {&rcExpo8, sizeof(rcExpo8)}
-, {&rollPitchRate, sizeof(rollPitchRate)}
-, {&yawRate, sizeof(yawRate)}
-, {&dynThrPID, sizeof(dynThrPID)}
-, {&thrMid8, sizeof(thrMid8)}
-, {&thrExpo8, sizeof(thrExpo8)}
-, {&accZero, sizeof(accZero)}
-, {&magZero, sizeof(magZero)}
-, {&accTrim, sizeof(accTrim)}
-, {&activate, sizeof(activate)}
-, {&powerTrigger1, sizeof(powerTrigger1)}
-#ifdef FLYING_WING
-, {&wing_left_mid,  sizeof(wing_left_mid)}
-, {&wing_right_mid, sizeof(wing_right_mid)}
-#endif
-#ifdef TRI
-, {&tri_yaw_middle,  sizeof(tri_yaw_middle)}
-#endif
-#ifdef HELICOPTER
-, {&servoTrim,  sizeof(servoTrim)}
-#endif
-, {&checkNewConf, sizeof(checkNewConf)} // this _must_ be the last entry always.
-};  
-#define EEBLOCK_SIZE sizeof(eep_entry)/sizeof(eep_entry_t)
-// ************************************************************************************************************
+#define EEPROM_CONF_VERSION 157
 
 void readEEPROM() {
-  uint8_t i, _address = eep_entry[0].size;
-  for(i=1; i<EEBLOCK_SIZE; i++) {
-    eeprom_read_block(eep_entry[i].var, (void*)(_address), eep_entry[i].size); _address += eep_entry[i].size;
-  }
+  uint8_t i;
 
+  eeprom_read_block((void*)&conf, (void*)0, sizeof(conf));
   for(i=0;i<6;i++) {
-    lookupPitchRollRC[i] = (2500+rcExpo8*(i*i-25))*i*(int32_t)rcRate8/2500;
+    lookupPitchRollRC[i] = (2500+conf.rcExpo8*(i*i-25))*i*(int32_t)conf.rcRate8/2500;
   }
   for(i=0;i<11;i++) {
-    int16_t tmp = 10*i-thrMid8;
+    int16_t tmp = 10*i-conf.thrMid8;
     uint8_t y = 1;
-    if (tmp>0) y = 100-thrMid8;
-    if (tmp<0) y = thrMid8;
-    lookupThrottleRC[i] = 10*thrMid8 + tmp*( 100-thrExpo8+(int32_t)thrExpo8*(tmp*tmp)/(y*y) )/10;     // [0;1000]
-    lookupThrottleRC[i] = MINTHROTTLE + (int32_t)(MAXTHROTTLE-MINTHROTTLE)* lookupThrottleRC[i]/1000; // [0;1000] -> [MINTHROTTLE;MAXTHROTTLE]
+    if (tmp>0) y = 100-conf.thrMid8;
+    if (tmp<0) y = conf.thrMid8;
+    lookupThrottleRC[i] = 10*conf.thrMid8 + tmp*( 100-conf.thrExpo8+(int32_t)conf.thrExpo8*(tmp*tmp)/(y*y) )/10; // [0;1000]
+    lookupThrottleRC[i] = MINTHROTTLE + (int32_t)(MAXTHROTTLE-MINTHROTTLE)* lookupThrottleRC[i]/1000;            // [0;1000] -> [MINTHROTTLE;MAXTHROTTLE]
   }
 
   #if defined(POWERMETER)
-    pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
+    pAlarm = (uint32_t) conf.powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
   #endif
   #ifdef FLYING_WING
     #ifdef LCD_CONF
-      wing_left_mid  = constrain(wing_left_mid, WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
-      wing_right_mid = constrain(wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
+      conf.wing_left_mid  = constrain(conf.wing_left_mid, WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
+      conf.wing_right_mid = constrain(conf.wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
     #else // w.o LCD support user may not find this value stored in eeprom, so always use the define value
-      wing_left_mid  = WING_LEFT_MID;
-      wing_right_mid = WING_RIGHT_MID;
+      conf.wing_left_mid  = WING_LEFT_MID;
+      conf.wing_right_mid = WING_RIGHT_MID;
     #endif
   #endif
   #ifdef TRI
     #ifdef LCD_CONF
-      tri_yaw_middle = constrain(tri_yaw_middle, TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
+      conf.tri_yaw_middle = constrain(conf.tri_yaw_middle, TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
     #else // w.o LCD support user may not find this value stored in eeprom, so always use the define value
-      tri_yaw_middle = TRI_YAW_MIDDLE;
+      conf.tri_yaw_middle = TRI_YAW_MIDDLE;
     #endif
   #endif
 //#ifdef HELICOPTER
@@ -88,46 +45,43 @@ void readEEPROM() {
 }
 
 void writeParams(uint8_t b) {
-  uint8_t i, _address = 0;
-  checkNewConf = EEPROM_CONF_VERSION; // make sure we write the current version into eeprom
-  for(i=0; i<EEBLOCK_SIZE; i++) {
-    eeprom_write_block(eep_entry[i].var, (void*)(_address), eep_entry[i].size); _address += eep_entry[i].size;
-  }  
+  conf.checkNewConf = EEPROM_CONF_VERSION; // make sure we write the current version into eeprom
+  eeprom_write_block((const void*)&conf, (void*)0, sizeof(conf));
   readEEPROM();
   if (b == 1) blinkLED(15,20,1);
 }
 
 void checkFirstTime() {
-  if (EEPROM_CONF_VERSION == checkNewConf) return;
-  P8[ROLL] = 40; I8[ROLL] = 30; D8[ROLL] = 23;
-  P8[PITCH] = 40; I8[PITCH] = 30; D8[PITCH] = 23;
-  P8[YAW]  = 85; I8[YAW]  = 45;  D8[YAW]  = 0;
-  P8[PIDALT]   = 16; I8[PIDALT]   = 15;  D8[PIDALT]   = 7;
-  P8[PIDGPS]   = 50; I8[PIDGPS]   = 0;  D8[PIDGPS]   = 15;
-  P8[PIDVEL]   =  0; I8[PIDVEL]   = 0;  D8[PIDVEL]   = 0;
-  P8[PIDLEVEL] = 70; I8[PIDLEVEL] = 10; D8[PIDLEVEL] = 100;
-  P8[PIDMAG] = 40;
-  rcRate8 = 90; rcExpo8 = 65;
-  rollPitchRate = 0;
-  yawRate = 0;
-  dynThrPID = 0;
-  thrMid8 = 50; thrExpo8 = 0;
-  for(uint8_t i=0;i<CHECKBOXITEMS;i++) {activate[i] = 0;}
-  accTrim[0] = 0; accTrim[1] = 0;
-  powerTrigger1 = 0;
+  if (EEPROM_CONF_VERSION == conf.checkNewConf) return;
+  conf.P8[ROLL]  = 40;  conf.I8[ROLL] = 30; conf.D8[ROLL]  = 23;
+  conf.P8[PITCH] = 40; conf.I8[PITCH] = 30; conf.D8[PITCH] = 23;
+  conf.P8[YAW]   = 85;  conf.I8[YAW]  = 45;  conf.D8[YAW]  = 0;
+  conf.P8[PIDALT]   = 16; conf.I8[PIDALT]   = 15; conf.D8[PIDALT]   = 7;
+  conf.P8[PIDGPS]   = 50; conf.I8[PIDGPS]   = 0;  conf.D8[PIDGPS]   = 15;
+  conf.P8[PIDVEL]   =  0; conf.I8[PIDVEL]   = 0;  conf.D8[PIDVEL]   = 0;
+  conf.P8[PIDLEVEL] = 70; conf.I8[PIDLEVEL] = 10; conf.D8[PIDLEVEL] = 100;
+  conf.P8[PIDMAG] = 40;
+  conf.rcRate8 = 90; conf.rcExpo8 = 65;
+  conf.rollPitchRate = 0;
+  conf.yawRate = 0;
+  conf.dynThrPID = 0;
+  conf.thrMid8 = 50; conf.thrExpo8 = 0;
+  for(uint8_t i=0;i<CHECKBOXITEMS;i++) {conf.activate[i] = 0;}
+  conf.angleTrim[0] = 0; conf.angleTrim[1] = 0;
+  conf.powerTrigger1 = 0;
   #ifdef FLYING_WING
-    wing_left_mid  = WING_LEFT_MID; 
-    wing_right_mid = WING_RIGHT_MID; 
+    conf.wing_left_mid  = WING_LEFT_MID; 
+    conf.wing_right_mid = WING_RIGHT_MID; 
   #endif
   #ifdef FIXEDWING
-   dynThrPID = 50;
-   rcExpo8   =  0;
+    conf.dynThrPID = 50;
+    conf.rcExpo8   =  0;
   #endif
   #ifdef TRI
-   tri_yaw_middle = TRI_YAW_MIDDLE;
+    conf.tri_yaw_middle = TRI_YAW_MIDDLE;
   #endif
   #ifdef HELICOPTER
-   //servoTrim[] = SERVO_OFFSET;
+    //servoTrim[] = SERVO_OFFSET;
   #endif
   writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }

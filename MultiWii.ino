@@ -63,7 +63,6 @@ static uint8_t  headFreeMode = 0;   // if head free mode is a activated
 static uint8_t  passThruMode = 0;   // if passthrough mode is activated
 static int16_t  headFreeModeHold;
 static int16_t  gyroADC[3],accADC[3],accSmooth[3],magADC[3];
-static int16_t  accTrim[2] = {0, 0};
 static int16_t  heading,magHold;
 static uint8_t  calibratedACC = 0;
 static uint8_t  vbat;               // battery voltage in 0.1V steps
@@ -105,7 +104,6 @@ static uint16_t AccInflightCalibrationActive = 0;
 static uint32_t pMeter[PMOTOR_SUM + 1];  // we use [0:7] for eight motors,one extra for sum
 static uint8_t pMeterV;                  // dummy to satisfy the paramStruct logic in ConfigurationLoop()
 static uint32_t pAlarm;                  // we scale the eeprom value from [0:255] to this value we can directly compare to the sum in pMeter[6]
-static uint8_t powerTrigger1 = 0;        // trigger for alarm based on power consumption
 static uint16_t powerValue = 0;          // last known current
 static uint16_t intPowerMeterSum, intPowerTrigger1;
 
@@ -125,10 +123,6 @@ volatile int16_t failsafeCnt = 0;
 static int16_t failsafeEvents = 0;
 static int16_t rcData[8];          // interval [1000;2000]
 static int16_t rcCommand[4];       // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW 
-static uint8_t rcRate8;
-static uint8_t rcExpo8;
-static uint8_t thrMid8;
-static uint8_t thrExpo8;
 static int16_t lookupPitchRollRC[6];// lookup table for expo & RC rate PITCH+ROLL
 static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 volatile uint8_t rcFrameComplete; // for serial rc receiver Spektrum
@@ -139,8 +133,6 @@ static uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim o
 // **************
 static int16_t gyroData[3] = {0,0,0};
 static int16_t gyroZero[3] = {0,0,0};
-static int16_t accZero[3]  = {0,0,0};
-static int16_t magZero[3]  = {0,0,0};
 static int16_t angle[2]    = {0,0};  // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
 static int8_t  smallAngle25 = 1;
 
@@ -150,20 +142,37 @@ static int8_t  smallAngle25 = 1;
 static int16_t axisPID[3];
 static int16_t motor[8];
 static int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1500};
-static uint16_t wing_left_mid  = WING_LEFT_MID; 
-static uint16_t wing_right_mid = WING_RIGHT_MID; 
-static uint16_t tri_yaw_middle = TRI_YAW_MIDDLE; 
-static int16_t  servoTrim[8] = SERVO_OFFSET;
 
-// **********************
-// EEPROM & LCD functions
-// **********************
-static uint8_t P8[8], I8[8], D8[8]; // 8 bits is much faster and the code is much shorter
+// ************************
+// EEPROM Layout definition
+// ************************
 static uint8_t dynP8[3], dynI8[3], dynD8[3];
-static uint8_t rollPitchRate;
-static uint8_t yawRate;
-static uint8_t dynThrPID;
-static uint16_t activate[CHECKBOXITEMS];
+static struct {
+  uint8_t checkNewConf;
+  uint8_t P8[PIDITEMS], I8[PIDITEMS], D8[PIDITEMS];
+  uint8_t rcRate8;
+  uint8_t rcExpo8;
+  uint8_t rollPitchRate;
+  uint8_t yawRate;
+  uint8_t dynThrPID;
+  uint8_t thrMid8;
+  uint8_t thrExpo8;
+  int16_t accZero[3];
+  int16_t magZero[3];
+  int16_t angleTrim[2];
+  uint16_t activate[CHECKBOXITEMS];
+  uint8_t powerTrigger1;
+  #ifdef FLYING_WING
+    uint16_t wing_left_mid;
+    uint16_t wing_right_mid;
+  #endif
+  #ifdef TRI
+    uint16_t tri_yaw_middle;
+  #endif
+  #ifdef HELICOPTER
+    int16_t servoTrim[8];
+  #endif
+} conf;
 
 // **********************
 // GPS
@@ -207,9 +216,9 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     prop2 = 100;
   } else {
     if (rcData[THROTTLE]<2000) {
-      prop2 = 100 - (uint16_t)dynThrPID*(rcData[THROTTLE]-BREAKPOINT)/(2000-BREAKPOINT);
+      prop2 = 100 - (uint16_t)conf.dynThrPID*(rcData[THROTTLE]-BREAKPOINT)/(2000-BREAKPOINT);
     } else {
-      prop2 = 100 - dynThrPID;
+      prop2 = 100 - conf.dynThrPID;
     }
   }
 
@@ -222,14 +231,14 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     if(axis!=2) { //ROLL & PITCH
       tmp2 = tmp/100;
       rcCommand[axis] = lookupPitchRollRC[tmp2] + (tmp-tmp2*100) * (lookupPitchRollRC[tmp2+1]-lookupPitchRollRC[tmp2]) / 100;
-      prop1 = 100-(uint16_t)rollPitchRate*tmp/500;
+      prop1 = 100-(uint16_t)conf.rollPitchRate*tmp/500;
       prop1 = (uint16_t)prop1*prop2/100;
     } else {      // YAW
       rcCommand[axis] = tmp;
-      prop1 = 100-(uint16_t)yawRate*tmp/500;
+      prop1 = 100-(uint16_t)conf.yawRate*tmp/500;
     }
-    dynP8[axis] = (uint16_t)P8[axis]*prop1/100;
-    dynD8[axis] = (uint16_t)D8[axis]*prop1/100;
+    dynP8[axis] = (uint16_t)conf.P8[axis]*prop1/100;
+    dynD8[axis] = (uint16_t)conf.D8[axis]*prop1/100;
     if (rcData[axis]<MIDRC) rcCommand[axis] = -rcCommand[axis];
   }
   tmp = constrain(rcData[THROTTLE],MINCHECK,2000);
@@ -322,7 +331,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 
   #if defined(POWERMETER)
     intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
-    intPowerTrigger1 = powerTrigger1 * PLEVELSCALE; 
+    intPowerTrigger1 = conf.powerTrigger1 * PLEVELSCALE; 
   #endif
 
   #ifdef LCD_TELEMETRY_AUTO
@@ -480,8 +489,8 @@ void loop () {
             writeServos();
           #endif
           #ifdef FLYING_WING
-            servo[0]  = wing_left_mid;
-            servo[1]  = wing_right_mid;
+            servo[0]  = conf.wing_left_mid;
+            servo[1]  = conf.wing_right_mid;
             writeServos();
           #endif
           #ifdef AIRPLANE
@@ -511,7 +520,7 @@ void loop () {
           }
        } 
      #endif
-      else if (activate[BOXARM] > 0) {
+      else if (conf.activate[BOXARM] > 0) {
         if ( rcOptions[BOXARM] && okToArm ) {
 	  armed = 1;
 	  headFreeModeHold = heading;
@@ -555,22 +564,22 @@ void loop () {
         if (rcDelayCommand == 20) calibratingM=1; // MAG calibration request
         rcDelayCommand++;
       } else if (rcData[PITCH] > MAXCHECK) {
-         accTrim[PITCH]+=2;writeParams(1);
+         conf.angleTrim[PITCH]+=2;writeParams(1);
          #if defined(LED_RING)
            blinkLedRing();
          #endif
       } else if (rcData[PITCH] < MINCHECK) {
-         accTrim[PITCH]-=2;writeParams(1);
+         conf.angleTrim[PITCH]-=2;writeParams(1);
          #if defined(LED_RING)
            blinkLedRing();
          #endif
       } else if (rcData[ROLL] > MAXCHECK) {
-         accTrim[ROLL]+=2;writeParams(1);
+         conf.angleTrim[ROLL]+=2;writeParams(1);
          #if defined(LED_RING)
            blinkLedRing();
          #endif
       } else if (rcData[ROLL] < MINCHECK) {
-         accTrim[ROLL]-=2;writeParams(1);
+         conf.angleTrim[ROLL]-=2;writeParams(1);
          #if defined(LED_RING)
            blinkLedRing();
          #endif
@@ -599,7 +608,7 @@ void loop () {
        ((rcData[AUX1]<1300)    | (1300<rcData[AUX1] && rcData[AUX1]<1700)<<1 | (rcData[AUX1]>1700)<<2
        |(rcData[AUX2]<1300)<<3 | (1300<rcData[AUX2] && rcData[AUX2]<1700)<<4 | (rcData[AUX2]>1700)<<5
        |(rcData[AUX3]<1300)<<6 | (1300<rcData[AUX3] && rcData[AUX3]<1700)<<7 | (rcData[AUX3]>1700)<<8
-       |(rcData[AUX4]<1300)<<9 | (1300<rcData[AUX4] && rcData[AUX4]<1700)<<10| (rcData[AUX4]>1700)<<11) & activate[i])>0;
+       |(rcData[AUX4]<1300)<<9 | (1300<rcData[AUX4] && rcData[AUX4]<1700)<<10| (rcData[AUX4]>1700)<<11) & conf.activate[i])>0;
     }
 
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAVE_DELAY is always false
@@ -699,7 +708,7 @@ void loop () {
       int16_t dif = heading - magHold;
       if (dif <= - 180) dif += 360;
       if (dif >= + 180) dif -= 360;
-      if ( smallAngle25 ) rcCommand[YAW] -= dif*P8[PIDMAG]/30;  // 18 deg
+      if ( smallAngle25 ) rcCommand[YAW] -= dif*conf.P8[PIDMAG]/30;  // 18 deg
     } else magHold = heading;
   #endif
 
@@ -728,8 +737,8 @@ void loop () {
         GPS_dir = GPS_directionToHold;
       }
       float radDiff = (GPS_dir-heading) * 0.0174533f;
-      GPS_angle[ROLL]  = constrain(P8[PIDGPS] * sin(radDiff) * GPS_dist / 10,-D8[PIDGPS]*10,+D8[PIDGPS]*10); // with P=5.0, a distance of 1 meter = 0.5deg inclination
-      GPS_angle[PITCH] = constrain(P8[PIDGPS] * cos(radDiff) * GPS_dist / 10,-D8[PIDGPS]*10,+D8[PIDGPS]*10); // max inclination = D deg
+      GPS_angle[ROLL]  = constrain(conf.P8[PIDGPS] * sin(radDiff) * GPS_dist / 10,-conf.D8[PIDGPS]*10,+conf.D8[PIDGPS]*10); // with P=5.0, a distance of 1 meter = 0.5deg inclination
+      GPS_angle[PITCH] = constrain(conf.P8[PIDGPS] * cos(radDiff) * GPS_dist / 10,-conf.D8[PIDGPS]*10,+conf.D8[PIDGPS]*10); // max inclination = D deg
     }
   #endif
 
@@ -737,26 +746,26 @@ void loop () {
   for(axis=0;axis<3;axis++) {
     if (accMode == 1 && axis<2 ) { //LEVEL MODE
       // 50 degrees max inclination
-      errorAngle = constrain(2*rcCommand[axis] - GPS_angle[axis],-500,+500) - angle[axis] + accTrim[axis]; //16 bits is ok here
+      errorAngle = constrain(2*rcCommand[axis] - GPS_angle[axis],-500,+500) - angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
       #ifdef LEVEL_PDF
-        PTerm      = -(int32_t)angle[axis]*P8[PIDLEVEL]/100 ;
+        PTerm      = -(int32_t)angle[axis]*conf.P8[PIDLEVEL]/100 ;
       #else  
-        PTerm      = (int32_t)errorAngle*P8[PIDLEVEL]/100 ;                          // 32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
+        PTerm      = (int32_t)errorAngle*conf.P8[PIDLEVEL]/100 ;                          // 32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
       #endif
-      PTerm = constrain(PTerm,-D8[PIDLEVEL]*5,+D8[PIDLEVEL]*5);
+      PTerm = constrain(PTerm,-conf.D8[PIDLEVEL]*5,+conf.D8[PIDLEVEL]*5);
 
       errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);    // WindUp     //16 bits is ok here
-      ITerm              = ((int32_t)errorAngleI[axis]*I8[PIDLEVEL])>>12;            // 32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
+      ITerm              = ((int32_t)errorAngleI[axis]*conf.I8[PIDLEVEL])>>12;            // 32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
     } else { //ACRO MODE or YAW axis
-      if (abs(rcCommand[axis])<350) error =          rcCommand[axis]*10*8/P8[axis] ; // 16 bits is needed for calculation: 350*10*8 = 28000      16 bits is ok for result if P8>2 (P>0.2)
-                               else error = (int32_t)rcCommand[axis]*10*8/P8[axis] ; // 32 bits is needed for calculation: 500*5*10*8 = 200000   16 bits is ok for result if P8>2 (P>0.2)
+      if (abs(rcCommand[axis])<350) error =          rcCommand[axis]*10*8/conf.P8[axis] ; // 16 bits is needed for calculation: 350*10*8 = 28000      16 bits is ok for result if P8>2 (P>0.2)
+                               else error = (int32_t)rcCommand[axis]*10*8/conf.P8[axis] ; // 32 bits is needed for calculation: 500*5*10*8 = 200000   16 bits is ok for result if P8>2 (P>0.2)
       error -= gyroData[axis];
 
       PTerm = rcCommand[axis];
       
       errorGyroI[axis]  = constrain(errorGyroI[axis]+error,-16000,+16000);          // WindUp   16 bits is ok here
       if (abs(gyroData[axis])>640) errorGyroI[axis] = 0;
-      ITerm = (errorGyroI[axis]/125*I8[axis])>>6;                                   // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
+      ITerm = (errorGyroI[axis]/125*conf.I8[axis])>>6;                                   // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
     }
     if (abs(gyroData[axis])<160) PTerm -=          gyroData[axis]*dynP8[axis]/10/8; // 16 bits is needed for calculation   160*200 = 32000         16 bits is ok for result
                             else PTerm -= (int32_t)gyroData[axis]*dynP8[axis]/10/8; // 32 bits is needed for calculation   

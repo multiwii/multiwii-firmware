@@ -256,15 +256,15 @@ void ACC_Common() {
       a[axis] +=accADC[axis];
       // Clear global variables for next reading
       accADC[axis]=0;
-      accZero[axis]=0;
+      conf.accZero[axis]=0;
     }
     // Calculate average, shift Z down by acc_1G and store values in EEPROM at end of calibration
     if (calibratingA == 1) {
-      accZero[ROLL]  = a[ROLL]/400;
-      accZero[PITCH] = a[PITCH]/400;
-      accZero[YAW]   = a[YAW]/400-acc_1G; // for nunchuk 200=1G
-      accTrim[ROLL]   = 0;
-      accTrim[PITCH]  = 0;
+      conf.accZero[ROLL]  = a[ROLL]/400;
+      conf.accZero[PITCH] = a[PITCH]/400;
+      conf.accZero[YAW]   = a[YAW]/400-acc_1G; // for nunchuk 200=1G
+      conf.angleTrim[ROLL]   = 0;
+      conf.angleTrim[PITCH]  = 0;
       writeParams(1); // write accZero in EEPROM
     }
     calibratingA--;
@@ -316,9 +316,9 @@ void ACC_Common() {
         writeParams(1); // write accZero in EEPROM
       }
   #endif
-  accADC[ROLL]  -=  accZero[ROLL] ;
-  accADC[PITCH] -=  accZero[PITCH];
-  accADC[YAW]   -=  accZero[YAW] ;
+  accADC[ROLL]  -=  conf.accZero[ROLL] ;
+  accADC[PITCH] -=  conf.accZero[PITCH];
+  accADC[YAW]   -=  conf.accZero[YAW] ;
 }
 
 
@@ -919,16 +919,16 @@ void Mag_getADC() {
   if (calibratingM == 1) {
     tCal = t;
     for(axis=0;axis<3;axis++) {
-      magZero[axis] = 0;
+      conf.magZero[axis] = 0;
       magZeroTempMin[axis] = magADC[axis];
       magZeroTempMax[axis] = magADC[axis];
     }
     calibratingM = 0;
   }
   if (magInit) { // we apply offset only once mag calibration is done
-    magADC[ROLL]  -= magZero[ROLL];
-    magADC[PITCH] -= magZero[PITCH];
-    magADC[YAW]   -= magZero[YAW];
+    magADC[ROLL]  -= conf.magZero[ROLL];
+    magADC[PITCH] -= conf.magZero[PITCH];
+    magADC[YAW]   -= conf.magZero[YAW];
   }
  
   if (tCal != 0) {
@@ -941,7 +941,7 @@ void Mag_getADC() {
     } else {
       tCal = 0;
       for(axis=0;axis<3;axis++)
-        magZero[axis] = (magZeroTempMin[axis] + magZeroTempMax[axis])/2;
+        conf.magZero[axis] = (magZeroTempMin[axis] + magZeroTempMax[axis])/2;
       writeParams(1);
     }
   }
