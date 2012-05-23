@@ -877,7 +877,7 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
 #endif
 #ifdef POWERMETER
   &lcd_param_text33, &pMeter[PMOTOR_SUM], &__PS,
-  &lcd_param_text34, &powerTrigger1, &__PT,
+  &lcd_param_text34, &conf.powerTrigger1, &__PT,
 #endif
 #ifdef VBAT
   &lcd_param_text35, &vbat, &__VB,
@@ -1217,8 +1217,8 @@ void output_VmAbars() {
 #ifdef POWERMETER
   //     intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
   //   pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
-  if (powerTrigger1)
-  LCDbar(8, (intPowerMeterSum/(uint16_t)powerTrigger1) *2 );// bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
+  if (conf.powerTrigger1)
+  LCDbar(8, (intPowerMeterSum/(uint16_t)conf.powerTrigger1) *2 );// bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
 #endif
 }
 void fill_line1_cycle() {
