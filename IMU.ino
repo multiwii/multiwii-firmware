@@ -58,11 +58,9 @@ void computeIMU () {
     }
   }
   #if defined(GYRO_SMOOTHING)
-    static uint8_t Smoothing[3]  = GYRO_SMOOTHING; // How much to smoothen with per axis
     static int16_t gyroSmooth[3] = {0,0,0};
     for (axis = 0; axis < 3; axis++) {
-      gyroData[axis] = (int16_t) ( ( (int32_t)((int32_t)gyroSmooth[axis] * (Smoothing[axis]-1) )+gyroData[axis]+1 ) / Smoothing[axis]);
-      // was :gyroData[axis] = (gyroSmooth[axis]*(Smoothing[axis]-1)+gyroData[axis])/Smoothing[axis];
+      gyroData[axis] = (int16_t) ( ( (int32_t)((int32_t)gyroSmooth[axis] * (conf.Smoothing[axis]-1) )+gyroData[axis]+1 ) / conf.Smoothing[axis]);
       gyroSmooth[axis] = gyroData[axis];
     }
   #elif defined(TRI)

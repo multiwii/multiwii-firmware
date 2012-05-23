@@ -1,6 +1,6 @@
 #include <avr/eeprom.h>
 
-#define EEPROM_CONF_VERSION 157
+#define EEPROM_CONF_VERSION 158
 
 void readEEPROM() {
   uint8_t i;
@@ -82,6 +82,10 @@ void checkFirstTime() {
   #endif
   #ifdef HELICOPTER
     //servoTrim[] = SERVO_OFFSET;
+  #endif
+  #if defined(GYRO_SMOOTHING)
+    uint8_t s[3] = GYRO_SMOOTHING;
+    for(uint8_t i=0;i<3;i++) conf.Smoothing[i] = s[i];
   #endif
   writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }

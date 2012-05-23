@@ -172,6 +172,9 @@ static struct {
   #ifdef HELICOPTER
     int16_t servoTrim[8];
   #endif
+  #if defined(GYRO_SMOOTHING)
+    uint8_t Smoothing[3];
+  #endif
 } conf;
 
 // **********************

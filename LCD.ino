@@ -732,7 +732,12 @@ PROGMEM prog_char lcd_param_text74 [] = "Trim Ser L";
 PROGMEM prog_char lcd_param_text75 [] = "Trim Ser T";
 PROGMEM prog_char lcd_param_text76 [] = "Trim Ser R";
 #endif
-//                                        0123456789.12345
+#ifdef GYRO_SMOOTHING //                 0123456789
+PROGMEM prog_char lcd_param_text80 [] = "Gsmooth R ";
+PROGMEM prog_char lcd_param_text81 [] = "Gsmooth P ";
+PROGMEM prog_char lcd_param_text82 [] = "Gsmooth Y ";
+#endif
+//                                       0123456789.12345
 
 PROGMEM const prog_void *lcd_param_ptr_table [] = {
   &lcd_param_text01, &conf.P8[ROLL], &__P,
@@ -894,6 +899,11 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
   &lcd_param_text74, &conf.servoTrim[4], &__ST,
   &lcd_param_text75, &conf.servoTrim[5], &__ST,
   &lcd_param_text76, &conf.servoTrim[6], &__ST,
+#endif
+#ifdef GYRO_SMOOTHING
+  &lcd_param_text80, &conf.Smoothing[0], &__D,
+  &lcd_param_text81, &conf.Smoothing[1], &__D,
+  &lcd_param_text82, &conf.Smoothing[2], &__D,
 #endif
 #ifdef LOG_VALUES
   &lcd_param_text39, &failsafeEvents, &__L,
