@@ -169,7 +169,7 @@ static struct {
   #ifdef TRI
     uint16_t tri_yaw_middle;
   #endif
-  #ifdef HELICOPTER
+  #if defined HELICOPTER || defined(AIRPLANE)
     int16_t servoTrim[8];
   #endif
   #if defined(GYRO_SMOOTHING)

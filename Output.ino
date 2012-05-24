@@ -883,7 +883,6 @@ void mixTable() {
     // Common parts for Plane and Heli
     static int16_t   servoMid[8];                        // Midpoint on servo
     static uint8_t   servoTravel[8] = SERVO_RATES;       // Rates in 0-100% 
-    static int8_t    Mid[8] = SERVO_OFFSET;
     static int8_t    servoReverse[8] = SERVO_DIRECTION ; // Inverted servos
     static int16_t   servoLimit[8][2]; // Holds servoLimit data
 
@@ -893,7 +892,7 @@ void mixTable() {
   #define SERVO_MIN 1020           // limit servo travel range must be inside [1020;2000]
   #define SERVO_MAX 2000           // limit servo travel range must be inside [1020;2000]
     for(i=0; i<8; i++){  //  Set rates with 0 - 100%. 
-      servoMid[i]     =MIDRC + Mid[i];
+      servoMid[i]     =MIDRC + conf.servoTrim[i];
       servoLimit[i][0]=servoMid[i]-((servoMid[i]-SERVO_MIN)   *(servoTravel[i]*0.01));
       servoLimit[i][1]=servoMid[i]+((SERVO_MAX - servoMid[i]) *(servoTravel[i]*0.01));  
     }
@@ -929,7 +928,7 @@ void mixTable() {
       servo[6]  =(servoMid[6] + (axisPID[PITCH]             *servoReverse[6]));   //   Elevator
     } 
     // ServoRates
-    for(uint8_t i=3;i<8;i++){ 
+    for(i=3;i<8;i++){
       servo[i]  = map(servo[i], SERVO_MIN, SERVO_MAX,servoLimit[i][0],servoLimit[i][1]);
       servo[i]  = constrain( servo[i], SERVO_MIN, SERVO_MAX);
     }
@@ -1014,7 +1013,7 @@ void mixTable() {
     servo[6]  = HeliXPIDMIX( servoDir[0], +0, +0)+conf.servoTrim[6] ;      //     COLLECTIVE  servo
   #endif    
 
-    for(uint8_t i=3;i<8;i++){
+    for(i=3;i<8;i++){
       servo[i]  = constrain( servo[i], servoEndpiont[i][0], servoEndpiont[i][1] ); 
     }
 

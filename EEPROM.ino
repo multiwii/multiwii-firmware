@@ -80,12 +80,17 @@ void checkFirstTime() {
   #ifdef TRI
     conf.tri_yaw_middle = TRI_YAW_MIDDLE;
   #endif
-  #ifdef HELICOPTER
-    //servoTrim[] = SERVO_OFFSET;
+  #if defined HELICOPTER || defined(AIRPLANE)
+    {
+      int16_t s[8] = SERVO_OFFSET;
+      for(uint8_t i=0;i<8;i++) conf.servoTrim[i] = s[i];
+    }
   #endif
   #if defined(GYRO_SMOOTHING)
-    uint8_t s[3] = GYRO_SMOOTHING;
-    for(uint8_t i=0;i<3;i++) conf.Smoothing[i] = s[i];
+    {
+      uint8_t s[3] = GYRO_SMOOTHING;
+      for(uint8_t i=0;i<3;i++) conf.Smoothing[i] = s[i];
+    }
   #endif
   writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }
