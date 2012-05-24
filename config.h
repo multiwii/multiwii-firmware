@@ -722,6 +722,32 @@
        dont use it with analog servos! thay may get damage. (some will work but be careful)*/
     //#define SERVO_RFR_300HZ
 
+  /********************************************************************/
+  /****           IMU complimentary filter tuning                  ****/
+  /********************************************************************/
+
+    /* Set the Low Pass Filter factor for ACC */
+    /* Increasing this value would reduce ACC noise (visible in GUI), but would increase ACC lag time*/
+    /* Comment this if  you do not want filter at all.*/
+    //#define ACC_LPF_FACTOR 100
+
+    /* Set the Low Pass Filter factor for Magnetometer */
+    /* Increasing this value would reduce Magnetometer noise (not visible in GUI), but would increase Magnetometer lag time*/
+    /* Comment this if  you do not want filter at all.*/
+    /* Default WMC value: n/a*/
+    //#define MG_LPF_FACTOR 4
+
+    /* Set the Gyro Weight for Gyro/Acc complementary filter */
+    /* Increasing this value would reduce and delay Acc influence on the output of the filter*/
+    /* Default WMC value: 300*/
+    //#define GYR_CMPF_FACTOR 400.0f
+
+    /* Set the Gyro Weight for Gyro/Magnetometer complementary filter */
+    /* Increasing this value would reduce and delay Magnetometer influence on the output of the filter*/
+    /* Default WMC value: n/a*/
+    //#define GYR_CMPFM_FACTOR 200.0f
+
+
 
   /********************************************************************/
   /****           diagnostics                                      ****/
