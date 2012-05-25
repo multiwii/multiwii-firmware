@@ -37,11 +37,9 @@ void readEEPROM() {
       conf.tri_yaw_middle = TRI_YAW_MIDDLE;
     #endif
   #endif
-//#ifdef HELICOPTER
-//  #ifndef LCD_CONF
-//      servoTrim = SERVO_OFFSET;
-//  #endif
-//#endif
+  #if defined(I2C_GPS)
+    if (i2c_init_done) GPS_set_pids();
+  #endif
 }
 
 void writeParams(uint8_t b) {
@@ -57,8 +55,11 @@ void checkFirstTime() {
   conf.P8[PITCH] = 40; conf.I8[PITCH] = 30; conf.D8[PITCH] = 23;
   conf.P8[YAW]   = 85;  conf.I8[YAW]  = 45;  conf.D8[YAW]  = 0;
   conf.P8[PIDALT]   = 16; conf.I8[PIDALT]   = 15; conf.D8[PIDALT]   = 7;
-  conf.P8[PIDGPS]   = 50; conf.I8[PIDGPS]   = 0;  conf.D8[PIDGPS]   = 15;
-  conf.P8[PIDVEL]   =  0; conf.I8[PIDVEL]   = 0;  conf.D8[PIDVEL]   = 0;
+  
+  conf.P8[PIDPOS]  = POSHOLD_P * 100; conf.I8[PIDPOS]   = POSHOLD_I * 100;  conf.D8[PIDPOS]   = 0;
+  conf.P8[PIDPOSR] =  POSHOLD_RATE_P * 10; conf.I8[PIDPOSR]   = POSHOLD_RATE_I * 100;  conf.D8[PIDPOSR]   = POSHOLD_RATE_D * 1000;
+  conf.P8[PIDNAVR] =  NAV_P * 10; conf.I8[PIDNAVR]   = NAV_I * 100;  conf.D8[PIDNAVR]   = NAV_D * 1000;
+
   conf.P8[PIDLEVEL] = 70; conf.I8[PIDLEVEL] = 10; conf.D8[PIDLEVEL] = 100;
   conf.P8[PIDMAG] = 40;
   conf.rcRate8 = 90; conf.rcExpo8 = 65;

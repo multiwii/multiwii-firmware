@@ -24,10 +24,11 @@ March  2012     V2.0
 #define AUX4       7
 
 #define PIDALT     3
-#define PIDVEL     4
-#define PIDGPS     5
-#define PIDLEVEL   6
-#define PIDMAG     7
+#define PIDPOS     4
+#define PIDPOSR    5
+#define PIDNAVR    6
+#define PIDLEVEL   7
+#define PIDMAG     8
 
 #define BOXACC       0
 #define BOXBARO      1
@@ -42,7 +43,7 @@ March  2012     V2.0
 #define BOXBEEPERON  10
 
 #define CHECKBOXITEMS 11
-#define PIDITEMS 8
+#define PIDITEMS 9
 
 static uint32_t currentTime = 0;
 static uint16_t previousTime = 0;
@@ -76,6 +77,7 @@ static int16_t  errorAltitudeI = 0;
 static uint8_t  toggleBeep = 0;
 static int16_t  debug1,debug2,debug3,debug4;
 static int16_t  sonarAlt; //to think about the unit
+static uint8_t  i2c_init_done = 0;          // For i2c gps we have to now when i2c init is done, so we can update parameters to the i2cgps from eeprom (at startup it is done in setup())
 
 //for log
 static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
@@ -177,21 +179,61 @@ static struct {
   #endif
 } conf;
 
+
 // **********************
-// GPS
+// GPS common variables
 // **********************
 static int32_t  GPS_latitude,GPS_longitude;
-static int32_t  GPS_latitude_home,GPS_longitude_home,GPS_altitude_home;
-static int32_t  GPS_latitude_hold,GPS_longitude_hold,GPS_altitude_hold;
+static int32_t  GPS_latitude_home,GPS_longitude_home;
+static int32_t  GPS_latitude_hold,GPS_longitude_hold;
 static uint8_t  GPS_fix , GPS_fix_home = 0;
 static uint8_t  GPS_numSat;
 static uint16_t GPS_distanceToHome,GPS_distanceToHold;       // distance to home or hold point in meters
 static int16_t  GPS_directionToHome,GPS_directionToHold;     // direction to home or hol point in degrees
-static int16_t  GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s
+static uint16_t GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s
 static uint8_t  GPS_update = 0;                              // it's a binary toogle to distinct a GPS position update
 static int16_t  GPS_angle[2] = { 0, 0};                      // it's the angles that must be applied for GPS correction
-
 static uint16_t GPS_ground_course = 0;                       //degrees*10
+
+// The desired bank towards North (Positive) or South (Negative)
+static int16_t	nav_lat;
+// The desired bank towards East (Positive) or West (Negative)
+static int16_t	nav_lon;
+// This is the angle from the copter to the "next_WP" location
+// with the addition of Crosstrack error in degrees * 100
+static int32_t	nav_bearing;
+// saves the bearing at takeof (1deg = 1) used to rotate to takeoff direction when arrives at home
+static int16_t  nav_takeoff_bearing; 
+//Used for rotation calculations for GPS nav vector
+static float sin_yaw_y;
+static float cos_yaw_x;
+//////////////////////////////////////////////////////////////////////////////
+// POSHOLD control gains
+//
+#define POSHOLD_P			.11
+#define POSHOLD_I			0.0
+#define POSHOLD_IMAX		20		// degrees
+
+#define POSHOLD_RATE_P		2.0			//
+#define POSHOLD_RATE_I		0.08			// Wind control
+#define POSHOLD_RATE_D		0.045			// try 2 or 3 for POSHOLD_RATE 1
+#define POSHOLD_RATE_IMAX	20			// degrees
+//////////////////////////////////////////////////////////////////////////////
+// Navigation PID gains
+//
+#define NAV_P				1.4		//
+#define NAV_I				0.20		// Wind control
+#define NAV_D				0.08		//
+#define NAV_IMAX			20		// degrees
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Serial GPS only variables
+//navigation mode
+#define NAV_MODE_NONE              0
+#define NAV_MODE_POSHOLD           1
+#define NAV_MODE_WP                2
+static int8_t  nav_mode = NAV_MODE_NONE;            //Navigation mode
+
 
 
 void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
@@ -358,7 +400,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   
   #if GPS
     static uint32_t GPSLEDTime;
-    if ( currentTime > GPSLEDTime && (GPS_fix_home == 1)) {
+    if ( currentTime > GPSLEDTime && (GPS_numSat >= 5)) {
       GPSLEDTime = currentTime + 150000;
       LEDPIN_TOGGLE;
     }
@@ -408,6 +450,9 @@ void setup() {
     initOpenLRS();
   #endif
   initSensors();
+  #if defined(I2C_GPS) || defined(GPS_SERIAL)
+    GPS_set_pids();
+  #endif
   previousTime = micros();
   #if defined(GIMBAL)
    calibratingA = 400;
@@ -546,7 +591,7 @@ void loop () {
           armed = 1;
           headFreeModeHold = heading;
         }
-#endif
+      #endif
       #ifdef LCD_TELEMETRY_AUTO
       } else if (rcData[ROLL] < MINCHECK && rcData[PITCH] > MAXCHECK && armed == 0) {
         if (rcDelayCommand == 20) {
@@ -650,19 +695,64 @@ void loop () {
         }
       } else headFreeMode = 0;
     #endif
+    
     #if GPS
-      if (rcOptions[BOXGPSHOME]) {GPSModeHome = 1;}
-      else GPSModeHome = 0;
-      if (rcOptions[BOXGPSHOLD]) {
-        if (GPSModeHold == 0) {
-          GPSModeHold = 1;
-          GPS_latitude_hold = GPS_latitude;
-          GPS_longitude_hold = GPS_longitude;
+      #if defined(I2C_GPS)
+      static uint8_t GPSNavReset = 1;
+      if (GPS_fix == 1 && GPS_numSat >= 5 ) {
+        if (!rcOptions[BOXGPSHOME] && !rcOptions[BOXGPSHOLD] )
+          {    //Both boxes are unselected
+            if (GPSNavReset == 0 ) { 
+               GPSNavReset = 1; 
+               GPS_I2C_command(I2C_GPS_COMMAND_STOP_NAV,0);
+            }
+          }  
+        if (rcOptions[BOXGPSHOME]) {
+         if (GPSModeHome == 0)  {
+            GPSModeHome = 1;
+            GPSNavReset = 0;
+            GPS_I2C_command(I2C_GPS_COMMAND_START_NAV,0);        //waypoint zero
+          }
+        } else {
+          GPSModeHome = 0;
         }
-      } else {
-        GPSModeHold = 0;
+        if (rcOptions[BOXGPSHOLD]) {
+          if (GPSModeHold == 0 & GPSModeHome == 0) {
+            GPSModeHold = 1;
+            GPSNavReset = 0;
+            GPS_I2C_command(I2C_GPS_COMMAND_POSHOLD,0);
+          }
+        } else {
+          GPSModeHold = 0;
+        }
       }
+      #endif 
+      #if defined(GPS_SERIAL)
+      if (GPS_fix == 1 && GPS_numSat >= 5 ) {
+        if (rcOptions[BOXGPSHOME]) {
+          if (GPSModeHome == 0)  {
+            GPSModeHome = 1;
+            GPS_set_next_wp(GPS_latitude_home,GPS_longitude_home);
+            nav_mode    = NAV_MODE_WP;
+          }
+        } else {
+          GPSModeHome = 0;
+        }
+        if (rcOptions[BOXGPSHOLD]) {
+          if (GPSModeHold == 0) {
+            GPSModeHold = 1;
+            GPS_latitude_hold = GPS_latitude;
+            GPS_longitude_hold = GPS_longitude;
+            GPS_set_next_wp(GPS_latitude_hold,GPS_longitude_hold);
+            nav_mode = NAV_MODE_POSHOLD;
+          }
+        } else {
+          GPSModeHold = 0;
+        }
+      }
+      #endif
     #endif
+   
     if (rcOptions[BOXPASSTHRU]) {passThruMode = 1;}
     else {passThruMode = 0;}
     
@@ -726,30 +816,26 @@ void loop () {
   #if GPS
     uint16_t GPS_dist;
     int16_t  GPS_dir;
-
+    //debug2 = GPS_angle[ROLL];
+    //debug3 = GPS_angle[PITCH];
+    // Check that we really need to navigate ?
     if ( (GPSModeHome == 0 && GPSModeHold == 0) || (GPS_fix_home == 0) ) {
-      GPS_angle[ROLL]  = 0;
-      GPS_angle[PITCH] = 0;
+      // If not. Reset nav loops and all nav related parameters
+      GPS_reset_nav();
     } else {
-      if (GPSModeHome == 1) {
-        GPS_dist = GPS_distanceToHome;
-        GPS_dir = GPS_directionToHome;
-      }
-      if (GPSModeHold == 1) {
-        GPS_dist = GPS_distanceToHold;
-        GPS_dir = GPS_directionToHold;
-      }
-      float radDiff = (GPS_dir-heading) * 0.0174533f;
-      GPS_angle[ROLL]  = constrain(conf.P8[PIDGPS] * sin(radDiff) * GPS_dist / 10,-conf.D8[PIDGPS]*10,+conf.D8[PIDGPS]*10); // with P=5.0, a distance of 1 meter = 0.5deg inclination
-      GPS_angle[PITCH] = constrain(conf.P8[PIDGPS] * cos(radDiff) * GPS_dist / 10,-conf.D8[PIDGPS]*10,+conf.D8[PIDGPS]*10); // max inclination = D deg
+      sin_yaw_y = sin((float)heading*0.0174532925f);
+      cos_yaw_x = cos((float)heading*0.0174532925f);
+      GPS_angle[ROLL] = ((float)nav_lon*cos_yaw_x - (float)nav_lat*sin_yaw_y) /10;
+      GPS_angle[PITCH]  = ((float)nav_lon*sin_yaw_y + (float)nav_lat*cos_yaw_x) /10;
     }
   #endif
+
 
   //**** PITCH & ROLL & YAW PID ****    
   for(axis=0;axis<3;axis++) {
     if (accMode == 1 && axis<2 ) { //LEVEL MODE
       // 50 degrees max inclination
-      errorAngle = constrain(2*rcCommand[axis] - GPS_angle[axis],-500,+500) - angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
+      errorAngle = constrain(2*rcCommand[axis] + GPS_angle[axis],-500,+500) - angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
       #ifdef LEVEL_PDF
         PTerm      = -(int32_t)angle[axis]*conf.P8[PIDLEVEL]/100 ;
       #else  

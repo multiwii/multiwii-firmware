@@ -437,6 +437,11 @@
 /*****************                                                                 ***************/
 /*************************************************************************************************/
 
+  /* Pseudo-derivative conrtroller for level mode (experimental)
+     Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
+  //#define LEVEL_PDF
+
+
   /********                          Failsave settings                 ********************/
     /* Failsafe check pulse on THROTTLE channel. If the pulse is OFF (on only THROTTLE or on all channels) the failsafe procedure is initiated.
        After FAILSAVE_DELAY time of pulse absence, the level mode is on (if ACC or nunchuk is avaliable), PITCH, ROLL and YAW is centered
@@ -506,15 +511,23 @@
        http://code.google.com/p/i2c-gps-nav/ */
     //#define I2C_GPS
 
-    /* GPS data readed from Misio-OSD  ( EXPERIMENTAL )
-       If we have Misio-OSD with GPS module connected to OSD we can use this GPS for navigation purpose.
-       Working with OSD firmware v0.66 or newer.
-       contribution from Mis */
+    /* GPS data readed from OSD -- still need some more code to work */
     //#define GPS_FROM_OSD
 
-    /* Pseudo-derivative conrtroller for level mode (experimental)
-       Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
-    //#define LEVEL_PDF
+    /* GPS navigation can control the heading */
+    
+    #define NAV_CONTROLS_HEADING       true      // copter faces toward the navigation point, maghold must be enabled for it
+    #define NAV_TAIL_FIRST             false     // true - copter comes in with tail first 
+    #define NAV_SET_TAKEOFF_HEADING    true      // true - when copter arrives to home position it rotates it's head to takeoff direction
+    
+    #define MAG_DECLINIATION  3.96f              //For Budapest Hungary.
+    //Get your magnetic decliniation from here : http://magnetic-declination.com/
+    //Convert the degree+minutes into decimal degree by ==> degree+minutes*(1/60)
+    //Note the sign on declination it could be negative or positive (WEST or EAST)
+    
+    #define GPS_FILTERING              true      // add a 5 element moving average filter to GPS coordinates, helps eliminate gps noise but adds latency
+    #define GPS_LOW_SPEED_D_FILTER     true      // below .5m/s speed ignore D term for POSHOLD_RATE, theoretically this also removed D term induced noise
+    #define GPS_WP_RADIUS              200       // if we are within this distance to a waypoint then we consider it reached (distance is in cm)
 
 
   /**************************************************************************************/

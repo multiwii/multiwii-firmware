@@ -172,7 +172,7 @@ void serialCom() {
             case MSP_COMP_GPS:
               headSerialReply(c,5);
               serialize16(GPS_distanceToHome);
-              serialize16(GPS_directionToHome+180);
+              serialize16(GPS_directionToHome);
               serialize8(GPS_update);
               tailSerialReply();break;
             case MSP_ATTITUDE:
