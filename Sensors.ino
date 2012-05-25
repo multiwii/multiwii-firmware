@@ -217,7 +217,7 @@ void GYRO_Common() {
       gyroZero[axis]=0;
       if (calibratingG == 1) {
         gyroZero[axis]=g[axis]/400;
-        blinkLED(10,15,1+3*nunchuk);
+        blinkLED(10,15,1);
       }
     }
     calibratingG--;
@@ -1146,37 +1146,22 @@ void ACC_getADC () {
   #endif
 #endif
 
-#if !GYRO 
+#if defined(WMP) || defined(NUNCHUCK)
 // ************************************************************************************************************
 // I2C Wii Motion Plus + optional Nunchuk
 // ************************************************************************************************************
 // I2C adress 1: 0xA6 (8bit)    0x53 (7bit)
 // I2C adress 2: 0xA4 (8bit)    0x52 (7bit)
 // ************************************************************************************************************
-void WMP_init() {
+void Gyro_init() {
   delay(250);
   i2c_writeReg(0xA6, 0xF0, 0x55); // Initialize Extension
   delay(250);
   i2c_writeReg(0xA6, 0xFE, 0x05); // Activate Nunchuck pass-through mode
   delay(250);
-
-  // We need to set acc_1G for the Nunchuk beforehand; It's used in WMP_getRawADC() and ACC_Common()
-  // If a different accelerometer is used, it will be overwritten by its ACC_init() later.
-  acc_1G = 200;
-  acc_25deg = acc_1G * 0.423;
-  uint8_t numberAccRead = 0;
-  // Read from WMP 100 times, this should return alternating WMP and Nunchuk data
-  for(uint8_t i=0;i<100;i++) {
-    delay(4);
-    if (WMP_getRawADC() == 0) numberAccRead++; // Count number of times we read from the Nunchuk extension
-  }
-  // If we got at least 25 Nunchuck reads, we assume the Nunchuk is present
-  if (numberAccRead>25)
-    nunchuk = 1;
-  delay(10);
 }
 
-uint8_t WMP_getRawADC() {
+void Gyro_getADC() {
   uint8_t axis;
   TWBR = ((16000000L / I2C_SPEED) - 16) / 2; // change the I2C clock rate
   i2c_getSixRawADC(0xA4,0x00);
@@ -1184,7 +1169,7 @@ uint8_t WMP_getRawADC() {
   if (micros() < (neutralizeTime + NEUTRALIZE_DELAY)) {//we neutralize data in case of blocking+hard reset state
     for (axis = 0; axis < 3; axis++) {gyroADC[axis]=0;accADC[axis]=0;}
     accADC[YAW] = acc_1G;
-    return 1;
+    nunchukData = 0;
   } 
 
   // Wii Motion Plus Data
@@ -1198,16 +1183,29 @@ uint8_t WMP_getRawADC() {
     gyroADC[ROLL]  = (rawADC[3]&0x01)     ? gyroADC[ROLL]/5  : gyroADC[ROLL];  //the ratio 1/5 is not exactly the IDG600 or ISZ650 specification 
     gyroADC[PITCH] = (rawADC[4]&0x02)>>1  ? gyroADC[PITCH]/5 : gyroADC[PITCH]; //we detect here the slow of fast mode WMP gyros values (see wiibrew for more details)
     gyroADC[YAW]   = (rawADC[3]&0x02)>>1  ? gyroADC[YAW]/5   : gyroADC[YAW];   // this step must be done after zero compensation    
-    return 1;
-  } else if ( (rawADC[5]&0x03) == 0x00 ) { // Nunchuk Data
-    ACC_ORIENTATION(  ( (rawADC[3]<<2)      | ((rawADC[5]>>4)&0x02) ) ,
-                    - ( (rawADC[2]<<2)      | ((rawADC[5]>>3)&0x02) ) ,
-                      ( ((rawADC[4]>>1)<<3) | ((rawADC[5]>>5)&0x06) ) );
-    ACC_Common();
-    return 0;
-  } else
-    return 2;
+    nunchukData = 0;
+  #if defined(NUNCHUCK)
+    } else if ( (rawADC[5]&0x03) == 0x00 ) { // Nunchuk Data
+      ACC_ORIENTATION(  ( (rawADC[3]<<2)      | ((rawADC[5]>>4)&0x02) ) ,
+                      - ( (rawADC[2]<<2)      | ((rawADC[5]>>3)&0x02) ) ,
+                        ( ((rawADC[4]>>1)<<3) | ((rawADC[5]>>5)&0x06) ) );
+      ACC_Common();
+      nunchukData = 1;
+  #endif
+  }
 }
+
+#if defined(NUNCHUCK)
+  void ACC_init () {
+    // We need to set acc_1G for the Nunchuk beforehand
+    // If a different accelerometer is used, it will be overwritten by its ACC_init() later.
+    acc_1G = 200;
+  }
+  void ACC_getADC () { // it's done ine the WMP gyro part
+    Gyro_getADC();
+  }
+#endif
+
 #endif
 
 
@@ -1403,7 +1401,6 @@ void initSensors() {
   i2c_init();
   delay(100);
   if (GYRO) Gyro_init();
-  else WMP_init();
   if (BARO) Baro_init();
   if (MAG) Mag_init();
   if (ACC) {ACC_init();acc_25deg = acc_1G * 0.423;}

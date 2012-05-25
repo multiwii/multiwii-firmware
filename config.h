@@ -109,11 +109,13 @@
     /***************************    independent sensors    ********************************/
       //leave it commented if you already checked a specific board above
       /* I2C gyroscope */
+      //#define WMP
       //#define ITG3200
       //#define L3G4200D
       //#define MPU6050       //combo + ACC
 
       /* I2C accelerometer */
+      //#define NUNCHUCK  // if you want to use the nunckuk connected to a WMP
       //#define MMA745
       //#define ADXL345
       //#define BMA020
