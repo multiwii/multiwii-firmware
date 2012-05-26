@@ -181,13 +181,15 @@ void configureReceiver() {
       static uint16_t last = 0;
       now = micros();  
       diff = now - last;
-      last = now;
-      if(900<diff && diff<2200){ 
-        rcValue[3] = diff;
-        #if defined(FAILSAFE)
-          if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
-        #endif 
-      }  
+      diff = now - last;
+      if(!(PINE & (1<<6))){
+        if(900<diff && diff<2200){
+          rcValue[3] = diff;
+          #if defined(FAILSAFE)
+            if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
+          #endif 
+        }
+      }else last = now; 
     }
     // Aux 2
     #if defined(RCAUX2PINRXO)
@@ -195,9 +197,10 @@ void configureReceiver() {
         static uint16_t now,diff;
         static uint16_t last = 0; 
         now = micros();  
-        diff = now - last;
-        last = now;
-        if(900<diff && diff<2200) rcValue[7] = diff;
+        if(!(PIND & (1<<2))){
+          diff = now - last;
+          if(900<diff && diff<2200) rcValue[7] = diff;
+        }else last = now;
       }
     #endif  
   #endif
