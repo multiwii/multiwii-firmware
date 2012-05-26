@@ -297,7 +297,7 @@ void oldSerialCom(uint8_t sr) {
 // it cant have the same name as in the arduino API because it wont compile for the promini (eaven if it will be not compiled)
 // *******************************************************
 #if defined(TEENSY20)
-  unsigned char T_USB_Available(unsigned char ignored){
+  unsigned char T_USB_Available(){
     int n = Serial.available();
     if (n > 255) n = 255;
     return n;
@@ -359,6 +359,10 @@ void SerialOpen(uint8_t port, uint32_t baud) {
   switch (port) {
     #if !defined(PROMICRO)
     case 0: UCSR0A  = (1<<U2X0); UBRR0H = h; UBRR0L = l; UCSR0B |= (1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0); break;
+    #else
+      #if (ARDUINO > 100)
+        case 0: UDIEN &= ~(1<<SOFE); // disable the USB frame interrupt of arduino (it causes strong jitter and we dont need it)
+      #endif
     #endif
     #if defined(MEGA) || defined(PROMICRO)
     case 1: UCSR1A  = (1<<U2X1); UBRR1H = h; UBRR1L = l; UCSR1B |= (1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1); break;
@@ -420,9 +424,12 @@ ISR(USART_RX_vect){
 
 uint8_t SerialRead(uint8_t port) {
   #if defined(PROMICRO)
-     #if defined(TEENSY20) || (ARDUINO > 100)
+     #if defined(TEENSY20)
       if(port == 0) return Serial.read();
     #else
+      #if (ARDUINO > 100)
+        USB_Flush(USB_CDC_TX);
+      #endif
       if(port == 0) return USB_Recv(USB_CDC_RX);      
     #endif
     port = 0;
@@ -435,11 +442,7 @@ uint8_t SerialRead(uint8_t port) {
 uint8_t SerialAvailable(uint8_t port) {
   #if defined(PROMICRO)
     #if !defined(TEENSY20)
-      #if(ARDUINO > 100)
-        if(port == 0) return Serial.available();
-      #else
-        if(port == 0) return USB_Available(USB_CDC_RX);
-      #endif
+      if(port == 0) return USB_Available(USB_CDC_RX);
     #else
       if(port == 0) return T_USB_Available(USB_CDC_RX);
     #endif
