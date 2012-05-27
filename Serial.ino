@@ -360,7 +360,7 @@ void SerialOpen(uint8_t port, uint32_t baud) {
     #if !defined(PROMICRO)
     case 0: UCSR0A  = (1<<U2X0); UBRR0H = h; UBRR0L = l; UCSR0B |= (1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0); break;
     #else
-      #if (ARDUINO > 100)
+      #if (ARDUINO > 100) && !defined(TEENSY20)
         case 0: UDIEN &= ~(1<<SOFE); // disable the USB frame interrupt of arduino (it causes strong jitter and we dont need it)
       #endif
     #endif
