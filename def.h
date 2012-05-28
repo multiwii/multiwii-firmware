@@ -620,6 +620,24 @@
   #undef INTERNAL_I2C_PULLUPS
 #endif
 
+#if defined(DROTEK_10DOF_MPU)
+  #define MPU6050
+  #define HMC5883
+  #define MS561101BA
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  = -X; accADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  X; gyroADC[PITCH] = Y; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  -Y; magADC[PITCH]  = X; magADC[YAW]  = -Z;}
+  #define MPU6050_ADDRESS 0XD2
+  #define MPU6050_EN_I2C_BYPASS // MAG connected to the AUX I2C bus of MPU6050
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+
+#if defined(FLYDUINO_MPU)
+  #define MPU6050
+  #define ACC_ORIENTATION(X, Y, Z) {accADC[ROLL] = X; accADC[PITCH] = Y; accADC[YAW] = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] = X; gyroADC[YAW] = -Z;}
+#endif
+
 #if defined(MONGOOSE1_0)
   #define ITG3200
   #define ADXL345
@@ -731,6 +749,52 @@
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
   #define ITG3200_ADDRESS 0XD0
   #undef INTERNAL_I2C_PULLUPS
+#endif
+
+#if defined(IOI_Mini_Multiwii)
+  #define ITG3200
+  #define BMA180
+  #define HMC5883
+  #define BMP085
+  #define ACC_ORIENTATION(X, Y, Z) {accADC[ROLL] = -X; accADC[PITCH] = -Y; accADC[YAW] = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z) {magADC[ROLL] = -Y; magADC[PITCH] = X; magADC[YAW] = -Z;} 
+#endif
+
+#if defined(Bobs_6DOF_V1)
+  #define ITG3200
+  #define BMA180
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  Y; magADC[PITCH]  = -X; magADC[YAW]  = -Z;}
+  #define BMA180_ADDRESS 0x80
+  #define ITG3200_ADDRESS 0XD0
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+
+#if defined(Bobs_9DOF_V1)
+  #define ITG3200
+  #define BMA180
+  #define BMP085
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  Y; magADC[PITCH]  = -X; magADC[YAW]  = -Z;}
+  #define BMA180_ADDRESS 0x80
+  #define ITG3200_ADDRESS 0XD0
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+
+#if defined(Bobs_10DOF_BMP_V1)
+  #define ITG3200
+  #define BMA180
+  #define BMP085  // Bobs 10DOF uses the BMP180 - BMP085 and BMP180 are software compatible
+  #define HMC5883
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  Y; magADC[PITCH]  = -X; magADC[YAW]  = -Z;}
+  #define BMA180_ADDRESS 0x80
+  #define ITG3200_ADDRESS 0XD0
+  #undef INTERNAL_IC2_PULLUPS
 #endif
 
 #if defined(OPENLRSv2MULTI)

@@ -94,6 +94,7 @@
       //#define DROTEK_10DOF_MS // Drotek 10DOF with ITG3200, BMA180, HMC5883, MS5611, LLC
       //#define DROTEK_6DOFv2   // Drotek 6DOF v2
       //#define DROTEK_6DOF_MPU // Drotek 6DOF with MPU6050
+      //#define DROTEK_10DOF_MPU//
       //#define MONGOOSE1_0     // mongoose 1.0    http://store.ckdevices.com/
       //#define CRIUS_LITE      // Crius MultiWii Lite
       //#define CRIUS_SE        // Crius MultiWii SE
@@ -105,7 +106,12 @@
       //#define GY_86           // Chinese 10 DOF with  MPU6050 HMC5883L MS5611, LLC
       //#define INNOVWORKS_10DOF // with ITG3200, BMA180, HMC5883, BMP085 available here http://www.diymulticopter.com
       //#define INNOVWORKS_6DOF // with ITG3200, BMA180 available here http://www.diymulticopter.com
-
+      //#define IOI_Mini_Multiwii// www.bambucopter.com
+      //#define Bobs_6DOF_V1    // BobsQuads 6DOF V1 with ITG3200 & BMA180
+      //#define Bobs_9DOF_V1	 // BobsQuads 9DOF V1 with ITG3200, BMA180 & HMC5883L
+      //#define Bobs_10DOF_BMP_V1 // BobsQuads 10DOF V1 with ITG3200, BMA180, HMC5883L & BMP180 - BMP180 is software compatible with BMP085
+      //#define FLYDUINO_MPU
+      
     /***************************    independent sensors    ********************************/
       //leave it commented if you already checked a specific board above
       /* I2C gyroscope */
@@ -453,7 +459,7 @@
     //#define FAILSAFE                                  // uncomment  to activate the failsafe function
     #define FAILSAVE_DELAY     10                     // Guard time for failsafe activation after signal lost. 1 step = 0.1sec - 1sec in example
     #define FAILSAVE_OFF_DELAY 200                    // Time for Landing before motors stop in 0.1sec. 1 step = 0.1sec - 20sec in example
-    #define FAILSAVE_THR0TTLE  (MINTHROTTLE + 200)    // Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
+    #define FAILSAVE_THROTTLE  (MINTHROTTLE + 200)    // Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
 
   /*****************                DFRobot LED RING    *********************************/
     /* I2C DFRobot LED RING communication */
