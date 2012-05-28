@@ -98,7 +98,7 @@ W: http://www.multiwii.com/forum/viewtopic.php?f=8&t=1094
 
 S: i2c OLED  128x64 display
 D: support for OLED as alternatative to LCD
-N: howardbb
+N: howardhb
 E: howard@automatrix.co.za
 W:
 
