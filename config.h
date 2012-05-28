@@ -504,6 +504,9 @@
        uncomment the first line to select the GPS serial port of the arduino */
     //#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
     #define GPS_BAUD   115200
+    
+    //#define GPS_PROMINI_SERIAL    57600 // Will Autosense if GPS is connected when ardu boots!.....
+   
 
     /* I2C GPS device made with an independant arduino + GPS device
        including some navigation functions

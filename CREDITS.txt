@@ -72,6 +72,12 @@ N: Jevermeister (Nils Ivo von Aswege)
 E:
 W:http://ncopters.blogspot.com
 
+S: GPS Autosense for ProMini
+D: Switch between Gps & Gui on comport.
+N: PatrikE
+E:
+W:
+
 S: GPS_altitude,GPS_speed
 D:
 N: Mis

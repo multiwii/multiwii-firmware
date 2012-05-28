@@ -193,7 +193,10 @@ static int16_t  GPS_directionToHome,GPS_directionToHold;     // direction to hom
 static uint16_t GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s
 static uint8_t  GPS_update = 0;                              // it's a binary toogle to distinct a GPS position update
 static int16_t  GPS_angle[2] = { 0, 0};                      // it's the angles that must be applied for GPS correction
-static uint16_t GPS_ground_course = 0;                       //degrees*10
+static uint16_t GPS_ground_course = 0;                       // degrees*10
+static uint8_t  GPS_Present = 0;                             // Checksum from Gps serial
+static uint8_t  GPS_Enable  = 0;
+
 
 // The desired bank towards North (Positive) or South (Negative)
 static int16_t	nav_lat;
@@ -372,7 +375,11 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       calibratedACC = 1;
   }
 
-  serialCom();
+    #if defined(GPS_PROMINI)
+      if(GPS_Enable == 0){serialCom();}
+    #else
+      serialCom();
+    #endif
 
   #if defined(POWERMETER)
     intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
@@ -424,7 +431,9 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 }
 
 void setup() {
-  SerialOpen(0,SERIAL_COM_SPEED);
+  #if !defined(GPS_PROMINI)
+    SerialOpen(0,SERIAL_COM_SPEED);
+  #endif
   LEDPIN_PINMODE;
   POWERPIN_PINMODE;
   BUZZERPIN_PINMODE;
@@ -462,9 +471,28 @@ void setup() {
     for(uint8_t i=0;i<=PMOTOR_SUM;i++)
       pMeter[i]=0;
   #endif
+  /************************************/
   #if defined(GPS_SERIAL)
-    SerialOpen(GPS_SERIAL,GPS_BAUD);
+    SerialOpen(GPS_SERIAL,GPS_BAUD);  
+    delay(400);  
+    for(uint8_t i=0;i<=5;i++){
+      GPS_NewData(); 
+      LEDPIN_ON
+      delay(20);
+      LEDPIN_OFF
+      delay(80);
+    }
+    if(!GPS_Present){
+      SerialEnd(GPS_SERIAL);
+      SerialOpen(0,SERIAL_COM_SPEED);
+    }      
+	#if !defined(GPS_PROMINI)
+	  GPS_Present = 1;
+	#endif
+    GPS_Enable = GPS_Present;    
   #endif
+  /************************************/
+  
   #if defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64)
     initLCD();
   #endif
@@ -779,7 +807,7 @@ void loop () {
         break;
       case 3:
         #if GPS
-          GPS_NewData();
+          if(GPS_Enable) GPS_NewData();
         #endif
         break;
       case 4:

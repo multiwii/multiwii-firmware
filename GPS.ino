@@ -1149,6 +1149,7 @@ bool GPS_newFrame(char c) {
      if (offset < 15) string[offset++] = c;
      if (!checksum_param) parity ^= c;
   }
+  GPS_Present = constrain(GPS_Present+frame,0,1); // For Autodetect of serial GPS on ProMini
   return frameOK && (frame==FRAME_GGA);
 }
 #endif //SERIAL GPS

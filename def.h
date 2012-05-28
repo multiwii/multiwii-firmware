@@ -820,6 +820,12 @@
   #define BARO 0
 #endif
 
+#if defined(GPS_PROMINI_SERIAL)
+  #define GPS_SERIAL 0
+  #define GPS_PROMINI
+  #define GPS_BAUD   GPS_PROMINI_SERIAL
+#endif
+
 #if defined(GPS_SERIAL)  || defined(I2C_GPS) || defined(GPS_FROM_OSD)
   #define GPS 1
 #else
