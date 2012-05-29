@@ -106,12 +106,11 @@
       //#define GY_86           // Chinese 10 DOF with  MPU6050 HMC5883L MS5611, LLC
       //#define INNOVWORKS_10DOF // with ITG3200, BMA180, HMC5883, BMP085 available here http://www.diymulticopter.com
       //#define INNOVWORKS_6DOF // with ITG3200, BMA180 available here http://www.diymulticopter.com
-      //#define IOI_Mini_Multiwii// www.bambucopter.com
+      //#define IOI_MINI_MULTIWII// www.bambucopter.com
       //#define Bobs_6DOF_V1    // BobsQuads 6DOF V1 with ITG3200 & BMA180
       //#define Bobs_9DOF_V1	 // BobsQuads 9DOF V1 with ITG3200, BMA180 & HMC5883L
       //#define Bobs_10DOF_BMP_V1 // BobsQuads 10DOF V1 with ITG3200, BMA180, HMC5883L & BMP180 - BMP180 is software compatible with BMP085
       //#define FLYDUINO_MPU
-      //#define IOI_MINI_MULTIWII_FC // www.bambucopter.com
       
     /***************************    independent sensors    ********************************/
       //leave it commented if you already checked a specific board above

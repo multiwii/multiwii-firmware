@@ -29,6 +29,7 @@ March  2012     V2.0
 #define PIDNAVR    6
 #define PIDLEVEL   7
 #define PIDMAG     8
+#define PIDVEL     9 // not used currently
 
 #define BOXACC       0
 #define BOXBARO      1
@@ -43,7 +44,7 @@ March  2012     V2.0
 #define BOXBEEPERON  10
 
 #define CHECKBOXITEMS 11
-#define PIDITEMS 9
+#define PIDITEMS 10
 
 static uint32_t currentTime = 0;
 static uint16_t previousTime = 0;
@@ -492,6 +493,10 @@ void setup() {
     GPS_Enable = GPS_Present;    
   #endif
   /************************************/
+ 
+  #if defined(I2C_GPS)
+   GPS_Enable = 1;
+  #endif
   
   #if defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64)
     initLCD();

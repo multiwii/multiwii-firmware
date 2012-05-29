@@ -1,6 +1,6 @@
 #include <avr/eeprom.h>
 
-#define EEPROM_CONF_VERSION 158
+#define EEPROM_CONF_VERSION 159
 
 void readEEPROM() {
   uint8_t i;
@@ -62,6 +62,9 @@ void checkFirstTime() {
 
   conf.P8[PIDLEVEL] = 70; conf.I8[PIDLEVEL] = 10; conf.D8[PIDLEVEL] = 100;
   conf.P8[PIDMAG] = 40;
+  
+  conf.P8[PIDVEL] = 0;  conf.I8[PIDVEL] = 0;  conf.D8[PIDVEL] = 0;
+  
   conf.rcRate8 = 90; conf.rcExpo8 = 65;
   conf.rollPitchRate = 0;
   conf.yawRate = 0;
