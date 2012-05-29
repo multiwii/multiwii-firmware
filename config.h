@@ -111,6 +111,7 @@
       //#define Bobs_9DOF_V1	 // BobsQuads 9DOF V1 with ITG3200, BMA180 & HMC5883L
       //#define Bobs_10DOF_BMP_V1 // BobsQuads 10DOF V1 with ITG3200, BMA180, HMC5883L & BMP180 - BMP180 is software compatible with BMP085
       //#define FLYDUINO_MPU
+      //#define IOI_MINI_MULTIWII_FC // www.bambucopter.com
       
     /***************************    independent sensors    ********************************/
       //leave it commented if you already checked a specific board above
