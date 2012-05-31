@@ -299,7 +299,8 @@
       //#define A32U4ALLPINS
 
     /**********************************    PWM Setup     **********************************/
-      // activate all 6 hardware PWM outputs Motor 5 = D11 and 6 = D13. => not possible on ProMicro! (untested!)
+      // activate all 6 hardware PWM outputs Motor 5 = D11 and 6 = D13. 
+      // note: not possible on the sparkfun promicro (pin 11 & 13 are not broken out there)
       // if activated:
       // Motor 1-6 = 10-bit hardware PWM
       // Motor 7-8 = 8-bit Software PWM

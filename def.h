@@ -175,10 +175,21 @@
   #define SOFT_PWM_1_PIN_LOW         PORTD &= ~(1<<4);
   #define SOFT_PWM_2_PIN_HIGH        PORTF |= 1<<5;
   #define SOFT_PWM_2_PIN_LOW         PORTF &= ~(1<<5);
-  #define SOFT_PWM_3_PIN_HIGH        PORTF |= 1<<7;
-  #define SOFT_PWM_3_PIN_LOW         PORTF &= ~(1<<7);
-  #define SOFT_PWM_4_PIN_HIGH        PORTF |= 1<<6;
-  #define SOFT_PWM_4_PIN_LOW         PORTF &= ~(1<<6);
+  #if !defined(A32U4ALLPINS)
+    #define SOFT_PWM_3_PIN_HIGH        PORTF |= 1<<7;
+    #define SOFT_PWM_3_PIN_LOW         PORTF &= ~(1<<7);
+    #define SOFT_PWM_4_PIN_HIGH        PORTF |= 1<<6;
+    #define SOFT_PWM_4_PIN_LOW         PORTF &= ~(1<<6);
+    #define SW_PWM_P3                  A1        
+    #define SW_PWM_P4                  A0
+  #else
+    #define SOFT_PWM_3_PIN_HIGH        PORTF |= 1<<4;
+    #define SOFT_PWM_3_PIN_LOW         PORTF &= ~(1<<4);
+    #define SOFT_PWM_4_PIN_HIGH        PORTF |= 1<<5;
+    #define SOFT_PWM_4_PIN_LOW         PORTF &= ~(1<<5); 
+    #define SW_PWM_P3                  A2        
+    #define SW_PWM_P4                  A3 
+  #endif
   
   // Servos
   #define SERVO_1_PINMODE   DDRF |= (1<<7); // A0
@@ -457,6 +468,13 @@
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -Y; accADC[PITCH]  =  X; accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -X; gyroADC[PITCH] = -Y; gyroADC[YAW] = -Z;}
   #undef INTERNAL_I2C_PULLUPS
+  #define SOFT_PWM_3_PIN_HIGH        PORTD |= 1<<4;
+  #define SOFT_PWM_3_PIN_LOW         PORTD &= ~(1<<4);
+  #define SOFT_PWM_4_PIN_HIGH        PORTF |= 1<<5;
+  #define SOFT_PWM_4_PIN_LOW         PORTF &= ~(1<<5);
+  #define SW_PWM_P3                  4        
+  #define SW_PWM_P4                  A2
+  #define HWPWM6
 #endif
 
 #if defined(PIPO)
