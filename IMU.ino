@@ -243,20 +243,14 @@ void getEstimatedAttitude(){
   // Attitude of the estimated vector
   angle[ROLL]  =  _atan2(EstG.V.X , EstG.V.Z) ;
   angle[PITCH] =  _atan2(EstG.V.Y , EstG.V.Z) ;
-  #if MAG
-    // Attitude of the cross product vector GxM (*10 removed to increase precision when edding mag_dec
-    heading = _atan2( EstG.V.X * EstM.V.Z - EstG.V.Z * EstM.V.X , EstG.V.Z * EstM.V.Y - EstG.V.Y * EstM.V.Z  );
-    //add declination
-    //Heading is -180 - 180 had to wrap up accordingly
-    heading = heading + (MAG_DECLINIATION * 10);
 
-	heading = heading /10;					// /10 moved here from above
-	
-    if ( heading > 180)
-       heading = heading - 360;
-    else if (heading < -180)
-       heading = heading + 360;
-//***************************************************   
+  #if MAG
+    // Attitude of the cross product vector GxM
+    heading = _atan2( EstG.V.X * EstM.V.Z - EstG.V.Z * EstM.V.X , EstG.V.Z * EstM.V.Y - EstG.V.Y * EstM.V.Z  );
+    heading += MAG_DECLINIATION * 10; //add declination
+    heading = heading /10;
+    if ( heading > 180)      heading = heading - 360;
+    else if (heading < -180) heading = heading + 360;
   #endif
 }
 

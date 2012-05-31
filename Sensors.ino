@@ -14,32 +14,32 @@
 
 /*** I2C address ***/
 #if !defined(MMA7455_ADDRESS)
-  #define MMA7455_ADDRESS 0x3A
+  #define MMA7455_ADDRESS 0x1D
 #endif
 
 #if !defined(ADXL345_ADDRESS) 
-  #define ADXL345_ADDRESS 0x3A
-  //#define ADXL345_ADDRESS 0xA6   //WARNING: Conflicts with a Wii Motion plus!
+  #define ADXL345_ADDRESS 0x1D
+  //#define ADXL345_ADDRESS 0x53   //WARNING: Conflicts with a Wii Motion plus!
 #endif
 
 #if !defined(BMA180_ADDRESS) 
-  #define BMA180_ADDRESS 0x80
-  //#define BMA180_ADDRESS 0x82
+  #define BMA180_ADDRESS 0x40
+  //#define BMA180_ADDRESS 0x41
 #endif
 
 #if !defined(ITG3200_ADDRESS) 
-  #define ITG3200_ADDRESS 0XD0
-  //#define ITG3200_ADDRESS 0XD2
+  #define ITG3200_ADDRESS 0X68
+  //#define ITG3200_ADDRESS 0X69
 #endif
 
 #if !defined(MPU6050_ADDRESS)
-  #define MPU6050_ADDRESS     0xD0 // address pin AD0 low (GND), default for FreeIMU v0.4 and InvenSense evaluation board
-  //#define MPU6050_ADDRESS     0xD2 // address pin AD0 high (VCC)
+  #define MPU6050_ADDRESS     0x68 // address pin AD0 low (GND), default for FreeIMU v0.4 and InvenSense evaluation board
+  //#define MPU6050_ADDRESS     0x69 // address pin AD0 high (VCC)
 #endif
 
 #if !defined(MS561101BA_ADDRESS) 
-  #define MS561101BA_ADDRESS 0xEE //CBR=0 0xEE I2C address when pin CSB is connected to LOW (GND)
-  //#define MS561101BA_ADDRESS 0xEC //CBR=1 0xEC I2C address when pin CSB is connected to HIGH (VCC)
+  #define MS561101BA_ADDRESS 0x77 //CBR=0 0xEE I2C address when pin CSB is connected to LOW (GND)
+  //#define MS561101BA_ADDRESS 0x76 //CBR=1 0xEC I2C address when pin CSB is connected to HIGH (VCC)
 #endif
 
 //ITG3200 and ITG3205 Gyro LPF setting
@@ -139,18 +139,20 @@ void i2c_write(uint8_t data ) {
   waitTransmissionI2C();
 }
 
-uint8_t i2c_readAck() {
-  TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWEA);
+uint8_t i2c_read(uint8_t ack) {
+  TWCR = (1<<TWINT) | (1<<TWEN) | (ack? (1<<TWEA) : 0);
   waitTransmissionI2C();
-  return TWDR;
+  uint8_t r = TWDR;
+  if (!ack) i2c_stop();
+  return r;
+}
+
+uint8_t i2c_readAck() {
+  return i2c_read(1);
 }
 
 uint8_t i2c_readNak(void) {
-  TWCR = (1<<TWINT) | (1<<TWEN);
-  waitTransmissionI2C();
-  uint8_t r = TWDR;
-  i2c_stop();
-  return r;
+  return i2c_read(0);
 }
 
 void waitTransmissionI2C() {
@@ -166,27 +168,57 @@ void waitTransmissionI2C() {
   }
 }
 
+size_t i2c_read_to_buf(uint8_t add, void *buf, size_t size) {
+  i2c_rep_start((add<<1) | 1);	// I2C read direction
+  size_t bytes_read = 0;
+  uint8_t *b = (uint8_t*)buf;
+  while (size--) {
+    /* acknowledge all but the final byte */
+    *b++ = i2c_read(size > 0);
+    /* TODO catch I2C errors here and abort */
+    bytes_read++;
+  }
+  return bytes_read;
+}
+
+size_t i2c_read_reg_to_buf(uint8_t add, uint8_t reg, void *buf, size_t size) {
+  i2c_rep_start(add<<1); // I2C write direction
+  i2c_write(reg);        // register selection
+  return i2c_read_to_buf(add, buf, size);
+}
+
+/* transform a series of bytes from big endian to little
+   endian and vice versa. */
+void swap_endianness(void *buf, size_t size) {
+  /* we swap in-place, so we only have to
+  * place _one_ element on a temporary tray
+  */
+  uint8_t tray;
+  uint8_t *from;
+  uint8_t *to;
+  /* keep swapping until the pointers have assed each other */
+  for (from = (uint8_t*)buf, to = &from[size-1]; from < to; from++, to--) {
+    tray = *from;
+    *from = *to;
+    *to = tray;
+  }
+}
+
 void i2c_getSixRawADC(uint8_t add, uint8_t reg) {
-  i2c_rep_start(add);
-  i2c_write(reg);         // Start multiple read at the reg register
-  i2c_rep_start(add +1);  // I2C read direction => I2C address + 1
-  for(uint8_t i = 0; i < 5; i++)
-    rawADC[i]=i2c_readAck();
-  rawADC[5]= i2c_readNak();
+  i2c_read_reg_to_buf(add, reg, &rawADC, 6);
 }
 
 void i2c_writeReg(uint8_t add, uint8_t reg, uint8_t val) {
-  i2c_rep_start(add+0);  // I2C write direction
+  i2c_rep_start(add<<1); // I2C write direction
   i2c_write(reg);        // register selection
   i2c_write(val);        // value to write in register
   i2c_stop();
 }
 
 uint8_t i2c_readReg(uint8_t add, uint8_t reg) {
-  i2c_rep_start(add+0);  // I2C write direction
-  i2c_write(reg);        // register selection
-  i2c_rep_start(add+1);  // I2C read direction
-  return i2c_readNak();  // Read single register and return value
+  uint8_t val;
+  i2c_read_reg_to_buf(add, reg, &val, 1);
+  return val;
 }
 
 // ****************
@@ -325,7 +357,7 @@ void ACC_Common() {
 // ************************************************************************************************************
 // I2C Barometer BOSCH BMP085
 // ************************************************************************************************************
-// I2C adress: 0xEE (8bit)   0x77 (7bit)
+// I2C adress: 0x77 (7bit)
 // principle:
 //  1) read the calibration register (only once at the initialization)
 //  2) read uncompensated temperature (not mandatory at every cycle)
@@ -335,33 +367,31 @@ void ACC_Common() {
 // ************************************************************************************************************
 
 #if defined(BMP085)
-#define BMP085_ADDRESS 0xEE
+#define BMP085_ADDRESS 0x77
 static int32_t  pressure;
 
 static struct {
   // sensor registers from the BOSCH BMP085 datasheet
-  int16_t  ac1, ac2, ac3, b1, b2, mb, mc, md;
+  int16_t  ac1, ac2, ac3;
   uint16_t ac4, ac5, ac6;
+  int16_t  b1, b2, mb, mc, md;
   union {uint16_t val; uint8_t raw[2]; } ut; //uncompensated T
   union {uint32_t val; uint8_t raw[4]; } up; //uncompensated P
   uint8_t  state;
   uint32_t deadline;
 } bmp085_ctx;  
-#define OSS 2 //we can get more uique samples and get better precision using average
+#define OSS 2 //we can get more unique samples and get better precision using average
 
 void i2c_BMP085_readCalibration(){
   delay(10);
-  bmp085_ctx.ac1 = i2c_BMP085_readIntRegister(0xAA);
-  bmp085_ctx.ac2 = i2c_BMP085_readIntRegister(0xAC);
-  bmp085_ctx.ac3 = i2c_BMP085_readIntRegister(0xAE);
-  bmp085_ctx.ac4 = i2c_BMP085_readIntRegister(0xB0);
-  bmp085_ctx.ac5 = i2c_BMP085_readIntRegister(0xB2);
-  bmp085_ctx.ac6 = i2c_BMP085_readIntRegister(0xB4);
-  bmp085_ctx.b1  = i2c_BMP085_readIntRegister(0xB6);
-  bmp085_ctx.b2  = i2c_BMP085_readIntRegister(0xB8);
-  bmp085_ctx.mb  = i2c_BMP085_readIntRegister(0xBA);
-  bmp085_ctx.mc  = i2c_BMP085_readIntRegister(0xBC);
-  bmp085_ctx.md  = i2c_BMP085_readIntRegister(0xBE);
+  //read calibration data in one go
+  size_t s_bytes = (uint8_t*)&bmp085_ctx.md - (uint8_t*)&bmp085_ctx.ac1 + sizeof(bmp085_ctx.ac1);
+  i2c_read_reg_to_buf(BMP085_ADDRESS, 0xAA, &bmp085_ctx.ac1, s_bytes);
+  // now fix endianness
+  int16_t *p;
+  for (p = &bmp085_ctx.ac1; p <= &bmp085_ctx.md; p++) {
+    swap_endianness(p, sizeof(*p));
+  }
 }
 
 void  Baro_init() {
@@ -372,21 +402,10 @@ void  Baro_init() {
   i2c_BMP085_UT_Read();
 }
 
-// read a 16 bit register
-int16_t i2c_BMP085_readIntRegister(uint8_t r) {
-  union {int16_t val; uint8_t raw[2]; } data;
-  i2c_rep_start(BMP085_ADDRESS + 0);
-  i2c_write(r);
-  i2c_rep_start(BMP085_ADDRESS + 1);//I2C read direction => 1
-  data.raw[1] = i2c_readAck();
-  data.raw[0] = i2c_readNak();
-  return data.val;
-}
-
 // read uncompensated temperature value: send command first
 void i2c_BMP085_UT_Start() {
   i2c_writeReg(BMP085_ADDRESS,0xf4,0x2e);
-  i2c_rep_start(BMP085_ADDRESS + 0);
+  i2c_rep_start(BMP085_ADDRESS<<1);
   i2c_write(0xF6);
   i2c_stop();
 }
@@ -394,7 +413,7 @@ void i2c_BMP085_UT_Start() {
 // read uncompensated pressure value: send command first
 void i2c_BMP085_UP_Start () {
   i2c_writeReg(BMP085_ADDRESS,0xf4,0x34+(OSS<<6)); // control register value for oversampling setting 3
-  i2c_rep_start(BMP085_ADDRESS + 0); //I2C write direction => 0
+  i2c_rep_start(BMP085_ADDRESS<<1); //I2C write direction => 0
   i2c_write(0xF6);
   i2c_stop();
 }
@@ -402,7 +421,7 @@ void i2c_BMP085_UP_Start () {
 // read uncompensated pressure value: read result bytes
 // the datasheet suggests a delay of 25.5 ms (oversampling settings 3) after the send command
 void i2c_BMP085_UP_Read () {
-  i2c_rep_start(BMP085_ADDRESS + 1);//I2C read direction => 1
+  i2c_rep_start((BMP085_ADDRESS<<1) | 1);//I2C read direction => 1
   bmp085_ctx.up.raw[2] = i2c_readAck();
   bmp085_ctx.up.raw[1] = i2c_readAck();
   bmp085_ctx.up.raw[0] = i2c_readNak();
@@ -411,7 +430,7 @@ void i2c_BMP085_UP_Read () {
 // read uncompensated temperature value: read result bytes
 // the datasheet suggests a delay of 4.5 ms after the send command
 void i2c_BMP085_UT_Read() {
-  i2c_rep_start(BMP085_ADDRESS + 1);//I2C read direction => 1
+  i2c_rep_start((BMP085_ADDRESS<<1) | 1);//I2C read direction => 1
   bmp085_ctx.ut.raw[1] = i2c_readAck();
   bmp085_ctx.ut.raw[0] = i2c_readNak();
 }
@@ -509,10 +528,10 @@ void i2c_MS561101BA_reset(){
 void i2c_MS561101BA_readCalibration(){
   union {uint16_t val; uint8_t raw[2]; } data;
   for(uint8_t i=0;i<6;i++) {
-    i2c_rep_start(MS561101BA_ADDRESS + 0);
+    i2c_rep_start(MS561101BA_ADDRESS<<1);
     i2c_write(0xA2+2*i);
     delay(10);
-    i2c_rep_start(MS561101BA_ADDRESS + 1);//I2C read direction => 1
+    i2c_rep_start((MS561101BA_ADDRESS<<1) | 1);//I2C read direction => 1
     delay(10);
     data.raw[1] = i2c_readAck();  // read a 16 bit register
     data.raw[0] = i2c_readNak();
@@ -529,23 +548,23 @@ void  Baro_init() {
 
 // read uncompensated temperature value: send command first
 void i2c_MS561101BA_UT_Start() {
-  i2c_rep_start(MS561101BA_ADDRESS+0);      // I2C write direction
+  i2c_rep_start(MS561101BA_ADDRESS<<1);      // I2C write direction
   i2c_write(MS561101BA_TEMPERATURE + OSR);  // register selection
   i2c_stop();
 }
 
 // read uncompensated pressure value: send command first
 void i2c_MS561101BA_UP_Start () {
-  i2c_rep_start(MS561101BA_ADDRESS+0);      // I2C write direction
+  i2c_rep_start(MS561101BA_ADDRESS<<1);      // I2C write direction
   i2c_write(MS561101BA_PRESSURE + OSR);     // register selection
   i2c_stop();
 }
 
 // read uncompensated pressure value: read result bytes
 void i2c_MS561101BA_UP_Read () {
-  i2c_rep_start(MS561101BA_ADDRESS + 0);
+  i2c_rep_start(MS561101BA_ADDRESS<<1);
   i2c_write(0);
-  i2c_rep_start(MS561101BA_ADDRESS + 1);
+  i2c_rep_start((MS561101BA_ADDRESS<<1) | 1);
   ms561101ba_ctx.up.raw[2] = i2c_readAck();
   ms561101ba_ctx.up.raw[1] = i2c_readAck();
   ms561101ba_ctx.up.raw[0] = i2c_readNak();
@@ -553,9 +572,9 @@ void i2c_MS561101BA_UP_Read () {
 
 // read uncompensated temperature value: read result bytes
 void i2c_MS561101BA_UT_Read() {
-  i2c_rep_start(MS561101BA_ADDRESS + 0);
+  i2c_rep_start(MS561101BA_ADDRESS<<1);
   i2c_write(0);
-  i2c_rep_start(MS561101BA_ADDRESS + 1);
+  i2c_rep_start((MS561101BA_ADDRESS<<1) | 1);
   ms561101ba_ctx.ut.raw[2] = i2c_readAck();
   ms561101ba_ctx.ut.raw[1] = i2c_readAck();
   ms561101ba_ctx.ut.raw[0] = i2c_readNak();
@@ -734,18 +753,18 @@ void ACC_getADC () {
 // ************************************************************************************************************
 #if defined(BMA020)
 void ACC_init(){
-  i2c_writeReg(0x70,0x15,0x80);    // set SPI4 bit
+  i2c_writeReg(0x38,0x15,0x80);    // set SPI4 bit
   uint8_t control = i2c_readReg(0x70, 0x14);
   control = control & 0xE0;        // save bits 7,6,5
   control = control | (0x02 << 3); // Range 8G (10)
   control = control | 0x00;        // Bandwidth 25 Hz 000
-  i2c_writeReg(0x70,0x14,control); 
+  i2c_writeReg(0x38,0x14,control); 
   acc_1G = 63;
 }
 
 void ACC_getADC(){
   TWBR = ((16000000L / 400000L) - 16) / 2;
-  i2c_getSixRawADC(0x70,0x02);
+  i2c_getSixRawADC(0x38,0x02);
   ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/64 ,
                    ((rawADC[3]<<8) | rawADC[2])/64 ,
                    ((rawADC[5]<<8) | rawADC[4])/64 );
@@ -757,16 +776,17 @@ void ACC_getADC(){
 // standalone I2C Nunchuk
 // ************************************************************************************************************
 #if defined(NUNCHACK)
+#define NUNCHACK_ADDRESS 0x52
 void ACC_init() {
-  i2c_writeReg(0xA4 ,0xF0 ,0x55 );
-  i2c_writeReg(0xA4 ,0xFB ,0x00 );
+  i2c_writeReg(NUNCHACK_ADDRESS ,0xF0 ,0x55 );
+  i2c_writeReg(NUNCHACK_ADDRESS ,0xFB ,0x00 );
   delay(250);
   acc_1G = 200;
 }
 
 void ACC_getADC() {
   TWBR = ((16000000L / I2C_SPEED) - 16) / 2; // change the I2C clock rate. !! you must check if the nunchuk is ok with this freq
-  i2c_getSixRawADC(0xA4,0x00);
+  i2c_getSixRawADC(NUNCHACK_ADDRESS,0x00);
 
   ACC_ORIENTATION(  ( (rawADC[3]<<2)        + ((rawADC[5]>>4)&0x2) ) ,
                   - ( (rawADC[2]<<2)        + ((rawADC[5]>>3)&0x2) ) ,
@@ -779,7 +799,7 @@ void ACC_getADC() {
 // LIS3LV02 I2C Accelerometer
 // ************************************************************************
 #if defined(LIS3LV02)
-#define LIS3A  0x3A // I2C adress: 0x3A (8bit)
+#define LIS3A  0x1D
 
 void ACC_init(){
   i2c_writeReg(LIS3A ,0x20 ,0xD7 ); // CTRL_REG1   1101 0111 Pwr on, 160Hz 
@@ -803,16 +823,16 @@ void ACC_getADC(){
 #if defined(LSM303DLx_ACC)
 void ACC_init () {
   delay(10);
-  i2c_writeReg(0x30,0x20,0x27);
-  i2c_writeReg(0x30,0x23,0x30);
-  i2c_writeReg(0x30,0x21,0x00);
+  i2c_writeReg(0x18,0x20,0x27);
+  i2c_writeReg(0x18,0x23,0x30);
+  i2c_writeReg(0x18,0x21,0x00);
 
   acc_1G = 256;
 }
 
   void ACC_getADC () {
   TWBR = ((16000000L / 400000L) - 16) / 2;
-  i2c_getSixRawADC(0x30,0xA8);
+  i2c_getSixRawADC(0x18,0xA8);
 
   ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/16 ,
                    ((rawADC[3]<<8) | rawADC[2])/16 ,
@@ -844,16 +864,17 @@ void ACC_getADC() {
 // I2C Gyroscope L3G4200D 
 // ************************************************************************************************************
 #if defined(L3G4200D)
+#define L3G4200D_ADDRESS 0x69
 void Gyro_init() {
   delay(100);
-  i2c_writeReg(0XD2+0 ,0x20 ,0x8F ); // CTRL_REG1   400Hz ODR, 20hz filter, run!
+  i2c_writeReg(L3G4200D_ADDRESS ,0x20 ,0x8F ); // CTRL_REG1   400Hz ODR, 20hz filter, run!
   delay(5);
-  i2c_writeReg(0XD2+0 ,0x24 ,0x02 ); // CTRL_REG5   low pass filter enable
+  i2c_writeReg(L3G4200D_ADDRESS ,0x24 ,0x02 ); // CTRL_REG5   low pass filter enable
 }
 
 void Gyro_getADC () {
   TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
-  i2c_getSixRawADC(0XD2,0x80|0x28);
+  i2c_getSixRawADC(L3G4200D_ADDRESS,0x80|0x28);
 
   GYRO_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/20  ,
                     ((rawADC[3]<<8) | rawADC[2])/20  ,
@@ -951,10 +972,10 @@ void Mag_getADC() {
 // ************************************************************************************************************
 // I2C Compass MAG3110
 // ************************************************************************************************************
-// I2C adress: 0x1C (8bit)   0x0E (7bit)
+// I2C adress: 0x0E (7bit)
 // ************************************************************************************************************
 #if defined(MAG3110)
-  #define MAG_ADDRESS 0x1C
+  #define MAG_ADDRESS 0x0E
   #define MAG_DATA_REGISTER 0x01
   #define MAG_CTRL_REG1 0x10
   #define MAG_CTRL_REG2 0x11
@@ -984,7 +1005,7 @@ void Mag_getADC() {
 // I2C adress: 0x3C (8bit)   0x1E (7bit)
 // ************************************************************************************************************
 #if defined(HMC5843) || defined(HMC5883)
-  #define MAG_ADDRESS 0x3C
+  #define MAG_ADDRESS 0x1E
   #define MAG_DATA_REGISTER 0x03
   
   void Mag_init() { 
@@ -1044,10 +1065,10 @@ void Device_Mag_getADC() {
 // ************************************************************************************************************
 // I2C Compass AK8975
 // ************************************************************************************************************
-// I2C adress: 0x18 (8bit)   0x0C (7bit)
+// I2C adress: 0x0C (7bit)
 // ************************************************************************************************************
 #if defined(AK8975)
-  #define MAG_ADDRESS 0x18
+  #define MAG_ADDRESS 0x0C
   #define MAG_DATA_REGISTER 0x03
   
   void Mag_init() {
@@ -1150,21 +1171,24 @@ void ACC_getADC () {
 // ************************************************************************************************************
 // I2C Wii Motion Plus + optional Nunchuk
 // ************************************************************************************************************
-// I2C adress 1: 0xA6 (8bit)    0x53 (7bit)
-// I2C adress 2: 0xA4 (8bit)    0x52 (7bit)
+// I2C adress 1: 0x53 (7bit)
+// I2C adress 2: 0x52 (7bit)
 // ************************************************************************************************************
+#define WMP_ADDRESS_1 0x53
+#define WMP_ADDRESS_2 0x52
+
 void Gyro_init() {
   delay(250);
-  i2c_writeReg(0xA6, 0xF0, 0x55); // Initialize Extension
+  i2c_writeReg(WMP_ADDRESS_1, 0xF0, 0x55); // Initialize Extension
   delay(250);
-  i2c_writeReg(0xA6, 0xFE, 0x05); // Activate Nunchuck pass-through mode
+  i2c_writeReg(WMP_ADDRESS_1, 0xFE, 0x05); // Activate Nunchuck pass-through mode
   delay(250);
 }
 
 void Gyro_getADC() {
   uint8_t axis;
   TWBR = ((16000000L / I2C_SPEED) - 16) / 2; // change the I2C clock rate
-  i2c_getSixRawADC(0xA4,0x00);
+  i2c_getSixRawADC(WMP_ADDRESS_2,0x00);
 
   if (micros() < (neutralizeTime + NEUTRALIZE_DELAY)) {//we neutralize data in case of blocking+hard reset state
     for (axis = 0; axis < 3; axis++) {gyroADC[axis]=0;accADC[axis]=0;}
@@ -1223,7 +1247,7 @@ void Gyro_getADC() {
 // sonar sensor can be added again.
 // Thus, add only 1 sonar sensor at a time, poweroff, then wire the next, power on, wait for flashing light and repeat
 #if !defined(SRF08_DEFAULT_ADDRESS) 
-  #define SRF08_DEFAULT_ADDRESS 0xE0
+  #define SRF08_DEFAULT_ADDRESS 0x70
 #endif
 
 #if !defined(SRF08_RANGE_WAIT) 
@@ -1271,9 +1295,9 @@ void Sonar_init() {
 // a 0xffff code is returned if the read failed
 uint16_t i2c_try_readReg(uint8_t add, uint8_t reg) {
   uint16_t count = 255;
-  i2c_rep_start(add+0);  // I2C write direction
+  i2c_rep_start(add<<1);  // I2C write direction
   i2c_write(reg);        // register selection
-  i2c_rep_start(add+1);  // I2C read direction
+  i2c_rep_start((add<<1)|1);  // I2C read direction
   
   TWCR = (1<<TWINT) | (1<<TWEN);
   while (!(TWCR & (1<<TWINT))) {
@@ -1291,10 +1315,9 @@ uint16_t i2c_try_readReg(uint8_t add, uint8_t reg) {
 
 // read a 16bit unsigned int from the i2c bus
 uint16_t i2c_readReg16(int8_t addr, int8_t reg) {
-  i2c_rep_start(addr);
-  i2c_write(reg);
-  i2c_rep_start(addr + 1);
-  return (i2c_readAck() <<8) | i2c_readNak();
+  uint8_t b[2];
+  i2c_read_reg_to_buf(addr, reg, &b, sizeof(b));
+  return (b[0]<<8) | b[1];
 }
 
 void i2c_srf08_change_addr(int8_t current, int8_t moveto) {

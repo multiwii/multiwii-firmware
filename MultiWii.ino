@@ -184,9 +184,9 @@ static struct {
 // **********************
 // GPS common variables
 // **********************
-static int32_t  GPS_latitude,GPS_longitude;
-static int32_t  GPS_latitude_home,GPS_longitude_home;
-static int32_t  GPS_latitude_hold,GPS_longitude_hold;
+static int32_t  GPS_coord[2];
+static int32_t  GPS_home[2];
+static int32_t  GPS_hold[2];
 static uint8_t  GPS_fix , GPS_fix_home = 0;
 static uint8_t  GPS_numSat;
 static uint16_t GPS_distanceToHome,GPS_distanceToHold;       // distance to home or hold point in meters
@@ -198,44 +198,37 @@ static uint16_t GPS_ground_course = 0;                       // degrees*10
 static uint8_t  GPS_Present = 0;                             // Checksum from Gps serial
 static uint8_t  GPS_Enable  = 0;
 
+#define LAT  0
+#define LON  1
+// The desired bank towards North (Positive) or South (Negative) : latitude
+// The desired bank towards East (Positive) or West (Negative)   : longitude
+static int16_t	nav[2];
 
-// The desired bank towards North (Positive) or South (Negative)
-static int16_t	nav_lat;
-// The desired bank towards East (Positive) or West (Negative)
-static int16_t	nav_lon;
-// This is the angle from the copter to the "next_WP" location
-// with the addition of Crosstrack error in degrees * 100
-static int32_t	nav_bearing;
-// saves the bearing at takeof (1deg = 1) used to rotate to takeoff direction when arrives at home
-static int16_t  nav_takeoff_bearing; 
-//Used for rotation calculations for GPS nav vector
-static float sin_yaw_y;
-static float cos_yaw_x;
 //////////////////////////////////////////////////////////////////////////////
 // POSHOLD control gains
 //
-#define POSHOLD_P			.11
-#define POSHOLD_I			0.0
-#define POSHOLD_IMAX		20		// degrees
+#define POSHOLD_P              .11
+#define POSHOLD_I              0.0
+#define POSHOLD_IMAX           20		// degrees
 
-#define POSHOLD_RATE_P		2.0			//
-#define POSHOLD_RATE_I		0.08			// Wind control
-#define POSHOLD_RATE_D		0.045			// try 2 or 3 for POSHOLD_RATE 1
-#define POSHOLD_RATE_IMAX	20			// degrees
+#define POSHOLD_RATE_P         2.0			//
+#define POSHOLD_RATE_I         0.08			// Wind control
+#define POSHOLD_RATE_D         0.045			// try 2 or 3 for POSHOLD_RATE 1
+#define POSHOLD_RATE_IMAX      20			// degrees
 //////////////////////////////////////////////////////////////////////////////
 // Navigation PID gains
 //
-#define NAV_P				1.4		//
-#define NAV_I				0.20		// Wind control
-#define NAV_D				0.08		//
-#define NAV_IMAX			20		// degrees
+#define NAV_P                  1.4		//
+#define NAV_I                  0.20		// Wind control
+#define NAV_D                  0.08		//
+#define NAV_IMAX               20		// degrees
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Serial GPS only variables
 //navigation mode
-#define NAV_MODE_NONE              0
-#define NAV_MODE_POSHOLD           1
-#define NAV_MODE_WP                2
+#define NAV_MODE_NONE          0
+#define NAV_MODE_POSHOLD       1
+#define NAV_MODE_WP            2
 static int8_t  nav_mode = NAV_MODE_NONE;            //Navigation mode
 
 
@@ -487,9 +480,9 @@ void setup() {
       SerialEnd(GPS_SERIAL);
       SerialOpen(0,SERIAL_COM_SPEED);
     }      
-	#if !defined(GPS_PROMINI)
-	  GPS_Present = 1;
-	#endif
+    #if !defined(GPS_PROMINI)
+      GPS_Present = 1;
+    #endif
     GPS_Enable = GPS_Present;    
   #endif
   /************************************/
@@ -765,7 +758,7 @@ void loop () {
         if (rcOptions[BOXGPSHOME]) {
           if (GPSModeHome == 0)  {
             GPSModeHome = 1;
-            GPS_set_next_wp(GPS_latitude_home,GPS_longitude_home);
+            GPS_set_next_wp(GPS_home[LAT],GPS_home[LON]);
             nav_mode    = NAV_MODE_WP;
           }
         } else {
@@ -774,9 +767,9 @@ void loop () {
         if (rcOptions[BOXGPSHOLD]) {
           if (GPSModeHold == 0) {
             GPSModeHold = 1;
-            GPS_latitude_hold = GPS_latitude;
-            GPS_longitude_hold = GPS_longitude;
-            GPS_set_next_wp(GPS_latitude_hold,GPS_longitude_hold);
+            GPS_hold[LAT] = GPS_coord[LAT];
+            GPS_hold[LON] = GPS_coord[LON];
+            GPS_set_next_wp(GPS_hold[LAT],GPS_hold[LON]);
             nav_mode = NAV_MODE_POSHOLD;
           }
         } else {
@@ -841,7 +834,7 @@ void loop () {
   #if BARO
     if (baroMode) {
       if (abs(rcCommand[THROTTLE]-initialThrottleHold)>20) {
-         baroMode = 0; // so that a new althold reference is defined
+        baroMode = 0; // so that a new althold reference is defined
       }
       rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
     }
@@ -856,10 +849,10 @@ void loop () {
       // If not. Reset nav loops and all nav related parameters
       GPS_reset_nav();
     } else {
-      sin_yaw_y = sin((float)heading*0.0174532925f);
-      cos_yaw_x = cos((float)heading*0.0174532925f);
-      GPS_angle[ROLL] = ((float)nav_lon*cos_yaw_x - (float)nav_lat*sin_yaw_y) /10;
-      GPS_angle[PITCH]  = ((float)nav_lon*sin_yaw_y + (float)nav_lat*cos_yaw_x) /10;
+      float sin_yaw_y = sin(heading*0.0174532925f);
+      float cos_yaw_x = cos(heading*0.0174532925f);
+      GPS_angle[ROLL]   = (nav[LON]*cos_yaw_x - nav[LAT]*sin_yaw_y) /10;
+      GPS_angle[PITCH]  = (nav[LON]*sin_yaw_y + nav[LAT]*cos_yaw_x) /10;
     }
   #endif
 

@@ -84,8 +84,8 @@ void serialCom() {
             case MSP_SET_RAW_GPS:
               GPS_fix = read8();
               GPS_numSat = read8();
-              GPS_latitude = read32();
-              GPS_longitude = read32();
+              GPS_coord[LAT] = read32();
+              GPS_coord[LON] = read32();
               GPS_altitude = read16();
               GPS_speed = read16();
               GPS_update = 1; break;
@@ -164,8 +164,8 @@ void serialCom() {
               headSerialReply(c,14);
               serialize8(GPS_fix);
               serialize8(GPS_numSat);
-              serialize32(GPS_latitude);
-              serialize32(GPS_longitude);
+              serialize32(GPS_coord[LAT]);
+              serialize32(GPS_coord[LON]);
               serialize16(GPS_altitude);
               serialize16(GPS_speed);
               tailSerialReply();break;
