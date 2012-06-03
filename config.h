@@ -471,8 +471,10 @@
     //#define LED_FLASHER_DDR DDRB
     //#define LED_FLASHER_PORT PORTB
     //#define LED_FLASHER_BIT PB4
+    //#define LED_FLASHER_SEQUENCE ( (uint8_t) 0 )
     // create double flashes
-    //#define LED_FLASHER_SEQUENCE ( (uint8_t) (1<<0 | 1<<2) )
+    //#define LED_FLASHER_SEQUENCE_ARMED ( (uint8_t) (1<<0 | 1<<2) )
+
 
 
   /*************************    INFLIGHT ACC Calibration    *****************************/
