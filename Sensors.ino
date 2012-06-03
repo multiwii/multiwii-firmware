@@ -309,14 +309,14 @@ void ACC_Common() {
   #if defined(INFLIGHT_ACC_CALIBRATION)
       static int32_t b[3];
       static int16_t accZero_saved[3]  = {0,0,0};
-      static int16_t  accTrim_saved[2] = {0, 0};
+      static int16_t  angleTrim_saved[2] = {0, 0};
       //Saving old zeropoints before measurement
       if (InflightcalibratingA==50) {
-         accZero_saved[ROLL]  = accZero[ROLL] ;
-         accZero_saved[PITCH] = accZero[PITCH];
-         accZero_saved[YAW]   = accZero[YAW] ;
-         accTrim_saved[ROLL] = accTrim[ROLL] ;
-         accTrim_saved[PITCH] = accTrim[PITCH] ;
+         accZero_saved[ROLL]  = conf.accZero[ROLL] ;
+         accZero_saved[PITCH] = conf.accZero[PITCH];
+         accZero_saved[YAW]   = conf.accZero[YAW] ;
+         angleTrim_saved[ROLL] = conf.angleTrim[ROLL] ;
+         angleTrim_saved[PITCH] = conf.angleTrim[PITCH] ;
       }
       if (InflightcalibratingA>0) {
         for (uint8_t axis = 0; axis < 3; axis++) {
@@ -326,7 +326,7 @@ void ACC_Common() {
           b[axis] +=accADC[axis];
           // Clear global variables for next reading
           accADC[axis]=0;
-          accZero[axis]=0;
+          conf.accZero[axis]=0;
         }
         //all values are measured
         if (InflightcalibratingA == 1) {
@@ -334,22 +334,22 @@ void ACC_Common() {
           AccInflightCalibrationMeasurementDone = 1;
           toggleBeep = 2;      //buzzer for indicatiing the end of calibration
         // recover saved values to maintain current flight behavior until new values are transferred
-         accZero[ROLL]  = accZero_saved[ROLL] ;
-         accZero[PITCH] = accZero_saved[PITCH];
-         accZero[YAW]   = accZero_saved[YAW] ;
-         accTrim[ROLL] = accTrim_saved[ROLL] ;
-         accTrim[PITCH] = accTrim_saved[PITCH] ;
+         conf.accZero[ROLL]  = accZero_saved[ROLL] ;
+         conf.accZero[PITCH] = accZero_saved[PITCH];
+         conf.accZero[YAW]   = accZero_saved[YAW] ;
+         conf.angleTrim[ROLL] = angleTrim_saved[ROLL] ;
+         conf.angleTrim[PITCH] = angleTrim_saved[PITCH] ;
         }
         InflightcalibratingA--;
       }
       // Calculate average, shift Z down by acc_1G and store values in EEPROM at end of calibration
       if (AccInflightCalibrationSavetoEEProm == 1){  //the copter is landed, disarmed and the combo has been done again
         AccInflightCalibrationSavetoEEProm = 0;
-        accZero[ROLL]  = b[ROLL]/50;
-        accZero[PITCH] = b[PITCH]/50;
-        accZero[YAW]   = b[YAW]/50-acc_1G; // for nunchuk 200=1G
-        accTrim[ROLL]   = 0;
-        accTrim[PITCH]  = 0;
+        conf.accZero[ROLL]  = b[ROLL]/50;
+        conf.accZero[PITCH] = b[PITCH]/50;
+        conf.accZero[YAW]   = b[YAW]/50-acc_1G; // for nunchuk 200=1G
+        conf.angleTrim[ROLL]   = 0;
+        conf.angleTrim[PITCH]  = 0;
         writeParams(1); // write accZero in EEPROM
       }
   #endif
@@ -1136,7 +1136,7 @@ void ACC_init () {
     i2c_writeReg(MPU6050_ADDRESS, 0x6A, 0b00100000);       //USER_CTRL     -- DMP_EN=0 ; FIFO_EN=0 ; I2C_MST_EN=1 (I2C master mode) ; I2C_IF_DIS=0 ; FIFO_RESET=0 ; I2C_MST_RESET=0 ; SIG_COND_RESET=0
     i2c_writeReg(MPU6050_ADDRESS, 0x37, 0x00);             //INT_PIN_CFG   -- INT_LEVEL=0 ; INT_OPEN=0 ; LATCH_INT_EN=0 ; INT_RD_CLEAR=0 ; FSYNC_INT_LEVEL=0 ; FSYNC_INT_EN=0 ; I2C_BYPASS_EN=0 ; CLKOUT_EN=0
     i2c_writeReg(MPU6050_ADDRESS, 0x24, 0x0D);             //I2C_MST_CTRL  -- MULT_MST_EN=0 ; WAIT_FOR_ES=0 ; SLV_3_FIFO_EN=0 ; I2C_MST_P_NSR=0 ; I2C_MST_CLK=13 (I2C slave speed bus = 400kHz)
-    i2c_writeReg(MPU6050_ADDRESS, 0x25, 0x80|(MAG_ADDRESS>>1));//I2C_SLV0_ADDR -- I2C_SLV4_RW=1 (read operation) ; I2C_SLV4_ADDR=MAG_ADDRESS
+    i2c_writeReg(MPU6050_ADDRESS, 0x25, 0x80|MAG_ADDRESS);//I2C_SLV0_ADDR -- I2C_SLV4_RW=1 (read operation) ; I2C_SLV4_ADDR=MAG_ADDRESS
     i2c_writeReg(MPU6050_ADDRESS, 0x26, MAG_DATA_REGISTER);//I2C_SLV0_REG  -- 6 data bytes of MAG are stored in 6 registers. First register address is MAG_DATA_REGISTER
     i2c_writeReg(MPU6050_ADDRESS, 0x27, 0x86);             //I2C_SLV0_CTRL -- I2C_SLV0_EN=1 ; I2C_SLV0_BYTE_SW=0 ; I2C_SLV0_REG_DIS=0 ; I2C_SLV0_GRP=0 ; I2C_SLV0_LEN=3 (3x2 bytes)
   #endif

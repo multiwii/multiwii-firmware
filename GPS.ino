@@ -6,6 +6,16 @@
 
 #if defined(GPS_SERIAL) || defined(GPS_FROM_OSD) || defined(TINY_GPS)
 
+  typedef struct PID_PARAM {
+    float kP;
+    float kI;
+    float kD;
+    float Imax;
+  };
+  PID_PARAM posholdPID;
+  PID_PARAM poshold_ratePID;
+  PID_PARAM navPID;
+
   // AC_PID.h & AC_PID.cpp
   class AC_PID {
   public:
@@ -22,33 +32,18 @@
     ///
     /// @returns		The updated control output.
     ///
-    int32_t get_p(int32_t error);
-    int32_t get_i(int32_t error, float dt);
-    int32_t get_d(int32_t error, float dt);
+    int32_t get_p(int32_t error,PID_PARAM* pid);
+    int32_t get_i(int32_t error, float* dt,PID_PARAM* pid);
+    int32_t get_d(int32_t error, float* dt,PID_PARAM* pid);
     
     /// Reset the PID integrator
     ///
-    void reset_I();
-  
-    float kP() const { return _kp; }
-    float kI() const { return _ki; }
-    float kD() const { return _kd; }
-    int16_t imax() const { return _imax; }
-    
-    void kP(const float v) { _kp = v; }
-    void kI(const float v) { _ki = v; }
-    void kD(const float v) { _kd = v; }
-    void imax(const int16_t v) { _imax = v; }
-    
+    void reset();
+
     float get_integrator() const { return _integrator; }
     void set_integrator(float i) { _integrator = i; }
     
   private:
-    float _kp;
-    float _ki;
-    float _kd;
-    int16_t _imax;
-    
     float _integrator; ///< integrator value
     int32_t _last_input; ///< last input for derivative
     float _last_derivative; ///< last derivative for low-pass filter
@@ -65,33 +60,33 @@
     // f_cut = 25 Hz -> _filter =  6.3662e-3
     // f_cut = 30 Hz -> _filter =  5.3052e-3
   };
-  int32_t AC_PID::get_p(int32_t error) {
-    return (float)error * _kp;
+  int32_t AC_PID::get_p(int32_t error,PID_PARAM* pid) {
+    return (float)error * pid->kP;
   }
   
-  int32_t AC_PID::get_i(int32_t error, float dt) {
-    _integrator += ((float)error * _ki) * dt;
-    if (_integrator < -_imax) {
-      _integrator = -_imax;
-    } else if (_integrator > _imax) {
-      _integrator = _imax;
+  int32_t AC_PID::get_i(int32_t error, float* dt,PID_PARAM* pid) {
+    _integrator += ((float)error * pid->kI) * *dt;
+    if (_integrator < -pid->Imax) {
+      _integrator = -pid->Imax;
+    } else if (_integrator > pid->Imax) {
+      _integrator = pid->Imax;
     }
     return _integrator;
   }
   
-  int32_t AC_PID::get_d(int32_t input, float dt) {
-    _derivative = (input - _last_input) / dt;
+  int32_t AC_PID::get_d(int32_t input, float* dt,PID_PARAM* pid) {
+    _derivative = (input - _last_input) / *dt;
     // discrete low pass filter, cuts out the
     // high frequency noise that can drive the controller crazy
-    _derivative = _last_derivative + (dt / ( _filter + dt)) * (_derivative - _last_derivative);
+    _derivative = _last_derivative + (*dt / ( _filter + *dt)) * (_derivative - _last_derivative);
     // update state
     _last_input = input;
     _last_derivative    = _derivative;
     // add in derivative component
-    return _kd * _derivative;
+    return pid->kD * _derivative;
   }
 
-  void AC_PID::reset_I() {
+  void AC_PID::reset() {
     _integrator = 0;
     _last_input = 0;
     _last_derivative = 0;
@@ -430,9 +425,9 @@ void GPS_reset_nav() {
     #if defined(I2C_GPS)
       //GPS_I2C_command(I2C_GPS_COMMAND_STOP_NAV,0);
     #else
-      pi_poshold[i].reset_I();
-      pid_poshold_rate[i].reset_I();
-      pid_nav[i].reset_I();
+      pi_poshold[i].reset();
+      pid_poshold_rate[i].reset();
+      pid_nav[i].reset();
     #endif
   }
 }
@@ -440,21 +435,19 @@ void GPS_reset_nav() {
 //Get the relevant P I D values and set the PID controllers 
 void GPS_set_pids() {
 #if defined(GPS_SERIAL)  || defined(GPS_FROM_OSD) || defined(TINY_GPS)
-  for(uint8_t i=0;i<2;i++) { // can still be optimized
-    pi_poshold[i].kP((float)conf.P8[PIDPOS]/100.0f);
-    pi_poshold[i].kI((float)conf.I8[PIDPOS]/100.0f);
-    pi_poshold[i].imax(POSHOLD_RATE_IMAX * 100);
-
-    pid_poshold_rate[i].kP((float)conf.P8[PIDPOSR]/10.0f);
-    pid_poshold_rate[i].kI((float)conf.I8[PIDPOSR]/100.0f);
-    pid_poshold_rate[i].kD((float)conf.D8[PIDPOSR]/1000.0f);
-    pid_poshold_rate[i].imax(POSHOLD_RATE_IMAX * 100);
-
-    pid_nav[i].kP((float)conf.P8[PIDNAVR]/10.0f);
-    pid_nav[i].kI((float)conf.I8[PIDNAVR]/100.0f);
-    pid_nav[i].kD((float)conf.D8[PIDNAVR]/1000.0f);
-    pid_nav[i].imax(POSHOLD_RATE_IMAX * 100);
-  }
+  posholdPID.kP =   (float)conf.P8[PIDPOS]/100.0;
+  posholdPID.kI =   (float)conf.I8[PIDPOS]/100.0;
+  posholdPID.Imax = POSHOLD_RATE_IMAX * 100;
+  
+  poshold_ratePID.kP =   (float)conf.P8[PIDPOSR]/10.0;
+  poshold_ratePID.kI =   (float)conf.I8[PIDPOSR]/100.0;
+  poshold_ratePID.kD =   (float)conf.D8[PIDPOSR]/1000.0;
+  poshold_ratePID.Imax = POSHOLD_RATE_IMAX * 100;
+  
+  navPID.kP =   (float)conf.P8[PIDNAVR]/10.0;
+  navPID.kI =   (float)conf.I8[PIDNAVR]/100.0;
+  navPID.kD =   (float)conf.D8[PIDNAVR]/1000.0;
+  navPID.Imax = POSHOLD_RATE_IMAX * 100;
 #endif
 
 #if defined(I2C_GPS)
@@ -636,15 +629,15 @@ static void GPS_calc_location_error( int32_t target_lat, int32_t target_lng, int
 static void GPS_calc_poshold() {
   int32_t p,i,d;						
   int32_t output;
-  int32_t target_speed[2];
+  int32_t target_speed;
   
   for (uint8_t axis=0;axis<2;axis++) {
-    target_speed[axis] = pi_poshold[axis].get_p(error[axis]);			// calculate desired speed from lon error
-    rate_error[axis] = target_speed[axis] - actual_speed[axis];	                // calc the speed error
+    target_speed = pi_poshold[axis].get_p(error[axis],&posholdPID);			// calculate desired speed from lon error
+    rate_error[axis] = target_speed - actual_speed[axis];	                // calc the speed error
   
-    p = pid_poshold_rate[axis].get_p(rate_error[axis]);
-    i = pid_poshold_rate[axis].get_i(rate_error[axis] + error[axis], dTnav);
-    d = pid_poshold_rate[axis].get_d(error[axis], dTnav);
+    p = pid_poshold_rate[axis].get_p(rate_error[axis],&poshold_ratePID);
+    i = pid_poshold_rate[axis].get_i(rate_error[axis] + error[axis], &dTnav,&poshold_ratePID);
+    d = pid_poshold_rate[axis].get_d(error[axis], &dTnav,&poshold_ratePID);
     d = constrain(d, -2000, 2000);
     // get rid of noise
     #if defined(GPS_LOW_SPEED_D_FILTER)
@@ -674,9 +667,9 @@ static void GPS_calc_nav_rate(int max_speed) {
     rate_error[axis] = constrain(rate_error[axis], -1000, 1000);
     // P + I + D
     nav[axis]      =
-        pid_nav[axis].get_p(rate_error[axis])
-       +pid_nav[axis].get_i(rate_error[axis], dTnav)
-       +pid_nav[axis].get_d(rate_error[axis], dTnav);
+        pid_nav[axis].get_p(rate_error[axis],&navPID)
+       +pid_nav[axis].get_i(rate_error[axis], &dTnav,&navPID)
+       +pid_nav[axis].get_d(rate_error[axis], &dTnav,&navPID);
     nav[axis]      = constrain(nav[axis], -NAV_BANK_MAX, NAV_BANK_MAX);
     pid_poshold_rate[axis].set_integrator(pid_nav[axis].get_integrator());
   }
