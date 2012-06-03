@@ -323,6 +323,7 @@ void i2c_clear_OLED(void){
 
 #if defined(LCD_ETPP)
 #define LCD_ETPP_ADDRESS 0x3B
+
 // *********************
 // i2c Eagle Tree Power Panel primitives
 // *********************

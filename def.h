@@ -884,13 +884,13 @@
   #define GPS_BAUD   GPS_PROMINI_SERIAL
 #endif
 
-#if defined(GPS_SERIAL)  || defined(I2C_GPS) || defined(GPS_FROM_OSD)
+#if defined(GPS_SERIAL)  || defined(I2C_GPS) || defined(GPS_FROM_OSD) || defined(TINY_GPS)
   #define GPS 1
 #else
   #define GPS 0
 #endif
 
-#if defined(SRF02) || defined(SRF08) || defined(SRF10) || defined(SRC235)
+#if defined(SRF02) || defined(SRF08) || defined(SRF10) || defined(SRC235) || defined(TINY_GPS_SONAR)
   #define SONAR 1
 #else
   #define SONAR 0

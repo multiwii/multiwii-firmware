@@ -1,5 +1,10 @@
 #if GPS
-#if defined(GPS_SERIAL) || defined(GPS_FROM_OSD)
+
+#if defined(TINY_GPS)
+#include "tinygps.h"
+#endif
+
+#if defined(GPS_SERIAL) || defined(GPS_FROM_OSD) || defined(TINY_GPS)
 
   // AC_PID.h & AC_PID.cpp
   class AC_PID {
@@ -297,10 +302,15 @@ void GPS_NewData() {
     }
   #endif     
 
+  #if defined(GPS_SERIAL) || defined(TINY_GPS)
   #if defined(GPS_SERIAL)
     while (SerialAvailable(GPS_SERIAL)) {
      if (GPS_newFrame(SerialRead(GPS_SERIAL))) {
-
+  #elif defined(TINY_GPS)
+    {
+      {
+      tinygps_query();
+  #endif
        if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;
         if (GPS_fix == 1 && GPS_numSat >= 5) {
           if (armed == 0) {GPS_fix_home = 0;}
@@ -429,7 +439,7 @@ void GPS_reset_nav() {
 
 //Get the relevant P I D values and set the PID controllers 
 void GPS_set_pids() {
-#if defined(GPS_SERIAL)  || defined(GPS_FROM_OSD)
+#if defined(GPS_SERIAL)  || defined(GPS_FROM_OSD) || defined(TINY_GPS)
   for(uint8_t i=0;i<2;i++) { // can still be optimized
     pi_poshold[i].kP((float)conf.P8[PIDPOS]/100.0f);
     pi_poshold[i].kI((float)conf.I8[PIDPOS]/100.0f);
@@ -482,8 +492,28 @@ void GPS_set_pids() {
 #endif
 }
 
-//OK here is the SERIAL GPS code 
-#if defined(GPS_SERIAL) || defined(GPS_FROM_OSD)
+#if defined (TINY_GPS)
+int32_t GPS_coord_to_decimal(struct coord *c) {
+	#define GPS_SCALE_FACTOR 10000000L
+	uint32_t deg = 0;
+	deg = (uint32_t)c->deg * GPS_SCALE_FACTOR;
+
+	uint32_t min = 0;
+	min = (uint32_t)c->min * GPS_SCALE_FACTOR;
+	/* add up the BCD fractions */
+	for (uint8_t i=0; i<NMEA_MINUTE_FRACTS; i++) {
+		uint8_t b = c->frac[i/2];
+		uint8_t n = (i%2 ? b&0x0F : b>>4);
+		min += n*(GPS_SCALE_FACTOR/(10*(i+1)));
+	}
+
+	/* now sum up degrees and minutes */
+	return deg + min/60;
+}
+#endif
+
+//OK here is the onboard GPS code
+#if defined(GPS_SERIAL) || defined(GPS_FROM_OSD) || defined(TINY_GPS)
 
 ////////////////////////////////////////////////////////////////////////////////////
 //PID based GPS navigation functions
@@ -712,6 +742,9 @@ int32_t wrap_36000(int32_t angle) {
   return angle;
 }
 
+// This code is used for parsing NMEA data
+#if defined(GPS_SERIAL) || defined(GPS_FROM_OSD)
+
 /* Alex optimization 
   The latitude or longitude is coded this way in NMEA frames
   dm.f   coded as degrees + minutes + minute decimal
@@ -823,5 +856,6 @@ bool GPS_newFrame(char c) {
   return frameOK && (frame==FRAME_GGA);
 }
 #endif //SERIAL GPS
+#endif //ONBOARD GPS CALC
 
 #endif // GPS
