@@ -76,5 +76,28 @@ void auto_switch_led_flasher() {
     switch_led_flasher(0);
   }
 }
+#endif
 
+#if defined(LANDING_LIGHTS_DDR)
+void init_landing_lights(void) {
+  LANDING_LIGHTS_DDR |= 1<<LANDING_LIGHTS_BIT;
+}
+
+void inline switch_landing_lights(uint8_t on) {
+  if (on) {
+    LANDING_LIGHTS_PORT |= 1<<LANDING_LIGHTS_BIT;
+  } else {
+    LANDING_LIGHTS_PORT &= ~(1<<LANDING_LIGHTS_BIT);
+  }
+}
+
+void auto_switch_landing_lights(void) {
+  #if defined(LANDING_LIGHTS_AUTO_ALTITUDE) & SONAR
+  if (sonarAlt >= 0 && sonarAlt <= LANDING_LIGHTS_AUTO_ALTITUDE && armed) {
+    switch_landing_lights(1);
+  } else {
+    switch_landing_lights(0);
+  }
+  #endif
+}
 #endif

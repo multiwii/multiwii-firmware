@@ -476,6 +476,20 @@
     //#define LED_FLASHER_SEQUENCE_ARMED ( (uint8_t) (1<<0 | 1<<2) )
 
 
+  /*******************************    Landing lights    *********************************/
+  /* Landing lights
+   *
+   * Use an output pin to control landing lights.
+   * They can be switched automatically when used in conjunction
+   * with altitude data from a sonar unit.
+   */
+    //#define LANDING_LIGHTS_DDR DDRC
+    //#define LANDING_LIGHTS_PORT PORTC
+    //#define LANDING_LIGHTS_BIT PC0
+
+    /* altitude above ground (in cm) as reported by sonar */
+    //#define LANDING_LIGHTS_AUTO_ALTITUDE 50
+
 
   /*************************    INFLIGHT ACC Calibration    *****************************/
     /* This will activate the ACC-Inflight calibration if unchecked */

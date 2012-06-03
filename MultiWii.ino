@@ -240,12 +240,18 @@ void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
       #if defined(LED_FLASHER)
         switch_led_flasher(1);
       #endif
+      #if defined(LANDING_LIGHTS_DDR)
+        switch_landing_lights(1);
+      #endif
       LEDPIN_TOGGLE; // switch LEDPIN state
       BUZZERPIN_ON;
       delay(wait);
       BUZZERPIN_OFF;
       #if defined(LED_FLASHER)
         switch_led_flasher(0);
+      #endif
+      #if defined(LANDING_LIGHTS_DDR)
+        switch_landing_lights(0);
       #endif
     }
     delay(60);
@@ -505,6 +511,9 @@ void setup() {
   #endif
   #ifdef LCD_CONF_DEBUG
     configurationLoop();
+  #endif
+  #ifdef LANDING_LIGHTS_DDR
+    init_landing_lights();
   #endif
   ADCSRA |= _BV(ADPS2) ; ADCSRA &= ~_BV(ADPS1); ADCSRA &= ~_BV(ADPS0); // this speeds up analogRead without loosing too much resolution: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1208715493/11
   #if defined(LED_FLASHER)
@@ -824,6 +833,9 @@ void loop () {
       case 4:
         #if SONAR
           Sonar_update();debug3 = sonarAlt;
+        #endif
+        #ifdef LANDING_LIGHTS_DDR
+          auto_switch_landing_lights();
         #endif
         break;
     }
