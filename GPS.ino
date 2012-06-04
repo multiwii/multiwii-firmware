@@ -111,7 +111,6 @@
   static int16_t GPS_wp_radius    = GPS_WP_RADIUS;
   static int16_t actual_speed[2] = {0,0};
   static float GPS_scaleLonDown; // this is used to offset the shrinking longitude as we go towards the poles
-  static float GPS_scaleLonUp;
 
   // The difference between the desired rate of travel and the actual rate of travel
   // updated after GPS read - 5-10hz
@@ -140,7 +139,7 @@
   // distance between plane and home in cm
   static int32_t home_distance;
   // distance between plane and next_WP in cm
-  static int32_t wp_distance;
+  static uint32_t wp_distance;
   
   // used for slow speed wind up when start navigation;
   static int16_t waypoint_speed_gov;
@@ -344,18 +343,21 @@ void GPS_NewData() {
           // prevent runup from bad GPS
 	  dTnav = min(dTnav, 1.0);  
 
-          //calculate distance and bearings for gui and other stuff continously
-          GPS_distanceToHome = GPS_distance_cm(GPS_coord[LAT],GPS_coord[LON],GPS_home[LAT],GPS_home[LON]) / 100;
-          GPS_directionToHome = GPS_bearing(GPS_home[LAT],GPS_home[LON],GPS_coord[LAT],GPS_coord[LON])/100;    //From home to copter
+          //calculate distance and bearings for gui and other stuff continously - From home to copter
+          uint32_t dist;
+          int32_t  dir;
+          GPS_distance_cm_bearing(&GPS_coord[LAT],&GPS_coord[LON],&GPS_home[LAT],&GPS_home[LON],&dist,&dir);
+          GPS_distanceToHome = dist/100;
+          GPS_directionToHome = dir/100;
+ 
           
           //calculate the current velocity based on gps coordinates continously to get a valid speed at the moment when we start navigating
           GPS_calc_velocity();        
           
           if (GPSModeHold == 1 || GPSModeHome == 1){    //ok we are navigating 
             //do gps nav calculations here, these are common for nav and poshold  
-            wp_distance = GPS_distance_cm(GPS_coord[LAT],GPS_coord[LON],GPS_WP[LAT],GPS_WP[LON]);
-            target_bearing = GPS_bearing(GPS_coord[LAT],GPS_coord[LON],GPS_WP[LAT],GPS_WP[LON]);
-            GPS_calc_location_error(GPS_WP[LAT],GPS_WP[LON],GPS_coord[LAT],GPS_coord[LON]);
+            GPS_distance_cm_bearing(&GPS_coord[LAT],&GPS_coord[LON],&GPS_WP[LAT],&GPS_WP[LON],&wp_distance,&target_bearing);
+            GPS_calc_location_error(&GPS_WP[LAT],&GPS_WP[LON],&GPS_coord[LAT],&GPS_coord[LON]);
 
             switch (nav_mode) {
               case NAV_MODE_POSHOLD: 
@@ -519,24 +521,22 @@ int32_t GPS_coord_to_decimal(struct coord *c) {
 // It's ok to calculate this once per waypoint setting, since it changes a little within the reach of a multicopter
 //
 void GPS_calc_longitude_scaling(int32_t lat) {
-  float rads       = (abs((float)lat) / 10000000.0) * 0.0174532925;
+  float rads       = (abs((float)lat)) * (0.0174532925 / 10000000.0);
   GPS_scaleLonDown = cos(rads);
-  GPS_scaleLonUp   = 1.0f / cos(rads);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Sets the waypoint to navigate, reset neccessary variables and calculate initial values
 //
-void GPS_set_next_wp(int32_t lat, int32_t lon) {
-  GPS_WP[LAT] = lat;
-  GPS_WP[LON] = lon;
-  
-  GPS_calc_longitude_scaling(lat);
-  
-  wp_distance = GPS_distance_cm(GPS_coord[LAT],GPS_coord[LON],GPS_WP[LAT],GPS_WP[LON]);
-  target_bearing = GPS_bearing(GPS_coord[LAT],GPS_coord[LON],GPS_WP[LAT],GPS_WP[LON]);
+void GPS_set_next_wp(int32_t* lat, int32_t* lon) {
+  GPS_WP[LAT] = *lat;
+  GPS_WP[LON] = *lon;
+ 
+  GPS_calc_longitude_scaling(*lat);
+  GPS_distance_cm_bearing(&GPS_coord[LAT],&GPS_coord[LON],&GPS_WP[LAT],&GPS_WP[LON],&wp_distance,&target_bearing);
+
   nav_bearing = target_bearing;
-  GPS_calc_location_error(GPS_WP[LAT],GPS_WP[LON],GPS_coord[LAT],GPS_coord[LON]);
+  GPS_calc_location_error(&GPS_WP[LAT],&GPS_WP[LON],&GPS_coord[LAT],&GPS_coord[LON]);
   original_target_bearing = target_bearing;
   waypoint_speed_gov = NAV_SPEED_MIN;
 }
@@ -553,33 +553,25 @@ static bool check_missed_wp() {
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Get distance between two points in cm
-//
-uint32_t GPS_distance_cm(int32_t lat1, int32_t lon1, int32_t lat2, int32_t lon2) {
-  float dLat = (lat2 - lat1);                                    // difference of latitude in 1/10 000 000 degrees
-  float dLon = (float)(lon2 - lon1) * GPS_scaleLonDown;
-  float dist = sqrt(sq(dLat) + sq(dLon)) * 1.113195;
-  return dist;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// get bearing from pos1 to pos2, returns an 1deg = 100 precision
-//
-int32_t GPS_bearing(int32_t lat1, int32_t lon1, int32_t lat2, int32_t lon2) {
-  float off_x = (float)lon2 - lon1;
-  float off_y = ((float)(lat2 - lat1)) * GPS_scaleLonUp;
-  float bearing = 9000.0f + atan2(-off_y, off_x) * 5729.57795f;      //Convert the output redians to 100xdeg
-  if (bearing < 0) bearing += 36000;
-  return bearing;
+// Get bearing from pos1 to pos2, returns an 1deg = 100 precision
+void GPS_distance_cm_bearing(int32_t* lat1, int32_t* lon1, int32_t* lat2, int32_t* lon2,uint32_t* dist, int32_t* bearing) {
+  float dLat = *lat2 - *lat1;                                    // difference of latitude in 1/10 000 000 degrees
+  float dLon = (float)(*lon2 - *lon1) * GPS_scaleLonDown;
+  *dist = sqrt(sq(dLat) + sq(dLon)) * 1.113195;
+  
+  *bearing = 9000.0f + atan2(-dLat, dLon) * 5729.57795f;      //Convert the output redians to 100xdeg
+  if (*bearing < 0) *bearing += 36000;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 // keep old calculation function for compatibility (could be removed later) distance in meters, bearing in degree 
 //
 void GPS_distance(int32_t lat1, int32_t lon1, int32_t lat2, int32_t lon2, uint16_t* dist, int16_t* bearing) {
-  uint32_t distance = GPS_distance_cm(lat1,lon1,lat2,lon2);
-  *dist = distance / 100;          //convert to meters
-  int32_t bear =  GPS_bearing(lat1,lon1,lat2,lon2);
-  *bearing = bear /  100;          //convert to degrees
+  uint32_t d1;
+  int32_t  d2;
+  GPS_distance_cm_bearing(&lat1,&lon1,&lat2,&lon2,&d1,&d2);
+  *dist = d1 / 100;          //convert to meters
+  *bearing = d2 /  100;      //convert to degrees
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -618,9 +610,9 @@ static void GPS_calc_velocity(){
 //	3000 	= 33m
 //	10000 	= 111m
 //
-static void GPS_calc_location_error( int32_t target_lat, int32_t target_lng, int32_t gps_lat, int32_t gps_lng ) {
-  error[LON] = (float)(target_lng - gps_lng) * GPS_scaleLonDown;  // X Error
-  error[LAT] = target_lat - gps_lat; // Y Error
+static void GPS_calc_location_error( int32_t* target_lat, int32_t* target_lng, int32_t* gps_lat, int32_t* gps_lng ) {
+  error[LON] = (float)(*target_lng - *gps_lng) * GPS_scaleLonDown;  // X Error
+  error[LAT] = *target_lat - *gps_lat; // Y Error
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
