@@ -780,7 +780,7 @@ void loop () {
         if (rcOptions[BOXGPSHOME]) {
           if (GPSModeHome == 0)  {
             GPSModeHome = 1;
-            GPS_set_next_wp(GPS_home[LAT],GPS_home[LON]);
+            GPS_set_next_wp(&GPS_home[LAT],&GPS_home[LON]);
             nav_mode    = NAV_MODE_WP;
           }
         } else {
@@ -791,7 +791,7 @@ void loop () {
             GPSModeHold = 1;
             GPS_hold[LAT] = GPS_coord[LAT];
             GPS_hold[LON] = GPS_coord[LON];
-            GPS_set_next_wp(GPS_hold[LAT],GPS_hold[LON]);
+            GPS_set_next_wp(&GPS_hold[LAT],&GPS_hold[LON]);
             nav_mode = NAV_MODE_POSHOLD;
           }
         } else {
