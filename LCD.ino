@@ -576,6 +576,42 @@ void initLCD() {
   line1[13] = digit1(VERSION);
   LCDattributesBold();
   LCDsetLine(1); LCDprintChar(line1);
+  strcpy_P(line2,PSTR("  Unknown Modell"));
+  #if defined(TRI)
+    strcpy_P(line2,PSTR("  TRICopter"));
+  #elif defined(QUADP)
+    strcpy_P(line2,PSTR("  QUAD-P"));
+  #elif defined(QUADX)
+    strcpy_P(line2,PSTR("  QUAD-X"));
+  #elif defined(BI)
+    strcpy_P(line2,PSTR("  BICopter"));
+  #elif defined(Y6)
+    strcpy_P(line2,PSTR("  Y6"));
+  #elif defined(HEX6)
+    strcpy_P(line2,PSTR("  HEX6"));
+  #elif defined(FLYING_WING)
+    strcpy_P(line2,PSTR("  FLYING_WING"));
+  #elif defined(Y4)
+    strcpy_P(line2,PSTR("  Y4"));
+  #elif defined(HEX6X)
+    strcpy_P(line2,PSTR("  HEX6-X"));
+  #elif defined(OCTOX8)
+    strcpy_P(line2,PSTR("  OCTOX8"));
+  #elif defined(OCTOFLATP)
+    strcpy_P(line2,PSTR("  OCTOFLAT-P"));
+  #elif defined(OCTOFLATX)
+    strcpy_P(line2,PSTR("  OCTOFLAT-X"));
+  #elif defined (AIRPLANE)
+    strcpy_P(line2,PSTR("  AIRPLANE"));
+  #elif defined (HELI_120_CCPM) 
+    strcpy_P(line2,PSTR("  HELI_120_CCPM")); 
+  #elif defined (HELI_90_DEG) 
+    strcpy_P(line2,PSTR("  HELI_90_DEG"));
+  #elif defined(VTAIL4)   
+    strcpy_P(line2,PSTR("  VTAIL Quad"));
+  #endif
+  //LCDattributesBold();
+  LCDsetLine(2); LCDprintChar(line2);
   LCDattributesOff();
 #if defined(LCD_TEXTSTAR) || defined(LCD_VT100)
   delay(2500);
@@ -739,6 +775,13 @@ PROGMEM prog_char lcd_param_text76 [] = "Trim Ser R";
 PROGMEM prog_char lcd_param_text80 [] = "Gsmooth R ";
 PROGMEM prog_char lcd_param_text81 [] = "Gsmooth P ";
 PROGMEM prog_char lcd_param_text82 [] = "Gsmooth Y ";
+#endif
+#ifdef AIRPLANE //                       0123456789
+PROGMEM prog_char lcd_param_text83 [] = "ServoMid 3";
+PROGMEM prog_char lcd_param_text84 [] = "ServoMid 4";
+PROGMEM prog_char lcd_param_text85 [] = "ServoMid 5";
+PROGMEM prog_char lcd_param_text86 [] = "ServoMid 6";
+PROGMEM prog_char lcd_param_text87 [] = "ServoMid 7";
 #endif
 //                                       0123456789.12345
 
@@ -907,6 +950,12 @@ PROGMEM const prog_void *lcd_param_ptr_table [] = {
   &lcd_param_text80, &conf.Smoothing[0], &__D,
   &lcd_param_text81, &conf.Smoothing[1], &__D,
   &lcd_param_text82, &conf.Smoothing[2], &__D,
+#endif
+#ifdef AIRPLANE
+  &lcd_param_text83, &conf.servoTrim[3], &__ST,
+  &lcd_param_text84, &conf.servoTrim[4], &__ST,
+  &lcd_param_text85, &conf.servoTrim[5], &__ST,
+  &lcd_param_text86, &conf.servoTrim[6], &__ST,
 #endif
 #ifdef LOG_VALUES
   &lcd_param_text39, &failsafeEvents, &__L,
