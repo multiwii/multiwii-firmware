@@ -42,8 +42,12 @@ March  2012     V2.0
 #define BOXPASSTHRU  8
 #define BOXHEADFREE  9
 #define BOXBEEPERON  10
+/* we want maximum illumination */
+#define BOXLEDMAX    11
+/* enable landing lights at any altitude */
+#define BOXLLIGHTS   12
 
-#define CHECKBOXITEMS 11
+#define CHECKBOXITEMS 13
 #define PIDITEMS 10
 
 static uint32_t currentTime = 0;
@@ -676,12 +680,8 @@ void loop () {
         rcDelayCommand = 0;
       }
     }
-    #if defined(LED_FLASHER) && defined(LED_FLASHER_SEQUENCE_ARMED)
-    static uint8_t prev_armed = 0;
-    if (prev_armed != armed) {
-      led_flasher_set_sequence(armed ? LED_FLASHER_SEQUENCE_ARMED : LED_FLASHER_SEQUENCE);
-      prev_armed = armed;
-    }
+    #if defined(LED_FLASHER)
+      led_flasher_autoselect_sequence();
     #endif
     
     #if defined(INFLIGHT_ACC_CALIBRATION)
