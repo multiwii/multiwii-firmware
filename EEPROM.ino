@@ -1,6 +1,6 @@
 #include <avr/eeprom.h>
 
-#define EEPROM_CONF_VERSION 160
+#define EEPROM_CONF_VERSION 161
 
 void readEEPROM() {
   uint8_t i;
