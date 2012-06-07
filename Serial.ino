@@ -73,11 +73,11 @@ void serialCom() {
     c = SerialRead(0);
 
     if (stateMSP > 99) {                           // a message with a length indication, indicating a non null payload
-      if (offset <= dataSize) {                    // there are still some octets to read (including checksum) to complete a full message
-        if (offset < dataSize) checksum ^= c;      // the checksum is computed, except for the last octet
+      if (offset < dataSize) {                     // there are still some octets to read (including checksum) to complete a full message
+        checksum ^= c;     						   // the checksum is computed, except for the last octet
         inBuf[offset++] = c;
       } else {                                     // we have read all the payload
-        if ( checksum == inBuf[dataSize] ) {       // we check is the computed checksum is ok
+        if ( checksum == c ) {                     // we check is the computed checksum is ok
           switch(stateMSP) {                       // if yes, then we execute different code depending on the message code. read8/16/32 will look into the inBuf buffer
             case MSP_SET_RAW_RC:
               for(i=0;i<8;i++) {rcData[i] = read16();} break;
