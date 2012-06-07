@@ -215,12 +215,12 @@ prog_uchar myFont[][6] PROGMEM = { // Refer to "Times New Roman" Font Database..
 
 
 void i2c_OLED_send_cmd(uint8_t command) {
-  TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate
   i2c_writeReg(OLED_address, 0x80, (uint8_t)command);
 }
 
 void i2c_OLED_send_byte(uint8_t val) {
-  TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate
   i2c_writeReg(OLED_address, 0x40, (uint8_t)val);
 }
 

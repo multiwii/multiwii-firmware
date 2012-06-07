@@ -121,7 +121,7 @@ void i2c_init(void) {
     I2C_PULLUPS_DISABLE
   #endif
   TWSR = 0;                                    // no prescaler => prescaler = 1
-  TWBR = ((16000000L / I2C_SPEED) - 16) / 2;   // change the I2C clock rate
+  TWBR = ((F_CPU / I2C_SPEED) - 16) / 2;   // change the I2C clock rate
   TWCR = 1<<TWEN;                              // enable twi module, no interrupt
 }
 
@@ -470,7 +470,7 @@ void i2c_BMP085_Calculate() {
 void Baro_update() {
   if (currentTime < bmp085_ctx.deadline) return; 
   bmp085_ctx.deadline = currentTime;
-  TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, BMP085 is ok with this speed
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, BMP085 is ok with this speed
   switch (bmp085_ctx.state) {
     case 0: 
       i2c_BMP085_UT_Start(); 
@@ -613,7 +613,7 @@ void i2c_MS561101BA_Calculate() {
 void Baro_update() {
   if (currentTime < ms561101ba_ctx.deadline) return; 
   ms561101ba_ctx.deadline = currentTime;
-  TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, MS5611 is ok with this speed
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, MS5611 is ok with this speed
   switch (ms561101ba_ctx.state) {
     case 0: 
       i2c_MS561101BA_UT_Start(); 
@@ -648,7 +648,7 @@ void ACC_init () {
 }
 
 void ACC_getADC () {
-  TWBR = ((16000000L / 400000L) - 16) / 2;
+  TWBR = ((F_CPU / 400000L) - 16) / 2;
   i2c_getSixRawADC(MMA7455_ADDRESS,0x00);
 
   ACC_ORIENTATION( ((int8_t(rawADC[1])<<8) | int8_t(rawADC[0])) ,
@@ -679,7 +679,7 @@ void ACC_init () {
 }
 
 void ACC_getADC () {
-  TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, ADXL435 is ok with this speed
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, ADXL435 is ok with this speed
   i2c_getSixRawADC(ADXL345_ADDRESS,0x32);
 
   ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,
@@ -730,7 +730,7 @@ void ACC_init () {
 }
 
 void ACC_getADC () {
-  TWBR = ((16000000L / 400000L) - 16) / 2;  // Optional line.  Sensor is good for it in the spec.
+  TWBR = ((F_CPU / 400000L) - 16) / 2;  // Optional line.  Sensor is good for it in the spec.
   i2c_getSixRawADC(BMA180_ADDRESS,0x02);
   //usefull info is on the 14 bits  [2-15] bits  /4 => [0-13] bits  /4 => 12 bit resolution
   ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/16 ,
@@ -768,7 +768,7 @@ void ACC_init(){
 }
 
 void ACC_getADC(){
-  TWBR = ((16000000L / 400000L) - 16) / 2;
+  TWBR = ((F_CPU / 400000L) - 16) / 2;
   i2c_getSixRawADC(0x38,0x02);
   ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/64 ,
                    ((rawADC[3]<<8) | rawADC[2])/64 ,
@@ -791,7 +791,7 @@ void ACC_init() {
 }
 
 void ACC_getADC() {
-  TWBR = ((16000000L / I2C_SPEED) - 16) / 2; // change the I2C clock rate. !! you must check if the nunchuk is ok with this freq
+  TWBR = ((F_CPU / I2C_SPEED) - 16) / 2; // change the I2C clock rate. !! you must check if the nunchuk is ok with this freq
   i2c_getSixRawADC(NUNCHACK_ADDRESS,0x00);
 
   ACC_ORIENTATION(  ( (rawADC[3]<<2)        + ((rawADC[5]>>4)&0x2) ) ,
@@ -814,7 +814,7 @@ void ACC_init(){
 }
 
 void ACC_getADC(){
-  TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   i2c_getSixRawADC(LIS3A,0x28+0x80);
   ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/4 ,
                    ((rawADC[3]<<8) | rawADC[2])/4 ,
@@ -837,7 +837,7 @@ void ACC_init () {
 }
 
   void ACC_getADC () {
-  TWBR = ((16000000L / 400000L) - 16) / 2;
+  TWBR = ((F_CPU / 400000L) - 16) / 2;
   i2c_getSixRawADC(0x18,0xA8);
 
   ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/16 ,
@@ -879,7 +879,7 @@ void Gyro_init() {
 }
 
 void Gyro_getADC () {
-  TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   i2c_getSixRawADC(L3G4200D_ADDRESS,0x80|0x28);
 
   GYRO_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/20  ,
@@ -914,7 +914,7 @@ void Gyro_init() {
 }
 
 void Gyro_getADC () {
-  TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   i2c_getSixRawADC(ITG3200_ADDRESS,0X1D);
   GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/4 , // range: +/- 8192; +/- 2000 deg/sec
                     ((rawADC[2]<<8) | rawADC[3])/4 ,
@@ -938,7 +938,7 @@ void Mag_getADC() {
   uint8_t axis;
   if ( currentTime < t ) return; //each read is spaced by 100ms
   t = currentTime + 100000;
-  TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   Device_Mag_getADC();
   magADC[ROLL]  = magADC[ROLL]  * magCal[ROLL];
   magADC[PITCH] = magADC[PITCH] * magCal[PITCH];
@@ -1100,7 +1100,7 @@ void Device_Mag_getADC() {
 #if defined(MPU6050)
 
 void Gyro_init() {
-  TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   i2c_writeReg(MPU6050_ADDRESS, 0x6B, 0x80);             //PWR_MGMT_1    -- DEVICE_RESET 1
   delay(5);
   i2c_writeReg(MPU6050_ADDRESS, 0x6B, 0x03);             //PWR_MGMT_1    -- SLEEP 0; CYCLE 0; TEMP_DIS 0; CLKSEL 3 (PLL with Z Gyro reference)
@@ -1193,7 +1193,7 @@ void Gyro_init() {
 
 void Gyro_getADC() {
   uint8_t axis;
-  TWBR = ((16000000L / I2C_SPEED) - 16) / 2; // change the I2C clock rate
+  TWBR = ((F_CPU / I2C_SPEED) - 16) / 2; // change the I2C clock rate
   i2c_getSixRawADC(WMP_ADDRESS_2,0x00);
 
   if (micros() < (neutralizeTime + NEUTRALIZE_DELAY)) {//we neutralize data in case of blocking+hard reset state
@@ -1395,7 +1395,7 @@ void i2c_srf08_discover() {
 void Sonar_update() {
   if (currentTime < srf08_ctx.deadline || (srf08_ctx.state==0 && armed)) return; 
   srf08_ctx.deadline = currentTime;
-  TWBR = ((16000000L / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, SRF08 is ok with this speed
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, SRF08 is ok with this speed
   switch (srf08_ctx.state) {
     case 0: 
       i2c_srf08_discover();
