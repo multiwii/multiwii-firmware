@@ -73,21 +73,12 @@ void tailSerialReply() {
 }
 
 uint8_t getBoxnameLength() {
-  uint8_t r = 0;
-  for (uint8_t i=0; i<CHECKBOXITEMS; i++) {
-    r += 1+strlen_P((PGM_P)pgm_read_word(&(BOXNAME_TABLE[i])));
-  }
-  return r;
+  return strlen_P(boxnames);
 }
 
 void serializeBoxnames() {
-  char buffer[10];
-  for (uint8_t i=0; i<CHECKBOXITEMS; i++) {
-    strcpy_P(buffer, (PGM_P)pgm_read_word(&(BOXNAME_TABLE[i])));
-    for (char *c = &buffer[0]; *c; c++) {
-      serialize8(*c);
-    }
-    serialize8(';');
+  for (PGM_P c = boxnames; pgm_read_byte(c); c++) {
+    serialize8(pgm_read_byte(c));
   }
 }
 
