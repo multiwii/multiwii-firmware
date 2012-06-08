@@ -102,6 +102,7 @@ static int16_t  errorAltitudeI = 0;
 static uint8_t  toggleBeep = 0;
 static int16_t  debug1,debug2,debug3,debug4;
 static int16_t  sonarAlt; //to think about the unit
+static uint8_t  i2c_init_done = 0;          // For i2c gps we have to now when i2c init is done, so we can update parameters to the i2cgps from eeprom (at startup it is done in setup())
 
 //for log
 #if defined(LOG_VALUES)

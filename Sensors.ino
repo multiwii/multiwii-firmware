@@ -1471,4 +1471,5 @@ void initSensors() {
   if (MAG) Mag_init();
   if (ACC) {ACC_init();acc_25deg = acc_1G * 0.423;}
   if (SONAR) Sonar_init();
+  i2c_init_done = 1;
 }
