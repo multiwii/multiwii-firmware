@@ -49,8 +49,42 @@ March  2012     V2.0
 /* acquire heading for HEADFREE mode */
 #define BOXHEADADJ   13
 
-#define CHECKBOXITEMS 14
 #define PIDITEMS 10
+
+/* names for dynamic generation of config GUI */
+char BOXNAME_0[]  PROGMEM = "ACC";
+char BOXNAME_1[]  PROGMEM = "BARO";
+char BOXNAME_2[]  PROGMEM = "MAG";
+char BOXNAME_3[]  PROGMEM = "CAMSTAB";
+char BOXNAME_4[]  PROGMEM = "CAMTRIG";
+char BOXNAME_5[]  PROGMEM = "ARM";
+char BOXNAME_6[]  PROGMEM = "GPS HOME";
+char BOXNAME_7[]  PROGMEM = "GPS HOLD";
+char BOXNAME_8[]  PROGMEM = "PASSTHRU";
+char BOXNAME_9[]  PROGMEM = "HEADFREE";
+char BOXNAME_10[] PROGMEM = "BEEPER";
+char BOXNAME_11[] PROGMEM = "LEDMAX";
+char BOXNAME_12[] PROGMEM = "LLIGHTS";
+char BOXNAME_13[] PROGMEM = "HEADADJ";
+
+PGM_P BOXNAME_TABLE[] PROGMEM = {
+  BOXNAME_0,
+  BOXNAME_1,
+  BOXNAME_2,
+  BOXNAME_3,
+  BOXNAME_4,
+  BOXNAME_5,
+  BOXNAME_6,
+  BOXNAME_7,
+  BOXNAME_8,
+  BOXNAME_9,
+  BOXNAME_10,
+  BOXNAME_11,
+  BOXNAME_12,
+  BOXNAME_13,
+};
+
+#define CHECKBOXITEMS (sizeof(BOXNAME_TABLE)/sizeof(*BOXNAME_TABLE))
 
 static uint32_t currentTime = 0;
 static uint16_t previousTime = 0;
