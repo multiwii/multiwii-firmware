@@ -227,8 +227,8 @@ static int32_t  GPS_home[2];
 static int32_t  GPS_hold[2];
 static uint8_t  GPS_fix , GPS_fix_home = 0;
 static uint8_t  GPS_numSat;
-static uint16_t GPS_distanceToHome,GPS_distanceToHold;       // distance to home or hold point in meters
-static int16_t  GPS_directionToHome,GPS_directionToHold;     // direction to home or hol point in degrees
+static uint16_t GPS_distanceToHome;                          // distance to home in meters
+static int16_t  GPS_directionToHome;                         // direction to home in degrees
 static uint16_t GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s
 static uint8_t  GPS_update = 0;                              // it's a binary toogle to distinct a GPS position update
 static int16_t  GPS_angle[2] = { 0, 0};                      // it's the angles that must be applied for GPS correction

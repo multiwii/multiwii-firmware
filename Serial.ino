@@ -215,12 +215,10 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      serialize16(GPS_speed);
      tailSerialReply();break;
    case MSP_COMP_GPS:
-     headSerialReply(c,9);
+     headSerialReply(c,5);
      serialize16(GPS_distanceToHome);
      serialize16(GPS_directionToHome);
      serialize8(GPS_update);
-     serialize16(GPS_distanceToHold);
-     serialize16(GPS_directionToHold);
      tailSerialReply();break;
    case MSP_ATTITUDE:
      headSerialReply(c,6);
