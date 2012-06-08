@@ -6,7 +6,7 @@
 
 #if defined(GPS_SERIAL) || defined(GPS_FROM_OSD) || defined(TINY_GPS)
 
-  typedef struct PID_PARAM {
+  struct PID_PARAM {
     float kP;
     float kI;
     float kD;
@@ -108,7 +108,7 @@
   #define NAV_BANK_MAX 3000        //30deg max banking when navigating (just for security and testing)
 
   static float  dTnav;            // Delta Time in milliseconds for navigation computations, updated with every good GPS read
-  static int16_t GPS_wp_radius    = GPS_WP_RADIUS;
+  static uint16_t GPS_wp_radius    = GPS_WP_RADIUS;
   static int16_t actual_speed[2] = {0,0};
   static float GPS_scaleLonDown; // this is used to offset the shrinking longitude as we go towards the poles
 
@@ -135,14 +135,14 @@
   static int16_t crosstrack_error;
   ////////////////////////////////////////////////////////////////////////////////
   // The location of the copter in relation to home, updated every GPS read (1deg - 100)
-  static int32_t home_to_copter_bearing;
+  // static int32_t home_to_copter_bearing; /* unused */
   // distance between plane and home in cm
-  static int32_t home_distance;
+  // static int32_t home_distance; /* unused */
   // distance between plane and next_WP in cm
   static uint32_t wp_distance;
   
   // used for slow speed wind up when start navigation;
-  static int16_t waypoint_speed_gov;
+  static uint16_t waypoint_speed_gov;
 
   ////////////////////////////////////////////////////////////////////////////////////
   // moving average filter variables
@@ -317,7 +317,7 @@ void GPS_NewData() {
           }
           //Apply moving average filter to GPS data
     #if defined(GPS_FILTERING)
-          GPS_filter_index = ++GPS_filter_index % GPS_FILTER_VECTOR_LENGTH;
+          GPS_filter_index = (GPS_filter_index+1) % GPS_FILTER_VECTOR_LENGTH;
           for (axis = 0; axis< 2; axis++) {
             GPS_read[axis] = GPS_coord[axis]; //latest unfiltered data is in GPS_latitude and GPS_longitude
             GPS_degree[axis] = GPS_read[axis] / 10000000;  // get the degree to assure the sum fits to the int32_t
@@ -693,7 +693,7 @@ static void GPS_update_crosstrack(void) {
 //	           |  		 		            +|+
 //	           |< we should slow to 1.5 m/s as we hit the target
 //
-static int16_t GPS_calc_desired_speed(int16_t max_speed, bool _slow) {
+static int16_t GPS_calc_desired_speed(uint16_t max_speed, bool _slow) {
   // max_speed is default 400 or 4m/s
   if(_slow){
     max_speed = min(max_speed, wp_distance / 2);
@@ -715,16 +715,16 @@ static int16_t GPS_calc_desired_speed(int16_t max_speed, bool _slow) {
 ////////////////////////////////////////////////////////////////////////////////////
 // Utilities
 //
-int32_t wrap_18000(int32_t error) {
-  if (error > 18000)  error -= 36000;
-  if (error < -18000) error += 36000;
-  return error;
+int32_t wrap_18000(int32_t ang) {
+  if (ang > 18000)  ang -= 36000;
+  if (ang < -18000) ang += 36000;
+  return ang;
 }
 
-int32_t wrap_36000(int32_t angle) {
-  if (angle > 36000) angle -= 36000;
-  if (angle < 0)     angle += 36000;
-  return angle;
+int32_t wrap_36000(int32_t ang) {
+  if (ang > 36000) ang -= 36000;
+  if (ang < 0)     ang += 36000;
+  return ang;
 }
 
 // This code is used for parsing NMEA data

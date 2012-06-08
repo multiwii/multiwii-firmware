@@ -1240,24 +1240,24 @@ void Gyro_getADC() {
 
 #if defined(TINY_GPS) | defined(TINY_GPS_SONAR)
 void tinygps_query(void) {
-  struct nav_data_t nav;
+  struct nav_data_t navi;
   int16_t i2c_errors = i2c_errors_count;
   /* copy GPS data to local struct */
-  i2c_read_to_buf(TINY_GPS_TWI_ADD, &nav, sizeof(nav));
+  i2c_read_to_buf(TINY_GPS_TWI_ADD, &navi, sizeof(navi));
   /* did we generate any errors? */
   if (i2c_errors == i2c_errors_count) {
     #if defined(TINY_GPS)
     GPS_update = !GPS_update;
 
-    GPS_numSat = nav.gps.sats;
-    GPS_fix = (nav.gps.quality > 0);
-    GPS_coord[LAT] = (nav.gps.flags & 1<<NMEA_RMC_FLAGS_LAT_NORTH ? 1 : -1) * GPS_coord_to_decimal(&nav.gps.lat);
-    GPS_coord[LON] = (nav.gps.flags & 1<<NMEA_RMC_FLAGS_LON_EAST ? 1 : -1) * GPS_coord_to_decimal(&nav.gps.lon);
-    GPS_altitude = nav.gps.alt.m;
+    GPS_numSat = navi.gps.sats;
+    GPS_fix = (navi.gps.quality > 0);
+    GPS_coord[LAT] = (navi.gps.flags & 1<<NMEA_RMC_FLAGS_LAT_NORTH ? 1 : -1) * GPS_coord_to_decimal(&navi.gps.lat);
+    GPS_coord[LON] = (navi.gps.flags & 1<<NMEA_RMC_FLAGS_LON_EAST ? 1 : -1) * GPS_coord_to_decimal(&navi.gps.lon);
+    GPS_altitude = navi.gps.alt.m;
     #endif
 
     #if defined(TINY_GPS_SONAR)
-    sonarAlt = nav.sonar.distance;
+    sonarAlt = navi.sonar.distance;
     #endif
   }
 }

@@ -7,13 +7,13 @@ void buzzer(uint8_t warn_vbat){
   static uint32_t buzzerLastToggleTime;
   static uint8_t activateBuzzer,
                  beeperOnBox,
-                 i,
-                 last_rcOptions[CHECKBOXITEMS], 
                  warn_noGPSfix = 0,
                  warn_failsafe = 0;         
 
   //===================== Beeps for changing rcOptions =====================
   #if defined(RCOPTIONSBEEP)
+    static uint8_t i = 0;
+    static uint8 last_rcOptions[CHECKBOXITEMS];
     if (last_rcOptions[i] != rcOptions[i]){toggleBeep = 1;}
     last_rcOptions[i] = rcOptions[i]; 
     i++;

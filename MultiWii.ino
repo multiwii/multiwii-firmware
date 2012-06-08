@@ -102,15 +102,16 @@ static int16_t  errorAltitudeI = 0;
 static uint8_t  toggleBeep = 0;
 static int16_t  debug1,debug2,debug3,debug4;
 static int16_t  sonarAlt; //to think about the unit
-static uint8_t  i2c_init_done = 0;          // For i2c gps we have to now when i2c init is done, so we can update parameters to the i2cgps from eeprom (at startup it is done in setup())
 
 //for log
+#if defined(LOG_VALUES)
 static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
 static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
 static uint16_t powerMax = 0;           // highest ever current
 static uint32_t armedTime = 0;
 static int32_t  BAROaltStart = 0;       // offset value from powerup
 static int32_t	BAROaltMax = 0;	        // maximum value
+#endif
 
 static int16_t  i2c_errors_count = 0;
 static int16_t  annex650_overrun_count = 0;
@@ -118,27 +119,33 @@ static int16_t  annex650_overrun_count = 0;
 // **********************
 //Automatic ACC Offset Calibration
 // **********************
+#if defined(INFLIGHT_ACC_CALIBRATION)
 static uint16_t InflightcalibratingA = 0;
 static int16_t AccInflightCalibrationArmed;
 static uint16_t AccInflightCalibrationMeasurementDone = 0;
 static uint16_t AccInflightCalibrationSavetoEEProm = 0;
 static uint16_t AccInflightCalibrationActive = 0;
+#endif
 
 // **********************
 // power meter
 // **********************
+#if defined(POWERMETER)
 #define PMOTOR_SUM 8                     // index into pMeter[] for sum
 static uint32_t pMeter[PMOTOR_SUM + 1];  // we use [0:7] for eight motors,one extra for sum
 static uint8_t pMeterV;                  // dummy to satisfy the paramStruct logic in ConfigurationLoop()
 static uint32_t pAlarm;                  // we scale the eeprom value from [0:255] to this value we can directly compare to the sum in pMeter[6]
 static uint16_t powerValue = 0;          // last known current
+#endif
 static uint16_t intPowerMeterSum, intPowerTrigger1;
 
 // **********************
 // telemetry
 // **********************
+#if defined(LCD_TELEMETRY) || defined(LCD_TELEMETRY_AUTO) || defined(LCD_TELEMETRY_DEBUG)
 static uint8_t telemetry = 0;
 static uint8_t telemetry_auto = 0;
+#endif
 
 // ******************
 // rc functions
@@ -146,14 +153,20 @@ static uint8_t telemetry_auto = 0;
 #define MINCHECK 1100
 #define MAXCHECK 1900
 
-volatile int16_t failsafeCnt = 0;
+#if defined(FAILSAFE)
 static int16_t failsafeEvents = 0;
+#endif
+volatile int16_t failsafeCnt = 0;
+
 static int16_t rcData[8];          // interval [1000;2000]
 static int16_t rcCommand[4];       // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW 
 static int16_t lookupPitchRollRC[6];// lookup table for expo & RC rate PITCH+ROLL
 static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 volatile uint8_t rcFrameComplete; // for serial rc receiver Spektrum
+
+#if defined(OPENLRSv2MULTI)
 static uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim or other usages
+#endif
 
 // **************
 // gyro+acc IMU
@@ -173,7 +186,7 @@ static int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1500};
 // ************************
 // EEPROM Layout definition
 // ************************
-static uint8_t dynP8[3], dynI8[3], dynD8[3];
+static uint8_t dynP8[3], dynD8[3];
 static struct {
   uint8_t checkNewConf;
   uint8_t P8[PIDITEMS], I8[PIDITEMS], D8[PIDITEMS];
@@ -218,8 +231,12 @@ static int16_t  GPS_directionToHome,GPS_directionToHold;     // direction to hom
 static uint16_t GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s
 static uint8_t  GPS_update = 0;                              // it's a binary toogle to distinct a GPS position update
 static int16_t  GPS_angle[2] = { 0, 0};                      // it's the angles that must be applied for GPS correction
+#if defined(I2C_GPS)
 static uint16_t GPS_ground_course = 0;                       // degrees*10
+#endif
+#if defined(GPS_SERIAL)
 static uint8_t  GPS_Present = 0;                             // Checksum from Gps serial
+#endif
 static uint8_t  GPS_Enable  = 0;
 
 #define LAT  0
@@ -283,7 +300,7 @@ void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
 }
 
 void annexCode() { // this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
-  static uint32_t buzzerTime,calibratedAccTime;
+  static uint32_t calibratedAccTime;
   uint16_t tmp,tmp2;
   static uint8_t  buzzerFreq;         // delay between buzzer ring
   uint8_t axis,prop1,prop2;
@@ -889,8 +906,6 @@ void loop () {
     }
   #endif
   #if GPS
-    uint16_t GPS_dist;
-    int16_t  GPS_dir;
     //debug2 = GPS_angle[ROLL];
     //debug3 = GPS_angle[PITCH];
     // Check that we really need to navigate ?
