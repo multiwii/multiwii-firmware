@@ -799,7 +799,7 @@ void loop () {
         }
       }
       #endif 
-      #if defined(GPS_SERIAL)
+      #if defined(GPS_SERIAL) || defined(TINY_GPS)
       if (GPS_fix == 1 && GPS_numSat >= 5 ) {
         if (rcOptions[BOXGPSHOME]) {
           if (GPSModeHome == 0)  {
