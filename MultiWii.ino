@@ -53,7 +53,7 @@ March  2012     V2.0
 #define CHECKBOXITEMS 14
 
 /* names for dynamic generation of config GUI */
-char boxnames[] PROGMEM =
+const char boxnames[] PROGMEM =
   "ACC;"
   "BARO;"
   "MAG;"
