@@ -1,10 +1,15 @@
 // 256 RX buffer is needed for GPS communication (64 or 128 was too short)
-// it avoids also modulo operations
+#if defined(GPS_SERIAL)
+#define RX_BUFFER_SIZE 256
+#else
+#define RX_BUFFER_SIZE 64
+#endif
+
 #if defined(MEGA)
-  uint8_t serialBufferRX[256][4];
+  uint8_t serialBufferRX[RX_BUFFER_SIZE][4];
   volatile uint8_t serialHeadRX[4],serialTailRX[4];
 #else
-  uint8_t serialBufferRX[256][1];
+  uint8_t serialBufferRX[RX_BUFFER_SIZE][1];
   volatile uint8_t serialHeadRX[1],serialTailRX[1];
 #endif
 
@@ -40,8 +45,10 @@
 
 #define MSP_DEBUG                254   //out message         debug1,debug2,debug3,debug4
 
+static uint8_t checksum;
+static uint8_t indRX;
 #define INBUF_SIZE 64
-static uint8_t checksum,indRX,inBuf[INBUF_SIZE];
+static uint8_t inBuf[INBUF_SIZE];
 
 uint32_t read32() {
   uint32_t t = inBuf[indRX++];
@@ -292,29 +299,32 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
 // *******************************************************
 // Interrupt driven UART transmitter - using a ring buffer
 // *******************************************************
-static uint8_t headTX,tailTX;
-static uint8_t bufTX[256];      // 256 is choosen to avoid modulo operations on 8 bits pointers
+static volatile uint8_t headTX,tailTX;
+#define TX_BUFFER_SIZE 128
+static uint8_t bufTX[TX_BUFFER_SIZE];
 
 void serialize32(uint32_t a) {
-  static uint8_t t;
-  t = a;       bufTX[headTX++] = t ; checksum ^= t;
-  t = a>>8;    bufTX[headTX++] = t ; checksum ^= t;
-  t = a>>16;   bufTX[headTX++] = t ; checksum ^= t;
-  t = a>>24;   bufTX[headTX++] = t ; checksum ^= t;
-  #if !defined(PROMICRO)
-    UCSR0B |= (1<<UDRIE0);      // in case ISR_UART desactivates the interrupt, we force its reactivation anyway
-  #endif 
+  serialize8((a    ) & 0xFF);
+  serialize8((a>> 8) & 0xFF);
+  serialize8((a>>16) & 0xFF);
+  serialize8((a>>24) & 0xFF);
 }
+
 void serialize16(int16_t a) {
-  static uint8_t t;
-  t = a;          bufTX[headTX++] = t ; checksum ^= t;
-  t = a>>8&0xff;  bufTX[headTX++] = t ; checksum ^= t;
-  #if !defined(PROMICRO)
-    UCSR0B |= (1<<UDRIE0);
-  #endif 
+  /* serialize low byte */
+  serialize8(a & 0xFF);
+  /* serialize high byte */
+  serialize8((a>>8) & 0xFF);
 }
+
 void serialize8(uint8_t a)  {
-  bufTX[headTX++]  = a; checksum ^= a;
+  if (headTX == sizeof(bufTX)-1) {
+    headTX = 0;
+  } else {
+    headTX++;
+  }
+  bufTX[headTX] = a;
+  checksum ^= a;
   #if !defined(PROMICRO)
     UCSR0B |= (1<<UDRIE0);
   #endif
@@ -322,7 +332,15 @@ void serialize8(uint8_t a)  {
 
 #if !defined(PROMICRO)
   ISR_UART {
-    if (headTX != tailTX) UDR0 = bufTX[tailTX++];  // Transmit next byte in the ring
+    if (headTX != tailTX) {
+      if (tailTX == sizeof(bufTX)-1) {
+        tailTX = 0;
+      } else {
+        tailTX++;
+      }
+
+      UDR0 = bufTX[tailTX];  // Transmit next byte in the ring
+    }
     if (tailTX == headTX) UCSR0B &= ~(1<<UDRIE0); // Check if all data is transmitted . if yes disable transmitter UDRE interrupt
   }
 #endif
@@ -374,36 +392,45 @@ void SerialEnd(uint8_t port) {
   }
 }
 
+static void inline store_uart_in_buf(uint8_t data, uint8_t portnum) {
+  /* the received data byte */
+  uint8_t d = data;
+  uint8_t i = serialHeadRX[portnum];
+  if (i == RX_BUFFER_SIZE-1) {
+    i = 0;
+  } else {
+    i++;
+  }
+  /* we did not bite our own tail? */
+  if (i != serialTailRX[portnum]) {
+   serialBufferRX[serialHeadRX[portnum]][portnum] = d;
+   serialHeadRX[portnum] = i;
+  } else {
+    /* sorry, this byte is lost :-/ */
+  }
+}
+
 #if defined(PROMINI) && !(defined(SPEKTRUM))
 ISR(USART_RX_vect){
-  uint8_t d = UDR0;
-  uint8_t i = serialHeadRX[0] + 1;
-  if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = d; serialHeadRX[0] = i;}
+  /* gcc hopefully inlines this */
+  store_uart_in_buf(UDR0, 0);
 }
 #endif
 
 #if (defined(MEGA) || defined(PROMICRO)) && !defined(SPEKTRUM)
   ISR(USART1_RX_vect){
-    uint8_t d = UDR1;
-    uint8_t i = serialHeadRX[1] + 1;
-    if (i != serialTailRX[1]) {serialBufferRX[serialHeadRX[1]][1] = d; serialHeadRX[1] = i;}
+    store_uart_in_buf(UDR1, 1);
   }
 #endif
 #if defined(MEGA)
   ISR(USART0_RX_vect){
-    uint8_t d = UDR0;
-    uint8_t i = serialHeadRX[0] + 1;
-    if (i != serialTailRX[0]) {serialBufferRX[serialHeadRX[0]][0] = d; serialHeadRX[0] = i;}
+    store_uart_in_buf(UDR0, 0);
   }
   ISR(USART2_RX_vect){
-    uint8_t d = UDR2;
-    uint8_t i = serialHeadRX[2] + 1;
-    if (i != serialTailRX[2]) {serialBufferRX[serialHeadRX[2]][2] = d; serialHeadRX[2] = i;}
+    store_uart_in_buf(UDR2, 2);
   }
   ISR(USART3_RX_vect){
-    uint8_t d = UDR3;
-    uint8_t i = serialHeadRX[3] + 1;
-    if (i != serialTailRX[3]) {serialBufferRX[serialHeadRX[3]][3] = d; serialHeadRX[3] = i;}
+    store_uart_in_buf(UDR3, 3);
   }
 #endif
 
@@ -420,7 +447,13 @@ uint8_t SerialRead(uint8_t port) {
     port = 0;
   #endif
   uint8_t c = serialBufferRX[serialTailRX[port]][port];
-  if ((serialHeadRX[port] != serialTailRX[port])) serialTailRX[port] = serialTailRX[port] + 1;
+  if ((serialHeadRX[port] != serialTailRX[port])) {
+    if (serialTailRX[port] == RX_BUFFER_SIZE-1) {
+      serialTailRX[port] = 0;
+    } else {
+      serialTailRX[port]++;
+    }
+  }
   return c;
 }
 
@@ -433,7 +466,7 @@ uint8_t SerialAvailable(uint8_t port) {
     #endif
     port = 0;
   #endif
-  return serialHeadRX[port] - serialTailRX[port];
+  return (serialHeadRX[port] != serialTailRX[port]);
 }
 
 void SerialWrite(uint8_t port,uint8_t c){
