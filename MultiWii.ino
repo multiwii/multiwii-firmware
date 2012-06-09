@@ -91,7 +91,9 @@ static int32_t  EstAlt;             // in cm
 static int16_t  BaroPID = 0;
 static int32_t  AltHold;
 static int16_t  errorAltitudeI = 0;
+#if defined(BUZZER)
 static uint8_t  toggleBeep = 0;
+#endif
 static int16_t  debug1,debug2,debug3,debug4;
 static int16_t  sonarAlt; //to think about the unit
 
@@ -308,7 +310,9 @@ void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
 void annexCode() { // this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
   static uint32_t calibratedAccTime;
   uint16_t tmp,tmp2;
-  static uint8_t  buzzerFreq;         // delay between buzzer ring
+  #if defined(BUZZER)
+    static uint8_t  buzzerFreq;         // delay between buzzer ring
+  #endif
   uint8_t axis,prop1,prop2;
 
   #define BREAKPOINT 1500
@@ -398,7 +402,9 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     else if (vbat>VBATLEVEL3_3S)   buzzerFreq = 2;
     else                           buzzerFreq = 4;
   #endif
-  buzzer(buzzerFreq); // external buzzer routine that handles buzzer events globally now
+  #if defined(BUZZER)
+    buzzer(buzzerFreq); // external buzzer routine that handles buzzer events globally now
+  #endif
   
   if ( (calibratingA>0 && ACC ) || (calibratingG>0) ) { // Calibration phasis
     LEDPIN_TOGGLE;
@@ -651,11 +657,13 @@ void loop () {
               AccInflightCalibrationSavetoEEProm = 1;
             }else{ 
               AccInflightCalibrationArmed = !AccInflightCalibrationArmed; 
+              #if defined(BUZZER)
               if (AccInflightCalibrationArmed){
                 toggleBeep = 2;
               } else {
                 toggleBeep = 3;
-              } 
+              }
+              #endif
             }
           }
        } 

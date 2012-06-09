@@ -448,6 +448,8 @@
      Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
   //#define LEVEL_PDF
 
+  /*****************                Buzzer                 *********************************/
+    //#define BUZZER
 
   /********                          Failsave settings                 ********************/
     /* Failsafe check pulse on THROTTLE channel. If the pulse is OFF (on only THROTTLE or on all channels) the failsafe procedure is initiated.
@@ -461,6 +463,7 @@
     #define FAILSAVE_DELAY     10                     // Guard time for failsafe activation after signal lost. 1 step = 0.1sec - 1sec in example
     #define FAILSAVE_OFF_DELAY 200                    // Time for Landing before motors stop in 0.1sec. 1 step = 0.1sec - 20sec in example
     #define FAILSAVE_THROTTLE  (MINTHROTTLE + 200)    // Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
+
 
   /*****************                DFRobot LED RING    *********************************/
     /* I2C DFRobot LED RING communication */

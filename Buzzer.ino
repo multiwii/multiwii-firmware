@@ -1,3 +1,4 @@
+#if defined(BUZZER)
 static uint8_t buzzerIsOn = 0;
 
 uint8_t isBuzzerON() { return buzzerIsOn; } // returns true while buzzer is buzzing; returns 0 for silent periods
@@ -84,3 +85,4 @@ void buzzer(uint8_t warn_vbat){
     buzzerIsOn = 0; 
   }	
 }
+#endif
