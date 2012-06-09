@@ -172,8 +172,10 @@ static int8_t  smallAngle25 = 1;
 // motor and servo functions
 // *************************
 static int16_t axisPID[3];
-static int16_t motor[8];
+static int16_t motor[NUMBER_MOTOR];
+#if defined(SERVO)
 static int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1500};
+#endif
 
 // ************************
 // EEPROM Layout definition

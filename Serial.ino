@@ -193,10 +193,12 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      for(uint8_t i=0;i<3;i++) serialize16(gyroData[i]);
      for(uint8_t i=0;i<3;i++) serialize16(magADC[i]);
      tailSerialReply();break;
+#if defined(SERVO)
    case MSP_SERVO:
      headSerialReply(c,16);
      for(uint8_t i=0;i<8;i++) serialize16(servo[i]);
      tailSerialReply();break;
+#endif
    case MSP_MOTOR:
      headSerialReply(c,16);
      for(uint8_t i=0;i<8;i++) serialize16(motor[i]);
