@@ -437,7 +437,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #endif
 
   if ( currentTime > calibratedAccTime ) {
-    if (get_flag(FLAG_SMALL_ANGLES_25)) {
+    if (! get_flag(FLAG_SMALL_ANGLES_25)) {
       // the multi uses ACC and is not calibrated or is too much inclinated
       set_flag(FLAG_ACC_CALIBRATED, 0);
       LEDPIN_TOGGLE;
