@@ -1394,5 +1394,7 @@ enum mwc_flag {
   FLAG_GPS_FIX,
   FLAG_GPS_FIX_HOME,
 
+  FLAG_SMALL_ANGLES_25,
+
   FLAG_CNT
 };

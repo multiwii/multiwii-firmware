@@ -222,15 +222,16 @@ void getEstimatedAttitude(){
     rotateV(&EstM.V,deltaGyroAngle);
   #endif 
 
-  if ( abs(accSmooth[ROLL])<acc_25deg && abs(accSmooth[PITCH])<acc_25deg && accSmooth[YAW]>0)
-    smallAngle25 = 1;
-  else
-    smallAngle25 = 0;
+  if ( abs(accSmooth[ROLL])<acc_25deg && abs(accSmooth[PITCH])<acc_25deg && accSmooth[YAW]>0) {
+    set_flag(FLAG_SMALL_ANGLES_25, 1);
+  } else {
+    set_flag(FLAG_SMALL_ANGLES_25, 0);
+  }
 
   // Apply complimentary filter (Gyro drift correction)
   // If accel magnitude >1.4G or <0.6G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
   // To do that, we just skip filter, as EstV already rotated by Gyro
-  if ( ( 36 < accMag && accMag < 196 ) || smallAngle25 )
+  if ( ( 36 < accMag && accMag < 196 ) || get_flag(FLAG_SMALL_ANGLES_25) )
     for (axis = 0; axis < 3; axis++) {
       int16_t acc = ACC_VALUE;
       EstG.A[axis] = (EstG.A[axis] * GYR_CMPF_FACTOR + acc) * INV_GYR_CMPF_FACTOR;

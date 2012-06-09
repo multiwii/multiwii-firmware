@@ -168,7 +168,6 @@ static uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim o
 static int16_t gyroData[3] = {0,0,0};
 static int16_t gyroZero[3] = {0,0,0};
 static int16_t angle[2]    = {0,0};  // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
-static int8_t  smallAngle25 = 1;
 
 // *************************
 // motor and servo functions
@@ -426,7 +425,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #endif
 
   if ( currentTime > calibratedAccTime ) {
-    if (smallAngle25 == 0) {
+    if (get_flag(FLAG_SMALL_ANGLES_25)) {
       // the multi uses ACC and is not calibrated or is too much inclinated
       set_flag(FLAG_ACC_CALIBRATED, 0);
       LEDPIN_TOGGLE;
@@ -920,7 +919,7 @@ void loop () {
       int16_t dif = heading - magHold;
       if (dif <= - 180) dif += 360;
       if (dif >= + 180) dif -= 360;
-      if ( smallAngle25 ) rcCommand[YAW] -= dif*conf.P8[PIDMAG]/30;  // 18 deg
+      if ( get_flag(FLAG_SMALL_ANGLES_25) ) rcCommand[YAW] -= dif*conf.P8[PIDMAG]/30;  // 18 deg
     } else magHold = heading;
   #endif
 
