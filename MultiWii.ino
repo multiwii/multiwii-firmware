@@ -97,7 +97,7 @@ static int16_t  debug1,debug2,debug3,debug4;
 static int16_t  sonarAlt; //to think about the unit
 
 //for log
-#if defined(LOG_VALUES)
+#if defined(LOG_VALUES) || defined(LCD_TELEMETRY)
 static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
 static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
 static uint16_t powerMax = 0;           // highest ever current
