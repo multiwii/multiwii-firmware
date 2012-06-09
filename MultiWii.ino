@@ -70,6 +70,19 @@ const char boxnames[] PROGMEM =
   "HEADADJ;"
 ;
 
+const char pidnames[] PROGMEM =
+  "ROLL;"
+  "PITCH;"
+  "YAW;"
+  "ALT;"
+  "Pos;"
+  "PosR;"
+  "NavR;"
+  "LEVEL;"
+  "MAG;"
+  "VEL;"
+;
+
 /* bitmask for all the flags specified in def.h */
 uint8_t flag_mask[FLAG_CNT+7 / 8] = {0};
 

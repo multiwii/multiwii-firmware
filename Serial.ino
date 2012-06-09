@@ -30,6 +30,7 @@
 #define MSP_MISC                 114   //out message         powermeter trig + 8 free for future use
 #define MSP_MOTOR_PINS           115   //out message         which pins are in use for motors & servos, for GUI 
 #define MSP_BOXNAMES             116   //out message         the aux switch names
+#define MSP_PIDNAMES             117   //out message         the PID names
 
 #define MSP_SET_RAW_RC           200   //in message          8 rc chan
 #define MSP_SET_RAW_GPS          201   //in message          fix, numsat, lat, lon, alt, speed
@@ -79,12 +80,12 @@ void tailSerialReply() {
   serialize8(checksum);UartSendData();
 }
 
-uint8_t getBoxnameLength() {
-  return strlen_P(boxnames);
+uint8_t getNameLength(PGM_P s) {
+  return strlen_P(s);
 }
 
-void serializeBoxnames() {
-  for (PGM_P c = boxnames; pgm_read_byte(c); c++) {
+void serializeNames(PGM_P s) {
+  for (PGM_P c = s; pgm_read_byte(c); c++) {
     serialize8(pgm_read_byte(c));
   }
 }
@@ -255,8 +256,12 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      for(uint8_t i=0;i<CHECKBOXITEMS;i++)    {serialize16(conf.activate[i]);}
      tailSerialReply();break;
    case MSP_BOXNAMES:
-     headSerialReply(c,getBoxnameLength());
-     serializeBoxnames();
+     headSerialReply(c,getNameLength(boxnames));
+     serializeNames(boxnames);
+     tailSerialReply();break;
+   case MSP_PIDNAMES:
+     headSerialReply(c,getNameLength(pidnames));
+     serializeNames(pidnames);
      tailSerialReply();break;
    case MSP_MISC:
      headSerialReply(c,2);
