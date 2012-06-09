@@ -1377,4 +1377,22 @@
         #error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
 #endif
 
+enum mwc_flag {
+  FLAG_OK_TO_ARM,
+  FLAG_ARMED,
+  FLAG_I2C_INIT_DONE,
+  FLAG_ACC_CALIBRATED,
+  FLAG_NUNCHUKDATA,
+  FLAG_ACC_MODE,
+  FLAG_MAG_MODE,
+  FLAG_BARO_MODE,
+  FLAG_GPS_HOME_MODE,
+  FLAG_GPS_HOLD_MODE,
+  FLAG_HEADFREE_MODE,
+  FLAG_PASSTHRU_MODE,
 
+  FLAG_GPS_FIX,
+  FLAG_GPS_FIX_HOME,
+
+  FLAG_CNT
+};

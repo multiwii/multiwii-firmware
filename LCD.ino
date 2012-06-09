@@ -1334,7 +1334,7 @@ void fill_line2_fails_values() {
 static char checkboxitemNames[CHECKBOXITEMS][4] = {"Lvl", "Bar", "Mag", "CSt", "CTr", "Arm", "GHm", "GHd", "Pas", "HFr", "Bpp"};
 void output_checkboxitems() {
   for (uint8_t i=0; i<CHECKBOXITEMS; i++ ) {
-    if (rcOptions[i] || ((i==BOXARM)&&(armed)) ) {
+    if (rcOptions[i] || ((i==BOXARM)&&(get_flag(FLAG_ARMED))) ) {
       LCDprintChar(checkboxitemNames[i]);
       LCDprint(' ');
     }
@@ -1443,7 +1443,7 @@ void lcd_telemetry() {
     case '6':
     if (linenr++ % 2) {
       strcpy_P(line1,PSTR("Roll Pitch Throt"));
-      if (armed) line2[14] = 'A'; else line2[14] = 'a';
+      if (get_flag(FLAG_ARMED)) line2[14] = 'A'; else line2[14] = 'a';
       if (failsafeCnt > 5) line2[15] = 'F'; else line2[15] = 'f';
       LCDsetLine(1);LCDprintChar(line1);
     } else {
@@ -1473,7 +1473,7 @@ void lcd_telemetry() {
 
         strcpy_P(line1,PSTR("- Lat - - Lon --"));
         //                   0123456789012345
-        if (armed) line1[14] = 'A'; else line1[14] = 'a';
+        if (get_flag(FLAG_ARMED)) line1[14] = 'A'; else line1[14] = 'a';
         if (failsafeCnt > 5) line1[15] = 'F'; else line1[15] = 'f';
         line1[0]=GPS_coord[LAT]<0?'S':'N';
         line1[8]=GPS_coord[LON]<0?'W':'E';

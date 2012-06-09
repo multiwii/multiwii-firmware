@@ -149,7 +149,7 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
    case MSP_SET_RAW_RC:
      for(uint8_t i=0;i<8;i++) {rcData[i] = read16();} break;
    case MSP_SET_RAW_GPS:
-     GPS_fix = read8();
+     set_flag(FLAG_GPS_FIX, read8());
      GPS_numSat = read8();
      GPS_coord[LAT] = read32();
      GPS_coord[LON] = read32();
@@ -183,9 +183,9 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      serialize16(cycleTime);
      serialize16(i2c_errors_count);
      serialize16(ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4);
-     serialize16(accMode<<BOXACC|baroMode<<BOXBARO|magMode<<BOXMAG|armed<<BOXARM|
-                 GPSModeHome<<BOXGPSHOME|GPSModeHold<<BOXGPSHOLD|headFreeMode<<BOXHEADFREE|
-                 passThruMode<<BOXPASSTHRU|rcOptions[BOXBEEPERON]<<BOXBEEPERON);
+     serialize16(get_flag(FLAG_ACC_MODE)<<BOXACC|get_flag(FLAG_BARO_MODE)<<BOXBARO|get_flag(FLAG_MAG_MODE)<<BOXMAG|get_flag(FLAG_ARMED)<<BOXARM|
+                 get_flag(FLAG_GPS_HOME_MODE)<<BOXGPSHOME|get_flag(FLAG_GPS_HOLD_MODE)<<BOXGPSHOLD|get_flag(FLAG_HEADFREE_MODE)<<BOXHEADFREE|
+                 get_flag(FLAG_PASSTHRU_MODE)<<BOXPASSTHRU|rcOptions[BOXBEEPERON]<<BOXBEEPERON);
      tailSerialReply();break;
    case MSP_RAW_IMU:
      headSerialReply(c,18);
@@ -207,7 +207,7 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      tailSerialReply();break;
    case MSP_RAW_GPS:
      headSerialReply(c,14);
-     serialize8(GPS_fix);
+     serialize8(get_flag(FLAG_GPS_FIX));
      serialize8(GPS_numSat);
      serialize32(GPS_coord[LAT]);
      serialize32(GPS_coord[LON]);
