@@ -1396,5 +1396,7 @@ enum mwc_flag {
 
   FLAG_SMALL_ANGLES_25,
 
+  FLAG_CALIBRATE_MAG,
+
   FLAG_CNT
 };

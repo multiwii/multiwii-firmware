@@ -271,7 +271,8 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
    case MSP_ACC_CALIBRATION:
      calibratingA=400;break;
    case MSP_MAG_CALIBRATION:
-     calibratingM=1;break;
+     set_flag(FLAG_CALIBRATE_MAG, 1);
+     break;
    case MSP_EEPROM_WRITE:
      writeParams(0);break;
    case MSP_DEBUG:

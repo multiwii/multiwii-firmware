@@ -943,14 +943,14 @@ void Mag_getADC() {
   magADC[ROLL]  = magADC[ROLL]  * magCal[ROLL];
   magADC[PITCH] = magADC[PITCH] * magCal[PITCH];
   magADC[YAW]   = magADC[YAW]   * magCal[YAW];
-  if (calibratingM == 1) {
+  if (get_flag(FLAG_CALIBRATE_MAG)) {
     tCal = t;
     for(axis=0;axis<3;axis++) {
       conf.magZero[axis] = 0;
       magZeroTempMin[axis] = magADC[axis];
       magZeroTempMax[axis] = magADC[axis];
     }
-    calibratingM = 0;
+    set_flag(FLAG_CALIBRATE_MAG, 0);
   }
   if (magInit) { // we apply offset only once mag calibration is done
     magADC[ROLL]  -= conf.magZero[ROLL];
