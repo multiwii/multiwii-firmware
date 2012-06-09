@@ -186,7 +186,7 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      serialize16(ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4);
      serialize16(get_flag(FLAG_ACC_MODE)<<BOXACC|get_flag(FLAG_BARO_MODE)<<BOXBARO|get_flag(FLAG_MAG_MODE)<<BOXMAG|get_flag(FLAG_ARMED)<<BOXARM|
                  get_flag(FLAG_GPS_HOME_MODE)<<BOXGPSHOME|get_flag(FLAG_GPS_HOLD_MODE)<<BOXGPSHOLD|get_flag(FLAG_HEADFREE_MODE)<<BOXHEADFREE|
-                 get_flag(FLAG_PASSTHRU_MODE)<<BOXPASSTHRU|rcOptions[BOXBEEPERON]<<BOXBEEPERON);
+                 get_flag(FLAG_PASSTHRU_MODE)<<BOXPASSTHRU|rcOptions[BOXBEEPERON]<<BOXBEEPERON|rcOptions[BOXLEDMAX]<<BOXLEDMAX|rcOptions[BOXLLIGHTS]<<BOXLLIGHTS|rcOptions[BOXHEADADJ]<<BOXHEADADJ);
      tailSerialReply();break;
    case MSP_RAW_IMU:
      headSerialReply(c,18);
