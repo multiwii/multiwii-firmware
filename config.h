@@ -222,9 +222,12 @@
     #define SERVO_RATES      {100, 100, 100, 100, 100, 100, 100, 100} // Rates in 0-100%
     #define SERVO_DIRECTION  { -1,   1,   1,   -1,  1,   1,   1,   1 } // Invert servos by setting -1
 
-    //#define FLAP_CHANNEL     AUX4       // Define the Channel to controll Flaps with.If used.
-    #define FLAP_EP      { 1500, 1650 } // Endpooints for flaps on a 2 way switch else set {1020,2000} and program in radio.
-    #define FLAP_INVERT    { 1, -1 }    // Change direction om flaps { Wing1, Wing2 }
+    //#define FLAPPERONS    AUX4          // Mix Flaps with Aileroins.
+    #define FLAPPERON_INVERT { 1, -1 }    // Change direction om flapperons { Wing1, Wing2 }
+    
+    //#define FLAPS         AUX4          // Traditional Flaps on A2 invert with SERVO_DIRECTION servo[2).
+    #define FLAP_EP      { 1500, 1850 } // Endpooints for flaps on a 2 way switch else set {1020,2000} and program in radio.
+
 
   //*************************** !!!!  Common for Heli & Airplane  !!!! ****************************//
 

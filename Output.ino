@@ -907,25 +907,32 @@ void mixTable() {
     }
 
     // Flapperon Controll
-    int16_t flaps[2]={0,0};    
-  #if  defined(FLAP_CHANNEL) && defined(FLAP_EP) && defined(FLAP_INVERT)  
-    int8_t flapinv[2] = FLAP_INVERT; 
-    static int16_t F_Endpoint[2] = FLAP_EP;
-    int16_t flap = (MIDRC- constrain(rcData[FLAP_CHANNEL],F_Endpoint[0],F_Endpoint[1]));
-    for(i=0; i<2; i++){flaps[i] = flap * flapinv[i] ;}
-  #endif
+    int16_t flapperons[2]={0,0};    
+    #if  defined(FLAPPERONS) && defined(FLAP_EP) && defined(FLAPPERON_INVERT)  
+      int8_t flapinv[2] = FLAPPERON_INVERT; 
+      static int16_t F_Endpoint[2] = FLAP_EP;
+      int16_t flap = (MIDRC- constrain(rcData[FLAPPERONS],F_Endpoint[0],F_Endpoint[1]));
+      for(i=0; i<2; i++){flapperons[i] = flap * flapinv[i] ;}
+    #endif
+    
+    // Traditional Flaps on A2
+    #if defined(FLAPS) 
+      static int16_t F_Endpoint[2] = FLAP_EP;
+      int16_t flapps=(MIDRC- constrain(rcData[FLAPS],F_Endpoint[0],F_Endpoint[1]));
+      servo[2]    = servoMid[2]+(flapps *servoReverse[2]);
+    #endif
 
     if(get_flag(FLAG_PASSTHRU_MODE)){   // Direct passthru from RX 
-      servo[3]  = servoMid[3]+((rcCommand[ROLL] + flaps[0]) *servoReverse[3]);     //   Wing 1
-      servo[4]  = servoMid[4]+((rcCommand[ROLL] + flaps[1]) *servoReverse[4]);     //   Wing 2
-      servo[5]  = servoMid[5]+(rcCommand[YAW]               *servoReverse[5]);     //   Rudder
-      servo[6]  = servoMid[6]+(rcCommand[PITCH]             *servoReverse[6]);     //   Elevator 
+      servo[3]  = servoMid[3]+((rcCommand[ROLL] + flapperons[0]) *servoReverse[3]);     //   Wing 1
+      servo[4]  = servoMid[4]+((rcCommand[ROLL] + flapperons[1]) *servoReverse[4]);     //   Wing 2
+      servo[5]  = servoMid[5]+(rcCommand[YAW]                    *servoReverse[5]);     //   Rudder
+      servo[6]  = servoMid[6]+(rcCommand[PITCH]                  *servoReverse[6]);     //   Elevator 
     }else{
       // Assisted modes (gyro only or gyro+acc according to AUX configuration in Gui
-      servo[3]  =(servoMid[3] + ((axisPID[ROLL] + flaps[0]) *servoReverse[3]));   //   Wing 1 
-      servo[4]  =(servoMid[4] + ((axisPID[ROLL] + flaps[1]) *servoReverse[4]));   //   Wing 2
-      servo[5]  =(servoMid[5] + (axisPID[YAW]               *servoReverse[5]));   //   Rudder
-      servo[6]  =(servoMid[6] + (axisPID[PITCH]             *servoReverse[6]));   //   Elevator
+      servo[3]  =(servoMid[3] + ((axisPID[ROLL] + flapperons[0]) *servoReverse[3]));   //   Wing 1 
+      servo[4]  =(servoMid[4] + ((axisPID[ROLL] + flapperons[1]) *servoReverse[4]));   //   Wing 2
+      servo[5]  =(servoMid[5] + (axisPID[YAW]                    *servoReverse[5]));   //   Rudder
+      servo[6]  =(servoMid[6] + (axisPID[PITCH]                  *servoReverse[6]));   //   Elevator
     } 
     // ServoRates
     for(i=3;i<8;i++){
