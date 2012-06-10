@@ -297,8 +297,8 @@ void update_min_mem() {
 }
 #endif
 
-#define set_flag(f, v) ( (v!=0) ? ( flag_mask[f/8] |= 1<<(f%8) ) : ( flag_mask[f/8] |= 1<<(f%8) ) )
-#define get_flag(f) ( (flag_mask[f/8] & (1<<f%8)) != 0 )
+#define set_flag(f, v) ( (v) ? ( flag_mask[f/8] |= 1<<(f%8) ) : ( flag_mask[f/8] &= ~(1<<(f%8)) ) )
+#define get_flag(f) ( !!(flag_mask[f/8] & (1<<f%8)) )
 
 void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
   uint8_t i,r;
