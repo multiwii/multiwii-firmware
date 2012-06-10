@@ -17,8 +17,8 @@ void computeIMU () {
     getEstimatedAttitude(); // computation time must last less than one interleaving delay
     while((micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
     timeInterleave=micros();
-    nunchukData = 1;
-    while(nunchukData == 1) ACC_getADC(); // For this interleaving reading, we must have a gyro update at this point (less delay)
+    set_flag(FLAG_NUNCHUKDATA, 1);
+    while(get_flag(FLAG_NUNCHUKDATA)) ACC_getADC(); // For this interleaving reading, we must have a gyro update at this point (less delay)
 
     for (axis = 0; axis < 3; axis++) {
       // empirical, we take a weighted value of the current and the previous values
