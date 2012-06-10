@@ -278,6 +278,24 @@ static int16_t	nav[2];
 #define NAV_MODE_WP            2
 static int8_t  nav_mode = NAV_MODE_NONE;            //Navigation mode
 
+#if defined(DEBUG_MEM)
+size_t available_mem() {
+  uint8_t * heapptr;
+  uint8_t * stackptr;
+  stackptr = (uint8_t *)malloc(4);
+  heapptr = stackptr;
+  free(stackptr);
+  stackptr =  (uint8_t *)(SP);
+  return stackptr-heapptr;
+}
+
+static size_t min_mem = 0xFFFF;
+/* spread this probe function throughout the code you wish to inspect */
+void update_min_mem() {
+  size_t current = available_mem();
+  if (current < min_mem) min_mem = current;
+}
+#endif
 
 void inline set_flag(enum mwc_flag f, uint8_t v) {
   uint8_t *b = &flag_mask[f/8];
@@ -1000,6 +1018,11 @@ void loop () {
                       
     axisPID[axis] =  PTerm + ITerm - DTerm;
   }
+
+  #if defined(DEBUG_MEM)
+    update_min_mem();
+    debug2 = min_mem;
+  #endif
 
   mixTable();
   writeServos();

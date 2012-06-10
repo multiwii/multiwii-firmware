@@ -820,6 +820,9 @@
     /* will add extra code that may slow down the main loop or make copter non-flyable */
     //#define DEBUG
 
+    /* add memory debugging functions */
+    //#define DEBUG_MEM
+
     /* Use this to trigger LCD configuration without a TX - only for debugging - do NOT fly with this activated */
     //#define LCD_CONF_DEBUG
 
