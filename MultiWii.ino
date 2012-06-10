@@ -297,19 +297,8 @@ void update_min_mem() {
 }
 #endif
 
-void inline set_flag(enum mwc_flag f, uint8_t v) {
-  uint8_t *b = &flag_mask[f/8];
-  if (v) {
-    *b |= 1<<(f%8);
-  } else {
-    *b &= ~(1<<(f%8));
-  }
-}
-
-uint8_t inline get_flag(enum mwc_flag f) {
-  uint8_t *b = &flag_mask[f/8];
-  return (*b & 1<<(f%8)) != 0;
-}
+#define set_flag(f, v) ( (v!=0) ? ( flag_mask[f/8] |= 1<<(f%8) ) : ( flag_mask[f/8] |= 1<<(f%8) ) )
+#define get_flag(f) ( (flag_mask[f/8] & (1<<f%8)) != 0 )
 
 void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
   uint8_t i,r;
