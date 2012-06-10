@@ -634,7 +634,7 @@ void loop () {
     computeRC();
     // Failsafe routine - added by MIS
     #if defined(FAILSAFE)
-      if ( failsafeCnt > (5*FAILSAVE_DELAY) && set_flag(FLAG_ARMED, 1)) {                  // Stabilize, and set Throttle to specified level
+      if ( failsafeCnt > (5*FAILSAVE_DELAY) && get_flag(FLAG_ARMED)) {                  // Stabilize, and set Throttle to specified level
         for(i=0; i<3; i++) rcData[i] = MIDRC;                               // after specified guard time after RC signal is lost (in 0.1sec)
         rcData[THROTTLE] = FAILSAVE_THROTTLE;
         if (failsafeCnt > 5*(FAILSAVE_DELAY+FAILSAVE_OFF_DELAY)) {          // Turn OFF motors after specified Time (in 0.1sec)
@@ -642,6 +642,10 @@ void loop () {
           set_flag(FLAG_OK_TO_ARM, 0); // to restart accidentely by just reconnect to the tx - you will have to switch off first to rearm
         }
         failsafeEvents++;
+      }
+      if ( failsafeCnt > (5*FAILSAVE_DELAY) && !get_flag(FLAG_ARMED)) {  //Turn of "Ok To arm to prevent the motors from spinning after repowering the RX with low throttle and aux to arm
+          set_flag(FLAG_ARMED, 0);   // This will prevent the copter to automatically rearm if failsafe shuts it down and prevents
+          set_flag(FLAG_OK_TO_ARM, 0); // to restart accidentely by just reconnect to the tx - you will have to switch off first to rearm
       }
       failsafeCnt++;
     #endif
@@ -698,7 +702,11 @@ void loop () {
        } 
      #endif
       else if (conf.activate[BOXARM] > 0) {
-        if ( rcOptions[BOXARM] && get_flag(FLAG_OK_TO_ARM) ) {
+        if ( rcOptions[BOXARM] && get_flag(FLAG_OK_TO_ARM)
+        #if defined(FAILSAFE)
+          && failsafeCnt == 0
+        #endif 
+        ) {
 	  set_flag(FLAG_ARMED, 1);
 	  headFreeModeHold = heading;
         } else if (get_flag(FLAG_ARMED)) set_flag(FLAG_ARMED, 0);
