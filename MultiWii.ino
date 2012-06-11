@@ -85,8 +85,7 @@ const char pidnames[] PROGMEM =
   "VEL;"
 ;
 
-/* bitmask for all the flags specified in def.h */
-uint8_t flag_mask[FLAG_CNT+7 / 8] = {0};
+uint8_t flag_mask[FLAG_CNT] = {0};
 
 static uint32_t currentTime = 0;
 static uint16_t previousTime = 0;
@@ -299,8 +298,8 @@ void update_min_mem() {
 }
 #endif
 
-#define set_flag(f, v) ( (v) ? ( flag_mask[f/8] |= 1<<(f%8) ) : ( flag_mask[f/8] &= ~(1<<(f%8)) ) )
-#define get_flag(f) ( !!(flag_mask[f/8] & (1<<f%8)) )
+#define set_flag(f, v) ( flag_mask[f] = !!v )
+#define get_flag(f) ( flag_mask[f] )
 
 void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
   uint8_t i,r;
