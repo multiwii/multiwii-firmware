@@ -290,8 +290,9 @@ void writeMotors() { // [1000;2000] => [125;250]
 /************          Writes the mincommand to all Motors           ******************/
 /**************************************************************************************/
 void writeAllMotors(int16_t mc) {   // Sends commands to all motors
-  for (uint8_t i =0;i<NUMBER_MOTOR;i++)
+  for (uint8_t i =0;i<NUMBER_MOTOR;i++) {
     motor[i]=mc;
+  }
   writeMotors();
 }
 
@@ -301,8 +302,9 @@ void writeAllMotors(int16_t mc) {   // Sends commands to all motors
 void initOutput() {
   
 /****************            mark all PWM pins as Output             ******************/
-  for(uint8_t i=0;i<NUMBER_MOTOR;i++)
+  for(uint8_t i=0;i<NUMBER_MOTOR;i++) {
     pinMode(PWM_PIN[i],OUTPUT);
+  }
     
 /****************  Specific PWM Timers & Registers for the MEGA's    ******************/
   #if defined(MEGA)

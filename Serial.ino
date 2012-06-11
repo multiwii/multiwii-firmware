@@ -232,7 +232,9 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      break;
    case MSP_MOTOR:
      headSerialReply(c,16);
-     for(uint8_t i=0;i<8;i++) serialize16(motor[i]);
+     for(uint8_t i=0;i<8;i++) {
+       serialize16( (i < NUMBER_MOTOR) ? motor[i] : 0 );
+     }
      break;
    case MSP_RC:
      headSerialReply(c,16);
