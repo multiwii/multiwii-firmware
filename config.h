@@ -553,6 +553,9 @@
     /* get sonar data from Tiny-GPS */
     //#define TINY_GPS_SONAR
 
+    /* indicate a valid GPS fix with at least 5 satellites by flashing the LED? */
+    //#define GPS_LED_INDICATOR
+
     /* GPS data readed from OSD -- still need some more code to work */
     //#define GPS_FROM_OSD
 

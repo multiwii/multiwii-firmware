@@ -486,7 +486,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     }
   #endif
   
-  #if GPS
+  #if GPS & defined(GPS_LED_INDICATOR)
     static uint32_t GPSLEDTime;
     if ( currentTime > GPSLEDTime && (GPS_numSat >= 5)) {
       GPSLEDTime = currentTime + 150000;
