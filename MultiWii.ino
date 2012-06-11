@@ -8,6 +8,8 @@ March  2012     V2.0
  any later version. see <http://www.gnu.org/licenses/>
 */
 
+#include <avr/io.h>
+
 #include "config.h"
 #include "def.h"
 #include <avr/pgmspace.h>
