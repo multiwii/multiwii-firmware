@@ -66,14 +66,22 @@ uint16_t read16() {
 }
 uint8_t read8()  {return inBuf[indRX++]&0xff;}
 
-void headSerialReply(uint8_t c,uint8_t s) {
+void headSerialResponse(uint8_t err, uint8_t c,uint8_t s) {
   serialize8('$');
   serialize8('M');
-  serialize8('>');
+  serialize8(err ? '!' : '>');
   /* start calculating a new checksum */
   checksum = 0;
   serialize8(s);
   serialize8(c);
+}
+
+void headSerialReply(uint8_t c,uint8_t s) {
+  headSerialResponse(0, c, s);
+}
+
+void headSerialError(uint8_t c,uint8_t s) {
+  headSerialResponse(1, c, s);
 }
 
 void tailSerialReply() {
@@ -290,6 +298,11 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      serialize16(debug3);
      serialize16(debug4);
      tailSerialReply();break;
+   default:
+     /* we do not know how to handle the (valid) message, indicate error */
+     headSerialError(c,0);
+     tailSerialReply();
+     break;
   }
 }
 
