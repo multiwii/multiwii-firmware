@@ -154,6 +154,9 @@ void serialCom() {
 }
 
 void evaluateCommand(uint8_t c, uint8_t dataSize) {
+  #if !defined(PROMICRO)
+    UCSR0B &= ~(1<<UDRIE0); // disable transmitter UDRE interrupt during the serialization
+  #endif
   switch(c) {
    case MSP_SET_RAW_RC:
      for(uint8_t i=0;i<8;i++) {
@@ -341,6 +344,9 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      break;
   }
   tailSerialReply();
+  #if !defined(PROMICRO)
+    UCSR0B |= (1<<UDRIE0); // enable transmitter UDRE interrupt
+  #endif
 }
 
 // *******************************************************
@@ -383,9 +389,6 @@ void serialize8(uint8_t a)  {
   }
   bufTX[headTX] = a;
   checksum ^= a;
-  #if !defined(PROMICRO)
-    UCSR0B |= (1<<UDRIE0);
-  #endif
 }
 
 #if !defined(PROMICRO)
