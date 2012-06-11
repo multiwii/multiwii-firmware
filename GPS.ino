@@ -521,7 +521,7 @@ int32_t GPS_coord_to_decimal(struct coord *c) {
 // It's ok to calculate this once per waypoint setting, since it changes a little within the reach of a multicopter
 //
 void GPS_calc_longitude_scaling(int32_t lat) {
-  float rads       = (abs((float)lat)) * (0.0174532925 / 10000000.0);
+  float rads       = (abs((float)lat) / 10000000.0) * 0.0174532925;
   GPS_scaleLonDown = cos(rads);
 }
 

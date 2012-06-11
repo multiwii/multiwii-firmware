@@ -160,7 +160,6 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
        rcData[i] = read16();
      }
      headSerialReply(c,0);
-     tailSerialReply();
      break;
    case MSP_SET_RAW_GPS:
      set_flag(FLAG_GPS_FIX, read8());
@@ -171,7 +170,6 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      GPS_speed = read16();
      GPS_update = 1;
      headSerialReply(c,0);
-     tailSerialReply();
      break;
    case MSP_SET_PID:
      for(uint8_t i=0;i<PIDITEMS;i++) {
@@ -180,14 +178,12 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
        conf.D8[i]=read8();
      }
      headSerialReply(c,0);
-     tailSerialReply();
      break;
    case MSP_SET_BOX:
      for(uint8_t i=0;i<CHECKBOXITEMS;i++) {
        conf.activate[i]=read16();
      }
      headSerialReply(c,0);
-     tailSerialReply();
      break;
    case MSP_SET_RC_TUNING:
      conf.rcRate8 = read8();
@@ -198,20 +194,17 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      conf.thrMid8 = read8();
      conf.thrExpo8 = read8();
      headSerialReply(c,0);
-     tailSerialReply();
      break;
    case MSP_SET_MISC:
      #if defined(POWERMETER)
        conf.powerTrigger1 = read16() / PLEVELSCALE; // we rely on writeParams() to compute corresponding pAlarm value
      #endif
      headSerialReply(c,0);
-     tailSerialReply();
      break;
    case MSP_IDENT:                          // and we check message code to execute the relative code
      headSerialReply(c,2);                  // we reply with an header indicating a payload lenght of 2 octets
      serialize8(VERSION);                   // the first octet. serialize8/16/32 is used also to compute a checksum
      serialize8(MULTITYPE);                 // the second one
-     tailSerialReply();
      break;
    case MSP_STATUS:
      headSerialReply(c,8);
@@ -221,34 +214,29 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      serialize16(get_flag(FLAG_ACC_MODE)<<BOXACC|get_flag(FLAG_BARO_MODE)<<BOXBARO|get_flag(FLAG_MAG_MODE)<<BOXMAG|get_flag(FLAG_ARMED)<<BOXARM|
                  get_flag(FLAG_GPS_HOME_MODE)<<BOXGPSHOME|get_flag(FLAG_GPS_HOLD_MODE)<<BOXGPSHOLD|get_flag(FLAG_HEADFREE_MODE)<<BOXHEADFREE|
                  get_flag(FLAG_PASSTHRU_MODE)<<BOXPASSTHRU|rcOptions[BOXBEEPERON]<<BOXBEEPERON|rcOptions[BOXLEDMAX]<<BOXLEDMAX|rcOptions[BOXLLIGHTS]<<BOXLLIGHTS|rcOptions[BOXHEADADJ]<<BOXHEADADJ);
-     tailSerialReply();
      break;
    case MSP_RAW_IMU:
      headSerialReply(c,18);
      for(uint8_t i=0;i<3;i++) serialize16(accSmooth[i]);
      for(uint8_t i=0;i<3;i++) serialize16(gyroData[i]);
      for(uint8_t i=0;i<3;i++) serialize16(magADC[i]);
-     tailSerialReply();
      break;
    case MSP_SERVO:
      headSerialReply(c,16);
      for(uint8_t i=0;i<8;i++)
-#if defined(SERVO)
+       #if defined(SERVO)
        serialize16(servo[i]);
-#else
+       #else
        serialize16(0);
-#endif
-     tailSerialReply();
+       #endif
      break;
    case MSP_MOTOR:
      headSerialReply(c,16);
      for(uint8_t i=0;i<8;i++) serialize16(motor[i]);
-     tailSerialReply();
      break;
    case MSP_RC:
      headSerialReply(c,16);
      for(uint8_t i=0;i<8;i++) serialize16(rcData[i]);
-     tailSerialReply();
      break;
    case MSP_RAW_GPS:
      headSerialReply(c,14);
@@ -258,31 +246,26 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      serialize32(GPS_coord[LON]);
      serialize16(GPS_altitude);
      serialize16(GPS_speed);
-     tailSerialReply();
      break;
    case MSP_COMP_GPS:
      headSerialReply(c,5);
      serialize16(GPS_distanceToHome);
      serialize16(GPS_directionToHome);
      serialize8(GPS_update);
-     tailSerialReply();
      break;
    case MSP_ATTITUDE:
      headSerialReply(c,6);
      for(uint8_t i=0;i<2;i++) serialize16(angle[i]);
      serialize16(heading);
-     tailSerialReply();
      break;
    case MSP_ALTITUDE:
      headSerialReply(c,4);
      serialize32(EstAlt);
-     tailSerialReply();
      break;
    case MSP_BAT:
      headSerialReply(c,3);
      serialize8(vbat);
      serialize16(intPowerMeterSum);
-     tailSerialReply();
      break;
    case MSP_RC_TUNING:
      headSerialReply(c,7);
@@ -293,7 +276,6 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      serialize8(conf.dynThrPID);
      serialize8(conf.thrMid8);
      serialize8(conf.thrExpo8);
-     tailSerialReply();
      break;
    case MSP_PID:
      headSerialReply(c,3*PIDITEMS);
@@ -302,57 +284,47 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
        serialize8(conf.I8[i]);
        serialize8(conf.D8[i]);
      }
-     tailSerialReply();
      break;
    case MSP_BOX:
      headSerialReply(c,2*CHECKBOXITEMS);
      for(uint8_t i=0;i<CHECKBOXITEMS;i++) {
        serialize16(conf.activate[i]);
      }
-     tailSerialReply();
      break;
    case MSP_BOXNAMES:
      headSerialReply(c,getNameLength(boxnames));
      serializeNames(boxnames);
-     tailSerialReply();
      break;
    case MSP_PIDNAMES:
      headSerialReply(c,getNameLength(pidnames));
      serializeNames(pidnames);
-     tailSerialReply();
      break;
    case MSP_MISC:
      headSerialReply(c,2);
      serialize16(intPowerTrigger1);
-     tailSerialReply();
      break;
    case MSP_MOTOR_PINS:
      headSerialReply(c,8);
      for(uint8_t i=0;i<8;i++) {
        serialize8(PWM_PIN[i]);
      }
-     tailSerialReply();
      break;
    case MSP_RESET_CONF:
      conf.checkNewConf++;
      checkFirstTime();
      headSerialReply(c,0);
-     tailSerialReply();
      break;
    case MSP_ACC_CALIBRATION:
      calibratingA=400;
      headSerialReply(c,0);
-     tailSerialReply();
      break;
    case MSP_MAG_CALIBRATION:
      set_flag(FLAG_CALIBRATE_MAG, 1);
      headSerialReply(c,0);
-     tailSerialReply();
      break;
    case MSP_EEPROM_WRITE:
      writeParams(0);
      headSerialReply(c,0);
-     tailSerialReply();
      break;
    case MSP_DEBUG:
      headSerialReply(c,8);
@@ -360,14 +332,13 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      serialize16(debug2);
      serialize16(debug3);
      serialize16(debug4);
-     tailSerialReply();
      break;
    default:
      /* we do not know how to handle the (valid) message, indicate error */
      headSerialError(c,0);
-     tailSerialReply();
      break;
   }
+  tailSerialReply();
 }
 
 // *******************************************************
@@ -404,10 +375,9 @@ void serialize16(int16_t a) {
 }
 
 void serialize8(uint8_t a)  {
-  if (headTX == sizeof(bufTX)-1) {
+  headTX++;
+  if (headTX == TX_BUFFER_SIZE) {
     headTX = 0;
-  } else {
-    headTX++;
   }
   bufTX[headTX] = a;
   checksum ^= a;
@@ -419,12 +389,10 @@ void serialize8(uint8_t a)  {
 #if !defined(PROMICRO)
   ISR_UART {
     if (headTX != tailTX) {
-      if (tailTX == sizeof(bufTX)-1) {
+      tailTX++;
+      if (tailTX == TX_BUFFER_SIZE) {
         tailTX = 0;
-      } else {
-        tailTX++;
       }
-
       UDR0 = bufTX[tailTX];  // Transmit next byte in the ring
     }
     if (tailTX == headTX) UCSR0B &= ~(1<<UDRIE0); // Check if all data is transmitted . if yes disable transmitter UDRE interrupt
@@ -482,10 +450,9 @@ static void inline store_uart_in_buf(uint8_t data, uint8_t portnum) {
   /* the received data byte */
   uint8_t d = data;
   uint8_t i = serialHeadRX[portnum];
-  if (i == RX_BUFFER_SIZE-1) {
+  i++;
+  if (i == RX_BUFFER_SIZE) {
     i = 0;
-  } else {
-    i++;
   }
   /* we did not bite our own tail? */
   if (i != serialTailRX[portnum]) {
@@ -534,10 +501,9 @@ uint8_t SerialRead(uint8_t port) {
   #endif
   uint8_t c = serialBufferRX[serialTailRX[port]][port];
   if ((serialHeadRX[port] != serialTailRX[port])) {
-    if (serialTailRX[port] == RX_BUFFER_SIZE-1) {
+    serialTailRX[port]++;
+    if (serialTailRX[port] == RX_BUFFER_SIZE) {
       serialTailRX[port] = 0;
-    } else {
-      serialTailRX[port]++;
     }
   }
   return c;
