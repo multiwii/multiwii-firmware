@@ -259,9 +259,10 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      serialize8(GPS_update);
      break;
    case MSP_ATTITUDE:
-     headSerialReply(c,6);
+     headSerialReply(c,8);
      for(uint8_t i=0;i<2;i++) serialize16(angle[i]);
      serialize16(heading);
+     serialize16(headFreeModeHold);
      break;
    case MSP_ALTITUDE:
      headSerialReply(c,4);
