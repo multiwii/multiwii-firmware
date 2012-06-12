@@ -31,6 +31,7 @@
 #define MSP_MOTOR_PINS           115   //out message         which pins are in use for motors & servos, for GUI 
 #define MSP_BOXNAMES             116   //out message         the aux switch names
 #define MSP_PIDNAMES             117   //out message         the PID names
+#define MSP_HEADING              118   //out message         {FLAG_MAG_MODE, FLAG_HEADFREE_MODE}, current heading, mag heading, reference heading
 
 #define MSP_SET_RAW_RC           200   //in message          8 rc chan
 #define MSP_SET_RAW_GPS          201   //in message          fix, numsat, lat, lon, alt, speed
@@ -259,6 +260,14 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      headSerialReply(c,8);
      for(uint8_t i=0;i<2;i++) serialize16(angle[i]);
      serialize16(heading);
+     serialize16(headFreeModeHold);
+     break;
+   case MSP_HEADING:
+     headSerialReply(c,7);
+     /* indicate whether we are using mag stabilization or headfree mode */
+     serialize8( get_flag(FLAG_MAG_MODE)<<0 | get_flag(FLAG_HEADFREE_MODE)<<1 );
+     serialize16(heading);
+     serialize16(magHold);
      serialize16(headFreeModeHold);
      break;
    case MSP_ALTITUDE:
