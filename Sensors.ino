@@ -1247,8 +1247,6 @@ void tinygps_query(void) {
   /* did we generate any errors? */
   if (i2c_errors == i2c_errors_count) {
     #if defined(TINY_GPS)
-    GPS_update = !GPS_update;
-
     GPS_numSat = navi.gps.sats;
     set_flag(FLAG_GPS_FIX, (navi.gps.quality > 0));
     GPS_coord[LAT] = (navi.gps.flags & 1<<NMEA_RMC_FLAGS_LAT_NORTH ? 1 : -1) * GPS_coord_to_decimal(&navi.gps.lat);
