@@ -223,12 +223,15 @@
     #define SERVO_DIRECTION  { -1,   1,   1,   -1,  1,   1,   1,   1 } // Invert servos by setting -1
 
     //#define FLAPPERONS    AUX4          // Mix Flaps with Aileroins.
+    #define FLAPPERON_EP   { 1500, 1700 } // Endpooints for flaps on a 2 way switch else set {1020,2000} and program in radio.
+    //#define FLAPPERON_EP   { 1200, 1500 } // Or Flapperons up for CrowMix 
     #define FLAPPERON_INVERT { 1, -1 }    // Change direction om flapperons { Wing1, Wing2 }
     
     //#define FLAPS         AUX4          // Traditional Flaps on A2 invert with SERVO_DIRECTION servo[2).
-    #define FLAP_EP      { 1500, 1850 } // Endpooints for flaps on a 2 way switch else set {1020,2000} and program in radio.
+    #define FLAP_EP      { 1500, 1900 }   // Endpooints for flaps on a 2 way switch else set {1020,2000} and program in radio.
 
-
+    //#define FLAPSPEED     3             // Make flaps move slowm Higher value is Higher Speed.
+    // FlapSpeed is depending on Cykletime. High cykeltime needs higher flapspeed...
   //*************************** !!!!  Common for Heli & Airplane  !!!! ****************************//
 
     //#define D12_POWER      // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12

@@ -910,18 +910,31 @@ void mixTable() {
 
     // Flapperon Controll
     int16_t flapperons[2]={0,0};    
-    #if  defined(FLAPPERONS) && defined(FLAP_EP) && defined(FLAPPERON_INVERT)  
+    #if  defined(FLAPPERONS) && defined(FLAPPERON_EP)
       int8_t flapinv[2] = FLAPPERON_INVERT; 
-      static int16_t F_Endpoint[2] = FLAP_EP;
-      int16_t flap = (MIDRC- constrain(rcData[FLAPPERONS],F_Endpoint[0],F_Endpoint[1]));
-      for(i=0; i<2; i++){flapperons[i] = flap * flapinv[i] ;}
+      static int16_t F_Endpoint[2] = FLAPPERON_EP;
+      int16_t flap =MIDRC-constrain(rcData[FLAPPERONS],F_Endpoint[1],F_Endpoint[0]);
+      static int16_t slowFlaps= flap;
+      #if defined(FLAPSPEED)
+        if (slowFlaps < flap ){slowFlaps+=FLAPSPEED;}else if(slowFlaps > flap){slowFlaps-=FLAPSPEED;}
+      #else
+        slowFlaps = flap;
+      #endif      
+      flap = MIDRC-(constrain(MIDRC-slowFlaps,F_Endpoint[0],F_Endpoint[1]));      
+    for(i=0; i<2; i++){flapperons[i] = flap * flapinv[i] ;}
     #endif
     
     // Traditional Flaps on A2
-    #if defined(FLAPS) 
-      static int16_t F_Endpoint[2] = FLAP_EP;
-      int16_t flapps=(MIDRC- constrain(rcData[FLAPS],F_Endpoint[0],F_Endpoint[1]));
-      servo[2]    = servoMid[2]+(flapps *servoReverse[2]);
+    #if defined(FLAPS)  && defined(FLAP_EP)
+      static int16_t lF_Endpoint[2] = FLAP_EP;
+      int16_t lFlap = MIDRC-constrain(rcData[FLAPS],lF_Endpoint[0],lF_Endpoint[1]);
+      static int16_t slow_LFlaps= lFlap;
+      #if defined(FLAPSPEED)
+        if (slow_LFlaps < lFlap ){slow_LFlaps+=FLAPSPEED;}else if(slow_LFlaps > lFlap){slow_LFlaps-=FLAPSPEED;}
+      #else
+        slow_LFlaps = lFlap;
+      #endif
+      servo[2]    =  servoMid[2]+(slow_LFlaps *servoReverse[2]);
     #endif
 
     if(get_flag(FLAG_PASSTHRU_MODE)){   // Direct passthru from RX 
