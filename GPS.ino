@@ -496,10 +496,12 @@ int32_t GPS_coord_to_decimal(struct coord *c) {
 	uint32_t min = 0;
 	min = (uint32_t)c->min * GPS_SCALE_FACTOR;
 	/* add up the BCD fractions */
+	uint16_t divisor = (uint16_t)GPS_SCALE_FACTOR/10;
 	for (uint8_t i=0; i<NMEA_MINUTE_FRACTS; i++) {
 		uint8_t b = c->frac[i/2];
 		uint8_t n = (i%2 ? b&0x0F : b>>4);
-		min += n*(GPS_SCALE_FACTOR/(10*(i+1)));
+		min += n*(divisor);
+		divisor /= 10;
 	}
 
 	/* now sum up degrees and minutes */
