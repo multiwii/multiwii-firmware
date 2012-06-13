@@ -387,12 +387,12 @@ void serialize16(int16_t a) {
 }
 
 void serialize8(uint8_t a)  {
-  if (headTX == sizeof(bufTX)-1) {
-    headTX = 0;
-  } else {
-    headTX++;
+  uint8_t tempHeadTX = headTX;
+  if (++tempHeadTX >= sizeof(bufTX)) {
+    tempHeadTX = 0;
   }
-  bufTX[headTX] = a;
+  bufTX[tempHeadTX] = a;
+  headTX = tempHeadTX;
   checksum ^= a;
   #if !defined(PROMICRO)
     UCSR0B |= (1<<UDRIE0);
