@@ -196,7 +196,7 @@ void GPS_NewData() {
     if (_i2c_gps_status & I2C_GPS_STATUS_3DFIX) {                                     //Check is we have a good 3d fix (numsats>5)
        f.GPS_FIX = 1;
        
-       if (!f.ARMED)) { f.GPS_FIX_HOME = 0; }          // Clear home position when disarmed
+       if (!f.ARMED) { f.GPS_FIX_HOME = 0; }          // Clear home position when disarmed
        
        if (!f.GPS_FIX_HOME && f.ARMED) {        //if home is not set set home position to WP#0 and activate it
           GPS_I2C_command(I2C_GPS_COMMAND_SET_WP,0);      //Store current position to WP#0 (this is used for RTH)
@@ -250,8 +250,8 @@ void GPS_NewData() {
           *varptr++ = i2c_readAck();
           *varptr++ = i2c_readNak();
           
-          debug1=nav[LAT];
-          debug2=nav[LON];
+          debug[0]=nav[LAT];
+          debug[1]=nav[LON];
           
           i2c_rep_start(I2C_GPS_ADDRESS<<1);
           i2c_write(I2C_GPS_GROUND_SPEED);          
