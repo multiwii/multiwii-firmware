@@ -869,7 +869,7 @@ void mixTable() {
   #endif
   #if defined(FLYING_WING)
     motor[0] = rcCommand[THROTTLE];
-    if (get_flag(FLAG_PASSTHRU_MODE)) {// do not use sensors for correction, simple 2 channel mixing
+    if (f.PASSTHRU_MODE) {// do not use sensors for correction, simple 2 channel mixing
        servo[0]  = PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC);
        servo[1]  = PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC);
     } else { // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration
@@ -902,7 +902,7 @@ void mixTable() {
     // servo[7] is programmed with safty features to avoid motorstarts when ardu reset..  
     // All other servos go to center at reset..  Half throttle can be dangerus    
     // Only use servo[7] as motorcontrol if motor is used in the setup            */
-    if (!get_flag(FLAG_ARMED)){ 
+    if (!f.ARMED){ 
       servo[7] =  MINCOMMAND; // Kill throttle when disarmed
     } else {   
       servo[7] =  rcData[THROTTLE];
@@ -937,7 +937,7 @@ void mixTable() {
       servo[2]    =  servoMid[2]+(slow_LFlaps *servoReverse[2]);
     #endif
 
-    if(get_flag(FLAG_PASSTHRU_MODE)){   // Direct passthru from RX 
+    if(f.PASSTHRU_MODE){   // Direct passthru from RX 
       servo[3]  = servoMid[3]+((rcCommand[ROLL] + flapperons[0]) *servoReverse[3]);     //   Wing 1
       servo[4]  = servoMid[4]+((rcCommand[ROLL] + flapperons[1]) *servoReverse[4]);     //   Wing 2
       servo[5]  = servoMid[5]+(rcCommand[YAW]                    *servoReverse[5]);     //   Rudder
@@ -983,7 +983,7 @@ void mixTable() {
       collective = collect * (collRange[0]*0.01); 
     } 
 
-    if(get_flag(FLAG_PASSTHRU_MODE)){ // Use Rcdata Without sensors
+    if(f.PASSTHRU_MODE){ // Use Rcdata Without sensors
       heliRoll=  rcCommand[ROLL] ;
       heliNick=  rcCommand[PITCH];
     } else{ // Assisted modes
@@ -1004,7 +1004,7 @@ void mixTable() {
   /* Throttle & YAW
   ********************
   Handeled in common functions for Heli */
-    if (!get_flag(FLAG_ARMED)){ 
+    if (!f.ARMED){ 
       servo[7] = 900; // Kill throttle when disarmed
       if (YAWMOTOR){servo[5] =  MINCOMMAND;} else {servo[5] =  yawControll; } // Kill YAWMOTOR when disarmed
     }else {   
@@ -1084,7 +1084,7 @@ void mixTable() {
       #else
         motor[i] = MINCOMMAND;
       #endif
-    if (!get_flag(FLAG_ARMED))
+    if (!f.ARMED)
       motor[i] = MINCOMMAND;
   }
   /****************                      Powermeter Log                    ******************/

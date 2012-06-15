@@ -26,7 +26,7 @@ void i2CLedRingState() {
   } else if (state == 2) {
     b[0]='d'; // all unicolor GREEN 
     b[1]= 1;
-    if (get_flag(FLAG_ARMED)) b[2]= 1; else b[2]= 0;
+    if (f.ARMED) b[2]= 1; else b[2]= 0;
     i2c_rep_start(LED_RING_ADDRESS<<1);
     for(uint8_t i=0;i<3;i++)
       i2c_write(b[i]);
@@ -97,7 +97,7 @@ void led_flasher_autoselect_sequence() {
   } else {
     /* do we have a special sequence for armed copters? */
     #if defined(LED_FLASHER_SEQUENCE_ARMED)
-    led_flasher_set_sequence(get_flag(FLAG_ARMED) ? LED_FLASHER_SEQUENCE_ARMED : LED_FLASHER_SEQUENCE);
+    led_flasher_set_sequence(f.ARMED ? LED_FLASHER_SEQUENCE_ARMED : LED_FLASHER_SEQUENCE);
     #else
     /* Let's load the plain old boring sequence */
     led_flasher_set_sequence(LED_FLASHER_SEQUENCE);
@@ -123,7 +123,7 @@ void inline switch_landing_lights(uint8_t on) {
 void auto_switch_landing_lights(void) {
   if (rcOptions[BOXLLIGHTS]
   #if defined(LANDING_LIGHTS_AUTO_ALTITUDE) & SONAR
-	|| (sonarAlt >= 0 && sonarAlt <= LANDING_LIGHTS_AUTO_ALTITUDE && get_flag(FLAG_ARMED))
+	|| (sonarAlt >= 0 && sonarAlt <= LANDING_LIGHTS_AUTO_ALTITUDE && f.ARMED)
   #endif
   ) {
     switch_landing_lights(1);

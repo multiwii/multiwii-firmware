@@ -452,10 +452,13 @@
 
   /* Pseudo-derivative conrtroller for level mode (experimental)
      Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
-  //#define LEVEL_PDF
+    //#define LEVEL_PDF
 
   /*****************                Buzzer                 *********************************/
     //#define BUZZER
+
+    //#define RCOPTIONSBEEP        //uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
+
 
   /********                          Failsave settings                 ********************/
     /* Failsafe check pulse on THROTTLE channel. If the pulse is OFF (on only THROTTLE or on all channels) the failsafe procedure is initiated.
@@ -506,10 +509,6 @@
     /* This will activate the ACC-Inflight calibration if unchecked */
     //#define INFLIGHT_ACC_CALIBRATION
 
-
-  /**************************    rc option-change beep    *******************************/
-    //#define RCOPTIONSBEEP        //uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
-
   /**************************    Disable WMP power pin     *******************************/
     /* disable use of the POWER PIN */
     /* sorry, but this needs clarification about purpose and side effects */
@@ -557,7 +556,7 @@
     //#define TINY_GPS_SONAR
 
     /* indicate a valid GPS fix with at least 5 satellites by flashing the LED? */
-    //#define GPS_LED_INDICATOR
+    #define GPS_LED_INDICATOR
 
     /* GPS data readed from OSD -- still need some more code to work */
     //#define GPS_FROM_OSD
@@ -685,6 +684,7 @@
        after the resistor divisor we should get [0V;5V]->[0;1023] on analog V_BATPIN
        with R1=33k and R2=51k
        vbat = [0;1023]*16/VBATSCALE */
+    // must be associated with #define BUZZER !
     //#define VBAT              // uncomment this line to activate the vbat code
     #define VBATSCALE     131 // change this value if readed Battery voltage is different than real voltage
     #define VBATLEVEL1_3S 107 // 10,7V
@@ -825,9 +825,6 @@
     /* not needed and not recommended for normal operation */
     /* will add extra code that may slow down the main loop or make copter non-flyable */
     //#define DEBUG
-
-    /* add memory debugging functions */
-    //#define DEBUG_MEM
 
     /* Use this to trigger LCD configuration without a TX - only for debugging - do NOT fly with this activated */
     //#define LCD_CONF_DEBUG

@@ -1,15 +1,13 @@
-
 /**************************************************************************************/
 /***************             Global RX related variables           ********************/
 /**************************************************************************************/
 
 //RAW RC values will be store here
-#if !defined(SERIAL_SUM_PPM) & !defined(SBUS) & !defined(SPEKTRUM)
-volatile uint16_t rcValue[8] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
+#if defined(SBUS)
+  volatile uint16_t rcValue[18] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
 #else
-volatile uint16_t rcValue[18] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
+  volatile uint16_t rcValue[8] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
 #endif
-
 
 #if defined(SERIAL_SUM_PPM) //Channel order for PPM SUM RX Configs
   static uint8_t rcChannel[8] = {SERIAL_SUM_PPM};

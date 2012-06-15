@@ -17,8 +17,8 @@ void computeIMU () {
     getEstimatedAttitude(); // computation time must last less than one interleaving delay
     while((micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
     timeInterleave=micros();
-    set_flag(FLAG_NUNCHUKDATA, 1);
-    while(get_flag(FLAG_NUNCHUKDATA)) ACC_getADC(); // For this interleaving reading, we must have a gyro update at this point (less delay)
+    f.NUNCHUKDATA = 1;
+    while(f.NUNCHUKDATA) ACC_getADC(); // For this interleaving reading, we must have a gyro update at this point (less delay)
 
     for (axis = 0; axis < 3; axis++) {
       // empirical, we take a weighted value of the current and the previous values
@@ -223,15 +223,15 @@ void getEstimatedAttitude(){
   #endif 
 
   if ( abs(accSmooth[ROLL])<acc_25deg && abs(accSmooth[PITCH])<acc_25deg && accSmooth[YAW]>0) {
-    set_flag(FLAG_SMALL_ANGLES_25, 1);
+    f.SMALL_ANGLES_25 = 1;
   } else {
-    set_flag(FLAG_SMALL_ANGLES_25, 0);
+    f.SMALL_ANGLES_25 = 0;
   }
 
   // Apply complimentary filter (Gyro drift correction)
   // If accel magnitude >1.4G or <0.6G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
   // To do that, we just skip filter, as EstV already rotated by Gyro
-  if ( ( 36 < accMag && accMag < 196 ) || get_flag(FLAG_SMALL_ANGLES_25) )
+  if ( ( 36 < accMag && accMag < 196 ) || f.SMALL_ANGLES_25 )
     for (axis = 0; axis < 3; axis++) {
       int16_t acc = ACC_VALUE;
       EstG.A[axis] = (EstG.A[axis] * GYR_CMPF_FACTOR + acc) * INV_GYR_CMPF_FACTOR;
@@ -268,7 +268,7 @@ void getEstimatedAltitude(){
   static int32_t BaroHigh,BaroLow;
   int32_t temp32;
   int16_t last;
-  
+
   if (currentTime < deadLine) return;
   deadLine = currentTime + UPDATE_INTERVAL; 
 

@@ -38,7 +38,7 @@ void readEEPROM() {
     #endif
   #endif
   #if GPS
-    if (get_flag(FLAG_I2C_INIT_DONE)) GPS_set_pids();
+    if (f.I2C_INIT_DONE) GPS_set_pids();
   #endif
 }
 
@@ -56,9 +56,9 @@ void checkFirstTime() {
   conf.P8[YAW]   = 85;  conf.I8[YAW]  = 45;  conf.D8[YAW]  = 0;
   conf.P8[PIDALT]   = 16; conf.I8[PIDALT]   = 15; conf.D8[PIDALT]   = 7;
   
-  conf.P8[PIDPOS]  = POSHOLD_P * 100; conf.I8[PIDPOS]   = POSHOLD_I * 100;  conf.D8[PIDPOS]   = 0;
-  conf.P8[PIDPOSR] =  POSHOLD_RATE_P * 10; conf.I8[PIDPOSR]   = POSHOLD_RATE_I * 100;  conf.D8[PIDPOSR]   = POSHOLD_RATE_D * 1000;
-  conf.P8[PIDNAVR] =  NAV_P * 10; conf.I8[PIDNAVR]   = NAV_I * 100;  conf.D8[PIDNAVR]   = NAV_D * 1000;
+  conf.P8[PIDPOS]  = POSHOLD_P * 100;     conf.I8[PIDPOS]    = POSHOLD_I * 100;       conf.D8[PIDPOS]    = 0;
+  conf.P8[PIDPOSR] = POSHOLD_RATE_P * 10; conf.I8[PIDPOSR]   = POSHOLD_RATE_I * 100;  conf.D8[PIDPOSR]   = POSHOLD_RATE_D * 1000;
+  conf.P8[PIDNAVR] = NAV_P * 10;          conf.I8[PIDNAVR]   = NAV_I * 100;           conf.D8[PIDNAVR]   = NAV_D * 1000;
 
   conf.P8[PIDLEVEL] = 70; conf.I8[PIDLEVEL] = 10; conf.D8[PIDLEVEL] = 100;
   conf.P8[PIDMAG] = 40;

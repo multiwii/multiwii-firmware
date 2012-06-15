@@ -1,19 +1,23 @@
-// 256 RX buffer is needed for GPS communication (64 or 128 was too short)
-#if defined(GPS_SERIAL)
-#define RX_BUFFER_SIZE 256
-#else
-#define RX_BUFFER_SIZE 64
-#endif
-
 #if defined(MEGA)
-  uint8_t serialBufferRX[RX_BUFFER_SIZE][4];
-  volatile uint8_t serialHeadRX[4],serialTailRX[4];
+  #define UART_NUMBER 4
 #else
-  uint8_t serialBufferRX[RX_BUFFER_SIZE][1];
-  volatile uint8_t serialHeadRX[1],serialTailRX[1];
+  #define UART_NUMBER 1
 #endif
+#if defined(GPS_SERIAL)
+  #define RX_BUFFER_SIZE 256 // 256 RX buffer is needed for GPS communication (64 or 128 was too short)
+#else
+  #define RX_BUFFER_SIZE 64
+#endif
+#define TX_BUFFER_SIZE 128
+#define INBUF_SIZE 64
 
-#define MSP_IDENT                100   //out message         multitype + version
+static volatile uint8_t serialHeadRX[UART_NUMBER],serialTailRX[UART_NUMBER];
+static uint8_t serialBufferRX[RX_BUFFER_SIZE][UART_NUMBER];
+static volatile uint8_t headTX,tailTX;
+static uint8_t bufTX[TX_BUFFER_SIZE];
+static uint8_t inBuf[INBUF_SIZE];
+
+#define MSP_IDENT                100   //out message         multitype + multiwii version + protocol version + capability variable
 #define MSP_STATUS               101   //out message         cycletime & errors_count & sensor present & box activation
 #define MSP_RAW_IMU              102   //out message         9 DOF
 #define MSP_SERVO                103   //out message         8 servos
@@ -31,7 +35,6 @@
 #define MSP_MOTOR_PINS           115   //out message         which pins are in use for motors & servos, for GUI 
 #define MSP_BOXNAMES             116   //out message         the aux switch names
 #define MSP_PIDNAMES             117   //out message         the PID names
-#define MSP_HEADING              118   //out message         {FLAG_MAG_MODE, FLAG_HEADFREE_MODE}, current heading, mag heading, reference heading
 
 #define MSP_SET_RAW_RC           200   //in message          8 rc chan
 #define MSP_SET_RAW_GPS          201   //in message          fix, numsat, lat, lon, alt, speed
@@ -49,48 +52,44 @@
 
 static uint8_t checksum;
 static uint8_t indRX;
-#define INBUF_SIZE 64
-static uint8_t inBuf[INBUF_SIZE];
+static uint8_t cmdMSP;
 
-uint32_t read32() {
-  uint32_t t = inBuf[indRX++];
-  t+= inBuf[indRX++]<<8;
-  t+= (uint32_t)inBuf[indRX++]<<16;
-  t+= (uint32_t)inBuf[indRX++]<<24;
+static uint32_t inline read32() {
+  uint32_t t = read8();
+  t+= read8()<<8;
+  t+= read8()<<16;
+  t+= read8()<<24;
   return t;
 }
 
 uint16_t read16() {
-  uint16_t t = inBuf[indRX++];
-  t+= inBuf[indRX++]<<8;
+  uint16_t t = read8();
+  t+= read8()<<8;
   return t;
 }
-uint8_t read8()  {return inBuf[indRX++]&0xff;}
+uint8_t read8()  {
+  return inBuf[indRX++]&0xff;
+}
 
-void headSerialResponse(uint8_t err, uint8_t c,uint8_t s) {
+void headSerialResponse(uint8_t err, uint8_t s) {
   serialize8('$');
   serialize8('M');
   serialize8(err ? '!' : '>');
-  /* start calculating a new checksum */
-  checksum = 0;
+  checksum = 0; // start calculating a new checksum
   serialize8(s);
-  serialize8(c);
+  serialize8(cmdMSP);
 }
 
-void headSerialReply(uint8_t c,uint8_t s) {
-  headSerialResponse(0, c, s);
+void headSerialReply(uint8_t s) {
+  headSerialResponse(0, s);
 }
 
-void headSerialError(uint8_t c,uint8_t s) {
-  headSerialResponse(1, c, s);
+void inline headSerialError(uint8_t s) {
+  headSerialResponse(1, s);
 }
 
 void tailSerialReply() {
   serialize8(checksum);UartSendData();
-}
-
-uint8_t getNameLength(PGM_P s) {
-  return strlen_P(s);
 }
 
 void serializeNames(PGM_P s) {
@@ -100,8 +99,7 @@ void serializeNames(PGM_P s) {
 }
 
 void serialCom() {
-  uint8_t c;
-  static uint8_t cmd;
+  uint8_t c;  
   static uint8_t offset;
   static uint8_t dataSize;
   static enum _serial_state {
@@ -114,6 +112,8 @@ void serialCom() {
   } c_state = IDLE;
   
   while (SerialAvailable(0)) {
+    uint8_t bytesTXBuff = ((uint8_t)(headTX-tailTX))%TX_BUFFER_SIZE; // indicates the number of occupied bytes in TX buffer
+    if (bytesTXBuff > TX_BUFFER_SIZE - 40 ) return; // ensure there is enough free TX buffer to go further (40 bytes margin)
     c = SerialRead(0);
 
     if (c_state == IDLE) {
@@ -123,8 +123,7 @@ void serialCom() {
     } else if (c_state == HEADER_M) {
       c_state = (c=='<') ? HEADER_ARROW : IDLE;
     } else if (c_state == HEADER_ARROW) {
-      /* now we are expecting the payload size */
-      if (c > INBUF_SIZE) {
+      if (c > INBUF_SIZE) {  // now we are expecting the payload size
         c_state = IDLE;
         continue;
       }
@@ -133,44 +132,40 @@ void serialCom() {
       checksum = 0;
       indRX = 0;
       checksum ^= c;
-      /* the command is to follow */
-      c_state = HEADER_SIZE;
+      c_state = HEADER_SIZE;  // the command is to follow
     } else if (c_state == HEADER_SIZE) {
-      cmd = c;
+      cmdMSP = c;
       checksum ^= c;
       c_state = HEADER_CMD;
     } else if (c_state == HEADER_CMD && offset < dataSize) {
       checksum ^= c;
       inBuf[offset++] = c;
     } else if (c_state == HEADER_CMD && offset >= dataSize) {
-      /* compare calculated and transferred checksum */
-      if (checksum == c) {
-        /* we got a valid packet, evaluate it */
-        evaluateCommand(cmd, dataSize);
-      } else {
+      if (checksum == c) {  // compare calculated and transferred checksum
+        evaluateCommand();  // we got a valid packet, evaluate it
       }
       c_state = IDLE;
     }
   }
 }
 
-void evaluateCommand(uint8_t c, uint8_t dataSize) {
-  switch(c) {
+void evaluateCommand() {
+  switch(cmdMSP) {
    case MSP_SET_RAW_RC:
      for(uint8_t i=0;i<8;i++) {
        rcData[i] = read16();
      }
-     headSerialReply(c,0);
+     headSerialReply(0);
      break;
    case MSP_SET_RAW_GPS:
-     set_flag(FLAG_GPS_FIX, read8());
+     f.GPS_FIX = read8();
      GPS_numSat = read8();
      GPS_coord[LAT] = read32();
      GPS_coord[LON] = read32();
      GPS_altitude = read16();
      GPS_speed = read16();
      GPS_update = 1;
-     headSerialReply(c,0);
+     headSerialReply(0);
      break;
    case MSP_SET_PID:
      for(uint8_t i=0;i<PIDITEMS;i++) {
@@ -178,13 +173,13 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
        conf.I8[i]=read8();
        conf.D8[i]=read8();
      }
-     headSerialReply(c,0);
+     headSerialReply(0);
      break;
    case MSP_SET_BOX:
      for(uint8_t i=0;i<CHECKBOXITEMS;i++) {
        conf.activate[i]=read16();
      }
-     headSerialReply(c,0);
+     headSerialReply(0);
      break;
    case MSP_SET_RC_TUNING:
      conf.rcRate8 = read8();
@@ -194,36 +189,38 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      conf.dynThrPID = read8();
      conf.thrMid8 = read8();
      conf.thrExpo8 = read8();
-     headSerialReply(c,0);
+     headSerialReply(0);
      break;
    case MSP_SET_MISC:
      #if defined(POWERMETER)
-       conf.powerTrigger1 = read16() / PLEVELSCALE; // we rely on writeParams() to compute corresponding pAlarm value
+       conf.powerTrigger1 = read16() / PLEVELSCALE;
      #endif
-     headSerialReply(c,0);
+     headSerialReply(0);
      break;
-   case MSP_IDENT:                          // and we check message code to execute the relative code
-     headSerialReply(c,2);                  // we reply with an header indicating a payload lenght of 2 octets
-     serialize8(VERSION);                   // the first octet. serialize8/16/32 is used also to compute a checksum
-     serialize8(MULTITYPE);                 // the second one
+   case MSP_IDENT:
+     headSerialReply(7);
+     serialize8(VERSION);   // multiwii version
+     serialize8(MULTITYPE); // type of multicopter
+     serialize8(0);         // MultiWii Serial Protocol Version
+     serialize32(0);        // "capability"
      break;
    case MSP_STATUS:
-     headSerialReply(c,8);
+     headSerialReply(10);
      serialize16(cycleTime);
      serialize16(i2c_errors_count);
      serialize16(ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4);
-     serialize16(get_flag(FLAG_ACC_MODE)<<BOXACC|get_flag(FLAG_BARO_MODE)<<BOXBARO|get_flag(FLAG_MAG_MODE)<<BOXMAG|get_flag(FLAG_ARMED)<<BOXARM|
-                 get_flag(FLAG_GPS_HOME_MODE)<<BOXGPSHOME|get_flag(FLAG_GPS_HOLD_MODE)<<BOXGPSHOLD|get_flag(FLAG_HEADFREE_MODE)<<BOXHEADFREE|
-                 get_flag(FLAG_PASSTHRU_MODE)<<BOXPASSTHRU|rcOptions[BOXBEEPERON]<<BOXBEEPERON|rcOptions[BOXLEDMAX]<<BOXLEDMAX|rcOptions[BOXLLIGHTS]<<BOXLLIGHTS|rcOptions[BOXHEADADJ]<<BOXHEADADJ);
+     serialize32(f.ACC_MODE<<BOXACC|f.BARO_MODE<<BOXBARO|f.MAG_MODE<<BOXMAG|f.ARMED<<BOXARM|
+                 f.GPS_HOME_MODE<<BOXGPSHOME|f.GPS_HOLD_MODE<<BOXGPSHOLD|f.HEADFREE_MODE<<BOXHEADFREE|
+                 f.PASSTHRU_MODE<<BOXPASSTHRU|rcOptions[BOXBEEPERON]<<BOXBEEPERON|rcOptions[BOXLEDMAX]<<BOXLEDMAX|rcOptions[BOXLLIGHTS]<<BOXLLIGHTS|rcOptions[BOXHEADADJ]<<BOXHEADADJ);
      break;
    case MSP_RAW_IMU:
-     headSerialReply(c,18);
+     headSerialReply(18);
      for(uint8_t i=0;i<3;i++) serialize16(accSmooth[i]);
      for(uint8_t i=0;i<3;i++) serialize16(gyroData[i]);
      for(uint8_t i=0;i<3;i++) serialize16(magADC[i]);
      break;
    case MSP_SERVO:
-     headSerialReply(c,16);
+     headSerialReply(16);
      for(uint8_t i=0;i<8;i++)
        #if defined(SERVO)
        serialize16(servo[i]);
@@ -232,18 +229,18 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
        #endif
      break;
    case MSP_MOTOR:
-     headSerialReply(c,16);
+     headSerialReply(16);
      for(uint8_t i=0;i<8;i++) {
        serialize16( (i < NUMBER_MOTOR) ? motor[i] : 0 );
      }
      break;
    case MSP_RC:
-     headSerialReply(c,16);
+     headSerialReply(16);
      for(uint8_t i=0;i<8;i++) serialize16(rcData[i]);
      break;
    case MSP_RAW_GPS:
-     headSerialReply(c,14);
-     serialize8(get_flag(FLAG_GPS_FIX));
+     headSerialReply(14);
+     serialize8(f.GPS_FIX);
      serialize8(GPS_numSat);
      serialize32(GPS_coord[LAT]);
      serialize32(GPS_coord[LON]);
@@ -251,36 +248,28 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      serialize16(GPS_speed);
      break;
    case MSP_COMP_GPS:
-     headSerialReply(c,5);
+     headSerialReply(5);
      serialize16(GPS_distanceToHome);
      serialize16(GPS_directionToHome);
      serialize8(GPS_update);
      break;
    case MSP_ATTITUDE:
-     headSerialReply(c,8);
+     headSerialReply(8);
      for(uint8_t i=0;i<2;i++) serialize16(angle[i]);
      serialize16(heading);
      serialize16(headFreeModeHold);
      break;
-   case MSP_HEADING:
-     headSerialReply(c,7);
-     /* indicate whether we are using mag stabilization or headfree mode */
-     serialize8( get_flag(FLAG_MAG_MODE)<<0 | get_flag(FLAG_HEADFREE_MODE)<<1 );
-     serialize16(heading);
-     serialize16(magHold);
-     serialize16(headFreeModeHold);
-     break;
    case MSP_ALTITUDE:
-     headSerialReply(c,4);
+     headSerialReply(4);
      serialize32(EstAlt);
      break;
    case MSP_BAT:
-     headSerialReply(c,3);
+     headSerialReply(3);
      serialize8(vbat);
      serialize16(intPowerMeterSum);
      break;
    case MSP_RC_TUNING:
-     headSerialReply(c,7);
+     headSerialReply(7);
      serialize8(conf.rcRate8);
      serialize8(conf.rcExpo8);
      serialize8(conf.rollPitchRate);
@@ -290,7 +279,7 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      serialize8(conf.thrExpo8);
      break;
    case MSP_PID:
-     headSerialReply(c,3*PIDITEMS);
+     headSerialReply(3*PIDITEMS);
      for(uint8_t i=0;i<PIDITEMS;i++) {
        serialize8(conf.P8[i]);
        serialize8(conf.I8[i]);
@@ -298,25 +287,25 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
      }
      break;
    case MSP_BOX:
-     headSerialReply(c,2*CHECKBOXITEMS);
+     headSerialReply(2*CHECKBOXITEMS);
      for(uint8_t i=0;i<CHECKBOXITEMS;i++) {
        serialize16(conf.activate[i]);
      }
      break;
    case MSP_BOXNAMES:
-     headSerialReply(c,getNameLength(boxnames));
+     headSerialReply(strlen_P(boxnames));
      serializeNames(boxnames);
      break;
    case MSP_PIDNAMES:
-     headSerialReply(c,getNameLength(pidnames));
+     headSerialReply(strlen_P(pidnames));
      serializeNames(pidnames);
      break;
    case MSP_MISC:
-     headSerialReply(c,2);
+     headSerialReply(2);
      serialize16(intPowerTrigger1);
      break;
    case MSP_MOTOR_PINS:
-     headSerialReply(c,8);
+     headSerialReply(8);
      for(uint8_t i=0;i<8;i++) {
        serialize8(PWM_PIN[i]);
      }
@@ -324,33 +313,34 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
    case MSP_RESET_CONF:
      conf.checkNewConf++;
      checkFirstTime();
-     headSerialReply(c,0);
+     headSerialReply(0);
      break;
    case MSP_ACC_CALIBRATION:
      calibratingA=400;
-     headSerialReply(c,0);
+     headSerialReply(0);
      break;
    case MSP_MAG_CALIBRATION:
-     set_flag(FLAG_CALIBRATE_MAG, 1);
-     headSerialReply(c,0);
+     f.CALIBRATE_MAG = 1;
+     headSerialReply(0);
      break;
    case MSP_EEPROM_WRITE:
      writeParams(0);
-     headSerialReply(c,0);
+     headSerialReply(0);
      break;
    case MSP_DEBUG:
-     headSerialReply(c,8);
-     serialize16(debug1); // 4 variables are here for general monitoring purpose
-     serialize16(debug2);
-     serialize16(debug3);
-     serialize16(debug4);
+     headSerialReply(8);
+     for(uint8_t i=0;i<4;i++) {
+       serialize16(debug[i]); // 4 variables are here for general monitoring purpose
+     }
      break;
-   default:
-     /* we do not know how to handle the (valid) message, indicate error */
-     headSerialError(c,0);
+   default:  // we do not know how to handle the (valid) message, indicate error
+     headSerialError(0);
      break;
   }
   tailSerialReply();
+  #if !defined(PROMICRO)
+    UCSR0B |= (1<<UDRIE0); // enable transmitter UDRE interrupt if deactivacted
+  #endif
 }
 
 // *******************************************************
@@ -368,9 +358,6 @@ void evaluateCommand(uint8_t c, uint8_t dataSize) {
 // *******************************************************
 // Interrupt driven UART transmitter - using a ring buffer
 // *******************************************************
-static volatile uint8_t headTX,tailTX;
-#define TX_BUFFER_SIZE 128
-static uint8_t bufTX[TX_BUFFER_SIZE];
 
 void serialize32(uint32_t a) {
   serialize8((a    ) & 0xFF);
@@ -380,37 +367,27 @@ void serialize32(uint32_t a) {
 }
 
 void serialize16(int16_t a) {
-  /* serialize low byte */
-  serialize8(a & 0xFF);
-  /* serialize high byte */
+  serialize8((a   ) & 0xFF);
   serialize8((a>>8) & 0xFF);
 }
 
-void serialize8(uint8_t a)  {
-  uint8_t tempHeadTX = headTX;
-  if (++tempHeadTX >= sizeof(bufTX)) {
-    tempHeadTX = 0;
-  }
-  bufTX[tempHeadTX] = a;
-  headTX = tempHeadTX;
+void serialize8(uint8_t a) {
+  uint8_t t = headTX;
+  if (++t >= TX_BUFFER_SIZE) t = 0;
+  bufTX[t] = a;
   checksum ^= a;
-  #if !defined(PROMICRO)
-    UCSR0B |= (1<<UDRIE0);
-  #endif
+  headTX = t;
 }
 
 #if !defined(PROMICRO)
   ISR_UART {
-    if (headTX != tailTX) {
-      if (tailTX == sizeof(bufTX)-1) {
-        tailTX = 0;
-      } else {
-        tailTX++;
-      }
-
-      UDR0 = bufTX[tailTX];  // Transmit next byte in the ring
+    uint8_t t = tailTX;
+    if (headTX != t) {
+      if (++t >= TX_BUFFER_SIZE) t = 0;
+      UDR0 = bufTX[t];  // Transmit next byte in the ring
+      tailTX = t;
     }
-    if (tailTX == headTX) UCSR0B &= ~(1<<UDRIE0); // Check if all data is transmitted . if yes disable transmitter UDRE interrupt
+    if (t == headTX) UCSR0B &= ~(1<<UDRIE0); // Check if all data is transmitted . if yes disable transmitter UDRE interrupt
   }
 #endif
 
@@ -425,7 +402,7 @@ void UartSendData() {
   #endif
 }
 
-void SerialOpen(uint8_t port, uint32_t baud) {
+static void inline SerialOpen(uint8_t port, uint32_t baud) {
   uint8_t h = ((F_CPU  / 4 / baud -1) / 2) >> 8;
   uint8_t l = ((F_CPU  / 4 / baud -1) / 2);
   switch (port) {
@@ -446,7 +423,7 @@ void SerialOpen(uint8_t port, uint32_t baud) {
   }
 }
 
-void SerialEnd(uint8_t port) {
+static void inline SerialEnd(uint8_t port) {
   switch (port) {
     #if !defined(PROMICRO)
     case 0: UCSR0B &= ~((1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0)|(1<<UDRIE0)); break;
@@ -462,45 +439,24 @@ void SerialEnd(uint8_t port) {
 }
 
 static void inline store_uart_in_buf(uint8_t data, uint8_t portnum) {
-  /* the received data byte */
-  uint8_t d = data;
-  uint8_t i = serialHeadRX[portnum];
-  if (i == RX_BUFFER_SIZE-1) {
-    i = 0;
-  } else {
-    i++;
-  }
-  /* we did not bite our own tail? */
-  if (i != serialTailRX[portnum]) {
-   serialBufferRX[serialHeadRX[portnum]][portnum] = d;
-   serialHeadRX[portnum] = i;
-  } else {
-    /* sorry, this byte is lost :-/ */
-  }
+  uint8_t h = serialHeadRX[portnum];
+  if (++h >= RX_BUFFER_SIZE) h = 0;
+  if (h == serialTailRX[portnum]) return; // we did not bite our own tail?
+  serialBufferRX[serialHeadRX[portnum]][portnum] = data;
+  serialHeadRX[portnum] = h;
 }
 
 #if defined(PROMINI) && !(defined(SPEKTRUM))
-ISR(USART_RX_vect){
-  /* gcc hopefully inlines this */
-  store_uart_in_buf(UDR0, 0);
-}
+  ISR(USART_RX_vect)  { store_uart_in_buf(UDR0, 0); }
 #endif
 
 #if (defined(MEGA) || defined(PROMICRO)) && !defined(SPEKTRUM)
-  ISR(USART1_RX_vect){
-    store_uart_in_buf(UDR1, 1);
-  }
+  ISR(USART1_RX_vect) { store_uart_in_buf(UDR1, 1); }
 #endif
 #if defined(MEGA)
-  ISR(USART0_RX_vect){
-    store_uart_in_buf(UDR0, 0);
-  }
-  ISR(USART2_RX_vect){
-    store_uart_in_buf(UDR2, 2);
-  }
-  ISR(USART3_RX_vect){
-    store_uart_in_buf(UDR3, 3);
-  }
+  ISR(USART0_RX_vect) { store_uart_in_buf(UDR0, 0); }
+  ISR(USART2_RX_vect) { store_uart_in_buf(UDR2, 2); }
+  ISR(USART3_RX_vect) { store_uart_in_buf(UDR3, 3); }
 #endif
 
 uint8_t SerialRead(uint8_t port) {
@@ -515,13 +471,11 @@ uint8_t SerialRead(uint8_t port) {
     #endif
     port = 0;
   #endif
-  uint8_t c = serialBufferRX[serialTailRX[port]][port];
-  if ((serialHeadRX[port] != serialTailRX[port])) {
-    if (serialTailRX[port] == RX_BUFFER_SIZE-1) {
-      serialTailRX[port] = 0;
-    } else {
-      serialTailRX[port]++;
-    }
+  uint8_t t = serialTailRX[port];
+  uint8_t c = serialBufferRX[t][port];
+  if (serialHeadRX[port] != t) {
+    if (++t >= RX_BUFFER_SIZE) t = 0;
+    serialTailRX[port] = t;
   }
   return c;
 }

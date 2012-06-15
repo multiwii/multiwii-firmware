@@ -943,14 +943,14 @@ void Mag_getADC() {
   magADC[ROLL]  = magADC[ROLL]  * magCal[ROLL];
   magADC[PITCH] = magADC[PITCH] * magCal[PITCH];
   magADC[YAW]   = magADC[YAW]   * magCal[YAW];
-  if (get_flag(FLAG_CALIBRATE_MAG)) {
+  if (f.CALIBRATE_MAG) {
     tCal = t;
     for(axis=0;axis<3;axis++) {
       conf.magZero[axis] = 0;
       magZeroTempMin[axis] = magADC[axis];
       magZeroTempMax[axis] = magADC[axis];
     }
-    set_flag(FLAG_CALIBRATE_MAG, 0);
+    f.CALIBRATE_MAG = 0;
   }
   if (magInit) { // we apply offset only once mag calibration is done
     magADC[ROLL]  -= conf.magZero[ROLL];
@@ -1199,7 +1199,7 @@ void Gyro_getADC() {
   if (micros() < (neutralizeTime + NEUTRALIZE_DELAY)) {//we neutralize data in case of blocking+hard reset state
     for (axis = 0; axis < 3; axis++) {gyroADC[axis]=0;accADC[axis]=0;}
     accADC[YAW] = acc_1G;
-    set_flag(FLAG_NUNCHUKDATA, 0);
+    f.NUNCHUKDATA = 0;
   } 
 
   // Wii Motion Plus Data
@@ -1213,14 +1213,14 @@ void Gyro_getADC() {
     gyroADC[ROLL]  = (rawADC[3]&0x01)     ? gyroADC[ROLL]/5  : gyroADC[ROLL];  //the ratio 1/5 is not exactly the IDG600 or ISZ650 specification 
     gyroADC[PITCH] = (rawADC[4]&0x02)>>1  ? gyroADC[PITCH]/5 : gyroADC[PITCH]; //we detect here the slow of fast mode WMP gyros values (see wiibrew for more details)
     gyroADC[YAW]   = (rawADC[3]&0x02)>>1  ? gyroADC[YAW]/5   : gyroADC[YAW];   // this step must be done after zero compensation    
-    set_flag(FLAG_NUNCHUKDATA, 0);
+    f.NUNCHUKDATA = 0;
   #if defined(NUNCHUCK)
     } else if ( (rawADC[5]&0x03) == 0x00 ) { // Nunchuk Data
       ACC_ORIENTATION(  ( (rawADC[3]<<2)      | ((rawADC[5]>>4)&0x02) ) ,
                       - ( (rawADC[2]<<2)      | ((rawADC[5]>>3)&0x02) ) ,
                         ( ((rawADC[4]>>1)<<3) | ((rawADC[5]>>5)&0x06) ) );
       ACC_Common();
-      set_flag(FLAG_NUNCHUKDATA, 1);
+      f.NUNCHUKDATA = 1;
   #endif
   }
 }
@@ -1248,7 +1248,7 @@ void tinygps_query(void) {
   if (i2c_errors == i2c_errors_count) {
     #if defined(TINY_GPS)
     GPS_numSat = navi.gps.sats;
-    set_flag(FLAG_GPS_FIX, (navi.gps.quality > 0));
+    f.GPS_FIX = (navi.gps.quality > 0);
     GPS_coord[LAT] = (navi.gps.flags & 1<<NMEA_RMC_FLAGS_LAT_NORTH ? 1 : -1) * GPS_coord_to_decimal(&navi.gps.lat);
     GPS_coord[LON] = (navi.gps.flags & 1<<NMEA_RMC_FLAGS_LON_EAST ? 1 : -1) * GPS_coord_to_decimal(&navi.gps.lon);
     GPS_altitude = navi.gps.alt.m;
@@ -1391,7 +1391,7 @@ void i2c_srf08_discover() {
 }
 
 void Sonar_update() {
-  if (currentTime < srf08_ctx.deadline || (srf08_ctx.state==0 && get_flag(FLAG_ARMED))) return; 
+  if (currentTime < srf08_ctx.deadline || (srf08_ctx.state==0 && f.ARMED)) return; 
   srf08_ctx.deadline = currentTime;
   TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, SRF08 is ok with this speed
   switch (srf08_ctx.state) {
@@ -1469,5 +1469,5 @@ void initSensors() {
   if (MAG) Mag_init();
   if (ACC) {ACC_init();acc_25deg = acc_1G * 0.423;}
   if (SONAR) Sonar_init();
-  set_flag(FLAG_I2C_INIT_DONE, 1);
+  f.I2C_INIT_DONE = 1;
 }
