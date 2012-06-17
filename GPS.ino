@@ -296,7 +296,7 @@ void GPS_NewData() {
     }
   #endif     
 
-  #if defined(GPS_SERIAL) || defined(TINY_GPS)
+  #if defined(GPS_SERIAL) || defined(TINY_GPS) || defined(GPS_FROM_OSD)
   #if defined(GPS_SERIAL)
     while (SerialAvailable(GPS_SERIAL)) {
      if (GPS_newFrame(SerialRead(GPS_SERIAL))) {
@@ -304,6 +304,10 @@ void GPS_NewData() {
     {
       {
       tinygps_query();
+  #elif defined(GPS_FROM_OSD)
+    {
+      if(GPS_update & 2) {  // Once second bit of GPS_update is set, indicate new GPS datas is readed from OSD - all in right format.
+        GPS_update &= 1;    // We have: GPS_fix(0-2), GPS_numSat(0-15), GPS_coord[LAT & LON](signed, in 1/10 000 000 degres), GPS_altitude(signed, in meters) and GPS_speed(in cm/s)                     
   #endif
        if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;
         if (f.GPS_FIX && GPS_numSat >= 5) {
@@ -388,23 +392,6 @@ void GPS_NewData() {
           } //end of gps calcs  
         }
       }
-    }
-  #endif
-
-  #if defined(GPS_FROM_OSD)
-    if(GPS_update) {
-      if (f.GPS_FIX && GPS_numSat > 3) {
-        if (!f.GPS_FIX_HOME) {
-          f.GPS_FIX_HOME = 1;
-          GPS_home[LAT] = GPS_coord[LAT];
-          GPS_home[LON] = GPS_coord[LON];
-        }
-        if(f.GPS_HOLD_MODE) {}
-          //GPS_distance(GPS_hold[LAT],GPS_hold[LON],GPS_coord[LAT],GPS_coord[LON], &GPS_distanceToHold, &GPS_directionToHold);
-        else
-          GPS_distance(GPS_home[LAT],GPS_home[LON],GPS_coord[LAT],GPS_coord[LON], &GPS_distanceToHome, &GPS_directionToHome);
-      }
-      GPS_update = 0;
     }
   #endif
 }
@@ -729,7 +716,7 @@ int32_t wrap_36000(int32_t ang) {
 }
 
 // This code is used for parsing NMEA data
-#if defined(GPS_SERIAL) || defined(GPS_FROM_OSD)
+#if defined(GPS_SERIAL)
 
 /* Alex optimization 
   The latitude or longitude is coded this way in NMEA frames

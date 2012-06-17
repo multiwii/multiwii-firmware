@@ -527,7 +527,7 @@ void setup() {
     initOpenLRS();
   #endif
   initSensors();
-  #if defined(I2C_GPS) || defined(GPS_SERIAL)
+  #if defined(I2C_GPS) || defined(GPS_SERIAL) || defined(GPS_FROM_OSD)
     GPS_set_pids();
   #endif
   previousTime = micros();
@@ -561,7 +561,7 @@ void setup() {
   #endif
   /************************************/
  
-  #if defined(I2C_GPS) || defined(TINY_GPS)
+  #if defined(I2C_GPS) || defined(TINY_GPS) || defined(GPS_FROM_OSD)
    GPS_Enable = 1;
   #endif
   
@@ -857,7 +857,7 @@ void loop () {
         }
       }
       #endif 
-      #if defined(GPS_SERIAL) || defined(TINY_GPS)
+      #if defined(GPS_SERIAL) || defined(TINY_GPS) || defined(GPS_FROM_OSD)
       if (f.GPS_FIX && GPS_numSat >= 5 ) {
         if (rcOptions[BOXGPSHOME]) {
           if (!f.GPS_HOME_MODE)  {
@@ -914,7 +914,7 @@ void loop () {
         break;
       case 4:
         #if SONAR
-          Sonar_update();debug3 = sonarAlt;
+          Sonar_update();debug[2] = sonarAlt;
         #endif
         #ifdef LANDING_LIGHTS_DDR
           auto_switch_landing_lights();
