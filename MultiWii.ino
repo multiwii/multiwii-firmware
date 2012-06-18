@@ -263,7 +263,8 @@ static uint8_t  GPS_Enable  = 0;
 #define LON  1
 // The desired bank towards North (Positive) or South (Negative) : latitude
 // The desired bank towards East (Positive) or West (Negative)   : longitude
-static int16_t nav[2];
+static int16_t  nav[2];
+static int16_t  nav_rated[2];    //Adding a rate controller to the navigation to make it smoother
 
 // default POSHOLD control gains
 #define POSHOLD_P              .11
@@ -952,8 +953,17 @@ void loop () {
     } else {
       float sin_yaw_y = sin(heading*0.0174532925f);
       float cos_yaw_x = cos(heading*0.0174532925f);
+	  
+   #if defined(NAV_SLEW_RATE)     
+      nav_rated[LON] += constrain(wrap_18000(nav[LON]-nav_rated[LON]),-NAV_SLEW_RATE,NAV_SLEW_RATE);
+      nav_rated[LAT] += constrain(wrap_18000(nav[LAT]-nav_rated[LAT]),-NAV_SLEW_RATE,NAV_SLEW_RATE);
+      GPS_angle[ROLL]   = (nav_rated[LON]*cos_yaw_x - nav_rated[LAT]*sin_yaw_y) /10;
+      GPS_angle[PITCH]  = (nav_rated[LON]*sin_yaw_y + nav_rated[LAT]*cos_yaw_x) /10;
+   #else 
       GPS_angle[ROLL]   = (nav[LON]*cos_yaw_x - nav[LAT]*sin_yaw_y) /10;
       GPS_angle[PITCH]  = (nav[LON]*sin_yaw_y + nav[LAT]*cos_yaw_x) /10;
+   #endif
+	  
     }
   #endif
 

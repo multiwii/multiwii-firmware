@@ -575,6 +575,7 @@
     #define GPS_FILTERING              true      // add a 5 element moving average filter to GPS coordinates, helps eliminate gps noise but adds latency
     #define GPS_LOW_SPEED_D_FILTER     true      // below .5m/s speed ignore D term for POSHOLD_RATE, theoretically this also removed D term induced noise
     #define GPS_WP_RADIUS              200       // if we are within this distance to a waypoint then we consider it reached (distance is in cm)
+	#define NAV_SLEW_RATE              30		 // Adds a rate control to nav output, will smoothen out nav angle spikes
 
 
   /**************************************************************************************/

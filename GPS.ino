@@ -410,6 +410,7 @@ void GPS_reset_home_position() {
 void GPS_reset_nav() {
   for(uint8_t i=0;i<2;i++) {
     GPS_angle[i]  = 0;
+	nav_rated[i] = 0;
     nav[i] = 0;
     #if defined(I2C_GPS)
       //GPS_I2C_command(I2C_GPS_COMMAND_STOP_NAV,0);
@@ -494,6 +495,15 @@ void GPS_set_pids() {
   return deg + min/60;
 }
 #endif
+
+//It was mobed here since even i2cgps code needs it
+int32_t wrap_18000(int32_t ang) {
+  if (ang > 18000)  ang -= 36000;
+  if (ang < -18000) ang += 36000;
+  return ang;
+}
+
+
 
 //OK here is the onboard GPS code
 #if defined(GPS_SERIAL) || defined(GPS_FROM_OSD) || defined(TINY_GPS)
@@ -703,11 +713,6 @@ static uint16_t GPS_calc_desired_speed(uint16_t max_speed, bool _slow) {
 ////////////////////////////////////////////////////////////////////////////////////
 // Utilities
 //
-int32_t wrap_18000(int32_t ang) {
-  if (ang > 18000)  ang -= 36000;
-  if (ang < -18000) ang += 36000;
-  return ang;
-}
 
 int32_t wrap_36000(int32_t ang) {
   if (ang > 36000) ang -= 36000;
