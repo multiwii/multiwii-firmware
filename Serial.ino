@@ -17,6 +17,9 @@ static volatile uint8_t headTX,tailTX;
 static uint8_t bufTX[TX_BUFFER_SIZE];
 static uint8_t inBuf[INBUF_SIZE];
 
+// Multiwii Serial Protocol 0 
+#define MSP_VERSION				 0
+
 #define MSP_IDENT                100   //out message         multitype + multiwii version + protocol version + capability variable
 #define MSP_STATUS               101   //out message         cycletime & errors_count & sensor present & box activation
 #define MSP_RAW_IMU              102   //out message         9 DOF
@@ -198,7 +201,7 @@ void evaluateCommand() {
      headSerialReply(7);
      serialize8(VERSION);   // multiwii version
      serialize8(MULTITYPE); // type of multicopter
-     serialize8(0);         // MultiWii Serial Protocol Version
+     serialize8(MSP_VERSION);         // MultiWii Serial Protocol Version
      serialize32(0);        // "capability"
      break;
    case MSP_STATUS:
@@ -330,7 +333,7 @@ void evaluateCommand() {
        serialize16(debug[i]); // 4 variables are here for general monitoring purpose
      }
      break;
-   default:  // we do not know how to handle the (valid) message, indicate error
+   default:  // we do not know how to handle the (valid) message, indicate error MSP $M!
      headSerialError(0);
      break;
   }
