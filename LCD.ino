@@ -1263,9 +1263,11 @@ void fill_line1_VmA() {
   line1[11] = digit10(intPowerMeterSum);
   line1[12] = digit1(intPowerMeterSum);
 #endif
+#ifdef BUZZER
   if (isBuzzerON()) { // buzzer on? then add some blink for attention
     line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
   }
+#endif
   // set mark, if we had i2c errors, failsafes or annex650 overruns
   if (i2c_errors_count || failsafeEvents || annex650_overrun_count) line1[6] = '!';
 }
@@ -1554,7 +1556,9 @@ void lcd_telemetry() {
       case 0:// V, mAh
       LCDsetLine(1);
       fill_line1_VmA();
-      if (isBuzzerON()) { LCDattributesReverse(); } // buzzer on? then add some blink for attention
+      #ifdef BUZZER
+        if (isBuzzerON()) { LCDattributesReverse(); } // buzzer on? then add some blink for attention
+      #endif
       LCDprintChar(line1);
       break;
       case 1:// V, mAh bars

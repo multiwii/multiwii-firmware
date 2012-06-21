@@ -177,9 +177,7 @@ static uint8_t telemetry_auto = 0;
 #define MINCHECK 1100
 #define MAXCHECK 1900
 
-#if defined(FAILSAFE)
 static int16_t failsafeEvents = 0;
-#endif
 volatile int16_t failsafeCnt = 0;
 
 static int16_t rcData[8];          // interval [1000;2000]
