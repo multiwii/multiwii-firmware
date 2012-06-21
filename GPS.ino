@@ -736,6 +736,7 @@ int32_t wrap_36000(int32_t ang) {
   with 10e7 it's around 1 cm now. Increasing it further is irrelevant, since even 1cm resolution is unrealistic, however increased 
   resolution also increased precision of nav calculations
 */
+/* This calc adds approc 2km error to the gps coordinates reverted back to the original working one 
 uint32_t GPS_coord_to_degrees(char* s) {
   char *p = s, *d = s;
   uint8_t min, deg = 0;
@@ -750,6 +751,45 @@ uint32_t GPS_coord_to_degrees(char* s) {
   while (s<d-2) {deg *= 10;deg += *(s++)-'0';}  // convert degrees : all chars before minutes ; for the first iteration, deg = 0
   min = *(d-1)-'0' + (*(d-2)-'0')*10;           // convert minutes : 2 previous char before '.'
   return deg * 10000000UL + (min * 100000UL + frac)*10UL / 6;
+}
+*/
+
+#define DIGIT_TO_VAL(_x)	(_x - '0')
+uint32_t GPS_coord_to_degrees(char* s)
+{
+	char *p, *q;
+	uint8_t deg = 0, min = 0;
+	unsigned int frac_min = 0;
+
+	// scan for decimal point or end of field
+	for (p = s; isdigit(*p); p++)
+		;
+	q = s;
+
+	// convert degrees
+	while ((p - q) > 2) {
+		if (deg)
+			deg *= 10;
+		deg += DIGIT_TO_VAL(*q++);
+	}
+	// convert minutes
+	while (p > q) {
+		if (min)
+			min *= 10;
+		min += DIGIT_TO_VAL(*q++);
+	}
+	// convert fractional minutes
+	// expect up to four digits, result is in
+	// ten-thousandths of a minute
+	if (*p == '.') {
+		q = p + 1;
+		for (int i = 0; i < 4; i++) {
+			frac_min *= 10;
+			if (isdigit(*q))
+				frac_min += *q++ - '0';
+		}
+	}
+	return deg * 10000000UL + (min * 1000000UL + frac_min*100UL) / 6;
 }
 
 // helper functions 
