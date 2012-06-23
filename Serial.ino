@@ -489,7 +489,7 @@ uint8_t SerialAvailable(uint8_t port) {
     #if !defined(TEENSY20)
       if(port == 0) return USB_Available(USB_CDC_RX);
     #else
-      if(port == 0) return T_USB_Available(USB_CDC_RX);
+      if(port == 0) return T_USB_Available();
     #endif
     port = 0;
   #endif

@@ -210,12 +210,12 @@
     #define SERVO_4_PIN_HIGH  PORTF |= 1<<4;
     #define SERVO_4_PIN_LOW   PORTF &= ~(1<<4);  
   #endif
-  #define SERVO_5_PINMODE   DDRD |= (1<<7); // 6
-  #define SERVO_5_PIN_HIGH  PORTD |= 1<<7;
-  #define SERVO_5_PIN_LOW   PORTD &= ~(1<<7);
-  #define SERVO_6_PINMODE   DDRC |= (1<<6); // 5
-  #define SERVO_6_PIN_HIGH  PORTC|= 1<<6;
-  #define SERVO_6_PIN_LOW   PORTC &= ~(1<<6);
+  #define SERVO_5_PINMODE   DDRC |= (1<<6); // 5
+  #define SERVO_5_PIN_HIGH  PORTC|= 1<<6;
+  #define SERVO_5_PIN_LOW   PORTC &= ~(1<<6);
+  #define SERVO_6_PINMODE   DDRD |= (1<<7); // 6
+  #define SERVO_6_PIN_HIGH  PORTD |= 1<<7;
+  #define SERVO_6_PIN_LOW   PORTD &= ~(1<<7);
   #define SERVO_7_PINMODE   DDRB |= (1<<6); // 10
   #define SERVO_7_PIN_HIGH  PORTB |= 1<<6;
   #define SERVO_7_PIN_LOW   PORTB &= ~(1<<6);
