@@ -451,11 +451,16 @@
   /**************************************************************************************/
   /********          special ESC (wii-ESC) with extended range       ********************/
   /**************************************************************************************/
-//#define MINCOMMAND 1000
-//#define MINTHROTTLE 1080
-//#define MAXTHROTTLE 2000
-//#define EXT_MOTOR_RANGE
+  //#define MINCOMMAND 1000
+  //#define MINTHROTTLE 1080
+  //#define MAXTHROTTLE 2000
+  //#define EXT_MOTOR_RANGE
 
+  /**************************************************************************************/
+  /********          special ESC (simonk) with extended range        ********************/
+  /**************************************************************************************/
+  //#define MINTHROTTLE 1064
+  //#define MAXTHROTTLE 1864
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/
@@ -673,6 +678,10 @@
     //#define LCD_TELEMETRY_AUTO "123452679" // pages 1 to 7 in ascending order
     //#define LCD_TELEMETRY_AUTO  "212232425262729" // strong emphasis on page 2
 
+    // same as above, but manual stepping sequence; requires stick input for each stepping
+    //#define LCD_TELEMETRY_STEP "0123456789" // must begin with 0
+
+
     /* on telemetry page B (2) it gives a bar graph which shows how much voltage battery has left. Range from 0 to 12 Volt is not very informative */
     /* so we try do define a meaningful range. For a 3S battery we define full=12,6V and calculate how much it is above first warning level */
     /* Example: 12.6V - VBATLEVEL1_3S  (for me = 126 - 102 = 24) */
@@ -769,11 +778,15 @@
 
     /* this is the value for the ESCs when they are not armed
        in some cases, this value must be lowered down to 900 for some specific ESCs */
-    #define MINCOMMAND 1000
+    #ifndef MINCOMMAND
+      #define MINCOMMAND 1000
+    #endif
 
     /* this is the maximum value for the ESCs at full power
        this value can be increased up to 2000 */
-    #define MAXTHROTTLE 1850
+    #ifndef MAXTHROTTLE
+      #define MAXTHROTTLE 1850
+    #endif
 
   /**************************************************************************************/
   /***********************     motor, servo and other presets     ***********************/

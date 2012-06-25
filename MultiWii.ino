@@ -12,8 +12,9 @@ March  2012     V2.0
 
 #include "config.h"
 #include "def.h"
+
 #include <avr/pgmspace.h>
-#define  VERSION  201
+#define  VERSION  202
 
 /*********** RC alias *****************/
 #define ROLL       0
@@ -166,11 +167,10 @@ static uint16_t intPowerMeterSum, intPowerTrigger1;
 // **********************
 // telemetry
 // **********************
-#if defined(LCD_TELEMETRY) || defined(LCD_TELEMETRY_AUTO) || defined(LCD_TELEMETRY_DEBUG)
+#if defined(LCD_TELEMETRY)
 static uint8_t telemetry = 0;
 static uint8_t telemetry_auto = 0;
 #endif
-
 // ******************
 // rc functions
 // ******************
@@ -596,6 +596,10 @@ void loop () {
   static int16_t errorAngleI[2] = {0,0};
   static uint32_t rcTime  = 0;
   static int16_t initialThrottleHold;
+  #ifdef LCD_TELEMETRY_STEP
+  static char telemetryStepSequence []  = LCD_TELEMETRY_STEP;
+  static uint8_t telemetryStepIndex = 0;
+  #endif
 
   #if defined(SPEKTRUM)
     if (rcFrameComplete) computeRC();
@@ -715,7 +719,14 @@ void loop () {
            } else
               telemetry_auto = 1;
         }
-     #endif
+      #endif
+      #ifdef LCD_TELEMETRY_STEP
+      } else if (rcData[ROLL] > MAXCHECK && rcData[PITCH] > MAXCHECK && !f.ARMED) {
+        if (rcDelayCommand == 20) {
+          telemetry = telemetryStepSequence[++telemetryStepIndex % strlen(telemetryStepSequence)];
+          LCDclear(); // make sure to clear away remnants
+        }
+      #endif
       } else
         rcDelayCommand = 0;
     } else if (rcData[THROTTLE] > MAXCHECK && !f.ARMED) {

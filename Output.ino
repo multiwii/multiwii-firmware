@@ -1141,7 +1141,7 @@ void mixTable() {
     if (vbat) { // by all means - must avoid division by zero 
       for (i =0;i<NUMBER_MOTOR;i++) {
         amp = amperes[ ((motor[i] - 1000)>>4) ] / vbat; // range mapped from [1000:2000] => [0:1000]; then break that up into 64 ranges; lookup amp
-  	  #if (LOG_VALUES == 2)
+  	    #if (LOG_VALUES == 2)
            pMeter[i]+= amp; // sum up over time the mapped ESC input 
         #endif
         #if defined(POWERMETER_SOFT)
