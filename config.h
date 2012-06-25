@@ -35,6 +35,8 @@
     //#define FLYING_WING
     //#define VTAIL4
     //#define AIRPLANE     // Howto setup =>>>http://fotoflygarn.blogspot.com/2012/03/how-to-setup-multiwii-airplane-same.html
+    //#define SINGLECOPTER // http://www.youtube.com/watch?v=pKFygrGKSUQ
+    //#define DUALCOPTER   // request from  xuant9 Function must be confirmed.
     //*******************************************************
     // Heli is  beta test ......!
     // Howto setup =>>> http://fotoflygarn.blogspot.se/2012/04/multiwii-helicopter.html
@@ -263,8 +265,19 @@
 	
     // Limit Maximum controll for Roll & Nick  in 0-100%
     #define CONTROLL_RANGE   { 100, 100 }      //  { ROLL,PITCH }
-
-
+    
+  //*************************** !!!!  Single and DualCopter Settings  !!!!*************************//
+    // Change to -1 to reverse servomovement per axis
+    
+    // Servosettings for SingleCopter....    
+    #define SINGLECOPTRER_YAW   {1, 1, 1, 1} // Left, Right,Front,Rear
+    #define SINGLECOPTRER_SERVO {1,-1, 1,-1} // Pitch,Pitch,Roll, Roll    
+  
+    // Servosettings for DualCopter.....
+     #define DUALCOPTER_SERVO {1,1} //Pitch,Roll
+    
+    // Use  SERVO_OFFSET and SERVO_RATES in Heli and Airplane section for centering and endpoints.
+    
 /*************************************************************************************************/
 /*****************                                                                 ***************/
 /****************  SECTION  3 - ALTERNATE CPUs & BOARDS                                    *******/

@@ -926,7 +926,7 @@
   #define MULTITYPE 12   //12  for MultiWinGui
 #elif defined(OCTOFLATX)
   #define MULTITYPE 13   //13  for MultiWinGui 
-#elif defined(AIRPLANE)    
+#elif defined(AIRPLANE)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)    
   #define MULTITYPE 14    
 #elif defined (HELI_120_CCPM)   
   #define MULTITYPE 15      
@@ -939,11 +939,11 @@
 /**************************************************************************************/
 /***************          Some unsorted "chain" defines            ********************/
 /**************************************************************************************/
-#if defined (AIRPLANE) || defined(FLYING_WING)
+#if defined (AIRPLANE) || defined(FLYING_WING)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)
   #define FIXEDWING
 #endif
 
-#if defined (AIRPLANE) || defined(HELICOPTER) && defined(PROMINI) 
+#if defined (AIRPLANE) || defined(HELICOPTER)|| defined(SINGLECOPTER)|| defined(DUALCOPTER) && defined(PROMINI) 
   #if defined(D12_POWER)
     #define SERVO_4_PINMODE            ;  // D12
     #define SERVO_4_PIN_HIGH           ;
@@ -988,7 +988,7 @@
 /**************************************************************************************/
 /***************             motor and servo numbers               ********************/
 /**************************************************************************************/
-#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(AIRPLANE) || defined(CAMTRIG) || defined(HELICOPTER) || defined(SERVO_MIX_TILT)
+#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(AIRPLANE) || defined(CAMTRIG) || defined(HELICOPTER) || defined(SERVO_MIX_TILT)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)
   #define SERVO
 #endif
 
@@ -1000,6 +1000,16 @@
   #define NUMBER_MOTOR     1
   #define PRI_SERVO_FROM   1 // use servo from 1 to 2
   #define PRI_SERVO_TO     2
+  
+#elif defined(SINGLECOPTER)
+  #define NUMBER_MOTOR     1
+  #define PRI_SERVO_FROM   4 // use servo from 4 to 7
+  #define PRI_SERVO_TO     7
+#elif defined(DUALCOPTER)
+  #define NUMBER_MOTOR     2
+  #define PRI_SERVO_FROM   4 // use servo from 5 to 6
+  #define PRI_SERVO_TO     6
+  
 #elif defined(AIRPLANE)
   #define NUMBER_MOTOR     0
     #if defined(FLAPS) 

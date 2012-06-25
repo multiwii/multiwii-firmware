@@ -232,7 +232,7 @@ static struct {
   #ifdef TRI
     uint16_t tri_yaw_middle;
   #endif
-  #if defined HELICOPTER || defined(AIRPLANE)
+  #if defined HELICOPTER || defined(AIRPLANE)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)
     int16_t servoTrim[8];
   #endif
   #if defined(GYRO_SMOOTHING)

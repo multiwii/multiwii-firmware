@@ -881,7 +881,7 @@ void mixTable() {
   #endif
   
   /************************************************************************************************************/
-  #if defined(AIRPLANE)
+  #if defined(AIRPLANE) || defined(SINGLECOPTER) || defined(DUALCOPTER)
     // Common parts for Plane and Heli
     static int16_t   servoMid[8];                        // Midpoint on servo
     static uint8_t   servoTravel[8] = SERVO_RATES;       // Rates in 0-100% 
@@ -936,19 +936,56 @@ void mixTable() {
       #endif
       servo[2]    =  servoMid[2]+(slow_LFlaps *servoReverse[2]);
     #endif
-
+    
+    #if defined(AIRPLANE)
     if(f.PASSTHRU_MODE){   // Direct passthru from RX 
       servo[3]  = servoMid[3]+((rcCommand[ROLL] + flapperons[0]) *servoReverse[3]);     //   Wing 1
       servo[4]  = servoMid[4]+((rcCommand[ROLL] + flapperons[1]) *servoReverse[4]);     //   Wing 2
       servo[5]  = servoMid[5]+(rcCommand[YAW]                    *servoReverse[5]);     //   Rudder
       servo[6]  = servoMid[6]+(rcCommand[PITCH]                  *servoReverse[6]);     //   Elevator 
     }else{
+	
       // Assisted modes (gyro only or gyro+acc according to AUX configuration in Gui
       servo[3]  =(servoMid[3] + ((axisPID[ROLL] + flapperons[0]) *servoReverse[3]));   //   Wing 1 
       servo[4]  =(servoMid[4] + ((axisPID[ROLL] + flapperons[1]) *servoReverse[4]));   //   Wing 2
       servo[5]  =(servoMid[5] + (axisPID[YAW]                    *servoReverse[5]));   //   Rudder
-      servo[6]  =(servoMid[6] + (axisPID[PITCH]                  *servoReverse[6]));   //   Elevator
-    } 
+      servo[6]  =(servoMid[6] + (axisPID[PITCH]                  *servoReverse[6]));   //   Elevator	 
+    }  
+    #endif
+/*************************************************************************************************************************/
+/*************************************************************************************************************************/
+/******************                   Development of single & DualCopter                            **********************/
+/*************************************************************************************************************************/
+/*************************************************************************************************************************/
+    #if  defined(SINGLECOPTER)
+    int8_t yawServo[4] =SINGLECOPTRER_YAW;
+    int8_t scServo[4]  =SINGLECOPTRER_SERVO;
+    // Singlecopter  
+    // This is a beta requested by  xuant9
+    // Assisted modes (gyro only or gyro+acc according to AUX configuration in Gui
+    // http://www.kkmulticopter.kr/multicopter/images/blue_single.jpg
+      servo[3]  = servoMid[3] + (axisPID[YAW]*yawServo[0]) + (axisPID[PITCH]*scServo[0])  ;   //   SideServo  5  D12
+      servo[4]  = servoMid[4] + (axisPID[YAW]*yawServo[1]) + (axisPID[PITCH]*scServo[1])  ;   //   SideServo  3  D11
+      servo[5]  = servoMid[5] + (axisPID[YAW]*yawServo[2]) + (axisPID[ROLL] *scServo[2])  ;   //   FrontServo 2  D3
+      servo[6]  = servoMid[6] + (axisPID[YAW]*yawServo[3]) + (axisPID[ROLL] *scServo[3])  ;   //   RearServo  4  D10
+      motor[1]  = rcData[THROTTLE] ;                                                          //  Pin D10
+    #endif 
+    #if  defined(DUALCOPTER)
+     int8_t dcServo[2]  =DUALCOPTER_SERVO;
+    // Dualcopter  
+    // This is a beta requested by  xuant9
+    // Assisted modes (gyro only or gyro+acc according to AUX configuration in Gui
+    //http://www.kkmulticopter.kr/products_pic/index.html?sn=multicopter_v02_du&name=KKMultiCopter%20Flight%20Controller%20Blackboard%3Cbr%3E
+      servo[5]  = servoMid[5] + (axisPID[PITCH] * dcServo[0]) ;  //  PITCHServo 3  D12
+      servo[6]  = servoMid[6] + (axisPID[ROLL]  * dcServo[1]) ;  //  ROLLServo  4  D11
+      motor[0] = PIDMIX(0,0,-1);                                 //  Pin D9
+      motor[1] = PIDMIX(0,0,+1);                                 //  Pin D10
+    #endif	
+
+/*************************************************************************************************************************/ 
+/*************************************************************************************************************************/ 
+/*************************************************************************************************************************/ 
+/*************************************************************************************************************************/    
     // ServoRates
     for(i=3;i<8;i++){
       servo[i]  = map(servo[i], SERVO_MIN, SERVO_MAX,servoLimit[i][0],servoLimit[i][1]);

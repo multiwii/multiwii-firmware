@@ -84,7 +84,7 @@ void checkFirstTime() {
   #ifdef TRI
     conf.tri_yaw_middle = TRI_YAW_MIDDLE;
   #endif
-  #if defined HELICOPTER || defined(AIRPLANE)
+  #if defined HELICOPTER || defined(AIRPLANE)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)
     {
       int16_t s[8] = SERVO_OFFSET;
       for(uint8_t i=0;i<8;i++) conf.servoTrim[i] = s[i];
