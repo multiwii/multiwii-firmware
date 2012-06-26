@@ -118,6 +118,7 @@ void serialCom() {
 
     if (c_state == IDLE) {
       c_state = (c=='$') ? HEADER_START : IDLE;
+      if (c_state == IDLE) evaluateOtherData(c); // evaluate all other incoming serial data
     } else if (c_state == HEADER_START) {
       c_state = (c=='M') ? HEADER_M : IDLE;
     } else if (c_state == HEADER_M) {
@@ -344,6 +345,54 @@ void evaluateCommand() {
   #endif
 }
 
+// evaluate all other incoming serial data
+void evaluateOtherData(uint8_t sr) {
+  switch (sr) {
+    #ifdef LCD_CONF
+    case 's':
+    case 'S':
+      configurationLoop();
+      break;
+    #endif
+    #ifdef LCD_TELEMETRY
+    case 'A': // button A press
+      toggle_telemetry(1);
+      break;
+    case 'B': // button B press
+      toggle_telemetry(2);
+      break;
+    case 'C': // button C press
+      toggle_telemetry(3);
+      break;
+    case 'D': // button D press
+      toggle_telemetry(4);
+      break;
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+    #if defined(LOG_VALUES) && defined(DEBUG)
+    case 'R':
+    #endif
+    #ifdef DEBUG
+    case 'F':
+    #endif
+      toggle_telemetry(sr);
+      break;
+    case 'a': // button A release
+    case 'b': // button B release
+    case 'c': // button C release
+    case 'd': // button D release
+      break;
+    #endif // LCD_TELEMETRY
+  }
+}
+
 // *******************************************************
 // For Teensy 2.0, these function emulate the API used for ProMicro
 // it cant have the same name as in the arduino API because it wont compile for the promini (eaven if it will be not compiled)
@@ -413,7 +462,7 @@ static void inline SerialOpen(uint8_t port, uint32_t baud) {
     #if !defined(PROMICRO)
     case 0: UCSR0A  = (1<<U2X0); UBRR0H = h; UBRR0L = l; UCSR0B |= (1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0); break;
     #else
-      #if (ARDUINO > 100) && !defined(TEENSY20)
+      #if (ARDUINO >= 100) && !defined(TEENSY20)
         case 0: UDIEN &= ~(1<<SOFE); // disable the USB frame interrupt of arduino (it causes strong jitter and we dont need it)
       #endif
     #endif
@@ -468,7 +517,7 @@ uint8_t SerialRead(uint8_t port) {
      #if defined(TEENSY20)
       if(port == 0) return Serial.read();
     #else
-      #if (ARDUINO > 100)
+      #if (ARDUINO >= 100)
         USB_Flush(USB_CDC_TX);
       #endif
       if(port == 0) return USB_Recv(USB_CDC_RX);      
