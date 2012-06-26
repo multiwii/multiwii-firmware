@@ -1118,11 +1118,7 @@ static uint8_t lcdStickState[3];
 #define IsHigh(x) (lcdStickState[x] & 0x2)
 #define IsMid(x)  (!lcdStickState[x])
 
-/* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
-#define LCD_MENU_PREV 'a'
-#define LCD_MENU_NEXT 'c'
-#define LCD_VALUE_UP 'd'
-#define LCD_VALUE_DOWN 'b'
+
 /* ------------ DISPLAY_2LINES ------------------------------------*/
 #ifdef DISPLAY_2LINES
 void ConfigRefresh(uint8_t p) {
@@ -1205,8 +1201,8 @@ void configurationLoop() {
     if (key == LCD_MENU_NEXT) key=LCD_VALUE_UP; else key = LCD_MENU_NEXT;
 #endif
     for (i = ROLL; i < THROTTLE; i++) {uint16_t Tmp = readRawRC(i); lcdStickState[i] = (Tmp < MINCHECK) | ((Tmp > MAXCHECK) << 1);};
-    if (IsLow(YAW) && IsHigh(PITCH)) LCD = 0; // save and exit
-    else if (IsHigh(YAW) && IsHigh(PITCH)) LCD = 2;// exit without save: eeprom has only 100.000 write cycles
+    if (key == LCD_MENU_SAVE_EXIT || (IsLow(YAW) && IsHigh(PITCH))) LCD = 0; // save and exit
+    else if (key == LCD_MENU_ABORT || (IsHigh(YAW) && IsHigh(PITCH))) LCD = 2;// exit without save: eeprom has only 100.000 write cycles
     else if (key == LCD_MENU_NEXT || (IsLow(PITCH))) { //switch config param with pitch
       refreshLCD = 1; p++; if (p>PARAMMAX) p = 0;
     } else if (key == LCD_MENU_PREV || (IsHigh(PITCH))) {

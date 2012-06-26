@@ -636,6 +636,9 @@
       #define LCD_VALUE_UP 'd'
       #define LCD_VALUE_DOWN 'b'
 
+      #define LCD_MENU_SAVE_EXIT 's'
+      #define LCD_MENU_ABORT 'x'
+
     /* To use an LCD03 for configuration:
        http://www.robot-electronics.co.uk/htm/Lcd03tech.htm
        Remove the jumper on its back to set i2c control.
