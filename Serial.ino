@@ -38,6 +38,7 @@ static uint8_t inBuf[INBUF_SIZE];
 #define MSP_MOTOR_PINS           115   //out message         which pins are in use for motors & servos, for GUI 
 #define MSP_BOXNAMES             116   //out message         the aux switch names
 #define MSP_PIDNAMES             117   //out message         the PID names
+#define MSP_WP                   118   //out message         get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
 
 #define MSP_SET_RAW_RC           200   //in message          8 rc chan
 #define MSP_SET_RAW_GPS          201   //in message          fix, numsat, lat, lon, alt, speed
@@ -48,6 +49,7 @@ static uint8_t inBuf[INBUF_SIZE];
 #define MSP_MAG_CALIBRATION      206   //in message          no param
 #define MSP_SET_MISC             207   //in message          powermeter trig + 8 free for future use
 #define MSP_RESET_CONF           208   //in message          no param
+#define MSP_WP_SET               209   //in message          sets a given WP (WP#,lat, lon, alt, flags)
 
 #define MSP_EEPROM_WRITE         250   //in message          no param
 
@@ -312,6 +314,30 @@ void evaluateCommand() {
        serialize8(PWM_PIN[i]);
      }
      break;
+
+#if defined(USE_MSP_WP)    
+   case MSP_WP:
+     {
+      uint8_t wp_no = read8();    //get the wp number  
+      headSerialReply(12);
+      if (wp_no == 0) {
+        serialize8(0);                   //wp0
+        serialize32(GPS_home[LAT]);
+        serialize32(GPS_home[LON]);
+        serialize16(0);                  //altitude will come here 
+        serialize8(0);                   //nav flag will come here
+      } else if (wp_no == 16)
+      {
+        serialize8(16);                  //wp16
+        serialize32(GPS_hold[LAT]);
+        serialize32(GPS_hold[LON]);
+        serialize16(0);                  //altitude will come here 
+        serialize8(0);                   //nav flag will come here
+      } 
+     }
+     break;  
+#endif	 
+	 
    case MSP_RESET_CONF:
      conf.checkNewConf++;
      checkFirstTime();

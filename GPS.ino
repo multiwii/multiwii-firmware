@@ -461,8 +461,12 @@ void GPS_set_pids() {
   GPS_I2C_command(I2C_GPS_COMMAND_UPDATE_PIDS,0);
   
   uint8_t nav_flags = 0;
-  if (GPS_FILTERING)          nav_flags += I2C_NAV_FLAG_GPS_FILTER;
-  if (GPS_LOW_SPEED_D_FILTER) nav_flags += I2C_NAV_FLAG_LOW_SPEED_D_FILTER; 
+  #if defined(GPS_FILTERING)
+    nav_flags += I2C_NAV_FLAG_GPS_FILTER;
+  #endif 
+  #if defined(GPS_LOW_SPEED_D_FILTER)
+    nav_flags += I2C_NAV_FLAG_LOW_SPEED_D_FILTER; 
+  #endif
   
   i2c_rep_start(I2C_GPS_ADDRESS<<1);
     i2c_write(I2C_GPS_NAV_FLAGS);

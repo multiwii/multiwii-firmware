@@ -583,6 +583,9 @@
     /* GPS data readed from OSD -- still need some more code to work */
     //#define GPS_FROM_OSD
 
+	//#define USE_MSP_WP           //Enables the MSP_WP command, which is used by WinGUI to display and log Home and Poshold positions
+                                   //Uncomment it if you are planning to use WinGUI - Will cost +208 bytes of Flash
+	
     /* GPS navigation can control the heading */
     
     #define NAV_CONTROLS_HEADING       true      // copter faces toward the navigation point, maghold must be enabled for it
@@ -594,8 +597,8 @@
     //Convert the degree+minutes into decimal degree by ==> degree+minutes*(1/60)
     //Note the sign on declination it could be negative or positive (WEST or EAST)
     
-    #define GPS_FILTERING              true      // add a 5 element moving average filter to GPS coordinates, helps eliminate gps noise but adds latency
-    #define GPS_LOW_SPEED_D_FILTER     true      // below .5m/s speed ignore D term for POSHOLD_RATE, theoretically this also removed D term induced noise
+    #define GPS_FILTERING                    // add a 5 element moving average filter to GPS coordinates, helps eliminate gps noise but adds latency comment out to disable
+    #define GPS_LOW_SPEED_D_FILTER           // below .5m/s speed ignore D term for POSHOLD_RATE, theoretically this also removed D term induced noise commnent out to disable
     #define GPS_WP_RADIUS              200       // if we are within this distance to a waypoint then we consider it reached (distance is in cm)
     #define NAV_SLEW_RATE              30        // Adds a rate control to nav output, will smoothen out nav angle spikes
 
