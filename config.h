@@ -265,6 +265,10 @@
 	
     // Limit Maximum controll for Roll & Nick  in 0-100%
     #define CONTROLL_RANGE   { 100, 100 }      //  { ROLL,PITCH }
+
+    // use servo code to drive the throttle output. You want this for analog servo driving the throttle on IC engines.
+    // if inactive, throttle output will be treated as a motor output, so it can drive an ESC
+    //#define HELI_USE_SERVO_FOR_THROTTLE
     
   //*************************** !!!!  Single and DualCopter Settings  !!!!*************************//
     // Change to -1 to reverse servomovement per axis

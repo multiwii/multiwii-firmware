@@ -1078,6 +1078,9 @@ void mixTable() {
       if (YAWMOTOR && rcData[THROTTLE] < MINTHROTTLE){servo[5] =  MINCOMMAND;}
       else{ servo[5] =  yawControll; }     // YawSero	 
     }
+    #ifndef HELI_USE_SERVO_FOR_THROTTLE
+      motor[0] = servo[7]; // use real motor output - ESC capable
+    #endif
 
 
   //              ( Collective, Pitch/Nick, Roll ) Change sign to invert

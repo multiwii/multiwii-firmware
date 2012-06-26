@@ -1049,9 +1049,15 @@
 #elif defined(OCTOX8) || defined(OCTOFLATP) || defined(OCTOFLATX)
   #define NUMBER_MOTOR     8
 #elif defined(HELICOPTER)
-  #define NUMBER_MOTOR     0
-  #define PRI_SERVO_FROM   4 // use servo from 4 to 8
-  #define PRI_SERVO_TO     8
+  #ifdef HELI_USE_SERVO_FOR_THROTTLE
+    #define NUMBER_MOTOR     0 // use servo to drive throttle output
+    #define PRI_SERVO_FROM   4 // use servo from 4 to 8
+    #define PRI_SERVO_TO     8
+  #else
+    #define NUMBER_MOTOR     1 // use 1 motor for throttle
+    #define PRI_SERVO_FROM   4 // use servo from 4 to 7
+    #define PRI_SERVO_TO     7
+  #endif
 #endif
 
 
