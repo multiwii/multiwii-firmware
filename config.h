@@ -811,6 +811,14 @@
        for use with digital servos
        dont use it with analog servos! thay may get damage. (some will work but be careful)*/
     //#define SERVO_RFR_300HZ
+    
+  /***********************             HW PWM Servos             ***********************/ 
+    /* HW PWM Gimbal for Arduino Mega.. moves:*/
+    //Pitch = pin 44
+    //Roll  = pin 45
+    // this reduces the PWM resolution for all other servos to 8 bit
+
+    //#define MEGA_HW_GIMBAL
 
   /********************************************************************/
   /****           IMU complimentary filter tuning                  ****/

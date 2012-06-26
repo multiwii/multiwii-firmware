@@ -1065,8 +1065,10 @@
       #define SEC_SERVO_FROM   3 // use servo from 3 to 4
       #define SEC_SERVO_TO     4
     #else
-      #define SEC_SERVO_FROM   1 // use servo from 1 to 2
-      #define SEC_SERVO_TO     2
+      #if !defined(MEGA_HW_GIMBAL) // if HW Gimbal is active we dont need the SW PWM defines
+        #define SEC_SERVO_FROM   1 // use servo from 1 to 2
+        #define SEC_SERVO_TO     2
+      #endif
     #endif
   #endif
   #if defined(CAMTRIG)
