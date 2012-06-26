@@ -345,10 +345,13 @@ void evaluateCommand() {
 // evaluate all other incoming serial data
 void evaluateOtherData(uint8_t sr) {
   switch (sr) {
+  // Note: we may receive weird characters here which could trigger unwanted features during flight.
+  //       this could lead to a crash easily.
+  //       Please use if (!f.ARMED) where neccessary
     #ifdef LCD_CONF
     case 's':
     case 'S':
-      configurationLoop();
+      if (!f.ARMED) configurationLoop();
       break;
     #endif
     #ifdef LCD_TELEMETRY
