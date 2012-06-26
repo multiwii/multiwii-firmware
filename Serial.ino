@@ -340,9 +340,6 @@ void evaluateCommand() {
      break;
   }
   tailSerialReply();
-  #if !defined(PROMICRO)
-    UCSR0B |= (1<<UDRIE0); // enable transmitter UDRE interrupt if deactivacted
-  #endif
 }
 
 // evaluate all other incoming serial data
@@ -452,6 +449,8 @@ void UartSendData() {
         Serial.write(p,1);
       #endif
     }
+  #else
+    UCSR0B |= (1<<UDRIE0); // enable transmitter UDRE interrupt if deactivacted
   #endif
 }
 
