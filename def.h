@@ -767,6 +767,19 @@
   #undef INTERNAL_I2C_PULLUPS
 #endif
 
+#if defined(PROTO_DIY)
+  #define ITG3200
+  #define BMA180
+  #define HMC5883
+  #define MS561101BA
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = X; accADC[PITCH]  = Y; accADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = X; gyroADC[PITCH] = Y; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = X; magADC[PITCH]  = Y; magADC[YAW]  = -Z;}
+  #undef INTERNAL_I2C_PULLUPS
+  #define STABLEPIN_ON               PORTC &= ~(1<<6);
+  #define STABLEPIN_OFF              PORTC |= 1<<6;
+#endif
+
 #if defined(IOI_MINI_MULTIWII)
   #define ITG3200
   #define BMA180

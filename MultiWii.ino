@@ -45,18 +45,14 @@ March  2012     V2.0
 #define BOXPASSTHRU  8
 #define BOXHEADFREE  9
 #define BOXBEEPERON  10
-/* we want maximum illumination */
-#define BOXLEDMAX    11
-/* enable landing lights at any altitude */
-#define BOXLLIGHTS   12
-/* acquire heading for HEADFREE mode */
-#define BOXHEADADJ   13
+#define BOXLEDMAX    11 // we want maximum illumination
+#define BOXLLIGHTS   12 // enable landing lights at any altitude
+#define BOXHEADADJ   13 // acquire heading for HEADFREE mode
 
 #define PIDITEMS 10
 #define CHECKBOXITEMS 14
 
-/* names for dynamic generation of config GUI */
-const char boxnames[] PROGMEM =
+const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
   "ACC;"
   "BARO;"
   "MAG;"
@@ -104,7 +100,7 @@ static int16_t  BaroPID = 0;
 static int32_t  AltHold;
 static int16_t  errorAltitudeI = 0;
 #if defined(BUZZER)
-static uint8_t  toggleBeep = 0;
+  static uint8_t  toggleBeep = 0;
 #endif
 static int16_t  debug[4];
 static int16_t  sonarAlt; //to think about the unit
@@ -130,12 +126,12 @@ struct flags_struct {
 
 //for log
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY)
-static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
-static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
-static uint16_t powerMax = 0;           // highest ever current
-static uint32_t armedTime = 0;
-static int32_t  BAROaltStart = 0;       // offset value from powerup
-static int32_t	BAROaltMax = 0;	        // maximum value
+  static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
+  static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
+  static uint16_t powerMax = 0;           // highest ever current
+  static uint32_t armedTime = 0;
+  static int32_t  BAROaltStart = 0;       // offset value from powerup
+  static int32_t	BAROaltMax = 0;	        // maximum value
 #endif
 
 static int16_t  i2c_errors_count = 0;
@@ -145,11 +141,11 @@ static int16_t  annex650_overrun_count = 0;
 //Automatic ACC Offset Calibration
 // **********************
 #if defined(INFLIGHT_ACC_CALIBRATION)
-static uint16_t InflightcalibratingA = 0;
-static int16_t AccInflightCalibrationArmed;
-static uint16_t AccInflightCalibrationMeasurementDone = 0;
-static uint16_t AccInflightCalibrationSavetoEEProm = 0;
-static uint16_t AccInflightCalibrationActive = 0;
+  static uint16_t InflightcalibratingA = 0;
+  static int16_t AccInflightCalibrationArmed;
+  static uint16_t AccInflightCalibrationMeasurementDone = 0;
+  static uint16_t AccInflightCalibrationSavetoEEProm = 0;
+  static uint16_t AccInflightCalibrationActive = 0;
 #endif
 
 // **********************
@@ -157,10 +153,10 @@ static uint16_t AccInflightCalibrationActive = 0;
 // **********************
 #if defined(POWERMETER)
 #define PMOTOR_SUM 8                     // index into pMeter[] for sum
-static uint32_t pMeter[PMOTOR_SUM + 1];  // we use [0:7] for eight motors,one extra for sum
-static uint8_t pMeterV;                  // dummy to satisfy the paramStruct logic in ConfigurationLoop()
-static uint32_t pAlarm;                  // we scale the eeprom value from [0:255] to this value we can directly compare to the sum in pMeter[6]
-static uint16_t powerValue = 0;          // last known current
+  static uint32_t pMeter[PMOTOR_SUM + 1];  // we use [0:7] for eight motors,one extra for sum
+  static uint8_t pMeterV;                  // dummy to satisfy the paramStruct logic in ConfigurationLoop()
+  static uint32_t pAlarm;                  // we scale the eeprom value from [0:255] to this value we can directly compare to the sum in pMeter[6]
+  static uint16_t powerValue = 0;          // last known current
 #endif
 static uint16_t intPowerMeterSum, intPowerTrigger1;
 
@@ -168,8 +164,8 @@ static uint16_t intPowerMeterSum, intPowerTrigger1;
 // telemetry
 // **********************
 #if defined(LCD_TELEMETRY)
-static uint8_t telemetry = 0;
-static uint8_t telemetry_auto = 0;
+  static uint8_t telemetry = 0;
+  static uint8_t telemetry_auto = 0;
 #endif
 // ******************
 // rc functions
@@ -187,7 +183,7 @@ static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 volatile uint8_t rcFrameComplete; // for serial rc receiver Spektrum
 
 #if defined(OPENLRSv2MULTI)
-static uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim or other usages
+  static uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim or other usages
 #endif
 
 // **************
@@ -203,7 +199,7 @@ static int16_t angle[2]    = {0,0};  // absolute angle inclination in multiple o
 static int16_t axisPID[3];
 static int16_t motor[NUMBER_MOTOR];
 #if defined(SERVO)
-static int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1500};
+  static int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1500};
 #endif
 
 // ************************
@@ -597,8 +593,8 @@ void loop () {
   static uint32_t rcTime  = 0;
   static int16_t initialThrottleHold;
   #ifdef LCD_TELEMETRY_STEP
-  static char telemetryStepSequence []  = LCD_TELEMETRY_STEP;
-  static uint8_t telemetryStepIndex = 0;
+    static char telemetryStepSequence []  = LCD_TELEMETRY_STEP;
+    static uint8_t telemetryStepIndex = 0;
   #endif
 
   #if defined(SPEKTRUM)
@@ -767,7 +763,7 @@ void loop () {
     #if defined(INFLIGHT_ACC_CALIBRATION)
       if (AccInflightCalibrationArmed && f.ARMED && rcData[THROTTLE] > MINCHECK && !rcOptions[BOXARM] ){ // Copter is airborne and you are turning it off via boxarm : start measurement
         InflightcalibratingA = 50;
-        AccInflightCalibrationArmed = 0;  
+        AccInflightCalibrationArmed = 0;
       }  
       if (rcOptions[BOXPASSTHRU]) {      // Use the Passthru Option to activate : Passthru = TRUE Meausrement started, Land and passtrhu = 0 measurement stored
         if (!AccInflightCalibrationActive && !AccInflightCalibrationMeasurementDone){
@@ -779,10 +775,9 @@ void loop () {
       }
     #endif
 
-    uint16_t auxState = (rcData[AUX1]<1300)    | (1300<rcData[AUX1] && rcData[AUX1]<1700)<<1 | (rcData[AUX1]>1700)<<2
-                       |(rcData[AUX2]<1300)<<3 | (1300<rcData[AUX2] && rcData[AUX2]<1700)<<4 | (rcData[AUX2]>1700)<<5
-                       |(rcData[AUX3]<1300)<<6 | (1300<rcData[AUX3] && rcData[AUX3]<1700)<<7 | (rcData[AUX3]>1700)<<8
-                       |(rcData[AUX4]<1300)<<9 | (1300<rcData[AUX4] && rcData[AUX4]<1700)<<10| (rcData[AUX4]>1700)<<11;
+    uint16_t auxState = 0;
+    for(i=0;i<4;i++)
+      auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
       rcOptions[i] = (auxState & conf.activate[i])>0;
 

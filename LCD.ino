@@ -20,7 +20,7 @@ unsigned char CHAR_FORMAT = 0;      // use to INVERSE characters
 // use INVERSE    CHAR_FORMAT = 0b01111111;
 // use NORMAL     CHAR_FORMAT = 0;
 static char buffer; // buffer to read bytes from ROM, using pgm_read_byte macro. NB! avr/pgmspace.h must be included prog_uchar LOGO[] PROGMEM = {  // My first attempt to flash a logo....
-prog_uchar LOGO[] PROGMEM = { // logo....
+const uint8_t PROGMEM LOGO[] = { // logo....
     0x00, 0x00, 0x02, 0xFE, 0xFE, 0x0E, 0xFC, 0xF8, 0xC0, 0x00, 0xC0, 0xF8, 0xFC, 0x0E, 0xFE, 0xFE,
     0xFE, 0x02, 0x00, 0x00, 0x30, 0xF0, 0xF0, 0x00, 0x00, 0x00, 0x30, 0xF0, 0xF0, 0x00, 0x00, 0x00,
     0x02, 0xFE, 0xFE, 0x00, 0x00, 0x00, 0x30, 0xF8, 0xFE, 0x30, 0x30, 0x30, 0x00, 0x00, 0x30, 0xF6,
@@ -88,7 +88,7 @@ prog_uchar LOGO[] PROGMEM = { // logo....
 
 };
 
-prog_uchar myFont[][6] PROGMEM = { // Refer to "Times New Roman" Font Database... 5 x 7 font
+const uint8_t PROGMEM myFont[][6] = { // Refer to "Times New Roman" Font Database... 5 x 7 font
   { 0x00,0x00,0x00,0x00,0x00,0x00},
   { 0x00,0x00,0x4F,0x00,0x00,0x00}, //   (  1)  ! - 0x0021 Exclamation Mark
   { 0x00,0x07,0x00,0x07,0x00,0x00}, //   (  2)  " - 0x0022 Quotation Mark
@@ -731,114 +731,114 @@ static lcd_param_def_t __AUX4 = {&LAUX4, 0, 1, 512};
 
 // Program Space Strings - These sit in program flash, not SRAM.
 //                                       0123456789
-PROGMEM prog_char lcd_param_text01 [] = "Pit&Roll P";
-PROGMEM prog_char lcd_param_text02 [] = "Roll     P";
-PROGMEM prog_char lcd_param_text03 [] = "Roll     I";
-PROGMEM prog_char lcd_param_text04 [] = "Roll     D";
-PROGMEM prog_char lcd_param_text05 [] = "Pitch    P";
-PROGMEM prog_char lcd_param_text06 [] = "Pitch    I";
-PROGMEM prog_char lcd_param_text07 [] = "Pitch    D";
-PROGMEM prog_char lcd_param_text08 [] = "Yaw      P";
-PROGMEM prog_char lcd_param_text09 [] = "Yaw      I";
-PROGMEM prog_char lcd_param_text10 [] = "Yaw      D";
+const char PROGMEM lcd_param_text01 [] = "Pit&Roll P";
+const char PROGMEM lcd_param_text02 [] = "Roll     P";
+const char PROGMEM lcd_param_text03 [] = "Roll     I";
+const char PROGMEM lcd_param_text04 [] = "Roll     D";
+const char PROGMEM lcd_param_text05 [] = "Pitch    P";
+const char PROGMEM lcd_param_text06 [] = "Pitch    I";
+const char PROGMEM lcd_param_text07 [] = "Pitch    D";
+const char PROGMEM lcd_param_text08 [] = "Yaw      P";
+const char PROGMEM lcd_param_text09 [] = "Yaw      I";
+const char PROGMEM lcd_param_text10 [] = "Yaw      D";
 #if  BARO
-PROGMEM prog_char lcd_param_text11 [] = "Alt      P";
-PROGMEM prog_char lcd_param_text12 [] = "Alt      I";
-PROGMEM prog_char lcd_param_text13 [] = "Alt      D";
-PROGMEM prog_char lcd_param_text14 [] = "Vel      P";
-PROGMEM prog_char lcd_param_text15 [] = "Vel      I";
-PROGMEM prog_char lcd_param_text16 [] = "Vel      D";
+const char PROGMEM lcd_param_text11 [] = "Alt      P";
+const char PROGMEM lcd_param_text12 [] = "Alt      I";
+const char PROGMEM lcd_param_text13 [] = "Alt      D";
+const char PROGMEM lcd_param_text14 [] = "Vel      P";
+const char PROGMEM lcd_param_text15 [] = "Vel      I";
+const char PROGMEM lcd_param_text16 [] = "Vel      D";
 #endif
-PROGMEM prog_char lcd_param_text17 [] = "Level    P";
-PROGMEM prog_char lcd_param_text18 [] = "Level    I";
-PROGMEM prog_char lcd_param_text188[] = "Level    D";
+const char PROGMEM lcd_param_text17 [] = "Level    P";
+const char PROGMEM lcd_param_text18 [] = "Level    I";
+const char PROGMEM lcd_param_text188[] = "Level    D";
 #if MAG
-PROGMEM prog_char lcd_param_text19 [] = "Mag      P";
+const char PROGMEM lcd_param_text19 [] = "Mag      P";
 #endif
-PROGMEM prog_char lcd_param_text20 [] = "RC Rate   ";
-PROGMEM prog_char lcd_param_text21 [] = "RC Expo   ";
-PROGMEM prog_char lcd_param_text20t [] = "Thrott Mid";
-PROGMEM prog_char lcd_param_text21t [] = "ThrottExpo";
-PROGMEM prog_char lcd_param_text22 [] = "P&R Rate  ";
-PROGMEM prog_char lcd_param_text23 [] = "Yaw Rate  ";
-PROGMEM prog_char lcd_param_text24 [] = "Thrott PID";
+const char PROGMEM lcd_param_text20 [] = "RC Rate   ";
+const char PROGMEM lcd_param_text21 [] = "RC Expo   ";
+const char PROGMEM lcd_param_text20t [] = "Thrott Mid";
+const char PROGMEM lcd_param_text21t [] = "ThrottExpo";
+const char PROGMEM lcd_param_text22 [] = "P&R Rate  ";
+const char PROGMEM lcd_param_text23 [] = "Yaw Rate  ";
+const char PROGMEM lcd_param_text24 [] = "Thrott PID";
 #ifdef LOG_VALUES
 #if (LOG_VALUES == 2)
-PROGMEM prog_char lcd_param_text25 [] = "pMeter  M0";
-PROGMEM prog_char lcd_param_text26 [] = "pMeter  M1";
-PROGMEM prog_char lcd_param_text27 [] = "pMeter  M2";
-PROGMEM prog_char lcd_param_text28 [] = "pMeter  M3";
-PROGMEM prog_char lcd_param_text29 [] = "pMeter  M4";
-PROGMEM prog_char lcd_param_text30 [] = "pMeter  M5";
-PROGMEM prog_char lcd_param_text31 [] = "pMeter  M6";
-PROGMEM prog_char lcd_param_text32 [] = "pMeter  M7";
+const char PROGMEM lcd_param_text25 [] = "pMeter  M0";
+const char PROGMEM lcd_param_text26 [] = "pMeter  M1";
+const char PROGMEM lcd_param_text27 [] = "pMeter  M2";
+const char PROGMEM lcd_param_text28 [] = "pMeter  M3";
+const char PROGMEM lcd_param_text29 [] = "pMeter  M4";
+const char PROGMEM lcd_param_text30 [] = "pMeter  M5";
+const char PROGMEM lcd_param_text31 [] = "pMeter  M6";
+const char PROGMEM lcd_param_text32 [] = "pMeter  M7";
 #endif //                                0123456789
 #endif
 #ifdef POWERMETER
-PROGMEM prog_char lcd_param_text33 [] = "pMeter Sum";
-PROGMEM prog_char lcd_param_text34 [] = "pAlarm /50"; // change text to represent PLEVELSCALE value
+const char PROGMEM lcd_param_text33 [] = "pMeter Sum";
+const char PROGMEM lcd_param_text34 [] = "pAlarm /50"; // change text to represent PLEVELSCALE value
 #endif
 #ifdef VBAT
-PROGMEM prog_char lcd_param_text35 [] = "Batt Volt ";
+const char PROGMEM lcd_param_text35 [] = "Batt Volt ";
 #endif
 #ifdef FLYING_WING
-PROGMEM prog_char lcd_param_text36 [] = "Trim Ser 1";
-PROGMEM prog_char lcd_param_text37 [] = "Trim Ser 2";
+const char PROGMEM lcd_param_text36 [] = "Trim Ser 1";
+const char PROGMEM lcd_param_text37 [] = "Trim Ser 2";
 #endif
 #ifdef TRI //                            0123456789
-PROGMEM prog_char lcd_param_text38 [] = "Trim Ser Y";
+const char PROGMEM lcd_param_text38 [] = "Trim Ser Y";
 #endif
 #ifdef LOG_VALUES
-PROGMEM prog_char lcd_param_text39 [] = "Failsafes ";
-PROGMEM prog_char lcd_param_text40 [] = "i2c Errors";
-PROGMEM prog_char lcd_param_text41 [] = "an overrun";
+const char PROGMEM lcd_param_text39 [] = "Failsafes ";
+const char PROGMEM lcd_param_text40 [] = "i2c Errors";
+const char PROGMEM lcd_param_text41 [] = "an overrun";
 #endif
 #if defined(LCD_CONF_AUX)
-PROGMEM prog_char lcd_param_text42 [] = "AUX level ";
-PROGMEM prog_char lcd_param_text43 [] = "AUX baro  ";
-PROGMEM prog_char lcd_param_text44 [] = "AUX mag   ";
-PROGMEM prog_char lcd_param_text45 [] = "AUX camstb";
-PROGMEM prog_char lcd_param_text46 [] = "AUX camtrg";
-PROGMEM prog_char lcd_param_text47 [] = "AUX arm   ";
-PROGMEM prog_char lcd_param_text48 [] = "AUX gpshom";
-PROGMEM prog_char lcd_param_text49 [] = "AUX gpshld";
-PROGMEM prog_char lcd_param_text50 [] = "AUX passth";
-PROGMEM prog_char lcd_param_text51 [] = "AUX headfr";
-PROGMEM prog_char lcd_param_text52 [] = "AUX beeper";
+const char PROGMEM lcd_param_text42 [] = "AUX level ";
+const char PROGMEM lcd_param_text43 [] = "AUX baro  ";
+const char PROGMEM lcd_param_text44 [] = "AUX mag   ";
+const char PROGMEM lcd_param_text45 [] = "AUX camstb";
+const char PROGMEM lcd_param_text46 [] = "AUX camtrg";
+const char PROGMEM lcd_param_text47 [] = "AUX arm   ";
+const char PROGMEM lcd_param_text48 [] = "AUX gpshom";
+const char PROGMEM lcd_param_text49 [] = "AUX gpshld";
+const char PROGMEM lcd_param_text50 [] = "AUX passth";
+const char PROGMEM lcd_param_text51 [] = "AUX headfr";
+const char PROGMEM lcd_param_text52 [] = "AUX beeper";
 // 53 to 61 reserved
 #endif
 #ifdef HELI_120_CCPM //                  0123456789
-PROGMEM prog_char lcd_param_text73 [] = "Trim Ser N";
-PROGMEM prog_char lcd_param_text74 [] = "Trim Ser L";
-PROGMEM prog_char lcd_param_text75 [] = "Trim Ser T";
-PROGMEM prog_char lcd_param_text76 [] = "Trim Ser R";
+const char PROGMEM lcd_param_text73 [] = "Trim Ser N";
+const char PROGMEM lcd_param_text74 [] = "Trim Ser L";
+const char PROGMEM lcd_param_text75 [] = "Trim Ser T";
+const char PROGMEM lcd_param_text76 [] = "Trim Ser R";
 #endif
 #ifdef GYRO_SMOOTHING //                 0123456789
-PROGMEM prog_char lcd_param_text80 [] = "Gsmooth R ";
-PROGMEM prog_char lcd_param_text81 [] = "Gsmooth P ";
-PROGMEM prog_char lcd_param_text82 [] = "Gsmooth Y ";
+const char PROGMEM lcd_param_text80 [] = "Gsmooth R ";
+const char PROGMEM lcd_param_text81 [] = "Gsmooth P ";
+const char PROGMEM lcd_param_text82 [] = "Gsmooth Y ";
 #endif
 #ifdef AIRPLANE //                       0123456789
-PROGMEM prog_char lcd_param_text83 [] = "ServoMid 3";
-PROGMEM prog_char lcd_param_text84 [] = "ServoMid 4";
-PROGMEM prog_char lcd_param_text85 [] = "ServoMid 5";
-PROGMEM prog_char lcd_param_text86 [] = "ServoMid 6";
-PROGMEM prog_char lcd_param_text87 [] = "ServoMid 7";
+const char PROGMEM lcd_param_text83 [] = "ServoMid 3";
+const char PROGMEM lcd_param_text84 [] = "ServoMid 4";
+const char PROGMEM lcd_param_text85 [] = "ServoMid 5";
+const char PROGMEM lcd_param_text86 [] = "ServoMid 6";
+const char PROGMEM lcd_param_text87 [] = "ServoMid 7";
 #endif
 #if GPS
-PROGMEM prog_char lcd_param_text91 [] = "GPS Pos. P";
-PROGMEM prog_char lcd_param_text92 [] = "GPS Pos. I";
-PROGMEM prog_char lcd_param_text93 [] = "Pos Rate P";
-PROGMEM prog_char lcd_param_text94 [] = "Pos Rate I";
-PROGMEM prog_char lcd_param_text95 [] = "Pos Rate D";
-PROGMEM prog_char lcd_param_text96 [] = "NAV Rate P";
-PROGMEM prog_char lcd_param_text97 [] = "NAV Rate I";
-PROGMEM prog_char lcd_param_text98 [] = "NAV Rate D";
+const char PROGMEM lcd_param_text91 [] = "GPS Pos. P";
+const char PROGMEM lcd_param_text92 [] = "GPS Pos. I";
+const char PROGMEM lcd_param_text93 [] = "Pos Rate P";
+const char PROGMEM lcd_param_text94 [] = "Pos Rate I";
+const char PROGMEM lcd_param_text95 [] = "Pos Rate D";
+const char PROGMEM lcd_param_text96 [] = "NAV Rate P";
+const char PROGMEM lcd_param_text97 [] = "NAV Rate I";
+const char PROGMEM lcd_param_text98 [] = "NAV Rate D";
 #endif
 
 //                                       0123456789.12345
 
-PROGMEM const prog_void *lcd_param_ptr_table [] = {
+PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text01, &conf.P8[ROLL], &__P,
   &lcd_param_text02, &conf.P8[ROLL], &__P,
   &lcd_param_text03, &conf.I8[ROLL], &__I,
