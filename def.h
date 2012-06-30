@@ -1,4 +1,38 @@
 /**************************************************************************************/
+/***************             test configurations                   ********************/
+/**************************************************************************************/
+#if COPTERTEST == 1
+  #define QUADP
+  #define WMP
+#elif COPTERTEST == 2
+  #define FLYING_WING
+  #define WMP
+  #define BMA020
+  #define FAILSAFE
+  #define LCD_CONF
+  #define LCD_TEXTSTAR
+#elif COPTERTEST == 3
+  #define TRI
+  #define FREEIMUv035_MS
+  #define BUZZER
+  #define VBAT
+  #define POWERMETER_HARD
+  #define LCD_CONF
+  #define LCD_VT100
+  #define LCD_TELEMETRY
+  #define LCD_TELEMETRY_STEP "01245"
+#elif COPTERTEST == 4
+  #define QUADX
+  #define CRIUS_SE
+  #define SPEKTRUM 2048
+  #define LED_RING
+  #define GPS_SERIAL 2
+#elif defined(COPTERTEST)
+  #error "*** this test is not yet defined"
+#endif
+
+
+/**************************************************************************************/
 /***************             Proc specific definitions             ********************/
 /**************************************************************************************/
 // Proc auto detection

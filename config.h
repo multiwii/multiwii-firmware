@@ -873,6 +873,22 @@
     #define PSENSORFREQ 6               // to read hardware powermeter sensor 6 <=> 18ms
     #define VBATFREQ PSENSORFREQ        // to read battery voltage - keep equal to PSENSORFREQ unless you know what you are doing
 
+  /********************************************************************/
+  /****           Regression testing                               ****/
+  /********************************************************************/
+
+    /* for development only:
+       to allow for easier and reproducable config sets for test compiling, different sets of config parameters are kept
+       together. This is meant to help detecting compile time errors for various features in a coordinated way.
+       It is not meant to produce your flying firmware
+       To use:
+       - do not set any options in config.h,
+       - enable with #define COPTERTEST 1, then compile
+       - if possible, check for the size
+       - repeat with other values of 2, 3, 4 etc.
+        */
+    //#define COPTERTEST 4
+
 /*************************************************************************************************/
 /****           END OF CONFIGURABLE PARAMETERS                                                ****/
 /*************************************************************************************************/

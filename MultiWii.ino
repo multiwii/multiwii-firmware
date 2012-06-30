@@ -482,7 +482,6 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #endif
   #ifdef LCD_TELEMETRY
     if (f.ARMED) armedTime += (uint32_t)cycleTime;
-  #endif
   #if BARO
     if (!f.ARMED) {
       BAROaltStart = BaroAlt;
@@ -490,6 +489,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     } else {
       if (BaroAlt > BAROaltMax) BAROaltMax = BaroAlt;
     }
+  #endif
   #endif
 
 }
