@@ -1667,10 +1667,8 @@ void lcd_telemetry() {
 #if BARO
       int16_t h = (BaroAlt - BAROaltStart) / 100;
       LCDprint('A'); lcdprint_int16(h); LCDprint('m');
-#ifdef LOG_VALUES
       h = (BAROaltMax - BAROaltStart) / 100;
       LCDprintChar(" ("); lcdprint_int16(h);
-#endif
 #endif
       break;
     }

@@ -480,17 +480,18 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     if (cycleTime > cycleTimeMax) cycleTimeMax = cycleTime; // remember highscore
     if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
   #endif
-  #ifdef LOG_VALUES
+  #ifdef LCD_TELEMETRY
     if (f.ARMED) armedTime += (uint32_t)cycleTime;
-    #if BARO
-      if (!f.ARMED) {
-        BAROaltStart = BaroAlt;
-        BAROaltMax = BaroAlt;
-      } else {
-        if (BaroAlt > BAROaltMax) BAROaltMax = BaroAlt;
-      }
-    #endif
   #endif
+  #if BARO
+    if (!f.ARMED) {
+      BAROaltStart = BaroAlt;
+      BAROaltMax = BaroAlt;
+    } else {
+      if (BaroAlt > BAROaltMax) BAROaltMax = BaroAlt;
+    }
+  #endif
+
 }
 
 void setup() {

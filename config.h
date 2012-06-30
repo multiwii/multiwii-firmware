@@ -577,7 +577,7 @@
        Convert the degree+minutes into decimal degree by ==> degree+minutes*(1/60)
        Note the sign on declination it could be negative or positive (WEST or EAST) */
     //#define MAG_DECLINIATION  3.96f              //For Budapest Hungary.
-    #define MAG_DECLINIATION  0f
+    #define MAG_DECLINIATION  0.0f
     
     #define GPS_FILTERING                    // add a 5 element moving average filter to GPS coordinates, helps eliminate gps noise but adds latency comment out to disable
     #define GPS_LOW_SPEED_D_FILTER           // below .5m/s speed ignore D term for POSHOLD_RATE, theoretically this also removed D term induced noise commnent out to disable
