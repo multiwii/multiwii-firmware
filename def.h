@@ -1465,3 +1465,7 @@
 #if defined(LCD_TELEMETRY_STEP) && !(defined(LCD_TELEMETRY))
         #error "to use single step telemetry, you MUST also define and configure LCD_TELEMETRY"
 #endif
+
+#if defined(VBAT) && !(defined(BUZZER))
+        #error "to use VBAT, you must also configure BUZZER"
+#endif
