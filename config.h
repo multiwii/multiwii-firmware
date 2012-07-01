@@ -409,8 +409,12 @@
     /* when there is an error on I2C bus, we neutralize the values during a short time. expressed in microseconds
        it is relevent only for a conf with at least a WMP */
     #define NEUTRALIZE_DELAY 100000
-
-
+       
+    /* Train Acro with auto recovery. Value set the point where Levelmode takes over.
+       Remember to activate LevelMode first!...
+       A Value on 200 will give a very distinct transfer */
+    //#define ACROTRAINER 200   // http://www.multiwii.com/forum/viewtopic.php?f=16&t=1944#p17437
+	
   /**************************************************************************************/
   /********                              Gyro filters                ********************/
   /**************************************************************************************/
