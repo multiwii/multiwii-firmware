@@ -270,6 +270,13 @@ void GPS_NewData() {
           *varptr++ = i2c_readAck();
           *varptr   = i2c_readNak();
 
+		  if (!f.GPS_FIX_HOME) {				//If we don't have home set, do not display anything
+             GPS_distanceToHome = 0;
+             GPS_directionToHome = 0;
+		  }		  
+
+		  
+		  
           //Adjust heading when navigating
           if (f.GPS_HOME_MODE)
           {  if ( !(_i2c_gps_status & I2C_GPS_STATUS_WP_REACHED) )
@@ -353,7 +360,11 @@ void GPS_NewData() {
           GPS_distance_cm_bearing(&GPS_coord[LAT],&GPS_coord[LON],&GPS_home[LAT],&GPS_home[LON],&dist,&dir);
           GPS_distanceToHome = dist/100;
           GPS_directionToHome = dir/100;
- 
+
+          if (!f.GPS_FIX_HOME) {				//If we don't have home set, do not display anything
+             GPS_distanceToHome = 0;
+             GPS_directionToHome = 0;
+		  }		  
           
           //calculate the current velocity based on gps coordinates continously to get a valid speed at the moment when we start navigating
           GPS_calc_velocity();        
