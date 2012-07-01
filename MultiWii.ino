@@ -945,7 +945,7 @@ void loop () {
 
   #if BARO
     if (f.BARO_MODE) {
-      if (abs(rcCommand[THROTTLE]-initialThrottleHold)>20) {
+      if (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
         f.BARO_MODE = 0; // so that a new althold reference is defined
       }
       rcCommand[THROTTLE] = initialThrottleHold + BaroPID;

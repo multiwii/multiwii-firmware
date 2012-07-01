@@ -529,6 +529,10 @@
        Must be greater than zero, comment if you dont want a deadband on roll, pitch and yaw */
     //#define DEADBAND 6
 
+    /* defines the neutral zone of throttle stick during altitude hold, default setting is
+       +/-20 uncommend and change the value below if you want to change it. */
+    //#define ALT_HOLD_THROTTLE_NEUTRAL_ZONE 20 
+
 
   /**************************************************************************************/
   /***********************                  GPS                **************************/
@@ -538,8 +542,8 @@
        only available on MEGA boards (this might be possible on 328 based boards in the future)
        if enabled, define here the Arduino Serial port number and the UART speed
        note: only the RX PIN is used, the GPS is not configured by multiwii
-       the GPS must be configured to output NMEA sentences (which is generally the default conf for most GPS devices)
-       uncomment the first line to select the GPS serial port of the arduino */
+       the GPS must be configured to output GGA and RMC NMEA sentences (which is generally the default conf for most GPS devices)
+       at least 5Hz update rate. uncomment the first line to select the GPS serial port of the arduino */
     //#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
     #define GPS_BAUD   115200
     
@@ -547,7 +551,8 @@
    
     /* I2C GPS device made with an independant arduino + GPS device
        including some navigation functions
-       contribution from EOSBandi   http://code.google.com/p/i2c-gps-nav/ */
+       contribution from EOSBandi   http://code.google.com/p/i2c-gps-nav/ 
+       You have to use at least I2CGpsNav code r33 */
     //#define I2C_GPS
 
     /* I2C GPS device made with an indeedent ATTiny[24]313 + GPS device and
@@ -563,9 +568,11 @@
     /* GPS data readed from OSD -- still need some more code to work */
     //#define GPS_FROM_OSD
 
-    //#define USE_MSP_WP           //Enables the MSP_WP command, which is used by WinGUI to display and log Home and Poshold positions
-                                   //Uncomment it if you are planning to use WinGUI - Will cost +208 bytes of Flash
+    //#define USE_MSP_WP           		//Enables the MSP_WP command, which is used by WinGUI to display and log Home and Poshold positions
+						//Uncomment it if you are planning to use WinGUI - Will cost +208 bytes of Flash
 	
+    //#define DONT_RESET_HOME_AT_ARM             // HOME position is reset at every arm, uncomment it to prohibit it (you can set home position with GyroCalibration)
+
     /* GPS navigation can control the heading */
     
     #define NAV_CONTROLS_HEADING       true      // copter faces toward the navigation point, maghold must be enabled for it
@@ -579,8 +586,8 @@
     //#define MAG_DECLINIATION  3.96f              //For Budapest Hungary.
     #define MAG_DECLINIATION  0.0f
     
-    #define GPS_FILTERING                    // add a 5 element moving average filter to GPS coordinates, helps eliminate gps noise but adds latency comment out to disable
-    #define GPS_LOW_SPEED_D_FILTER           // below .5m/s speed ignore D term for POSHOLD_RATE, theoretically this also removed D term induced noise commnent out to disable
+    #define GPS_FILTERING                        // add a 5 element moving average filter to GPS coordinates, helps eliminate gps noise but adds latency comment out to disable
+    #define GPS_LOW_SPEED_D_FILTER               // below .5m/s speed ignore D term for POSHOLD_RATE, theoretically this also removed D term induced noise commnent out to disable
     #define GPS_WP_RADIUS              200       // if we are within this distance to a waypoint then we consider it reached (distance is in cm)
     #define NAV_SLEW_RATE              30        // Adds a rate control to nav output, will smoothen out nav angle spikes
 

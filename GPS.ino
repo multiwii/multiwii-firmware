@@ -196,12 +196,12 @@ void GPS_NewData() {
     if (_i2c_gps_status & I2C_GPS_STATUS_3DFIX) {                                     //Check is we have a good 3d fix (numsats>5)
        f.GPS_FIX = 1;
        
-       if (!f.ARMED) { f.GPS_FIX_HOME = 0; }          // Clear home position when disarmed
+#if !defined(DONT_RESET_HOME_AT_ARM)
+          if (!f.ARMED) {f.GPS_FIX_HOME = 0;}				//Clear home position if disarmed
+#endif
        
        if (!f.GPS_FIX_HOME && f.ARMED) {        //if home is not set set home position to WP#0 and activate it
-          GPS_I2C_command(I2C_GPS_COMMAND_SET_WP,0);      //Store current position to WP#0 (this is used for RTH)
-          nav_takeoff_bearing = heading;                  //Store takeof heading
-          f.GPS_FIX_HOME = 1;
+          GPS_reset_home_position();
        }
        if (_i2c_gps_status & I2C_GPS_STATUS_NEW_DATA) {                               //Check about new data
           if (GPS_update) { GPS_update = 0;} else { GPS_update = 1;}                  //Fancy flash on GUI :D
@@ -311,14 +311,14 @@ void GPS_NewData() {
   #endif
        if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;
         if (f.GPS_FIX && GPS_numSat >= 5) {
+
+#if !defined(DONT_RESET_HOME_AT_ARM)
           if (!f.ARMED) {f.GPS_FIX_HOME = 0;}
+#endif
           if (!f.GPS_FIX_HOME && f.ARMED) {
-            f.GPS_FIX_HOME = 1;
-            GPS_home[LAT] = GPS_coord[LAT];
-            GPS_home[LON] = GPS_coord[LON];
-            GPS_calc_longitude_scaling(GPS_coord[LAT]);  //need an initial value for distance and bearing calc
-            nav_takeoff_bearing = heading;             //save takeoff heading
+            GPS_reset_home_position();		  
           }
+
           //Apply moving average filter to GPS data
     #if defined(GPS_FILTERING)
           GPS_filter_index = (GPS_filter_index+1) % GPS_FILTER_VECTOR_LENGTH;
@@ -397,13 +397,23 @@ void GPS_NewData() {
 }
 
 void GPS_reset_home_position() {
+
+if (f.GPS_FIX && GPS_numSat >= 5) {
+
   #if defined(I2C_GPS)
     //set current position as home
     GPS_I2C_command(I2C_GPS_COMMAND_SET_WP,0);  //WP0 is the home position
   #else
     GPS_home[LAT] = GPS_coord[LAT];
     GPS_home[LON] = GPS_coord[LON];
+    GPS_calc_longitude_scaling(GPS_coord[LAT]);  //need an initial value for distance and bearing calc
   #endif
+
+    nav_takeoff_bearing = heading;             //save takeoff heading
+    //Set ground altitude
+    
+    f.GPS_FIX_HOME = 1;
+ }
 }
 
 //reset navigation (stop the navigation processor, and clear nav)
@@ -857,7 +867,8 @@ bool GPS_newFrame(char c) {
       else if (param == 7)                     {GPS_numSat = grab_fields(string,0);}
       else if (param == 9)                     {GPS_altitude = grab_fields(string,0);}	// altitude in meters added by Mis
     } else if (frame == FRAME_RMC) {
-      if      (param == 7)                     {GPS_speed = ((uint32_t)grab_fields(string,1)*514444L)/100000L;}	// speed in cm/s added by Mis
+      if      (param == 7)                     {GPS_speed = ((uint32_t)grab_fields(string,1)*5144L)/1000L;}  //gps speed in cm/s will be used for navigation	
+      else if (param == 8)                     {GPS_ground_course = grab_fields(string,1); }                 //ground course deg*10 
     }
     param++; offset = 0;
     if (c == '*') checksum_param=1;
