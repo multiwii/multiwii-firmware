@@ -160,6 +160,7 @@ void evaluateCommand() {
      }
      headSerialReply(0);
      break;
+#if GPS
    case MSP_SET_RAW_GPS:
      f.GPS_FIX = read8();
      GPS_numSat = read8();
@@ -170,6 +171,7 @@ void evaluateCommand() {
      GPS_update |= 2;              // New data signalisation to GPS functions
      headSerialReply(0);
      break;
+#endif
    case MSP_SET_PID:
      for(uint8_t i=0;i<PIDITEMS;i++) {
        conf.P8[i]=read8();
@@ -242,6 +244,7 @@ void evaluateCommand() {
      headSerialReply(16);
      for(uint8_t i=0;i<8;i++) serialize16(rcData[i]);
      break;
+#if GPS
    case MSP_RAW_GPS:
      headSerialReply(14);
      serialize8(f.GPS_FIX);
@@ -257,6 +260,7 @@ void evaluateCommand() {
      serialize16(GPS_directionToHome);
      serialize8(GPS_update & 1);
      break;
+#endif
    case MSP_ATTITUDE:
      headSerialReply(8);
      for(uint8_t i=0;i<2;i++) serialize16(angle[i]);
