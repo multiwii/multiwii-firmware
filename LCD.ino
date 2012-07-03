@@ -1308,39 +1308,39 @@ void fill_line1_deg() {
 void fill_line2_AmaxA() {
   uint16_t unit;
   strcpy_P(line2,PSTR("---,-A max---,-A"));
-#ifdef LOG_VALUES
-  unit = powerValue * PINT2mA;
-  line2[0] = digit10000(unit);
-  line2[1] = digit1000(unit);
-  line2[2] = digit100(unit);
-  line2[4] = digit10(unit);
-  unit = powerMax * PINT2mA;
-  line2[10] = digit10000(unit);
-  line2[11] = digit1000(unit);
-  line2[12] = digit100(unit);
-  line2[14] = digit10(unit);
-#endif
+  #ifdef POWERMETER
+    unit = powerValue * PINT2mA;
+    line2[0] = digit10000(unit);
+    line2[1] = digit1000(unit);
+    line2[2] = digit100(unit);
+    line2[4] = digit10(unit);
+    unit = powerMax * PINT2mA;
+    line2[10] = digit10000(unit);
+    line2[11] = digit1000(unit);
+    line2[12] = digit100(unit);
+    line2[14] = digit10(unit);
+  #endif
 }
 void fill_line1_VmA() {
   strcpy_P(line1,PSTR("--.-V   -----mAh")); // uint8_t vbat, intPowerMeterSum
   //                   0123456789.12345
-#ifdef VBAT
-  line1[0] = digit100(vbat);
-  line1[1] = digit10(vbat);
-  line1[3] = digit1(vbat);
-#endif
-#ifdef POWERMETER
-  line1[8] = digit10000(intPowerMeterSum);
-  line1[9] = digit1000(intPowerMeterSum);
-  line1[10] = digit100(intPowerMeterSum);
-  line1[11] = digit10(intPowerMeterSum);
-  line1[12] = digit1(intPowerMeterSum);
-#endif
-#ifdef BUZZER
-  if (isBuzzerON()) { // buzzer on? then add some blink for attention
-    line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
-  }
-#endif
+  #ifdef VBAT
+    line1[0] = digit100(vbat);
+    line1[1] = digit10(vbat);
+    line1[3] = digit1(vbat);
+  #endif
+  #ifdef POWERMETER
+    line1[8] = digit10000(intPowerMeterSum);
+    line1[9] = digit1000(intPowerMeterSum);
+    line1[10] = digit100(intPowerMeterSum);
+    line1[11] = digit10(intPowerMeterSum);
+    line1[12] = digit1(intPowerMeterSum);
+  #endif
+  #ifdef BUZZER
+    if (isBuzzerON()) { // buzzer on? then add some blink for attention
+      line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
+    }
+  #endif
   // set mark, if we had i2c errors, failsafes or annex650 overruns
   if (i2c_errors_count || failsafeEvents || annex650_overrun_count) line1[6] = '!';
 }

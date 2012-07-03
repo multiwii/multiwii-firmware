@@ -240,49 +240,49 @@ static struct {
 // **********************
 // GPS common variables
 // **********************
-static int32_t  GPS_coord[2];
-static int32_t  GPS_home[2];
-static int32_t  GPS_hold[2];
-static uint8_t  GPS_numSat;
-static uint16_t GPS_distanceToHome;                          // distance to home in meters
-static int16_t  GPS_directionToHome;                         // direction to home in degrees
-static uint16_t GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s
-static uint8_t  GPS_update = 0;                              // it's a binary toogle to distinct a GPS position update
-static int16_t  GPS_angle[2] = { 0, 0};                      // it's the angles that must be applied for GPS correction
-static uint16_t GPS_ground_course = 0;                       // degrees*10
-static uint8_t  GPS_Present = 0;                             // Checksum from Gps serial
-static uint8_t  GPS_Enable  = 0;
+  static int32_t  GPS_coord[2];
+  static int32_t  GPS_home[2];
+  static int32_t  GPS_hold[2];
+  static uint8_t  GPS_numSat;
+  static uint16_t GPS_distanceToHome;                          // distance to home in meters
+  static int16_t  GPS_directionToHome;                         // direction to home in degrees
+  static uint16_t GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s
+  static uint8_t  GPS_update = 0;                              // it's a binary toogle to distinct a GPS position update
+  static int16_t  GPS_angle[2] = { 0, 0};                      // it's the angles that must be applied for GPS correction
+  static uint16_t GPS_ground_course = 0;                       // degrees*10
+  static uint8_t  GPS_Present = 0;                             // Checksum from Gps serial
+  static uint8_t  GPS_Enable  = 0;
 
-#define LAT  0
-#define LON  1
-// The desired bank towards North (Positive) or South (Negative) : latitude
-// The desired bank towards East (Positive) or West (Negative)   : longitude
-static int16_t  nav[2];
-static int16_t  nav_rated[2];    //Adding a rate controller to the navigation to make it smoother
+  #define LAT  0
+  #define LON  1
+  // The desired bank towards North (Positive) or South (Negative) : latitude
+  // The desired bank towards East (Positive) or West (Negative)   : longitude
+  static int16_t  nav[2];
+  static int16_t  nav_rated[2];    //Adding a rate controller to the navigation to make it smoother
 
-// default POSHOLD control gains
-#define POSHOLD_P              .11
-#define POSHOLD_I              0.0
-#define POSHOLD_IMAX           20        // degrees
+  // default POSHOLD control gains
+  #define POSHOLD_P              .11
+  #define POSHOLD_I              0.0
+  #define POSHOLD_IMAX           20        // degrees
 
-#define POSHOLD_RATE_P         2.0
-#define POSHOLD_RATE_I         0.08      // Wind control
-#define POSHOLD_RATE_D         0.045     // try 2 or 3 for POSHOLD_RATE 1
-#define POSHOLD_RATE_IMAX      20        // degrees
+  #define POSHOLD_RATE_P         2.0
+  #define POSHOLD_RATE_I         0.08      // Wind control
+  #define POSHOLD_RATE_D         0.045     // try 2 or 3 for POSHOLD_RATE 1
+  #define POSHOLD_RATE_IMAX      20        // degrees
 
-// default Navigation PID gains
-#define NAV_P                  1.4
-#define NAV_I                  0.20      // Wind control
-#define NAV_D                  0.08      //
-#define NAV_IMAX               20        // degrees
+  // default Navigation PID gains
+  #define NAV_P                  1.4
+  #define NAV_I                  0.20      // Wind control
+  #define NAV_D                  0.08      //
+  #define NAV_IMAX               20        // degrees
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Serial GPS only variables
-//navigation mode
-#define NAV_MODE_NONE          0
-#define NAV_MODE_POSHOLD       1
-#define NAV_MODE_WP            2
-static uint8_t nav_mode = NAV_MODE_NONE;            //Navigation mode
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Serial GPS only variables
+  //navigation mode
+  #define NAV_MODE_NONE          0
+  #define NAV_MODE_POSHOLD       1
+  #define NAV_MODE_WP            2
+  static uint8_t nav_mode = NAV_MODE_NONE;            //Navigation mode
 
 void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
   uint8_t i,r;
@@ -369,7 +369,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       pMeterRaw =  analogRead(PSENSORPIN);
       powerValue = ( PSENSORNULL > pMeterRaw ? PSENSORNULL - pMeterRaw : pMeterRaw - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
       if ( powerValue < 333) {  // only accept reasonable values. 333 is empirical
-      #ifdef LOG_VALUES
+      #ifdef LCD_TELEMETRY
         if (powerValue > powerMax) powerMax = powerValue;
       #endif
       } else {

@@ -894,7 +894,7 @@
        - if possible, check for the size
        - repeat with other values of 2, 3, 4 etc.
         */
-    //#define COPTERTEST 4
+    //#define COPTERTEST 1
 
 /*************************************************************************************************/
 /****           END OF CONFIGURABLE PARAMETERS                                                ****/
