@@ -482,16 +482,15 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #endif
   #ifdef LCD_TELEMETRY
     if (f.ARMED) armedTime += (uint32_t)cycleTime;
-  #if BARO
-    if (!f.ARMED) {
-      BAROaltStart = BaroAlt;
-      BAROaltMax = BaroAlt;
-    } else {
-      if (BaroAlt > BAROaltMax) BAROaltMax = BaroAlt;
-    }
+    #if BARO
+      if (!f.ARMED) {
+        BAROaltStart = BaroAlt;
+        BAROaltMax = BaroAlt;
+      } else {
+        if (BaroAlt > BAROaltMax) BAROaltMax = BaroAlt;
+      }
+    #endif
   #endif
-  #endif
-
 }
 
 void setup() {
@@ -578,6 +577,7 @@ void setup() {
     init_led_flasher();
     led_flasher_set_sequence(LED_FLASHER_SEQUENCE);
   #endif
+  f.SMALL_ANGLES_25=1; // important for gyro only conf
 }
 
 // ******** Main Loop *********

@@ -332,13 +332,15 @@ void ACC_Common() {
         if (InflightcalibratingA == 1) {
           AccInflightCalibrationActive = 0;
           AccInflightCalibrationMeasurementDone = 1;
-          toggleBeep = 2;      //buzzer for indicatiing the end of calibration
-        // recover saved values to maintain current flight behavior until new values are transferred
-         conf.accZero[ROLL]  = accZero_saved[ROLL] ;
-         conf.accZero[PITCH] = accZero_saved[PITCH];
-         conf.accZero[YAW]   = accZero_saved[YAW] ;
-         conf.angleTrim[ROLL] = angleTrim_saved[ROLL] ;
-         conf.angleTrim[PITCH] = angleTrim_saved[PITCH] ;
+          #if defined(BUZZER)
+            toggleBeep = 2;      //buzzer for indicatiing the end of calibration
+          #endif
+          // recover saved values to maintain current flight behavior until new values are transferred
+          conf.accZero[ROLL]  = accZero_saved[ROLL] ;
+          conf.accZero[PITCH] = accZero_saved[PITCH];
+          conf.accZero[YAW]   = accZero_saved[YAW] ;
+          conf.angleTrim[ROLL] = angleTrim_saved[ROLL] ;
+          conf.angleTrim[PITCH] = angleTrim_saved[PITCH] ;
         }
         InflightcalibratingA--;
       }

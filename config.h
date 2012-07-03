@@ -132,7 +132,7 @@
 
       /* I2C accelerometer */
       //#define NUNCHUCK  // if you want to use the nunckuk connected to a WMP
-      //#define MMA745
+      //#define MMA7455
       //#define ADXL345
       //#define BMA020
       //#define BMA180
