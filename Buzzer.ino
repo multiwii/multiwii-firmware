@@ -37,7 +37,7 @@ void buzzer(uint8_t warn_vbat){
   #endif
   //===================== GPS fix notification handling =====================
   #if GPS
-  if ((f.GPS_HOME_MODE || f.GPS_HOLD_MODE) && !f.GPS_FIX){    //if no fix and gps funtion is activated: do warning beeps.
+  if ((rcOptions[BOXGPSHOME] || rcOptions[BOXGPSHOLD]) && !f.GPS_FIX){    //if no fix and gps funtion is activated: do warning beeps.
     warn_noGPSfix = 1;    
   }else{
     warn_noGPSfix = 0;
