@@ -682,7 +682,7 @@ void loop () {
       else if (conf.activate[BOXARM] > 0) {
         if ( rcOptions[BOXARM] && f.OK_TO_ARM
         #if defined(FAILSAFE)
-          && failsafeCnt == 0
+          && failsafeCnt <= 1
         #endif 
         ) {
 	  f.ARMED = 1;
