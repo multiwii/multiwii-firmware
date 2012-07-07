@@ -701,6 +701,7 @@
   /********************************************************************/
     //#define BUZZER
     //#define RCOPTIONSBEEP        //uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
+	//#define ARMEDTIMEWARNING 330  // Trigger an alarm after a certain time of being armed [s] to save you lipo (if your TX does not have a countdown)
 
   /********************************************************************/
   /****           battery voltage monitoring                       ****/
