@@ -9,7 +9,8 @@ void buzzer(uint8_t warn_vbat){
   static uint8_t activateBuzzer,
                  beeperOnBox,
                  warn_noGPSfix = 0,
-                 warn_failsafe = 0;         
+                 warn_failsafe = 0, 
+                 warn_runtime = 0;  
 
   //===================== Beeps for changing rcOptions =====================
   #if defined(RCOPTIONSBEEP)
@@ -43,33 +44,42 @@ void buzzer(uint8_t warn_vbat){
     warn_noGPSfix = 0;
   }
   #endif
- //===================== Main Handling Block =====================
-  repeat = 1;                                           // set repeat to default
-  ontime = 100;                                           // set offtime to default
+    //===================== Runtime Warning =====================
+  #if defined(ARMEDTIMEWARNING)
+  if (armedTime >= (ARMEDTIMEWARNING*1000000)){
+    warn_runtime = 1;
+  }
+  #endif
   
-  //the order of the below is the priority from high to low, the last entry has the lowest priority, only one option can be active at the same time
-  if (warn_failsafe == 2){activateBuzzer = 1; offtime = 2000;ontime=300;repeat = 1;}    //failsafe "find me" signal
-  else if (warn_failsafe == 1){activateBuzzer = 1; offtime = 50;}                       //failsafe landing active         
-  else if (warn_noGPSfix == 1){activateBuzzer = 1; offtime = 10;}      
-  else if (beeperOnBox == 1){activateBuzzer = 1; offtime = 50;}                           //beeperon
-  else if (warn_vbat == 4){activateBuzzer = 1; offtime = 500; repeat = 3;}       
-  else if (warn_vbat == 2){activateBuzzer = 1; offtime = 1000; repeat = 2;}      
-  else if (warn_vbat == 1){activateBuzzer = 1; offtime = 2000;}                 
-  else if (toggleBeep > 0){activateBuzzer = 1; ontime = 50; offtime = 50;}       //fast confirmation beep
-  else{activateBuzzer=0;}
+  if (warn_failsafe == 2)      letsbeep(1, 200, 2000, 1);     //failsafe "find me" signal
+  else if (warn_failsafe == 1) letsbeep(1, 100, 50, 1);                        //failsafe landing active         
+  else if (warn_noGPSfix == 1) letsbeep(1, 100, 50, 1);       
+  else if (beeperOnBox == 1)   letsbeep(1, 100, 50, 1);                            //beeperon
+  else if (warn_vbat == 4)     letsbeep(1, 100, 500, 3);       
+  else if (warn_vbat == 2)     letsbeep(1, 100, 1000, 2);       
+  else if (warn_vbat == 1)     letsbeep(1, 100, 2000, 1);           
+  else if (warn_runtime == 1 && f.ARMED == 1)letsbeep(1, 50, 50, 1);                      //Runtime warning            
+  else if (toggleBeep > 0)     letsbeep(1, 50, 50, 1);        //fast confirmation beep
+  else                         letsbeep(0, 100, 1000, 1);    
+ 
+}
+
+void letsbeep(uint8_t activateBuzzer, uint16_t pulse, uint16_t pause, uint16_t repeat){  
+  static uint16_t beepcount, repeatcounter;
+  static uint32_t buzzerLastToggleTime;
   
   if (activateBuzzer) { 
     if ( repeatcounter > 1 && !buzzerIsOn && (millis() >= (buzzerLastToggleTime + 80)) ){    // if the buzzer is off and there is a short pause neccessary (multipe buzzes)
       buzzerIsOn = 1;
       BUZZERPIN_ON;
-      buzzerLastToggleTime=millis();      // save the time the buzer turned on
+      buzzerLastToggleTime=millis();      // save the time the buzzer turned on
       repeatcounter--;
-    } else if ( !buzzerIsOn && (millis() >= (buzzerLastToggleTime + offtime)) ) {	          // Buzzer is off and long pause time is up -> turn it on
+    } else if ( !buzzerIsOn && (millis() >= (buzzerLastToggleTime + pause)) ) {	          // Buzzer is off and long pause time is up -> turn it on
       buzzerIsOn = 1;
       BUZZERPIN_ON;
       buzzerLastToggleTime=millis();      // save the time the buzer turned on
-      repeatcounter = repeat;  //set the amount of repeats
-    } else if (buzzerIsOn && (millis() >= buzzerLastToggleTime + ontime) ) {         //Buzzer is on and time is up -> turn it off
+      repeatcounter = repeat;  //set the amount of repeats after the pause
+    } else if (buzzerIsOn && (millis() >= buzzerLastToggleTime + pulse) ) {         //Buzzer is on and time is up -> turn it off
       buzzerIsOn = 0;
       BUZZERPIN_OFF;
       buzzerLastToggleTime=millis();                                 // save the time the buzer turned on
@@ -83,6 +93,7 @@ void buzzer(uint8_t warn_vbat){
     beepcount = 0;                //reset the counter for the next time 
     BUZZERPIN_OFF;              
     buzzerIsOn = 0; 
-  }	
+  }   
 }
+
 #endif
