@@ -797,18 +797,18 @@ void mixTable() {
     motor[5] = PIDMIX(+1,-2/3,+1); //UNDER_LEFT    
   #endif
   #ifdef HEX6
-    motor[0] = PIDMIX(-1/2,+1/2,+1); //REAR_R
-    motor[1] = PIDMIX(-1/2,-1/2,-1); //FRONT_R
-    motor[2] = PIDMIX(+1/2,+1/2,+1); //REAR_L
-    motor[3] = PIDMIX(+1/2,-1/2,-1); //FRONT_L
+    motor[0] = PIDMIX(-7/8,+1/2,+1); //REAR_R
+    motor[1] = PIDMIX(-7/8,-1/2,-1); //FRONT_R
+    motor[2] = PIDMIX(+7/8,+1/2,+1); //REAR_L
+    motor[3] = PIDMIX(+7/8,-1/2,-1); //FRONT_L
     motor[4] = PIDMIX(+0  ,-1  ,+1); //FRONT
     motor[5] = PIDMIX(+0  ,+1  ,-1); //REAR
   #endif
   #ifdef HEX6X
-    motor[0] = PIDMIX(-1/2,+1/2,+1); //REAR_R
-    motor[1] = PIDMIX(-1/2,-1/2,+1); //FRONT_R
-    motor[2] = PIDMIX(+1/2,+1/2,-1); //REAR_L
-    motor[3] = PIDMIX(+1/2,-1/2,-1); //FRONT_L
+    motor[0] = PIDMIX(-1/2,+7/8,+1); //REAR_R
+    motor[1] = PIDMIX(-1/2,-7/8,+1); //FRONT_R
+    motor[2] = PIDMIX(+1/2,+7/8,-1); //REAR_L
+    motor[3] = PIDMIX(+1/2,-7/8,-1); //FRONT_L
     motor[4] = PIDMIX(-1  ,+0  ,-1); //RIGHT
     motor[5] = PIDMIX(+1  ,+0  ,+1); //LEFT
   #endif
@@ -842,11 +842,11 @@ void mixTable() {
     motor[6] = PIDMIX(-1/2,+1  ,-1); //REAR_R
     motor[7] = PIDMIX(+1  ,+1/2,-1); //MIDREAR_L 
   #endif
-  #ifdef VTAIL4
-    motor[0] = PIDMIX(+0,+1, -1/2); //REAR_R 
-    motor[1] = PIDMIX(-1, -1, +0);  //FRONT_R 
-    motor[2] = PIDMIX(+0,+1, +1/2); //REAR_L 
-    motor[3] = PIDMIX(+1, -1, -0);  //FRONT_L
+  #ifdef VTAIL4 //http://www.multiwii.com/forum/viewtopic.php?f=8&t=1973&start=20#p17816
+    motor[0] = PIDMIX(-1,+1, +1); //REAR_R
+    motor[1] = PIDMIX(-0.64, -0.64, -0.64); //FRONT_R
+    motor[2] = PIDMIX(+1,+1, -1); //REAR_L
+    motor[3] = PIDMIX(+0.64, -0.64, +0.64); //FRONT_L
   #endif
 
   /****************                Cam stabilize Sevos             ******************/
