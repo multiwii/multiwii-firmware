@@ -102,6 +102,10 @@ static int16_t  errorAltitudeI = 0;
 #if defined(BUZZER)
   static uint8_t  toggleBeep = 0;
 #endif
+#if defined(ARMEDTIMEWARNING)
+  static uint32_t  ArmedTimeWarningMicroSeconds = 0;
+#endif
+
 static int16_t  debug[4];
 static int16_t  sonarAlt; //to think about the unit
 
@@ -533,6 +537,9 @@ void setup() {
   #if defined(POWERMETER)
     for(uint8_t i=0;i<=PMOTOR_SUM;i++)
       pMeter[i]=0;
+  #endif
+  #if defined(ARMEDTIMEWARNING)
+    ArmedTimeWarningMicroSeconds = (ARMEDTIMEWARNING *1000000);
   #endif
   /************************************/
   #if defined(GPS_SERIAL)

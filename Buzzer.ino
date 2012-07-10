@@ -44,9 +44,9 @@ void buzzer(uint8_t warn_vbat){
     warn_noGPSfix = 0;
   }
   #endif
-    //===================== Runtime Warning =====================
+  //===================== Runtime Warning =====================
   #if defined(ARMEDTIMEWARNING)
-  if (armedTime >= (ARMEDTIMEWARNING*1000000)){
+  if (armedTime >= ArmedTimeWarningMicroSeconds){
     warn_runtime = 1;
   }
   #endif
