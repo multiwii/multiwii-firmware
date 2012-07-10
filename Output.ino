@@ -185,21 +185,41 @@ void writeMotors() { // [1000;2000] => [125;250]
 /******** Specific PWM Timers & Registers for the atmega32u4 (Promicro)   ************/
   #if defined(PROMICRO)
     #if (NUMBER_MOTOR > 0) // Timer 1 A & B [1000:2000] => [8000:16000]
-      OCR1A = motor[0]<<3; //  pin 9
+      #ifndef EXT_MOTOR_RANGE 
+        OCR1A = motor[0]<<3; //  pin 9
+      #else
+        OCR1A = ((motor[0]<<4) - 16000) + 128;
+      #endif
     #endif
     #if (NUMBER_MOTOR > 1)
-      OCR1B = motor[1]<<3; //  pin 10
+      #ifndef EXT_MOTOR_RANGE 
+        OCR1B = motor[1]<<3; //  pin 10
+      #else
+        OCR1B = ((motor[1]<<4) - 16000) + 128;
+      #endif
     #endif
     #if (NUMBER_MOTOR > 2) // Timer 4 A & D [1000:2000] => [1000:2000]
       #if !defined(HWPWM6)
         // to write values > 255 to timer 4 A/B we need to split the bytes
-        TC4H = (2047-motor[2])>>8; OCR4A = ((2047-motor[2])&0xFF); //  pin 5
+        #ifndef EXT_MOTOR_RANGE 
+          TC4H = (2047-motor[2])>>8; OCR4A = ((2047-motor[2])&0xFF); //  pin 5
+        #else
+          TC4H = 2047-(((motor[2]-1000)<<1)+16)>>8; OCR4A = (2047-(((motor[2]-1000)<<1)+16)&0xFF); //  pin 5
+        #endif
       #else
-        OCR3A = motor[2]<<3; //  pin 5
+        #ifndef EXT_MOTOR_RANGE 
+          OCR3A = motor[2]<<3; //  pin 5
+        #else
+          OCR3A = ((motor[2]<<4) - 16000) + 128;
+        #endif
       #endif
     #endif
     #if (NUMBER_MOTOR > 3)
-      TC4H = motor[3]>>8; OCR4D = (motor[3]&0xFF); //  pin 6
+      #ifndef EXT_MOTOR_RANGE 
+        TC4H = motor[3]>>8; OCR4D = (motor[3]&0xFF); //  pin 6
+      #else
+        TC4H = (((motor[3]-1000)<<1)+16)>>8; OCR4D = ((((motor[3]-1000)<<1)+16)&0xFF); //  pin 6
+      #endif
     #endif    
     #if (NUMBER_MOTOR > 4)
       #if !defined(HWPWM6)
@@ -215,8 +235,13 @@ void writeMotors() { // [1000;2000] => [125;250]
           atomicPWM_PIN6_lowState = 15743-atomicPWM_PIN6_highState;        
         #endif
       #else
-        OCR1C = motor[4]<<3; //  pin 11
-        TC4H = motor[5]>>8; OCR4A = (motor[5]&0xFF); //  pin 13    
+        #ifndef EXT_MOTOR_RANGE 
+          OCR1C = motor[4]<<3; //  pin 11
+          TC4H = motor[5]>>8; OCR4A = (motor[5]&0xFF); //  pin 13  
+        #else
+          OCR1C = ((motor[4]<<4) - 16000) + 128;
+          TC4H = (((motor[5]-1000)<<1)+16)>>8; OCR4A = ((((motor[5]-1000)<<1)+16)&0xFF); //  pin 13       
+        #endif  
       #endif
     #endif
     #if (NUMBER_MOTOR > 6)
