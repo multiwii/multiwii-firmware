@@ -70,38 +70,35 @@ void buzzer(uint8_t warn_vbat){
 void beep_code(char first, char second, char third, char pause){
   char patternChar[4];
   uint16_t patternInt[4];
-  static uint8_t icnt;
+  static uint8_t icnt = 0;
   
   patternChar[0] = first; 
   patternChar[1] = second;
   patternChar[2] = third;
   patternChar[3] = pause;
-  
-  for (int i = 0; i < 4; i = i+1) {
-    switch(patternChar[i]) {
-    case 'S':
-      patternInt[i] = 50; 
-      break;
+  switch(patternChar[icnt]) {
     case 'M': 
-      patternInt[i] = 100; 
+      patternInt[icnt] = 100; 
       break;
     case 'L': 
-      patternInt[i] = 200; 
+      patternInt[icnt] = 200; 
       break;
     case 'D': 
-      patternInt[i] = 2000; 
+      patternInt[icnt] = 2000; 
       break;
     case 'N': 
-      patternInt[i] = 0; 
+      patternInt[icnt] = 0; 
       break;
     default:
-      patternInt[i] = 50; 
+      patternInt[icnt] = 50; 
       break;
-    }
   }
-  
   if(icnt <3 && patternInt[icnt]!=0){
     beep(patternInt[icnt]);
+  }
+  if (icnt >=3 && (buzzerLastToggleTime<millis()-patternInt[3]) ){
+    icnt=0;
+    toggleBeep =0;
   }
   if (blinkdone == 1 || patternInt[icnt]==0){
     icnt++;
@@ -109,10 +106,16 @@ void beep_code(char first, char second, char third, char pause){
     buzzerIsOn = 0;
     BUZZERPIN_OFF;
   }
-  if (icnt >=3 && (buzzerLastToggleTime<millis()-patternInt[3]) ){
-    icnt=0;
-    toggleBeep =0;
-  }
+  
+  
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 }
 
 void beep( uint16_t pulse){  
