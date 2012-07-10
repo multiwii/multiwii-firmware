@@ -269,8 +269,8 @@ void getEstimatedAltitude(){
   int32_t temp32;
   int16_t last;
 
-  if (currentTime < deadLine) return;
-  deadLine = currentTime + UPDATE_INTERVAL; 
+  if (abs(currentTime - deadLine) < UPDATE_INTERVAL) return;
+  deadLine = currentTime; 
 
   //**** Alt. Set Point stabilization PID ****
   //calculate speed for D calculation
