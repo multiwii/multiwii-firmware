@@ -48,18 +48,17 @@ void buzzer(uint8_t warn_vbat){
     warn_runtime = 1;
   }
   #endif
-  
   //===================== Priority driven Handling =====================
   // beepcode(length1,length2,length3,pause)
-  //D: Double, L: Long, M: Middle, S: Short, N: None
-  if (warn_failsafe == 2)      beep_code('L','N','N','D');                 //failsafe "find me" signal
-  else if (warn_failsafe == 1) beep_code('S','M','L','M');                 //failsafe landing active         
-  else if (warn_noGPSfix == 1) beep_code('S','S','N','M');       
-  else if (beeperOnBox == 1)   beep_code('S','S','S','M');                 //beeperon
-  else if (warn_vbat == 4)     beep_code('S','M','M','D');       
-  else if (warn_vbat == 2)     beep_code('S','S','M','D');       
-  else if (warn_vbat == 1)     beep_code('S','M','N','D');           
-  else if (warn_runtime == 1 && f.ARMED == 1)beep_code('S','S','M','N'); //Runtime warning            
+  //None: 0, Short:50, Medium: 100, Long: 200, Double: 2000 .
+  if (warn_failsafe == 2)      beep_code(200,0,0,2000);                 //failsafe "find me" signal
+  else if (warn_failsafe == 1) beep_code(50,100,200,100);                 //failsafe landing active         
+  else if (warn_noGPSfix == 1) beep_code(50,50,0,100);       
+  else if (beeperOnBox == 1)   beep_code(50,50,50,100);                 //beeperon
+  else if (warn_vbat == 4)     beep_code(50,50,100,2000);       
+  else if (warn_vbat == 2)     beep_code(50,100,0,2000);       
+  else if (warn_vbat == 1)     beep_code(100,0,0,2000);           
+  else if (warn_runtime == 1 && f.ARMED == 1)beep_code(50,50,100,0); //Runtime warning            
   else if (toggleBeep > 0)     beep(50);                                   //fast confirmation beep
   else { 
     buzzerIsOn = 0;
@@ -67,32 +66,15 @@ void buzzer(uint8_t warn_vbat){
   }    
 }
 
-void beep_code(char first, char second, char third, char pause){
-  char patternChar[4];
+void beep_code(uint16_t first, uint16_t second, uint16_t third, uint16_t pause){
   uint16_t patternInt[4];
   static uint8_t icnt = 0;
   
-  patternChar[0] = first; 
-  patternChar[1] = second;
-  patternChar[2] = third;
-  patternChar[3] = pause;
-  switch(patternChar[icnt]) {
-    case 'M': 
-      patternInt[icnt] = 100; 
-      break;
-    case 'L': 
-      patternInt[icnt] = 200; 
-      break;
-    case 'D': 
-      patternInt[icnt] = 2000; 
-      break;
-    case 'N': 
-      patternInt[icnt] = 0; 
-      break;
-    default:
-      patternInt[icnt] = 50; 
-      break;
-  }
+  patternInt[0] = first; 
+  patternInt[1] = second;
+  patternInt[2] = third;
+  patternInt[3] = pause;
+
   if(icnt <3 && patternInt[icnt]!=0){
     beep(patternInt[icnt]);
   }
@@ -106,16 +88,6 @@ void beep_code(char first, char second, char third, char pause){
     buzzerIsOn = 0;
     BUZZERPIN_OFF;
   }
-  
-  
-  
- 
- 
- 
- 
- 
- 
- 
 }
 
 void beep( uint16_t pulse){  
