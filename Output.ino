@@ -799,8 +799,8 @@ void mixTable() {
   #ifdef BI
     motor[0] = PIDMIX(+1, 0, 0); //LEFT
     motor[1] = PIDMIX(-1, 0, 0); //RIGHT        
-    servo[4]  = constrain(1500 + YAW_DIRECTION * (axisPID[YAW] + axisPID[PITCH]), 1020, 2000); //LEFT
-    servo[5]  = constrain(1500 + YAW_DIRECTION * (axisPID[YAW] - axisPID[PITCH]), 1020, 2000); //RIGHT
+    servo[4]  = constrain(1500 + (YAW_DIRECTION * axisPID[YAW]) + axisPID[PITCH], 1020, 2000); //LEFT
+    servo[5]  = constrain(1500 + (YAW_DIRECTION * axisPID[YAW]) - axisPID[PITCH], 1020, 2000); //RIGHT
   #endif
   #ifdef TRI
     motor[0] = PIDMIX( 0,+4/3, 0); //REAR
@@ -880,11 +880,11 @@ void mixTable() {
     motor[6] = PIDMIX(-1/2,+1  ,-1); //REAR_R
     motor[7] = PIDMIX(+1  ,+1/2,-1); //MIDREAR_L 
   #endif
-  #ifdef VTAIL4 //http://www.multiwii.com/forum/viewtopic.php?f=8&t=1973&start=20#p17816
-    motor[0] = PIDMIX(-1,+1, +1); //REAR_R
-    motor[1] = PIDMIX(-0.64, -0.64, -0.64); //FRONT_R
-    motor[2] = PIDMIX(+1,+1, -1); //REAR_L
-    motor[3] = PIDMIX(+0.64, -0.64, +0.64); //FRONT_L
+  #ifdef VTAIL4
+    motor[0] = PIDMIX(+0,+1, +1); //REAR_R
+    motor[1] = PIDMIX(-1, -1, +0); //FRONT_R
+    motor[2] = PIDMIX(+0,+1, -1); //REAR_L
+    motor[3] = PIDMIX(+1, -1, -0); //FRONT_L
   #endif
 
   /****************                Cam stabilize Sevos             ******************/

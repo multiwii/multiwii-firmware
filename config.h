@@ -121,6 +121,7 @@
       //#define Bobs_9DOF_V1	 // BobsQuads 9DOF V1 with ITG3200, BMA180 & HMC5883L
       //#define Bobs_10DOF_BMP_V1 // BobsQuads 10DOF V1 with ITG3200, BMA180, HMC5883L & BMP180 - BMP180 is software compatible with BMP085
       //#define FLYDUINO_MPU
+      //#define CRIUS_AIO_PRO_V1
       
     /***************************    independent sensors    ********************************/
       /* leave it commented if you already checked a specific board above */
@@ -817,23 +818,22 @@
 
     /* Set the Low Pass Filter factor for ACC
        Increasing this value would reduce ACC noise (visible in GUI), but would increase ACC lag time
-       Comment this if  you do not want filter at all.*/
+       Comment this out if you want to set a specific coeff (non default)*/
     //#define ACC_LPF_FACTOR 100
 
     /* Set the Low Pass Filter factor for Magnetometer
        Increasing this value would reduce Magnetometer noise (not visible in GUI), but would increase Magnetometer lag time
-       Comment this if  you do not want filter at all.
-       Default WMC value: n/a */
+       Comment this out if you want to set a specific coeff (non default)*/
     //#define MG_LPF_FACTOR 4
 
     /* Set the Gyro Weight for Gyro/Acc complementary filter
        Increasing this value would reduce and delay Acc influence on the output of the filter
-       Default WMC value: 300 */
+       Comment this out if you want to set a specific coeff (non default)*/
     //#define GYR_CMPF_FACTOR 400.0f
 
     /* Set the Gyro Weight for Gyro/Magnetometer complementary filter
        Increasing this value would reduce and delay Magnetometer influence on the output of the filter
-       Default WMC value: n/a */
+       Comment this out if you want to set a specific coeff (non default)*/
     //#define GYR_CMPFM_FACTOR 200.0f
 
 
