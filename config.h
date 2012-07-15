@@ -676,7 +676,9 @@
     //#define LCD_TELEMETRY_AUTO "123452679" // pages 1 to 7 in ascending order
     //#define LCD_TELEMETRY_AUTO  "212232425262729" // strong emphasis on page 2
 
-    /* same as above, but manual stepping sequence; requires stick input for each stepping */
+    /* same as above, but manual stepping sequence; requires 
+       stick input (throttle=low & roll=right & pitch=forward) to 
+       step through each defined telemetry page */
     //#define LCD_TELEMETRY_STEP "0123456789" // must begin with 0
 
 
