@@ -361,10 +361,6 @@ void evaluateCommand() {
      break;
    case MSP_DEBUG:
      headSerialReply(8);
-     debug[0] = 3;
-     debug[1] = 10;
-     debug[2] = 17;
-     debug[3] = 24;
      for(uint8_t i=0;i<4;i++) {
        serialize16(debug[i]); // 4 variables are here for general monitoring purpose
      }

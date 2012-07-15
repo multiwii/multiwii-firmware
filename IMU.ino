@@ -100,7 +100,8 @@ void computeIMU () {
 #endif
 
 /* Set the Gyro Weight for Gyro/Acc complementary filter */
-/* Increasing this value would reduce and delay Acc influence on the output of the filter*/#ifndef GYR_CMPF_FACTOR
+/* Increasing this value would reduce and delay Acc influence on the output of the filter*/
+#ifndef GYR_CMPF_FACTOR
   #define GYR_CMPF_FACTOR 400.0f
 #endif
 
