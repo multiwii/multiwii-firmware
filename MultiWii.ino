@@ -132,10 +132,12 @@ struct flags_struct {
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY)
   static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
   static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
-  static uint16_t powerMax = 0;           // highest ever current
-  static uint32_t armedTime = 0;
+  static uint16_t powerMax = 0;           // highest ever current;
   static int32_t  BAROaltStart = 0;       // offset value from powerup
   static int32_t	BAROaltMax = 0;	        // maximum value
+#endif
+#if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)
+  static uint32_t armedTime = 0;
 #endif
 
 static int16_t  i2c_errors_count = 0;
@@ -484,8 +486,10 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     if (cycleTime > cycleTimeMax) cycleTimeMax = cycleTime; // remember highscore
     if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
   #endif
-  #ifdef LCD_TELEMETRY
+  #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)
     if (f.ARMED) armedTime += (uint32_t)cycleTime;
+  #endif
+  #ifdef LCD_TELEMETRY
     #if BARO
       if (!f.ARMED) {
         BAROaltStart = BaroAlt;
