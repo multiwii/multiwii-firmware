@@ -143,8 +143,22 @@ void configureReceiver() {
     #endif
     
     #if defined(FAILSAFE) && !defined(PROMICRO)
-      if (mask & 1<<THROTTLEPIN) {  // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
-        if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
+      #if (FAILSAFE_PIN == THROTTLE)
+        if (mask & 1<<THROTTLEPIN) {  // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
+          if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
+      #endif
+      #if (FAILSAFE_PIN == ROLL)
+        if (mask & 1<<ROLLPIN) {  // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
+          if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
+      #endif
+      #if (FAILSAFE_PIN == PITCH)
+        if (mask & 1<<PITCHPIN) {  // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
+          if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
+      #endif
+      #if (FAILSAFE_PIN == YAW)
+        if (mask & 1<<YAWPIN) {  // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
+          if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
+      #endif
     #endif
   }
   /*********************      atmega328P's Aux2 Pins      *************************/
