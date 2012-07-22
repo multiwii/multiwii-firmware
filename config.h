@@ -861,6 +861,9 @@
     //#define LCD_TELEMETRY_DEBUG    //This form rolls between all screens, LCD_TELEMETRY_AUTO must also be defined.
     //#define LCD_TELEMETRY_DEBUG 6  //This form stays on the screen specified.
 
+    /* Enable string transmissions from copter to GUI */
+    //#define DEBUGMSG
+
 
   /********************************************************************/
   /****           ESCs calibration                                 ****/

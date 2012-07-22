@@ -17,6 +17,13 @@ static volatile uint8_t headTX,tailTX;
 static uint8_t bufTX[TX_BUFFER_SIZE];
 static uint8_t inBuf[INBUF_SIZE];
 
+#ifdef DEBUGMSG
+  #define DEBUG_MSG_BUFFER_SIZE 128
+  static char debug_buf[DEBUG_MSG_BUFFER_SIZE];
+  static uint8_t head_debug;
+  static uint8_t tail_debug;
+#endif
+
 // Multiwii Serial Protocol 0 
 #define MSP_VERSION				 0
 
@@ -53,6 +60,7 @@ static uint8_t inBuf[INBUF_SIZE];
 
 #define MSP_EEPROM_WRITE         250   //in message          no param
 
+#define MSP_DEBUGMSG             253   //out message         debug string buffer
 #define MSP_DEBUG                254   //out message         debug1,debug2,debug3,debug4
 
 static uint8_t checksum;
@@ -365,6 +373,18 @@ void evaluateCommand() {
        serialize16(debug[i]); // 4 variables are here for general monitoring purpose
      }
      break;
+
+#ifdef DEBUGMSG
+   case MSP_DEBUGMSG:
+     {
+       uint8_t size = debugmsg_available();
+       if (size > 16) size = 16;
+       headSerialReply(size);
+       debugmsg_serialize(size);
+     }
+     break;
+#endif
+
    default:  // we do not know how to handle the (valid) message, indicate error MSP $M!
      headSerialError(0);
      break;
@@ -589,3 +609,37 @@ void SerialWrite(uint8_t port,uint8_t c){
     #endif
   }
 }
+
+#ifdef DEBUGMSG
+void debugmsg_append_str(const char *str) {
+  while(*str) {
+    debug_buf[head_debug++] = *str++;
+    if (head_debug == DEBUG_MSG_BUFFER_SIZE) {
+      head_debug = 0;
+    }
+  }
+}
+
+static uint8_t debugmsg_available() {
+  if (head_debug >= tail_debug) {
+    return head_debug-tail_debug;
+  } else {
+    return head_debug + (DEBUG_MSG_BUFFER_SIZE-tail_debug);
+  }
+}
+
+static void debugmsg_serialize(uint8_t l) {
+  for (uint8_t i=0; i<l; i++) {
+    if (head_debug != tail_debug) {
+      serialize8(debug_buf[tail_debug++]);
+      if (tail_debug == DEBUG_MSG_BUFFER_SIZE) {
+        tail_debug = 0;
+      }
+    } else {
+      serialize8('\0');
+    }
+  }
+}
+#else
+void debugmsg_append_str(const char *str) {};
+#endif
