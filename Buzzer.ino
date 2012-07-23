@@ -1,5 +1,5 @@
 #if defined(BUZZER)
-static uint8_t buzzerIsOn = 0,beepDone =0;
+static uint8_t buzzerIsOn = 0,beepDone =0,buzzerSequenceActive=0;
 static uint32_t buzzerLastToggleTime;
 uint8_t isBuzzerON() { return buzzerIsOn; } // returns true while buzzer is buzzing; returns 0 for silent periods
 
@@ -56,26 +56,30 @@ void buzzer(uint8_t warn_vbat){
   else if (warn_failsafe == 1) beep_code('S','M','L','M');                 //failsafe landing active         
   else if (warn_noGPSfix == 1) beep_code('S','S','N','M');       
   else if (beeperOnBox == 1)   beep_code('S','S','S','M');                 //beeperon
+  else if (warn_runtime == 1 && f.ARMED == 1)beep_code('S','S','M','N'); //Runtime warning      
   else if (warn_vbat == 4)     beep_code('S','M','M','D');       
   else if (warn_vbat == 2)     beep_code('S','S','M','D');       
-  else if (warn_vbat == 1)     beep_code('S','M','N','D');           
-  else if (warn_runtime == 1 && f.ARMED == 1)beep_code('S','S','M','N'); //Runtime warning            
+  else if (warn_vbat == 1)     beep_code('S','M','N','D');                 
   else if (toggleBeep > 0)     beep(50);                                   //fast confirmation beep
-  else { 
+  else if (buzzerSequenceActive == 1) beep_code('N','N','N','N');                //if no signal is needed, finish sequence if not finished yet
+  else{                                                                   //reset everything and keep quiet
     buzzerIsOn = 0;
     BUZZERPIN_OFF;
-  }    
+  }  
 }
 
 void beep_code(char first, char second, char third, char pause){
-  char patternChar[4];
+  static char patternChar[4];
   uint16_t Duration;
   static uint8_t icnt = 0;
   
-  patternChar[0] = first; 
-  patternChar[1] = second;
-  patternChar[2] = third;
-  patternChar[3] = pause;
+  if (buzzerSequenceActive == 0){    //only change sequenceparameters if prior sequence is done
+    buzzerSequenceActive = 1;
+    patternChar[0] = first; 
+    patternChar[1] = second;
+    patternChar[2] = third;
+    patternChar[3] = pause;
+  }
   switch(patternChar[icnt]) {
     case 'M': 
       Duration = 100; 
@@ -100,6 +104,7 @@ void beep_code(char first, char second, char third, char pause){
   if (icnt >=3 && (buzzerLastToggleTime<millis()-Duration) ){
     icnt=0;
     toggleBeep =0;
+    buzzerSequenceActive = 0;                              //sequence is now done, next sequence may begin
   }
   if (beepDone == 1 || Duration==0){
     if (icnt < 3){icnt++;}
