@@ -17,40 +17,48 @@ July  2012     V2.1
 #define  VERSION  210
 
 /*********** RC alias *****************/
-#define ROLL       0
-#define PITCH      1
-#define YAW        2
-#define THROTTLE   3
-#define AUX1       4
-#define AUX2       5
-#define AUX3       6
-#define AUX4       7
+enum rc {
+  ROLL,
+  PITCH,
+  YAW,
+  THROTTLE,
+  AUX1,
+  AUX2,
+  AUX3,
+  AUX4
+};
 
-#define PIDALT     3
-#define PIDPOS     4
-#define PIDPOSR    5
-#define PIDNAVR    6
-#define PIDLEVEL   7
-#define PIDMAG     8
-#define PIDVEL     9 // not used currently
+enum pid {
+  PIDROLL,
+  PIDPITCH,
+  PIDYAW,
+  PIDALT,
+  PIDPOS,
+  PIDPOSR,
+  PIDNAVR,
+  PIDLEVEL,
+  PIDMAG,
+  PIDVEL,     // not used currently
+  PIDITEMS
+};
 
-#define BOXACC       0
-#define BOXBARO      1
-#define BOXMAG       2
-#define BOXCAMSTAB   3
-#define BOXCAMTRIG   4
-#define BOXARM       5
-#define BOXGPSHOME   6
-#define BOXGPSHOLD   7
-#define BOXPASSTHRU  8
-#define BOXHEADFREE  9
-#define BOXBEEPERON  10
-#define BOXLEDMAX    11 // we want maximum illumination
-#define BOXLLIGHTS   12 // enable landing lights at any altitude
-#define BOXHEADADJ   13 // acquire heading for HEADFREE mode
-
-#define PIDITEMS 10
-#define CHECKBOXITEMS 14
+enum box {
+  BOXACC,
+  BOXBARO,
+  BOXMAG,
+  BOXCAMSTAB,
+  BOXCAMTRIG,
+  BOXARM,
+  BOXGPSHOME,
+  BOXGPSHOLD,
+  BOXPASSTHRU,
+  BOXHEADFREE,
+  BOXBEEPERON,
+  BOXLEDMAX, // we want maximum illumination
+  BOXLLIGHTS, // enable landing lights at any altitude
+  BOXHEADADJ, // acquire heading for HEADFREE mode
+  CHECKBOXITEMS
+};
 
 const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
   "ACC;"
