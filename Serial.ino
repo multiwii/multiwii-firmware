@@ -46,6 +46,7 @@ static uint8_t inBuf[INBUF_SIZE];
 #define MSP_BOXNAMES             116   //out message         the aux switch names
 #define MSP_PIDNAMES             117   //out message         the PID names
 #define MSP_WP                   118   //out message         get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
+#define MSP_LOG                  199   //out message         log messages for openlog
 
 #define MSP_SET_RAW_RC           200   //in message          8 rc chan
 #define MSP_SET_RAW_GPS          201   //in message          fix, numsat, lat, lon, alt, speed
@@ -109,6 +110,10 @@ void serializeNames(PGM_P s) {
 }
 
 void serialCom() {
+#if defined(OPENLOG_CONNECTED)
+  sendLogData();
+#else
+  
   uint8_t c;  
   static uint8_t offset;
   static uint8_t dataSize;
@@ -158,6 +163,7 @@ void serialCom() {
       c_state = IDLE;
     }
   }
+#endif
 }
 
 void evaluateCommand() {
@@ -442,6 +448,95 @@ void evaluateOtherData(uint8_t sr) {
     #endif // LCD_TELEMETRY
   }
 }
+
+
+#if defined(OPENLOG_CONNECTED)
+void sendLogData() {
+  static int logcounter = 0;
+  static uint32_t cycleCounter = 0;
+  
+  cycleCounter++;
+  
+  #define MSG_SIZE 8+18+6+8+6
+  
+  //if(logcounter < 6) {
+  //  logcounter++;
+  //  return;
+  //}
+  //logcounter = 0;
+  while( (headTX < tailTX && tailTX - headTX < (MSG_SIZE + 6)) || (headTX > tailTX && tailTX + TX_BUFFER_SIZE - headTX < (MSG_SIZE + 6)) ) {
+    logcounter++;
+  }
+
+  
+  /* headSerialReply() */
+  serialize8('$');
+  serialize8('M');
+  serialize8('>');
+  checksum = 0; // start calculating a new checksum
+  serialize8(MSG_SIZE); // +16+16+16+8+4+3 96 bytes (max 128 bytes, TX_BUFFER_SIZE)
+  serialize8(MSP_LOG);
+  /* end */
+  
+  // 8 bytes status
+  //serialize16(cycleTime); 
+  serialize32(currentTime);
+  //serialize32(cycleCounter);
+  //serialize16(logcounter);  logcounter = 0;
+  //serialize16(i2c_errors_count);
+  //serialize16(ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4);
+  serialize32(f.ACC_MODE<<BOXACC|f.BARO_MODE<<BOXBARO|f.MAG_MODE<<BOXMAG|f.ARMED<<BOXARM|
+              rcOptions[BOXCAMSTAB]<<BOXCAMSTAB | rcOptions[BOXCAMTRIG]<<BOXCAMTRIG |
+              f.GPS_HOME_MODE<<BOXGPSHOME|f.GPS_HOLD_MODE<<BOXGPSHOLD|f.HEADFREE_MODE<<BOXHEADFREE|
+              f.PASSTHRU_MODE<<BOXPASSTHRU|rcOptions[BOXBEEPERON]<<BOXBEEPERON|rcOptions[BOXLEDMAX]<<BOXLEDMAX|rcOptions[BOXLLIGHTS]<<BOXLLIGHTS|rcOptions[BOXHEADADJ]<<BOXHEADADJ);
+
+  // 18 bytes raw imu
+  for(uint8_t i=0;i<3;i++) serialize16(accADC[i]);
+  for(uint8_t i=0;i<3;i++) serialize16(gyroADC[i]);
+  for(uint8_t i=0;i<3;i++) serialize16(magADC[i]);
+
+  // 6 bytes attitude  
+  for(uint8_t i=0;i<2;i++) serialize16(angle[i]);
+  serialize16(heading);
+  
+  // 8 bytes RC signals
+  for(uint8_t i=0;i<4;i++) serialize16(rcData[i]);
+  
+  serialize32(BaroAlt);
+  serialize16(BaroPID);
+  
+  /*
+  // 16 bytes servos
+  for(uint8_t i=0;i<8;i++)
+    #if defined(SERVO)
+    serialize16(servo[i]);
+    #else
+    serialize16(0);
+    #endif
+
+  // 16 bytes motors
+  for(uint8_t i=0;i<8;i++) {
+    serialize16( (i < NUMBER_MOTOR) ? motor[i] : 0 );
+  }
+
+
+  
+  // 8 bytes attitude
+  for(uint8_t i=0;i<2;i++) serialize16(angle[i]);
+  serialize16(heading);
+  serialize16(headFreeModeHold);
+  
+  // 4 bytes altitude
+  serialize32(EstAlt);
+  
+  // 3 bytes power/battery
+  serialize8(vbat);
+  serialize16(intPowerMeterSum);  
+  */
+  
+  tailSerialReply();
+}
+#endif
 
 // *******************************************************
 // For Teensy 2.0, these function emulate the API used for ProMicro
