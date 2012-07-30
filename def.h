@@ -506,10 +506,10 @@
   #define SW_PWM_P3                  4        
   #define SW_PWM_P4                  A2
   #define HWPWM6
-  // move servo 3 & 4 to pin 12 & 11
-  #define SERVO_3_PINMODE   DDRD |= (1<<6); // 12
-  #define SERVO_3_PIN_HIGH  PORTD |= 1<<6;
-  #define SERVO_3_PIN_LOW   PORTD &= ~(1<<6);
+  // move servo 3 & 4 to pin 13 & 11
+  #define SERVO_3_PINMODE   DDRC |= (1<<7); // 13
+  #define SERVO_3_PIN_HIGH  PORTC |= 1<<7;
+  #define SERVO_3_PIN_LOW   PORTC &= ~(1<<7);
   #define SERVO_4_PINMODE   DDRB |= (1<<7); // 11
   #define SERVO_4_PIN_HIGH  PORTB |= 1<<7;
   #define SERVO_4_PIN_LOW   PORTB &= ~(1<<7);
