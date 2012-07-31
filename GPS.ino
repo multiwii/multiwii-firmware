@@ -272,7 +272,7 @@ void GPS_NewData() {
 
   #if defined(GPS_SERIAL) || defined(TINY_GPS) || defined(GPS_FROM_OSD)
   #if defined(GPS_SERIAL)
-    while (SerialAvailable(GPS_SERIAL)) {
+    while (SerialAvailable(GPS_SERIAL) > 0) {
      if (GPS_newFrame(SerialRead(GPS_SERIAL))) {
   #elif defined(TINY_GPS)
     {

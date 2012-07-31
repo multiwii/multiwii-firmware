@@ -1192,9 +1192,9 @@ void configurationLoop() {
       ConfigRefresh(p);
       refreshLCD = 0;
     }
-
+    readRawRC(1); delay(44); // For digital receivers like Spektrum, SBUS, and Serial, to ensure that an "old" frame does not cause immediate exit at startup. 
 #if defined(LCD_TEXTSTAR) || defined(LCD_VT100) // textstar or vt100 can send keys
-    key = ( SerialAvailable(0) ? SerialRead(0) : 0 );
+    key = ( (SerialAvailable(0)>0) ? SerialRead(0) : 0 );
 #endif
 #ifdef LCD_CONF_DEBUG
     delay(1000);

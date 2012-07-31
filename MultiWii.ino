@@ -74,7 +74,7 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
   "BEEPER;"
   "LEDMAX;"
   "LLIGHTS;"
-  "HEADADJ;"
+  "HEADADJ;"  
 ;
 
 const char pidnames[] PROGMEM =
@@ -452,10 +452,12 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     }
   }
 
-  #if defined(GPS_PROMINI)
-    if(GPS_Enable == 0) {serialCom();}
-  #else
-    serialCom();
+  #if !(defined(SPEKTRUM) && defined(PROMINI))  //Only one serial port on ProMini.  Skip serial com if Spektrum Sat in use. Note: Spek code will auto-call serialCom if GUI data detected on serial0.
+    #if defined(GPS_PROMINI)
+      if(GPS_Enable == 0) {serialCom();}
+    #else
+      serialCom();
+    #endif
   #endif
 
   #if defined(POWERMETER)

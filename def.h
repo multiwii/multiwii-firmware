@@ -89,8 +89,7 @@
     #define STABLEPIN_OFF              ;
   #endif 
   #define PPM_PIN_INTERRUPT          attachInterrupt(0, rxInt, RISING); //PIN 0
-  #define SPEK_SERIAL_VECT           USART_RX_vect
-  #define SPEK_DATA_REG              UDR0
+  #define SPEK_SERIAL_PORT           0
   //RX PIN assignment inside the port //for PORTD
   #define THROTTLEPIN                2
   #define ROLLPIN                    4
@@ -199,8 +198,9 @@
   #define STABLEPIN_ON               ;
   #define STABLEPIN_OFF              ;
   #define PPM_PIN_INTERRUPT          DDRE &= ~(1 << 6);PORTE |= (1 << 6);EIMSK |= (1 << INT6);EICRB |= (1 << ISC61)|(1 << ISC60);
-  #define SPEK_SERIAL_VECT           USART1_RX_vect
-  #define SPEK_DATA_REG              UDR1
+  #if !defined(SPEK_SERIAL_PORT)
+    #define SPEK_SERIAL_PORT         1
+  #endif
   #define USB_CDC_TX                 3
   #define USB_CDC_RX                 2
   
@@ -329,8 +329,9 @@
   #define STABLEPIN_OFF              PORTC &= ~(1<<6);
 
   #define PPM_PIN_INTERRUPT          attachInterrupt(4, rxInt, RISING);  //PIN 19, also used for Spektrum satellite option
-  #define SPEK_SERIAL_VECT           USART1_RX_vect
-  #define SPEK_DATA_REG              UDR1
+  #if !defined(SPEK_SERIAL_PORT)
+    #define SPEK_SERIAL_PORT         1
+  #endif
   //RX PIN assignment inside the port //for PORTK
   #define THROTTLEPIN                0  //PIN 62 =  PIN A8
   #define ROLLPIN                    1  //PIN 63 =  PIN A9
@@ -390,7 +391,7 @@
   #define LEDPIN_OFF                 PORTD &= ~(1<<4);  
   #define LEDPIN_ON                  PORTD |= (1<<4);     
   #define SPEK_BAUD_SET              UCSR0A  = (1<<U2X0); UBRR0H = ((F_CPU  / 4 / 115200 -1) / 2) >> 8; UBRR0L = ((F_CPU  / 4 / 115200 -1) / 2);
-  #define SPEK_SERIAL_INTERRUPT      UCSR0B |= (1<<RXEN0)|(1<<RXCIE0);
+  #define SPEK_SERIAL_PORT           0
 
   /* Unavailable pins on MONGOOSE1_0 */
   #define BUZZERPIN_PINMODE          ; // D8
@@ -921,6 +922,18 @@
   FlagType               Flag;   
 #endif
 
+#if defined(DESQUARED6DOFV2GO)
+  #define ITG3200
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+	
+#if defined(DESQUARED6DOFV4)
+  #define MPU6050
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #undef INTERNAL_I2C_PULLUPS
+#endif
 
 
 /**************************************************************************************/
@@ -1050,12 +1063,16 @@
   #if (SPEKTRUM == 1024)
     #define SPEK_CHAN_SHIFT  2       // Assumes 10 bit frames, that is 1024 mode.
     #define SPEK_CHAN_MASK   0x03    // Assumes 10 bit frames, that is 1024 mode.
+    #define SPEK_DATA_SHIFT          // Assumes 10 bit frames, that is 1024 mode.
   #endif
   #if (SPEKTRUM == 2048)
     #define SPEK_CHAN_SHIFT  3       // Assumes 11 bit frames, that is 2048 mode.
     #define SPEK_CHAN_MASK   0x07    // Assumes 11 bit frames, that is 2048 mode.
+    #define SPEK_DATA_SHIFT >> 1     // Assumes 11 bit frames, that is 2048 mode.
   #endif
 #endif
+
+
 
 
 /**************************************************************************************/
@@ -1469,7 +1486,7 @@
         #error "NUMBER_MOTOR is not set, most likely you have not defined any type of multicopter"
 #endif
 
-#if (defined(LCD_CONF) || defined(LCD_TELEMETRY)) && !(defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) )
+#if (defined(LCD_CONF) || defined(LCD_TELEMETRY)) && !(defined(LCD_DUMMY) || defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) )
   #error "LCD_CONF or LCD_TELEMETRY defined, and choice of LCD not defined.  Uncomment one of LCD_SERIAL3W or LCD_TEXTSTAR or LCD_VT100 or LCD_ETPP or LCD_LCD03 or OLED_I2C_128x64"
 #endif
 
