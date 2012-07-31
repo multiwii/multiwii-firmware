@@ -545,8 +545,7 @@ void setup() {
   #endif
   /************************************/
   #if defined(GPS_SERIAL)
-    SerialOpen(GPS_SERIAL,GPS_BAUD);  
-    delay(400);  
+    GPS_SerialInit(); 
     for(uint8_t i=0;i<=5;i++){
       GPS_NewData(); 
       LEDPIN_ON
@@ -557,7 +556,7 @@ void setup() {
     if(!GPS_Present){
       SerialEnd(GPS_SERIAL);
       SerialOpen(0,SERIAL_COM_SPEED);
-    }      
+    }
     #if !defined(GPS_PROMINI)
       GPS_Present = 1;
     #endif

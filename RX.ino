@@ -1,7 +1,10 @@
-#include <wiring.c>  //Auto-included by the Arduino core... but we need it sooner. 
 /**************************************************************************************/
 /***************             Global RX related variables           ********************/
 /**************************************************************************************/
+
+#if defined(SPEKTRUM)
+  #include <wiring.c>  //Auto-included by the Arduino core... but we need it sooner. 
+#endif
 
 //RAW RC values will be store here
 #if defined(SBUS)
@@ -245,7 +248,7 @@ void configureReceiver() {
 void  readSBus(){
   #define SBUS_SYNCBYTE 0x0F // Not 100% sure: at the beginning of coding it was 0xF0 !!!
   static uint16_t sbus[25]={0};
-  while(SerialAvailable(1) > 0){
+  while(SerialAvailable(1)){
     int val = SerialRead(1);
     if(sbusIndex==0 && val != SBUS_SYNCBYTE)
       continue;
@@ -288,8 +291,8 @@ void  readSBus(){
 /***************          combine and sort the RX Datas            ********************/
 /**************************************************************************************/
 #if defined(SPEKTRUM)
-  volatile uint8_t  spekFrameFlags;
-  volatile uint32_t spekTimeLast;
+volatile uint8_t  spekFrameFlags;
+volatile uint32_t spekTimeLast;
 void readSpektrum() {
   if ((!f.ARMED) && 
      #if defined(FAILSAFE) || (SPEK_SERIAL_PORT != 0) 
@@ -337,7 +340,7 @@ uint16_t readRawRC(uint8_t chan) {
   #else
     uint8_t oldSREG;
     oldSREG = SREG; cli(); // Let's disable interrupts
-      data = rcValue[rcChannel[chan]]; // Let's copy the data Atomically
+    data = rcValue[rcChannel[chan]]; // Let's copy the data Atomically
     SREG = oldSREG; sei(); // Let's enable the interrupts
   #endif
   return data; // We return the value correctly copied when the IRQ's where disabled
