@@ -123,7 +123,7 @@ void serialCom() {
   
   while (SerialAvailable(0)) {
     uint8_t bytesTXBuff = ((uint8_t)(headTX-tailTX))%TX_BUFFER_SIZE; // indicates the number of occupied bytes in TX buffer
-    if (bytesTXBuff > TX_BUFFER_SIZE - 40 ) return; // ensure there is enough free TX buffer to go further (40 bytes margin)
+    if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (40 bytes margin)
     c = SerialRead(0);
 
     if (c_state == IDLE) {
