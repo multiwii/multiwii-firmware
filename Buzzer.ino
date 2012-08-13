@@ -128,5 +128,7 @@ void beep( uint16_t pulse){
     beepDone =1;
   }
 } 
-
+#else
+ #define isBuzzerON() 0
 #endif
+

@@ -483,12 +483,19 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       if (telemetry) lcd_telemetry();
     }
   #endif
-  
-  #if GPS & defined(GPS_LED_INDICATOR)
-    static uint32_t GPSLEDTime;
-    if ( currentTime > GPSLEDTime && (GPS_numSat >= 5)) {
-      GPSLEDTime = currentTime + 150000;
-      LEDPIN_TOGGLE;
+
+  #if GPS & defined(GPS_LED_INDICATOR)       // modified by MIS to use STABLEPIN LED for number of sattelites indication
+    static uint32_t GPSLEDTime;              // - No GPS FIX -> LED blink at speed of incoming GPS frames
+    static uint8_t blcnt;                    // - Fix and sat no. bellow 5 -> LED off
+    if(currentTime > GPSLEDTime) {           // - Fix and sat no. >= 5 -> LED blinks, one blink for 5 sat, two blinks for 6 sat, three for 7 ...
+      if(f.GPS_FIX && GPS_numSat >= 5) {
+        if(++blcnt > 2*GPS_numSat) blcnt = 0;
+        GPSLEDTime = currentTime + 150000;
+        if(blcnt >= 10 && ((blcnt%2) == 0)) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
+      }else{
+        if((GPS_update == 1) && !f.GPS_FIX) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
+        blcnt = 0;
+      }
     }
   #endif
 
@@ -808,7 +815,9 @@ void loop () {
     }
 
     if (rcOptions[BOXARM] == 0) f.OK_TO_ARM = 1;
-    if (f.ACC_MODE) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
+    #if !defined(GPS_LED_INDICATOR)
+      if (f.ACC_MODE) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
+    #endif
 
     #if BARO
       if (rcOptions[BOXBARO]) {

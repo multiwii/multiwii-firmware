@@ -305,6 +305,9 @@
       //#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For Robe/Hitec/Futaba
       //#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For some Hitec/Sanwa/Others
 
+      // Uncommenting following line allow to connect PPM_SUM receiver to standard THROTTLE PIN on MEGA boards (eg. A8 in CRIUS AIO)
+      //#define PPM_ON_THROTTLE
+
     /**********************    Spektrum Satellite Reciver    *******************************/
       /* The following lines apply only for Spektrum Satellite Receiver
          Spektrum Satellites are 3V devices.  DO NOT connect to 5V!
@@ -499,11 +502,9 @@
     //#define LED_FLASHER_DDR DDRB
     //#define LED_FLASHER_PORT PORTB
     //#define LED_FLASHER_BIT PORTB4
-    //#define LED_FLASHER_SEQUENCE ( (uint8_t) 0 )
-    // create double flashes
-    //#define LED_FLASHER_SEQUENCE_ARMED ( (uint8_t) (1<<0 | 1<<2) )
-    // full illumination
-    //#define LED_FLASHER_SEQUENCE_MAX 0xFF
+    //#define LED_FLASHER_SEQUENCE        0b00000000      // leds OFF
+    //#define LED_FLASHER_SEQUENCE_ARMED  0b00000101      // create double flashes
+    //#define LED_FLASHER_SEQUENCE_MAX    0b11111111      // full illumination
 
 
   /*******************************    Landing lights    *********************************/
@@ -565,6 +566,7 @@
     //#define NMEA
     //#define UBLOX
 
+    //#define INIT_MTK_GPS        // initialize MTK GPS for using selected speed, 5Hz update rate and GGA & RMC sentence 
 
     //#define GPS_PROMINI_SERIAL    57600 // Will Autosense if GPS is connected when ardu boots
    
@@ -581,11 +583,14 @@
     /* get sonar data from Tiny-GPS */
     //#define TINY_GPS_SONAR
 
-    /* indicate a valid GPS fix with at least 5 satellites by flashing the LED? */
-    #define GPS_LED_INDICATOR
-
-    /* GPS data readed from OSD -- still need some more code to work */
+    /* GPS data readed from Misio-OSD - GPS module connected to OSD, and MultiWii read GPS data from OSD - tested and working OK ! */
     //#define GPS_FROM_OSD
+
+    /* indicate a valid GPS fix with at least 5 satellites by flashing the LED  - Modified by MIS - Using stable LED (YELLOW on CRIUS AIO) led work as sat number indicator 
+      - No GPS FIX -> LED blink at speed of incoming GPS frames
+      - Fix and sat no. bellow 5 -> LED off
+      - Fix and sat no. >= 5 -> LED blinks, one blink for 5 sat, two blinks for 6 sat, three for 7 ... */
+    #define GPS_LED_INDICATOR
 
     //#define USE_MSP_WP           		//Enables the MSP_WP command, which is used by WinGUI to display and log Home and Poshold positions
 						//Uncomment it if you are planning to use WinGUI - Will cost +208 bytes of Flash

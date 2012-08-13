@@ -145,7 +145,7 @@ void configureReceiver() {
     #endif
     
     #if defined(FAILSAFE) && !defined(PROMICRO)
-      if (mask & 1<<FAILSAFE_PIN) {  // If pulse present on FAILSAFE_PIN (independent from ardu version), clear FailSafe counter  - added by MIS
+      if (mask & 1<<FAILSAFE_PIN && dTime>980) {  // If pulse present on FAILSAFE_PIN  and pulse time > 980us, clear FailSafe counter  - added by MIS
         if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
     #endif
   }
@@ -189,7 +189,9 @@ void configureReceiver() {
         if(900<diff && diff<2200){
           rcValue[3] = diff;
           #if defined(FAILSAFE)
+           if(diff>980) {        // if Throttle value is higher than 980us
             if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
+           }
           #endif 
         }
       }else last = now; 
@@ -218,6 +220,11 @@ void configureReceiver() {
   ISR(INT6_vect){rxInt();}
 #endif
 
+// PPM_SUM at THROTTLE PIN on MEGA boards
+#if defined(PPM_ON_THROTTLE) && defined(MEGA) && defined(SERIAL_SUM_PPM)
+  ISR(PCINT2_vect) { if(PINK & (1<<0)) rxInt(); }
+#endif
+
 // Read PPM SUM RX Data
 #if defined(SERIAL_SUM_PPM)
   void rxInt() {
@@ -233,7 +240,9 @@ void configureReceiver() {
       if(900<diff && diff<2200 && chan<8 ) {   //Only if the signal is between these values it is valid, otherwise the failsafe counter should move up
         rcValue[chan] = diff;
         #if defined(FAILSAFE)
-          if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // clear FailSafe counter - added by MIS  //incompatible to quadroppm
+          if(chan==2 && diff>980) {        // if Throttle value is higher than 980us
+            if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // clear FailSafe counter - added by MIS  //incompatible to quadroppm
+          }
         #endif
       }
     chan++;

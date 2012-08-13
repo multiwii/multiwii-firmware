@@ -97,9 +97,9 @@ void inline switch_led_flasher(uint8_t on) {
 void auto_switch_led_flasher() {
   uint8_t seg = (currentTime/1000/125)%8;
   if (led_flasher_sequence & 1<<seg) {
-    switch_led_flasher(1);
+    switch_led_flasher(!isBuzzerON());
   } else {
-    switch_led_flasher(0);
+    switch_led_flasher(isBuzzerON());
   }
 }
 
