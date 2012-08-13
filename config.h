@@ -405,6 +405,9 @@
     /* This is the speed of the serial interface */
     #define SERIAL_COM_SPEED 115200
 
+    /* For connecting MISIO-OSD or BLUETOOTH module to SERIAL3 on MEGA boards - SERIAL3 clone functionality of SERIAL0 */
+    #define OSD_ON_UART3 
+
     /* interleaving delay in micro seconds between 2 readings WMP/NK in a WMP+NK config
        if the ACC calibration time is very long (20 or 30s), try to increase this delay up to 4000
        it is relevent only for a conf with NK */

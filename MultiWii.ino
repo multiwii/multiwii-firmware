@@ -514,6 +514,9 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 void setup() {
   #if !defined(GPS_PROMINI)
     SerialOpen(0,SERIAL_COM_SPEED);
+    #if defined(MEGA) && defined(OSD_ON_UART3)
+      SerialOpen(3,SERIAL_COM_SPEED);
+    #endif
   #endif
   LEDPIN_PINMODE;
   POWERPIN_PINMODE;

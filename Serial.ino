@@ -121,11 +121,21 @@ void serialCom() {
     HEADER_CMD,
   } c_state = IDLE;
   
+#if defined(MEGA) && defined(OSD_ON_UART3)
+  static uint8_t port;
+  while (SerialAvailable(0) || SerialAvailable(3)) {
+    uint8_t bytesTXBuff = ((uint8_t)(headTX-tailTX))%TX_BUFFER_SIZE; // indicates the number of occupied bytes in TX buffer
+    if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (40 bytes margin)
+
+    if (c_state == IDLE) port = 0;
+    if (SerialAvailable(0) && port != 2) {port = 1; c = SerialRead(0);}
+    if (SerialAvailable(3) && port != 1) {port = 2; c = SerialRead(3);}
+#else
   while (SerialAvailable(0)) {
     uint8_t bytesTXBuff = ((uint8_t)(headTX-tailTX))%TX_BUFFER_SIZE; // indicates the number of occupied bytes in TX buffer
     if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (40 bytes margin)
     c = SerialRead(0);
-
+#endif
     if (c_state == IDLE) {
       c_state = (c=='$') ? HEADER_START : IDLE;
       if (c_state == IDLE) evaluateOtherData(c); // evaluate all other incoming serial data
@@ -481,6 +491,9 @@ void serialize8(uint8_t a) {
     if (headTX != t) {
       if (++t >= TX_BUFFER_SIZE) t = 0;
       UDR0 = bufTX[t];  // Transmit next byte in the ring
+#if defined(MEGA) && defined(OSD_ON_UART3)
+      UDR3 = bufTX[t];  // Transmit next byte in the ring via UART3
+#endif
       tailTX = t;
     }
     if (t == headTX) UCSR0B &= ~(1<<UDRIE0); // Check if all data is transmitted . if yes disable transmitter UDRE interrupt
