@@ -43,38 +43,82 @@ enum pid {
 };
 
 enum box {
-  BOXACC,
-  BOXBARO,
-  BOXMAG,
-  BOXCAMSTAB,
-  BOXCAMTRIG,
+  #if ACC
+    BOXACC,
+  #endif
+  #if BARO
+    BOXBARO,
+  #endif
+  #if MAG
+    BOXMAG,
+  #endif
+  #if defined(SERVO_TILT) || defined(GIMBAL)
+    BOXCAMSTAB,
+  #endif
+  #if defined(CAMTRIG)
+    BOXCAMTRIG,
+  #endif
   BOXARM,
-  BOXGPSHOME,
-  BOXGPSHOLD,
-  BOXPASSTHRU,
-  BOXHEADFREE,
-  BOXBEEPERON,
-  BOXLEDMAX, // we want maximum illumination
-  BOXLLIGHTS, // enable landing lights at any altitude
-  BOXHEADADJ, // acquire heading for HEADFREE mode
+  #if GPS
+    BOXGPSHOME,
+    BOXGPSHOLD,
+  #endif
+  #if defined(SERVO)
+    BOXPASSTHRU,
+  #endif
+  #if MAG
+    BOXHEADFREE,
+  #endif
+  #if defined(BUZZER)
+    BOXBEEPERON,
+  #endif
+  #if defined(LED_FLASHER)
+    BOXLEDMAX, // we want maximum illumination
+    BOXLLIGHTS, // enable landing lights at any altitude
+  #endif
+  #if MAG
+    BOXHEADADJ, // acquire heading for HEADFREE mode
+  #endif
   CHECKBOXITEMS
 };
 
 const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
-  "ACC;"
-  "BARO;"
-  "MAG;"
-  "CAMSTAB;"
-  "CAMTRIG;"
+  #if ACC
+    "ACC;"
+  #endif
+  #if BARO
+    "BARO;"
+  #endif
+  #if MAG
+    "MAG;"
+  #endif
+  #if defined(SERVO_TILT) || defined(GIMBAL)
+    "CAMSTAB;"
+  #endif
+  #if defined(CAMTRIG)
+    "CAMTRIG;"
+  #endif
   "ARM;"
-  "GPS HOME;"
-  "GPS HOLD;"
-  "PASSTHRU;"
-  "HEADFREE;"
-  "BEEPER;"
-  "LEDMAX;"
-  "LLIGHTS;"
-  "HEADADJ;"  
+  #if GPS
+    "GPS HOME;"
+    "GPS HOLD;"
+  #endif
+  #if defined(SERVO)
+    "PASSTHRU;"
+  #endif
+  #if MAG
+    "HEADFREE;"
+  #endif
+  #if defined(BUZZER)
+    "BEEPER;"
+  #endif
+  #if defined(LED_FLASHER)
+    "LEDMAX;"
+    "LLIGHTS;"
+  #endif
+  #if MAG
+    "HEADADJ;"  
+  #endif
 ;
 
 const char pidnames[] PROGMEM =
@@ -803,16 +847,18 @@ void loop () {
       rcOptions[i] = (auxState & conf.activate[i])>0;
 
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAVE_DELAY is always false
-    if (( rcOptions[BOXACC] || (failsafeCnt > 5*FAILSAVE_DELAY) ) && ACC ) { 
-      // bumpless transfer to Level mode
-      if (!f.ACC_MODE) {
-        errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
-        f.ACC_MODE = 1;
-      }  
-    } else {
-      // failsafe support
-      f.ACC_MODE = 0;
-    }
+    #if ACC
+      if ( rcOptions[BOXACC] || (failsafeCnt > 5*FAILSAVE_DELAY) ) { 
+        // bumpless transfer to Level mode
+        if (!f.ACC_MODE) {
+          errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
+          f.ACC_MODE = 1;
+        }  
+      } else {
+        // failsafe support
+        f.ACC_MODE = 0;
+      }
+    #endif
 
     if (rcOptions[BOXARM] == 0) f.OK_TO_ARM = 1;
     #if !defined(GPS_LED_INDICATOR)
@@ -909,9 +955,11 @@ void loop () {
       }
       #endif
     #endif
-   
-    if (rcOptions[BOXPASSTHRU]) {f.PASSTHRU_MODE = 1;}
-    else {f.PASSTHRU_MODE = 0;}
+    
+    #if defined(SERVO)
+      if (rcOptions[BOXPASSTHRU]) {f.PASSTHRU_MODE = 1;}
+      else {f.PASSTHRU_MODE = 0;}
+    #endif
     
     #ifdef FIXEDWING 
       f.HEADFREE_MODE = 0;

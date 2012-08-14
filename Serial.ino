@@ -232,10 +232,42 @@ void evaluateCommand() {
      serialize16(cycleTime);
      serialize16(i2c_errors_count);
      serialize16(ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4);
-     serialize32(f.ACC_MODE<<BOXACC|f.BARO_MODE<<BOXBARO|f.MAG_MODE<<BOXMAG|f.ARMED<<BOXARM|
-                 rcOptions[BOXCAMSTAB]<<BOXCAMSTAB | rcOptions[BOXCAMTRIG]<<BOXCAMTRIG |
-                 f.GPS_HOME_MODE<<BOXGPSHOME|f.GPS_HOLD_MODE<<BOXGPSHOLD|f.HEADFREE_MODE<<BOXHEADFREE|
-                 f.PASSTHRU_MODE<<BOXPASSTHRU|rcOptions[BOXBEEPERON]<<BOXBEEPERON|rcOptions[BOXLEDMAX]<<BOXLEDMAX|rcOptions[BOXLLIGHTS]<<BOXLLIGHTS|rcOptions[BOXHEADADJ]<<BOXHEADADJ);
+     serialize32(
+                 #if ACC
+                   f.ACC_MODE<<BOXACC|
+                 #endif
+                 #if BARO
+                   f.BARO_MODE<<BOXBARO|
+                 #endif
+                 #if MAG
+                   f.MAG_MODE<<BOXMAG|
+                 #endif
+                 f.ARMED<<BOXARM|
+                 #if defined(SERVO_TILT) || defined(GIMBAL)
+                   rcOptions[BOXCAMSTAB]<<BOXCAMSTAB|
+                 #endif
+                 #if defined(CAMTRIG)
+                   rcOptions[BOXCAMTRIG]<<BOXCAMTRIG|
+                 #endif
+                 #if GPS
+                   f.GPS_HOME_MODE<<BOXGPSHOME|f.GPS_HOLD_MODE<<BOXGPSHOLD|
+                 #endif
+                 #if MAG
+                   f.HEADFREE_MODE<<BOXHEADFREE|
+                 #endif
+                 #if defined(SERVO)
+                   f.PASSTHRU_MODE<<BOXPASSTHRU|
+                 #endif
+                 #if defined(BUZZER)
+                   rcOptions[BOXBEEPERON]<<BOXBEEPERON|
+                 #endif
+                 #if defined(LED_FLASHER)
+                   rcOptions[BOXLEDMAX]<<BOXLEDMAX|rcOptions[BOXLLIGHTS]<<BOXLLIGHTS|
+                 #endif
+                 #if MAG
+                   rcOptions[BOXHEADADJ]<<BOXHEADADJ|
+                 #endif
+                 0);
      break;
    case MSP_RAW_IMU:
      headSerialReply(18);
