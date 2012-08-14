@@ -7,7 +7,7 @@ void i2CLedRingState() {
 
   b[0]='M'; // MultiwII mode
   if (f.ARMED) { // Motors running = flying
-    if(!f.ACC_MODE){ //ACRO
+    if(!f.ANGLE_MODE){ //ACRO
       b[0]= 'x';
     }
     else if(f.GPS_HOME_MODE){ //RTH
@@ -31,7 +31,7 @@ void i2CLedRingState() {
   }
   else { // Motors not running = on the ground
     b[0]= 's';
-    if (f.ACC_MODE) b[1]=1; 
+    if (f.ANGLE_MODE) b[1]=1; 
     else b[1]= 0;                  
     if (f.BARO_MODE) b[2]=1; 
     else b[2]= 0;                  

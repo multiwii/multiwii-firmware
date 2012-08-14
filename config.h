@@ -50,6 +50,7 @@
     //#define MINTHROTTLE 1300 // for Turnigy Plush ESCs 10A
     //#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
     //#define MINTHROTTLE 1064 // special ESC (simonk)
+    //#define MINTHROTTLE 1050 // for brushed ESCs like ladybird
     #define MINTHROTTLE 1150
 
   /****************************    Motor maxthrottle    *******************************/
@@ -124,6 +125,8 @@
       //#define CRIUS_AIO_PRO_V1
       //#define DESQUARED6DOFV2GO  // DEsquared V2 with ITG3200 only
       //#define DESQUARED6DOFV4    // DEsquared V4 with MPU6050
+      //#define LADYBIRD
+      
       
     /***************************    independent sensors    ********************************/
       /* leave it commented if you already checked a specific board above */

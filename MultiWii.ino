@@ -44,7 +44,8 @@ enum pid {
 
 enum box {
   #if ACC
-    BOXACC,
+    BOXANGLE,
+    BOXHORIZON,
   #endif
   #if BARO
     BOXBARO,
@@ -84,7 +85,8 @@ enum box {
 
 const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
   #if ACC
-    "ACC;"
+    "ANGLE;"
+    "HORIZON;"
   #endif
   #if BARO
     "BARO;"
@@ -167,7 +169,8 @@ struct flags_struct {
   uint8_t I2C_INIT_DONE :1 ; // For i2c gps we have to now when i2c init is done, so we can update parameters to the i2cgps from eeprom (at startup it is done in setup())
   uint8_t ACC_CALIBRATED :1 ;
   uint8_t NUNCHUKDATA :1 ;
-  uint8_t ACC_MODE :1 ;
+  uint8_t ANGLE_MODE :1 ;
+  uint8_t HORIZON_MODE :1 ;
   uint8_t MAG_MODE :1 ;
   uint8_t BARO_MODE :1 ;
   uint8_t GPS_HOME_MODE :1 ;
@@ -650,7 +653,7 @@ void loop () {
   uint8_t axis,i;
   int16_t error,errorAngle;
   int16_t delta,deltaSum;
-  int16_t PTerm,ITerm,DTerm;
+  int16_t PTerm,ITerm,PTermACC,ITermACC,PTermGYRO,ITermGYRO,DTerm;
   static int16_t lastGyro[3] = {0,0,0};
   static int16_t delta1[3],delta2[3];
   static int16_t errorGyroI[3] = {0,0,0};
@@ -848,21 +851,29 @@ void loop () {
 
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAVE_DELAY is always false
     #if ACC
-      if ( rcOptions[BOXACC] || (failsafeCnt > 5*FAILSAVE_DELAY) ) { 
+      if ( rcOptions[BOXANGLE] || (failsafeCnt > 5*FAILSAVE_DELAY) ) { 
         // bumpless transfer to Level mode
-        if (!f.ACC_MODE) {
+        if (!f.ANGLE_MODE) {
           errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
-          f.ACC_MODE = 1;
+          f.ANGLE_MODE = 1;
         }  
       } else {
         // failsafe support
-        f.ACC_MODE = 0;
+        f.ANGLE_MODE = 0;
+      }
+      if ( rcOptions[BOXHORIZON] ) { 
+        if (!f.HORIZON_MODE) {
+          errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
+          f.HORIZON_MODE = 1;
+        }
+      } else {
+        f.HORIZON_MODE = 0;
       }
     #endif
 
     if (rcOptions[BOXARM] == 0) f.OK_TO_ARM = 1;
     #if !defined(GPS_LED_INDICATOR)
-      if (f.ACC_MODE) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
+      if (f.ANGLE_MODE || f.HORIZON_MODE) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
     #endif
 
     #if BARO
@@ -1041,32 +1052,47 @@ void loop () {
     }
   #endif
 
-
-  //**** PITCH & ROLL & YAW PID ****    
+  //**** PITCH & ROLL & YAW PID ****
   for(axis=0;axis<3;axis++) {
-    if (f.ACC_MODE && axis<2 ) { //LEVEL MODE
+    if ((f.ANGLE_MODE || f.HORIZON_MODE) && axis<2 ) { // MODE relying on ACC
       // 50 degrees max inclination
       errorAngle = constrain(2*rcCommand[axis] + GPS_angle[axis],-500,+500) - angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
       #ifdef LEVEL_PDF
-        PTerm      = -(int32_t)angle[axis]*conf.P8[PIDLEVEL]/100 ;
+        PTermACC      = -(int32_t)angle[axis]*conf.P8[PIDLEVEL]/100 ;
       #else  
-        PTerm      = (int32_t)errorAngle*conf.P8[PIDLEVEL]/100 ;                          // 32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
+        PTermACC      = (int32_t)errorAngle*conf.P8[PIDLEVEL]/100 ;                          // 32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
       #endif
-      PTerm = constrain(PTerm,-conf.D8[PIDLEVEL]*5,+conf.D8[PIDLEVEL]*5);
+      PTermACC = constrain(PTermACC,-conf.D8[PIDLEVEL]*5,+conf.D8[PIDLEVEL]*5);
 
-      errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);    // WindUp     //16 bits is ok here
-      ITerm              = ((int32_t)errorAngleI[axis]*conf.I8[PIDLEVEL])>>12;            // 32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
-    } else { //ACRO MODE or YAW axis
+      errorAngleI[axis]     = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);    // WindUp     //16 bits is ok here
+      ITermACC              = ((int32_t)errorAngleI[axis]*conf.I8[PIDLEVEL])>>12;            // 32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
+    }
+    if (!f.ANGLE_MODE || axis == 2 ) { // MODE relying on GYRO or YAW axis
       if (abs(rcCommand[axis])<350) error =          rcCommand[axis]*10*8/conf.P8[axis] ; // 16 bits is needed for calculation: 350*10*8 = 28000      16 bits is ok for result if P8>2 (P>0.2)
                                else error = (int32_t)rcCommand[axis]*10*8/conf.P8[axis] ; // 32 bits is needed for calculation: 500*5*10*8 = 200000   16 bits is ok for result if P8>2 (P>0.2)
       error -= gyroData[axis];
 
-      PTerm = rcCommand[axis];
+      PTermGYRO = rcCommand[axis];
       
       errorGyroI[axis]  = constrain(errorGyroI[axis]+error,-16000,+16000);          // WindUp   16 bits is ok here
       if (abs(gyroData[axis])>640) errorGyroI[axis] = 0;
-      ITerm = (errorGyroI[axis]/125*conf.I8[axis])>>6;                                   // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
+      ITermGYRO = (errorGyroI[axis]/125*conf.I8[axis])>>6;                                   // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
     }
+    if ( f.HORIZON_MODE && axis<2) {
+      int16_t prop;
+      prop = abs(rcCommand[axis]); // range [0;500]
+      PTerm = ((int32_t)PTermACC*(500-prop) + (int32_t)PTermGYRO*prop)/500;
+      ITerm = ((int32_t)ITermACC*(500-prop) + (int32_t)ITermGYRO*prop)/500;
+    } else {
+      if ( f.ANGLE_MODE && axis<2) {
+        PTerm = PTermACC;
+        ITerm = ITermACC;
+      } else {
+        PTerm = PTermGYRO;
+        ITerm = ITermGYRO;
+      }
+    }
+
     if (abs(gyroData[axis])<160) PTerm -=          gyroData[axis]*dynP8[axis]/10/8; // 16 bits is needed for calculation   160*200 = 32000         16 bits is ok for result
                             else PTerm -= (int32_t)gyroData[axis]*dynP8[axis]/10/8; // 32 bits is needed for calculation   
 

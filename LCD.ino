@@ -882,11 +882,11 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #endif
 #ifdef LCD_CONF_AUX
   #if ACC
-    &lcd_param_text42, &conf.activate[BOXACC], &__AUX1,
-    &lcd_param_text42, &conf.activate[BOXACC], &__AUX2,
+    &lcd_param_text42, &conf.activate[BOXANGLE], &__AUX1,
+    &lcd_param_text42, &conf.activate[BOXANGLE], &__AUX2,
     #ifndef SUPPRESS_LCD_CONF_AUX34
-      &lcd_param_text42, &conf.activate[BOXACC], &__AUX3,
-      &lcd_param_text42, &conf.activate[BOXACC], &__AUX4,
+      &lcd_param_text42, &conf.activate[BOXANGLE], &__AUX3,
+      &lcd_param_text42, &conf.activate[BOXANGLE], &__AUX4,
     #endif
   #endif
   #if BARO

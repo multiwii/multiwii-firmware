@@ -234,7 +234,8 @@ void evaluateCommand() {
      serialize16(ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4);
      serialize32(
                  #if ACC
-                   f.ACC_MODE<<BOXACC|
+                   f.ANGLE_MODE<<BOXANGLE|
+                   f.HORIZON_MODE<<BOXHORIZON|
                  #endif
                  #if BARO
                    f.BARO_MODE<<BOXBARO|
