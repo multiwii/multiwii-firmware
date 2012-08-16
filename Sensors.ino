@@ -255,6 +255,9 @@ void GYRO_Common() {
       if (calibratingG == 1) {
         gyroZero[axis]=g[axis]/400;
         blinkLED(10,15,1);
+      #if defined(BUZZER)
+        beep_confirmation = 4;
+      #endif
       }
     }
     calibratingG--;
@@ -333,7 +336,7 @@ void ACC_Common() {
           AccInflightCalibrationActive = 0;
           AccInflightCalibrationMeasurementDone = 1;
           #if defined(BUZZER)
-            toggleBeep = 2;      //buzzer for indicatiing the end of calibration
+            beep_confirmation = 1;      //buzzer for indicatiing the end of calibration
           #endif
           // recover saved values to maintain current flight behavior until new values are transferred
           conf.accZero[ROLL]  = accZero_saved[ROLL] ;
@@ -1359,6 +1362,9 @@ void i2c_srf08_change_addr(int8_t current, int8_t moveto) {
   i2c_writeReg(current, SRF08_REV_COMMAND, 0xA5);  delay(30);
   i2c_writeReg(current, SRF08_REV_COMMAND, moveto);  delay(30); // now change i2c address
   blinkLED(5,1,2);
+  #if defined(BUZZER)
+   beep_confirmation = 2;
+  #endif
 }
 
 // discover previously known sensors and any new sensor (move new sensors to assigned area)

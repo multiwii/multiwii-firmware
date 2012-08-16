@@ -1072,6 +1072,10 @@
   #define POWERMETER
 #endif
 
+#if defined(VBAT)
+  #define BUZZER
+#endif
+
 //all new Special RX's must be added here
 //this is to avoid confusion :)
 #if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(RCSERIALERIAL)

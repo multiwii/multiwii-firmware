@@ -46,7 +46,13 @@ void writeParams(uint8_t b) {
   conf.checkNewConf = EEPROM_CONF_VERSION; // make sure we write the current version into eeprom
   eeprom_write_block((const void*)&conf, (void*)0, sizeof(conf));
   readEEPROM();
-  if (b == 1) blinkLED(15,20,1);
+  if (b == 1){ 
+    blinkLED(15,20,1);
+    #if defined(BUZZER)
+      beep_confirmation = 1;
+    #endif
+  }
+  
 }
 
 void checkFirstTime() {

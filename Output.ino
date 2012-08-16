@@ -458,6 +458,9 @@ void initOutput() {
     while (1) {
       delay(5000);
       blinkLED(2,20, 2);
+    #if defined(BUZZER)
+      beep_confirmation = 2;
+    #endif
     }
     exit; // statement never reached
   #endif

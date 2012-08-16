@@ -345,37 +345,14 @@ static struct {
   #define NAV_MODE_WP            2
   static uint8_t nav_mode = NAV_MODE_NONE;            //Navigation mode
 
-void blinkLED(uint8_t num, uint8_t wait,uint8_t repeat) {
-  uint8_t i,r;
-  for (r=0;r<repeat;r++) {
-    for(i=0;i<num;i++) {
-      #if defined(LED_FLASHER)
-        switch_led_flasher(1);
-      #endif
-      #if defined(LANDING_LIGHTS_DDR)
-        switch_landing_lights(1);
-      #endif
-      LEDPIN_TOGGLE; // switch LEDPIN state
-      BUZZERPIN_ON;
-      delay(wait);
-      BUZZERPIN_OFF;
-      #if defined(LED_FLASHER)
-        switch_led_flasher(0);
-      #endif
-      #if defined(LANDING_LIGHTS_DDR)
-        switch_landing_lights(0);
-      #endif
-    }
-    delay(60);
-  }
-}
+  #if defined(BUZZER)  
+    static uint8_t beep_toggle = 0,
+                   beep_confirmation = 0;
+   #endif
 
 void annexCode() { // this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
   static uint32_t calibratedAccTime;
   uint16_t tmp,tmp2;
-  #if defined(BUZZER)
-    static uint8_t  buzzerFreq;         // delay between buzzer ring
-  #endif
   uint8_t axis,prop1,prop2;
 
   #define BREAKPOINT 1500
@@ -439,35 +416,20 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       pMeter[PMOTOR_SUM] += (uint32_t) powerValue;
     }
   #endif
-
-  #if defined(VBAT)
-    static uint8_t vbatTimer = 0;
-    static uint8_t ind = 0;
-    uint16_t vbatRaw = 0;
-    static uint16_t vbatRawArray[8];
-    if (! (++vbatTimer % VBATFREQ)) {
-    	vbatRawArray[(ind++)%8] = analogRead(V_BATPIN);
-    	for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
-    	vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
-    }
-    if ( ( (vbat>VBATLEVEL1_3S) 
-    #if defined(POWERMETER)
-                         && ( (pMeter[PMOTOR_SUM] < pAlarm) || (pAlarm == 0) )
-    #endif
-                       )  || (NO_VBAT>vbat)                              ) // ToLuSe
-    {                                          // VBAT ok AND powermeter ok, buzzer off
-      buzzerFreq = 0;
-    #if defined(POWERMETER)
-    } else if (pMeter[PMOTOR_SUM] > pAlarm) {                             // sound alarm for powermeter
-      buzzerFreq = 4;
-    #endif
-    } else if (vbat>VBATLEVEL2_3S) buzzerFreq = 1;
-    else if (vbat>VBATLEVEL3_3S)   buzzerFreq = 2;
-    else                           buzzerFreq = 4;
-  #endif
   #if defined(BUZZER)
-    buzzer(buzzerFreq); // external buzzer routine that handles buzzer events globally now
-  #endif
+    #if defined(VBAT)
+      static uint8_t vbatTimer = 0;
+      static uint8_t ind = 0;
+      uint16_t vbatRaw = 0;
+      static uint16_t vbatRawArray[8];
+      if (! (++vbatTimer % VBATFREQ)) {
+      	vbatRawArray[(ind++)%8] = analogRead(V_BATPIN);
+      	for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
+      	vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
+      }
+    #endif
+    alarmHandler(); // external buzzer routine that handles buzzer events globally now
+  #endif  
   
   if ( (calibratingA>0 && ACC ) || (calibratingG>0) ) { // Calibration phasis
     LEDPIN_TOGGLE;
@@ -737,9 +699,9 @@ void loop () {
               AccInflightCalibrationArmed = !AccInflightCalibrationArmed; 
               #if defined(BUZZER)
               if (AccInflightCalibrationArmed){
-                toggleBeep = 2;
+                beep_toggle = 2;
               } else {
-                toggleBeep = 3;
+                beep_toggle = 3;
               }
               #endif
             }

@@ -579,6 +579,9 @@ void lcdprint_int16(int16_t v) {
 
 void initLCD() {
   blinkLED(20,30,1);
+  #if defined(BUZZER)
+    beep_confirmation = 1;
+  #endif
 #if defined(LCD_SERIAL3W)
   SerialEnd(0);
   //init LCD
@@ -1123,6 +1126,9 @@ static uint8_t lcdStickState[3];
 #ifdef DISPLAY_2LINES
 void ConfigRefresh(uint8_t p) {
   blinkLED(10,20,1);
+  #if defined(BUZZER)
+    beep_toggle = 1;
+  #endif
   strcpy_P(line1,PSTR("                "));
   strcpy(line2,line1);
   strcpy_P(line1, (char*)pgm_read_word(&(lcd_param_ptr_table[p * 3])));
@@ -1141,6 +1147,9 @@ void ConfigRefresh(uint8_t p) {
   int8_t pp = (int8_t)p;
   #ifndef OLED_I2C_128x64
    blinkLED(2,4,1);
+   #if defined(BUZZER)
+    beep_toggle = 1;
+   #endif
    LCDclear();
   #else
    delay(60);
@@ -1222,6 +1231,9 @@ void configurationLoop() {
     }
   } // while (LCD == 1)
   blinkLED(20,30,1);
+  #if defined(BUZZER)
+    beep_confirmation = 1;
+  #endif
 
   LCDclear();
   LCDsetLine(1);
