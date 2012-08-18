@@ -479,6 +479,13 @@
   /* Pseudo-derivative conrtroller for level mode (experimental)
      Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
     //#define LEVEL_PDF
+	
+	
+  /************************   Assisted AcroTrainer    **********************************/
+    /* Train Acro with auto recovery. Value set the point where ANGLE_MODE takes over.
+       Remember to activate ANGLE_MODE first!...
+       A Value on 200 will give a very distinct transfer */
+     //#define ACROTRAINER_MODE 200   // http://www.multiwii.com/forum/viewtopic.php?f=16&t=1944#p17437
 
 
   /********                          Failsave settings                 ********************/

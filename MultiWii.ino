@@ -976,6 +976,19 @@ void loop () {
   currentTime = micros();
   cycleTime = currentTime - previousTime;
   previousTime = currentTime;
+  
+  #if defined(ACROTRAINER_MODE)
+    if(f.ANGLE_MODE){
+      if (abs(rcCommand[ROLL]) + abs(rcCommand[PITCH]) >= ACROTRAINER_MODE ) {
+        f.ANGLE_MODE=0;
+		f.HORIZON_MODE=0;
+        f.MAG_MODE=0;
+        f.BARO_MODE=0;
+        f.GPS_HOME_MODE=0;
+        f.GPS_HOLD_MODE=0;
+      }
+    }
+  #endif
 
   #if MAG
     if (abs(rcCommand[YAW]) <70 && f.MAG_MODE) {
