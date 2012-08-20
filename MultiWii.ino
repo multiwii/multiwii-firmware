@@ -977,6 +977,9 @@ void loop () {
   cycleTime = currentTime - previousTime;
   previousTime = currentTime;
   
+ //***********************************
+ //**** Experimental FlightModes *****
+ //***********************************
   #if defined(ACROTRAINER_MODE)
     if(f.ANGLE_MODE){
       if (abs(rcCommand[ROLL]) + abs(rcCommand[PITCH]) >= ACROTRAINER_MODE ) {
@@ -990,6 +993,17 @@ void loop () {
     }
   #endif
 
+  #if defined(AP_MODE)
+    if(f.ANGLE_MODE || f.HORIZON_MODE){
+      if (abs(rcCommand[ROLL])>= AP_MODE || abs(rcCommand[PITCH]) >= AP_MODE) {
+        f.BARO_MODE=0;
+        f.GPS_HOME_MODE=0;
+        f.GPS_HOLD_MODE=0;
+      }
+    }
+  #endif 
+ //*********************************** 
+  
   #if MAG
     if (abs(rcCommand[YAW]) <70 && f.MAG_MODE) {
       int16_t dif = heading - magHold;

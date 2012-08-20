@@ -10,7 +10,7 @@
  * 3 - RC SYSTEM SETUP
  * 4 - ALTERNATE CPUs & BOARDS - if you have
  * 5 - ALTERNATE SETUP - select alternate RX (SBUS, PPM, etc.), alternate ESC-range, etc. here
- * 6 - OPTIONAL FEATURES - enable nice to have features here (LCD, telemetry, battery monitor etc.)
+ * 6 - OPTIONAL FEATURES - enable nice to have features here (FlightModes,LCD, telemetry, battery monitor etc.)
  * 7 - TUNING & DEVELOPER - if you know what you are doing; you have been warned
  */
 
@@ -481,11 +481,22 @@
     //#define LEVEL_PDF
 	
 	
+/*************************************************************************************************/
+/*****************                                                                 ***************/
+/****************   Experimental FlightModes                                               *******/
+/*****************                                                                 ***************/
+/*************************************************************************************************/
+
+
+  /************************        AP FlightMode        **********************************/
+    /* Temporarily Disables GPS_HOLD_MODE to be able to make it possible to adjust the Hold-position when moving the sticks.*/
+    //#define AP_MODE 10  // Create a deadspan for GPS.
+	
   /************************   Assisted AcroTrainer    **********************************/
     /* Train Acro with auto recovery. Value set the point where ANGLE_MODE takes over.
        Remember to activate ANGLE_MODE first!...
        A Value on 200 will give a very distinct transfer */
-     //#define ACROTRAINER_MODE 200   // http://www.multiwii.com/forum/viewtopic.php?f=16&t=1944#p17437
+    //#define ACROTRAINER_MODE 200   // http://www.multiwii.com/forum/viewtopic.php?f=16&t=1944#p17437
 
 
   /********                          Failsave settings                 ********************/
