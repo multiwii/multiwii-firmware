@@ -530,7 +530,12 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 void setup() {
   #if !defined(GPS_PROMINI)
     SerialOpen(0,SERIAL_COM_SPEED);
-    #if defined(MEGA) && defined(OSD_ON_UART3)
+    #if defined(PROMICRO)
+      SerialOpen(1,SERIAL_COM_SPEED);
+    #endif
+    #if defined(MEGA)
+      SerialOpen(1,SERIAL_COM_SPEED);
+      SerialOpen(2,SERIAL_COM_SPEED);
       SerialOpen(3,SERIAL_COM_SPEED);
     #endif
   #endif
@@ -564,7 +569,7 @@ void setup() {
   #endif
   /************************************/
   #if defined(GPS_SERIAL)
-    GPS_SerialInit(); 
+    GPS_SerialInit();
     for(uint8_t i=0;i<=5;i++){
       GPS_NewData(); 
       LEDPIN_ON
@@ -976,15 +981,15 @@ void loop () {
   currentTime = micros();
   cycleTime = currentTime - previousTime;
   previousTime = currentTime;
-  
- //***********************************
- //**** Experimental FlightModes *****
- //***********************************
+
+  //***********************************
+  //**** Experimental FlightModes *****
+  //***********************************
   #if defined(ACROTRAINER_MODE)
     if(f.ANGLE_MODE){
       if (abs(rcCommand[ROLL]) + abs(rcCommand[PITCH]) >= ACROTRAINER_MODE ) {
         f.ANGLE_MODE=0;
-		f.HORIZON_MODE=0;
+        f.HORIZON_MODE=0;
         f.MAG_MODE=0;
         f.BARO_MODE=0;
         f.GPS_HOME_MODE=0;
@@ -992,7 +997,6 @@ void loop () {
       }
     }
   #endif
-
   #if defined(AP_MODE)
     if(f.ANGLE_MODE || f.HORIZON_MODE){
       if (abs(rcCommand[ROLL])>= AP_MODE || abs(rcCommand[PITCH]) >= AP_MODE) {
@@ -1001,9 +1005,10 @@ void loop () {
         f.GPS_HOLD_MODE=0;
       }
     }
-  #endif 
+  #endif
  //*********************************** 
-  
+
+
   #if MAG
     if (abs(rcCommand[YAW]) <70 && f.MAG_MODE) {
       int16_t dif = heading - magHold;
@@ -1042,6 +1047,9 @@ void loop () {
   #endif
 
   //**** PITCH & ROLL & YAW PID ****
+  int16_t prop;
+  prop = max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])); // range [0;500]
+  
   for(axis=0;axis<3;axis++) {
     if ((f.ANGLE_MODE || f.HORIZON_MODE) && axis<2 ) { // MODE relying on ACC
       // 50 degrees max inclination
@@ -1068,8 +1076,6 @@ void loop () {
       ITermGYRO = (errorGyroI[axis]/125*conf.I8[axis])>>6;                                   // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
     }
     if ( f.HORIZON_MODE && axis<2) {
-      int16_t prop;
-      prop = abs(rcCommand[axis]); // range [0;500]
       PTerm = ((int32_t)PTermACC*(500-prop) + (int32_t)PTermGYRO*prop)/500;
       ITerm = ((int32_t)ITermACC*(500-prop) + (int32_t)ITermGYRO*prop)/500;
     } else {

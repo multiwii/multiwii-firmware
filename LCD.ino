@@ -1420,7 +1420,42 @@ void fill_line2_fails_values() {
   line2[14] = digit10(unit);
   line2[15] = digit1(unit);
 }
-static char checkboxitemNames[CHECKBOXITEMS][4] = {"Lvl", "Bar", "Mag", "CSt", "CTr", "Arm", "GHm", "GHd", "Pas", "HFr", "Bpp"};
+
+static char checkboxitemNames[][4] = {
+  #if ACC
+    "Ang","Hor",
+  #endif
+  #if BARO
+    "Bar",
+  #endif
+  #if MAG
+    "Mag",
+  #endif
+  #if defined(SERVO_TILT) || defined(GIMBAL)
+    "CSt",
+  #endif
+  #if defined(CAMTRIG)
+    "CTr",
+  #endif
+    "Arm",
+  #if GPS
+    "GHm",
+    "GHd",
+  #endif
+  #if defined(SERVO)
+    "Pas",
+  #endif
+  #if defined(LED_FLASHER)
+    "LED",
+    "LIG",
+  #endif
+  #if MAG
+    "HFr",
+  #endif
+  #if defined(BUZZER)
+    "Bpp",
+  #endif
+  ""};  
 void output_checkboxitems() {
   for (uint8_t i=0; i<CHECKBOXITEMS; i++ ) {
     if (rcOptions[i] || ((i==BOXARM)&&(f.ARMED)) ) {
@@ -1726,13 +1761,13 @@ void lcd_telemetry() {
       static uint8_t index = 0;
       index %= CHECKBOXITEMS;
       if (index == 0) linenr = 1; //vt100 starts linenumbering @1
-      if (!ACC && (index==0)) index++;
-      if (!BARO && (index==1)) index++;
-      if (!MAG && (index==2)) index++;
-      #if !( defined(SERVO_TILT)|| defined(SERVO_MIX_TILT) || defined(CAMTRIG) || defined(GIMBAL) )
-        if ( (index==3)) index+=2;
-      #endif
-      if (!GPS && (index==6)) index+=2;
+//      if (!ACC && (index==0)) index++;
+//      if (!BARO && (index==1)) index++;
+//      if (!MAG && (index==2)) index++;
+//      #if !( defined(SERVO_TILT)|| defined(SERVO_MIX_TILT) || defined(CAMTRIG) || defined(GIMBAL) )
+//        if ( (index==3)) index+=2;
+//      #endif
+//      if (!GPS && (index==6)) index+=2;
       LCDsetLine(linenr++);
       LCDprintChar(checkboxitemNames[index]);
       LCDprint(' ');

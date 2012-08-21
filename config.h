@@ -10,7 +10,7 @@
  * 3 - RC SYSTEM SETUP
  * 4 - ALTERNATE CPUs & BOARDS - if you have
  * 5 - ALTERNATE SETUP - select alternate RX (SBUS, PPM, etc.), alternate ESC-range, etc. here
- * 6 - OPTIONAL FEATURES - enable nice to have features here (FlightModes,LCD, telemetry, battery monitor etc.)
+ * 6 - OPTIONAL FEATURES - enable nice to have features here (FlightModes, LCD, telemetry, battery monitor etc.)
  * 7 - TUNING & DEVELOPER - if you know what you are doing; you have been warned
  */
 
@@ -55,12 +55,12 @@
 
   /****************************    Motor maxthrottle    *******************************/
     /* this is the maximum value for the ESCs at full power, this value can be increased up to 2000 */
-      #define MAXTHROTTLE 1850
+    #define MAXTHROTTLE 1850
 
   /****************************    Mincommand          *******************************/
     /* this is the value for the ESCs when they are not armed
        in some cases, this value must be lowered down to 900 for some specific ESCs, otherwise they failed to initiate */
-      #define MINCOMMAND  1000
+    #define MINCOMMAND  1000
 
   /**********************************    I2C speed   ************************************/
     #define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
@@ -411,9 +411,6 @@
     /* This is the speed of the serial interface */
     #define SERIAL_COM_SPEED 115200
 
-    /* For connecting MISIO-OSD or BLUETOOTH module to SERIAL3 on MEGA boards - SERIAL3 clone functionality of SERIAL0 */
-    #define OSD_ON_UART3 
-
     /* interleaving delay in micro seconds between 2 readings WMP/NK in a WMP+NK config
        if the ACC calibration time is very long (20 or 30s), try to increase this delay up to 4000
        it is relevent only for a conf with NK */
@@ -481,17 +478,10 @@
     //#define LEVEL_PDF
 	
 	
-/*************************************************************************************************/
-/*****************                                                                 ***************/
-/****************   Experimental FlightModes                                               *******/
-/*****************                                                                 ***************/
-/*************************************************************************************************/
-
-
   /************************        AP FlightMode        **********************************/
     /* Temporarily Disables GPS_HOLD_MODE to be able to make it possible to adjust the Hold-position when moving the sticks.*/
     //#define AP_MODE 10  // Create a deadspan for GPS.
-	
+        
   /************************   Assisted AcroTrainer    **********************************/
     /* Train Acro with auto recovery. Value set the point where ANGLE_MODE takes over.
        Remember to activate ANGLE_MODE first!...
@@ -575,8 +565,8 @@
        the GPS must be configured to output GGA and RMC NMEA sentences (which is generally the default conf for most GPS devices)
        at least 5Hz update rate. uncomment the first line to select the GPS serial port of the arduino */
     //#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
-    #define GPS_BAUD   57600
-    //#define GPS_BAUD   115200
+    //#define GPS_BAUD   57600
+    #define GPS_BAUD   115200
 
 
     /* GPS protocol 

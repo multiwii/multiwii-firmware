@@ -1,5 +1,7 @@
 #if defined(MEGA)
   #define UART_NUMBER 4
+#elif defined(PROMICRO)
+  #define UART_NUMBER 2
 #else
   #define UART_NUMBER 1
 #endif
@@ -13,9 +15,9 @@
 
 static volatile uint8_t serialHeadRX[UART_NUMBER],serialTailRX[UART_NUMBER];
 static uint8_t serialBufferRX[RX_BUFFER_SIZE][UART_NUMBER];
-static volatile uint8_t headTX,tailTX;
-static uint8_t bufTX[TX_BUFFER_SIZE];
-static uint8_t inBuf[INBUF_SIZE];
+static volatile uint8_t serialHeadTX[UART_NUMBER],serialTailTX[UART_NUMBER];
+static uint8_t serialBufferTX[TX_BUFFER_SIZE][UART_NUMBER];
+static uint8_t inBuf[INBUF_SIZE][UART_NUMBER];
 
 #ifdef DEBUGMSG
   #define DEBUG_MSG_BUFFER_SIZE 128
@@ -25,7 +27,7 @@ static uint8_t inBuf[INBUF_SIZE];
 #endif
 
 // Multiwii Serial Protocol 0 
-#define MSP_VERSION				 0
+#define MSP_VERSION              0
 
 #define MSP_IDENT                100   //out message         multitype + multiwii version + protocol version + capability variable
 #define MSP_STATUS               101   //out message         cycletime & errors_count & sensor present & box activation
@@ -63,9 +65,15 @@ static uint8_t inBuf[INBUF_SIZE];
 #define MSP_DEBUGMSG             253   //out message         debug string buffer
 #define MSP_DEBUG                254   //out message         debug1,debug2,debug3,debug4
 
-static uint8_t checksum;
-static uint8_t indRX;
-static uint8_t cmdMSP;
+static uint8_t checksum[UART_NUMBER];
+static uint8_t indRX[UART_NUMBER];
+static uint8_t cmdMSP[UART_NUMBER];
+
+#if defined(PROMINI)
+  #define CURRENTPORT 0
+#else
+  static uint8_t CURRENTPORT=0;
+#endif
 
 uint32_t read32() {
   uint32_t t = read16();
@@ -78,16 +86,16 @@ uint16_t read16() {
   return t;
 }
 uint8_t read8()  {
-  return inBuf[indRX++]&0xff;
+  return inBuf[indRX[CURRENTPORT]++][CURRENTPORT]&0xff;
 }
 
 void headSerialResponse(uint8_t err, uint8_t s) {
   serialize8('$');
   serialize8('M');
   serialize8(err ? '!' : '>');
-  checksum = 0; // start calculating a new checksum
+  checksum[CURRENTPORT] = 0; // start calculating a new checksum
   serialize8(s);
-  serialize8(cmdMSP);
+  serialize8(cmdMSP[CURRENTPORT]);
 }
 
 void headSerialReply(uint8_t s) {
@@ -99,7 +107,7 @@ void inline headSerialError(uint8_t s) {
 }
 
 void tailSerialReply() {
-  serialize8(checksum);UartSendData();
+  serialize8(checksum[CURRENTPORT]);UartSendData();
 }
 
 void serializeNames(PGM_P s) {
@@ -109,9 +117,9 @@ void serializeNames(PGM_P s) {
 }
 
 void serialCom() {
-  uint8_t c;  
-  static uint8_t offset;
-  static uint8_t dataSize;
+  uint8_t c,n;  
+  static uint8_t offset[UART_NUMBER];
+  static uint8_t dataSize[UART_NUMBER];
   static enum _serial_state {
     IDLE,
     HEADER_START,
@@ -119,59 +127,58 @@ void serialCom() {
     HEADER_ARROW,
     HEADER_SIZE,
     HEADER_CMD,
-  } c_state = IDLE;
-  
-#if defined(MEGA) && defined(OSD_ON_UART3)
-  static uint8_t port;
-  while (SerialAvailable(0) || SerialAvailable(3)) {
-    uint8_t bytesTXBuff = ((uint8_t)(headTX-tailTX))%TX_BUFFER_SIZE; // indicates the number of occupied bytes in TX buffer
-    if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (40 bytes margin)
+  } c_state[UART_NUMBER];// = IDLE;
 
-    if (c_state == IDLE) port = 0;
-    if (SerialAvailable(0) && port != 2) {port = 1; c = SerialRead(0);}
-    if (SerialAvailable(3) && port != 1) {port = 2; c = SerialRead(3);}
-#else
-  while (SerialAvailable(0)) {
-    uint8_t bytesTXBuff = ((uint8_t)(headTX-tailTX))%TX_BUFFER_SIZE; // indicates the number of occupied bytes in TX buffer
-    if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (40 bytes margin)
-    c = SerialRead(0);
-#endif
-    if (c_state == IDLE) {
-      c_state = (c=='$') ? HEADER_START : IDLE;
-      if (c_state == IDLE) evaluateOtherData(c); // evaluate all other incoming serial data
-    } else if (c_state == HEADER_START) {
-      c_state = (c=='M') ? HEADER_M : IDLE;
-    } else if (c_state == HEADER_M) {
-      c_state = (c=='<') ? HEADER_ARROW : IDLE;
-    } else if (c_state == HEADER_ARROW) {
-      if (c > INBUF_SIZE) {  // now we are expecting the payload size
-        c_state = IDLE;
-        continue;
+  for(n=0;n<UART_NUMBER;n++) {
+    #if !defined(PROMINI)
+      CURRENTPORT=n;
+    #endif
+    #if defined(GPS_SERIAL)
+    while (SerialAvailable(CURRENTPORT) && GPS_SERIAL != CURRENTPORT) {
+    #else
+    while (SerialAvailable(CURRENTPORT)) {
+    #endif
+      uint8_t bytesTXBuff = ((uint8_t)(serialHeadTX[CURRENTPORT]-serialTailTX[CURRENTPORT]))%TX_BUFFER_SIZE; // indicates the number of occupied bytes in TX buffer
+      if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (50 bytes margin)
+      c = SerialRead(CURRENTPORT);
+  
+      if (c_state[CURRENTPORT] == IDLE) {
+        c_state[CURRENTPORT] = (c=='$') ? HEADER_START : IDLE;
+        if (c_state[CURRENTPORT] == IDLE) evaluateOtherData(c); // evaluate all other incoming serial data
+      } else if (c_state[CURRENTPORT] == HEADER_START) {
+        c_state[CURRENTPORT] = (c=='M') ? HEADER_M : IDLE;
+      } else if (c_state[CURRENTPORT] == HEADER_M) {
+        c_state[CURRENTPORT] = (c=='<') ? HEADER_ARROW : IDLE;
+      } else if (c_state[CURRENTPORT] == HEADER_ARROW) {
+        if (c > INBUF_SIZE) {  // now we are expecting the payload size
+          c_state[CURRENTPORT] = IDLE;
+          continue;
+        }
+        dataSize[CURRENTPORT] = c;
+        offset[CURRENTPORT] = 0;
+        checksum[CURRENTPORT] = 0;
+        indRX[CURRENTPORT] = 0;
+        checksum[CURRENTPORT] ^= c;
+        c_state[CURRENTPORT] = HEADER_SIZE;  // the command is to follow
+      } else if (c_state[CURRENTPORT] == HEADER_SIZE) {
+        cmdMSP[CURRENTPORT] = c;
+        checksum[CURRENTPORT] ^= c;
+        c_state[CURRENTPORT] = HEADER_CMD;
+      } else if (c_state[CURRENTPORT] == HEADER_CMD && offset[CURRENTPORT] < dataSize[CURRENTPORT]) {
+        checksum[CURRENTPORT] ^= c;
+        inBuf[offset[CURRENTPORT]++][CURRENTPORT] = c;
+      } else if (c_state[CURRENTPORT] == HEADER_CMD && offset[CURRENTPORT] >= dataSize[CURRENTPORT]) {
+        if (checksum[CURRENTPORT] == c) {  // compare calculated and transferred checksum
+          evaluateCommand();  // we got a valid packet, evaluate it
+        }
+        c_state[CURRENTPORT] = IDLE;
       }
-      dataSize = c;
-      offset = 0;
-      checksum = 0;
-      indRX = 0;
-      checksum ^= c;
-      c_state = HEADER_SIZE;  // the command is to follow
-    } else if (c_state == HEADER_SIZE) {
-      cmdMSP = c;
-      checksum ^= c;
-      c_state = HEADER_CMD;
-    } else if (c_state == HEADER_CMD && offset < dataSize) {
-      checksum ^= c;
-      inBuf[offset++] = c;
-    } else if (c_state == HEADER_CMD && offset >= dataSize) {
-      if (checksum == c) {  // compare calculated and transferred checksum
-        evaluateCommand();  // we got a valid packet, evaluate it
-      }
-      c_state = IDLE;
     }
   }
 }
 
 void evaluateCommand() {
-  switch(cmdMSP) {
+  switch(cmdMSP[CURRENTPORT]) {
    case MSP_SET_RAW_RC:
      for(uint8_t i=0;i<8;i++) {
        rcData[i] = read16();
@@ -511,41 +518,87 @@ void serialize16(int16_t a) {
 }
 
 void serialize8(uint8_t a) {
-  uint8_t t = headTX;
+  uint8_t t = serialHeadTX[CURRENTPORT];
   if (++t >= TX_BUFFER_SIZE) t = 0;
-  bufTX[t] = a;
-  checksum ^= a;
-  headTX = t;
+  serialBufferTX[t][CURRENTPORT] = a;
+  checksum[CURRENTPORT] ^= a;
+  serialHeadTX[CURRENTPORT] = t;
 }
 
-#if !defined(PROMICRO)
-  ISR_UART {
-    uint8_t t = tailTX;
-    if (headTX != t) {
+#if defined(PROMINI) || defined(MEGA)
+  #if defined(PROMINI)
+  ISR(USART_UDRE_vect) {  // Serial 0 on a PROMINI
+  #endif
+  #if defined(MEGA)
+  ISR(USART0_UDRE_vect) { // Serial 0 on a MEGA
+  #endif
+    uint8_t t = serialTailTX[0];
+    if (serialHeadTX[0] != t) {
       if (++t >= TX_BUFFER_SIZE) t = 0;
-      UDR0 = bufTX[t];  // Transmit next byte in the ring
-#if defined(MEGA) && defined(OSD_ON_UART3)
-      UDR3 = bufTX[t];  // Transmit next byte in the ring via UART3
-#endif
-      tailTX = t;
+      UDR0 = serialBufferTX[t][0];  // Transmit next byte in the ring
+      serialTailTX[0] = t;
     }
-    if (t == headTX) UCSR0B &= ~(1<<UDRIE0); // Check if all data is transmitted . if yes disable transmitter UDRE interrupt
+    if (t == serialHeadTX[0]) UCSR0B &= ~(1<<UDRIE0); // Check if all data is transmitted . if yes disable transmitter UDRE interrupt
+  }
+#endif
+#if defined(MEGA) || defined(PROMICRO)
+  ISR(USART1_UDRE_vect) { // Serial 1 on a MEGA or on a PROMICRO
+    uint8_t t = serialTailTX[1];
+    if (serialHeadTX[1] != t) {
+      if (++t >= TX_BUFFER_SIZE) t = 0;
+      UDR1 = serialBufferTX[t][1];  // Transmit next byte in the ring
+      serialTailTX[1] = t;
+    }
+    if (t == serialHeadTX[1]) UCSR1B &= ~(1<<UDRIE1);
+  }
+#endif
+#if defined(MEGA)
+  ISR(USART2_UDRE_vect) { // Serial 2 on a MEGA
+    uint8_t t = serialTailTX[2];
+    if (serialHeadTX[2] != t) {
+      if (++t >= TX_BUFFER_SIZE) t = 0;
+      UDR2 = serialBufferTX[t][2];
+      serialTailTX[2] = t;
+    }
+    if (t == serialHeadTX[2]) UCSR2B &= ~(1<<UDRIE2);
+  }
+  ISR(USART3_UDRE_vect) { // Serial 3 on a MEGA
+    uint8_t t = serialTailTX[3];
+    if (serialHeadTX[3] != t) {
+      if (++t >= TX_BUFFER_SIZE) t = 0;
+      UDR3 = serialBufferTX[t][3];
+      serialTailTX[3] = t;
+    }
+    if (t == serialHeadTX[3]) UCSR3B &= ~(1<<UDRIE3);
   }
 #endif
 
 void UartSendData() {
+  #if defined(PROMINI)
+    UCSR0B |= (1<<UDRIE0);
+  #endif
   #if defined(PROMICRO)
-    while(headTX != tailTX) {
-      if (++tailTX >= TX_BUFFER_SIZE) tailTX = 0;
-      uint8_t* p = bufTX+tailTX;
-      #if !defined(TEENSY20)
-        USB_Send(USB_CDC_TX,p,1);
-      #else
-        Serial.write(p,1);
-      #endif
+    switch (CURRENTPORT) {
+      case 0:
+        while(serialHeadTX[0] != serialTailTX[0]) {
+           if (++serialTailTX[0] >= TX_BUFFER_SIZE) serialTailTX[0] = 0;
+           #if !defined(TEENSY20)
+             USB_Send(USB_CDC_TX,serialBufferTX[serialTailTX[0]],1);
+           #else
+             Serial.write(serialBufferTX[serialTailTX[0]],1);
+           #endif
+         }
+        break;
+      case 1: UCSR1B |= (1<<UDRIE1); break;
     }
-  #else
-    UCSR0B |= (1<<UDRIE0); // enable transmitter UDRE interrupt if deactivacted
+  #endif
+  #if defined(MEGA)
+    switch (CURRENTPORT) {
+      case 0: UCSR0B |= (1<<UDRIE0); break;
+      case 1: UCSR1B |= (1<<UDRIE1); break;
+      case 2: UCSR2B |= (1<<UDRIE2); break;
+      case 3: UCSR3B |= (1<<UDRIE3); break;
+    }
   #endif
 }
 
@@ -553,34 +606,37 @@ static void inline SerialOpen(uint8_t port, uint32_t baud) {
   uint8_t h = ((F_CPU  / 4 / baud -1) / 2) >> 8;
   uint8_t l = ((F_CPU  / 4 / baud -1) / 2);
   switch (port) {
-    #if !defined(PROMICRO)
-    case 0: UCSR0A  = (1<<U2X0); UBRR0H = h; UBRR0L = l; UCSR0B |= (1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0); break;
-    #else
+    #if defined(PROMINI)
+      case 0: UCSR0A  = (1<<U2X0); UBRR0H = h; UBRR0L = l; UCSR0B |= (1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0); break;
+    #endif
+    #if defined(PROMICRO)
       #if (ARDUINO >= 100) && !defined(TEENSY20)
         case 0: UDIEN &= ~(1<<SOFE); break;// disable the USB frame interrupt of arduino (it causes strong jitter and we dont need it)
       #endif
-    #endif
-    #if defined(MEGA) || defined(PROMICRO)
-    case 1: UCSR1A  = (1<<U2X1); UBRR1H = h; UBRR1L = l; UCSR1B |= (1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1); break;
+      case 1: UCSR1A  = (1<<U2X1); UBRR1H = h; UBRR1L = l; UCSR1B |= (1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1); break;
     #endif
     #if defined(MEGA)
-    case 2: UCSR2A  = (1<<U2X2); UBRR2H = h; UBRR2L = l; UCSR2B |= (1<<RXEN2)|(1<<TXEN2)|(1<<RXCIE2); break;
-    case 3: UCSR3A  = (1<<U2X3); UBRR3H = h; UBRR3L = l; UCSR3B |= (1<<RXEN3)|(1<<TXEN3)|(1<<RXCIE3); break;
+      case 0: UCSR0A  = (1<<U2X0); UBRR0H = h; UBRR0L = l; UCSR0B |= (1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0); break;
+      case 1: UCSR1A  = (1<<U2X1); UBRR1H = h; UBRR1L = l; UCSR1B |= (1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1); break;
+      case 2: UCSR2A  = (1<<U2X2); UBRR2H = h; UBRR2L = l; UCSR2B |= (1<<RXEN2)|(1<<TXEN2)|(1<<RXCIE2); break;
+      case 3: UCSR3A  = (1<<U2X3); UBRR3H = h; UBRR3L = l; UCSR3B |= (1<<RXEN3)|(1<<TXEN3)|(1<<RXCIE3); break;
     #endif
   }
 }
 
 static void inline SerialEnd(uint8_t port) {
   switch (port) {
-    #if !defined(PROMICRO)
-    case 0: UCSR0B &= ~((1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0)|(1<<UDRIE0)); break;
+    #if defined(PROMINI)
+      case 0: UCSR0B &= ~((1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0)|(1<<UDRIE0)); break;
     #endif
-    #if defined(MEGA) || defined(PROMICRO)
-    case 1: UCSR1B &= ~((1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1)); break;
+    #if defined(PROMICRO)
+      case 1: UCSR1B &= ~((1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1)|(1<<UDRIE1)); break;
     #endif
-    #if defined(MEGA) 
-    case 2: UCSR2B &= ~((1<<RXEN2)|(1<<TXEN2)|(1<<RXCIE2)); break;
-    case 3: UCSR3B &= ~((1<<RXEN3)|(1<<TXEN3)|(1<<RXCIE3)); break;
+    #if defined(MEGA)
+      case 0: UCSR0B &= ~((1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0)|(1<<UDRIE0)); break;
+      case 1: UCSR1B &= ~((1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1)|(1<<UDRIE1)); break;
+      case 2: UCSR2B &= ~((1<<RXEN2)|(1<<TXEN2)|(1<<RXCIE2)|(1<<UDRIE2)); break;
+      case 3: UCSR3B &= ~((1<<RXEN3)|(1<<TXEN3)|(1<<RXCIE3)|(1<<UDRIE3)); break;
     #endif
   }
 }
@@ -613,28 +669,26 @@ static void inline store_uart_in_buf(uint8_t data, uint8_t portnum) {
 #if defined(PROMINI)
   ISR(USART_RX_vect)  { store_uart_in_buf(UDR0, 0); }
 #endif
-
-#if (defined(MEGA) || defined(PROMICRO))
+#if defined(PROMICRO)
   ISR(USART1_RX_vect)  { store_uart_in_buf(UDR1, 1); }
 #endif
-
 #if defined(MEGA)
   ISR(USART0_RX_vect)  { store_uart_in_buf(UDR0, 0); }
+  ISR(USART1_RX_vect)  { store_uart_in_buf(UDR1, 1); }
   ISR(USART2_RX_vect)  { store_uart_in_buf(UDR2, 2); }
   ISR(USART3_RX_vect)  { store_uart_in_buf(UDR3, 3); }
 #endif
 
 uint8_t SerialRead(uint8_t port) {
   #if defined(PROMICRO)
-     #if defined(TEENSY20)
+    #if defined(TEENSY20)
       if(port == 0) return Serial.read();
     #else
       #if (ARDUINO >= 100)
-        USB_Flush(USB_CDC_TX);
+        if(port == 0) USB_Flush(USB_CDC_TX);
       #endif
       if(port == 0) return USB_Recv(USB_CDC_RX);      
     #endif
-    port = 0;
   #endif
   uint8_t t = serialTailRX[port];
   uint8_t c = serialBufferRX[t][port];
@@ -647,8 +701,8 @@ uint8_t SerialRead(uint8_t port) {
 
 #if defined(SPEKTRUM)
   uint8_t SerialPeek(uint8_t port) {
-      uint8_t c = serialBufferRX[serialTailRX[port]][port];
-      if ((serialHeadRX[port] != serialTailRX[port])) return c; else return 0;
+    uint8_t c = serialBufferRX[serialTailRX[port]][port];
+    if ((serialHeadRX[port] != serialTailRX[port])) return c; else return 0;
   }
 #endif
 
@@ -659,22 +713,15 @@ uint8_t SerialAvailable(uint8_t port) {
     #else
       if(port == 0) return T_USB_Available();
     #endif
-    port = 0;
   #endif
   return (serialHeadRX[port] - serialTailRX[port])%RX_BUFFER_SIZE;
 }
 
 void SerialWrite(uint8_t port,uint8_t c){
- switch (port) {
-    case 0: serialize8(c);UartSendData(); break;                 // Serial0 TX is driven via a buffer and a background intterupt
-    #if defined(MEGA) || defined(PROMICRO)
-    case 1: while (!(UCSR1A & (1 << UDRE1))) ; UDR1 = c; break;  // Serial1 Serial2 and Serial3 TX are not driven via interrupts
-    #endif
-    #if defined(MEGA)
-    case 2: while (!(UCSR2A & (1 << UDRE2))) ; UDR2 = c; break;
-    case 3: while (!(UCSR3A & (1 << UDRE3))) ; UDR3 = c; break;
-    #endif
-  }
+  #if !defined(PROMINI)
+    CURRENTPORT=port;
+  #endif
+  serialize8(c);UartSendData();
 }
 
 #ifdef DEBUGMSG

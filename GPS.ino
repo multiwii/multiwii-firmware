@@ -328,7 +328,7 @@ void GPS_NewData() {
   #endif     
 
   #if defined(GPS_SERIAL) || defined(TINY_GPS) || defined(GPS_FROM_OSD)
-    #if defined(GPS_SERIAL)    
+    #if defined(GPS_SERIAL)
     while (SerialAvailable(GPS_SERIAL)) {
       if (GPS_newFrame(SerialRead(GPS_SERIAL))) {
     #elif defined(TINY_GPS)

@@ -107,7 +107,6 @@
   #define PCIR_PORT_BIT              (1<<2)
   #define RX_PC_INTERRUPT            PCINT2_vect
   #define RX_PCINT_PIN_PORT          PIND
-  #define ISR_UART                   ISR(USART_UDRE_vect)
   #define V_BATPIN                   A3    // Analog PIN 3
   #define PSENSORPIN                 A2    // Analog PIN 2
   
@@ -285,8 +284,7 @@
   #define PCIR_PORT_BIT                (1<<0)
   #define RX_PC_INTERRUPT              PCINT0_vect
   #define RX_PCINT_PIN_PORT            PINB
-  
-  #define ISR_UART                    ISR(USART_UDRE_vect)
+
   #if !defined(A32U4ALLPINS) && !defined(TEENSY20)
     #define V_BATPIN                  A3    // Analog PIN 3
   #elif defined(A32U4ALLPINS)
@@ -354,8 +352,6 @@
   #define PCIR_PORT_BIT              (1<<2)
   #define RX_PC_INTERRUPT            PCINT2_vect
   #define RX_PCINT_PIN_PORT          PINK
-   
-  #define ISR_UART                   ISR(USART0_UDRE_vect)
   
   #define SERVO_1_PINMODE            pinMode(34,OUTPUT);pinMode(44,OUTPUT); // TILT_PITCH - WING left
   #define SERVO_1_PIN_HIGH           PORTC |= 1<<3;PORTL |= 1<<5;
