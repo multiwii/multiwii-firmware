@@ -983,7 +983,7 @@ void mixTable() {
     #if  defined(FLAPPERONS) && defined(FLAPPERON_EP)
       int8_t flapinv[2] = FLAPPERON_INVERT; 
       static int16_t F_Endpoint[2] = FLAPPERON_EP;
-      int16_t flap =MIDRC-constrain(rcData[FLAPPERONS],F_Endpoint[1],F_Endpoint[0]);
+      int16_t flap =MIDRC-constrain(rcData[FLAPPERONS],F_Endpoint[0],F_Endpoint[1]);
       static int16_t slowFlaps= flap;
       #if defined(FLAPSPEED)
         if (slowFlaps < flap ){slowFlaps+=FLAPSPEED;}else if(slowFlaps > flap){slowFlaps-=FLAPSPEED;}
