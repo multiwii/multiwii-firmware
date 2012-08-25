@@ -149,63 +149,82 @@ static int16_t  nav_takeoff_bearing;
   }
 #endif 
 
-#if defined(GPS_SERIAL)
-  void confGPS(unsigned char* s, uint8_t size) {
-    uint8_t i;
-    
-    for(i=0;i<size;i++) {
-      SerialWrite(GPS_SERIAL,s[i]);
-      delay(26); //simulating a 38400baud pace (or less), otherwise commands are not accepted by the device.
+#if defined(GPS_SERIAL) 
+ #if defined(INIT_MTK_GPS) || defined(UBLOX)
+  uint32_t init_speed[5] = {9600,19200,38400,57600,115200};
+  void SerialGpsPrint(prog_char* str) {
+    char b;
+    while(b = pgm_read_byte(str)) {
+      SerialWrite(GPS_SERIAL, b); 
+      delay(2);
+      str++;
     }
   }
-
- #if defined(INIT_MTK_GPS) 
-  uint32_t init_speed[5] = {9600,19200,38400,57600,115200};
-  void SerialGpsPrint(char* str) {
-    while(*str) SerialWrite(GPS_SERIAL, *str++);
-  }
+ #endif
+ #if defined(UBLOX)
+   prog_char UBLOX_INIT[] PROGMEM = {                          // PROGMEM array must be outside any function !!!
+     0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x05,0x00,0xFF,0x19,                            //disable all default NMEA messages
+     0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x03,0x00,0xFD,0x15,
+     0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x01,0x00,0xFB,0x11,
+     0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x00,0x00,0xFA,0x0F,
+     0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x02,0x00,0xFC,0x13,
+     0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x04,0x00,0xFE,0x17,
+     0xB5,0x62,0x06,0x01,0x03,0x00,0x01,0x02,0x01,0x0E,0x47,                            //set POSLLH MSG rate
+     0xB5,0x62,0x06,0x01,0x03,0x00,0x01,0x03,0x01,0x0F,0x49,                            //set STATUS MSG rate
+     0xB5,0x62,0x06,0x01,0x03,0x00,0x01,0x06,0x01,0x12,0x4F,                            //set SOL MSG rate
+     0xB5,0x62,0x06,0x01,0x03,0x00,0x01,0x12,0x01,0x1E,0x67,                            //set VELNED MSG rate
+     0xB5,0x62,0x06,0x16,0x08,0x00,0x03,0x07,0x03,0x00,0x51,0x08,0x00,0x00,0x8A,0x41,   //set WAAS to EGNOS
+     0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0xC8, 0x00, 0x01, 0x00, 0x01, 0x00, 0xDE, 0x6A //set rate to 5Hz
+   };
  #endif
 
   void GPS_SerialInit() {
     SerialOpen(GPS_SERIAL,GPS_BAUD);  
     delay(400);
     #if defined(UBLOX)
-      delay(1000);
-      PROGMEM prog_uchar conf[]={0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0xC8, 0x00, 0x01, 0x00, 0x01, 0x00, 0xDE, 0x6A}; //set rate to 5Hz
-      confGPS(conf,sizeof(conf));
-      delay(100);
-      PROGMEM prog_uchar conf_[]={0xB5,0x62,0x06,0x01,0x03,0x00,0x01,0x02,0x01,0x0E,0x47}; //set POSLLH MSG
-      confGPS(conf_,sizeof(conf_));
-      PROGMEM prog_uchar conf__[]={0xB5,0x62,0x06,0x16,0x08,0x00,0x03,0x07,0x03,0x00,0x51,0x08,0x00,0x00,0x8A,0x41}; //set EGNOS
-      confGPS(conf__,sizeof(conf__));
-      // STATUS, SOL, VELNED are ON by default
-    #endif
-
-    #if defined(INIT_MTK_GPS) && !defined(UBLOX)       // MTK GPS setup
-      // send "SET Baudrate" command at all usable UART speed's
       for(uint8_t i=0;i<=5;i++){
-        SerialOpen(GPS_SERIAL,init_speed[i]);          // switch UART speed for sending SET BAUDRATE command
+        SerialOpen(GPS_SERIAL,init_speed[i]);          // switch UART speed for sending SET BAUDRATE command (NMEA mode)
         #if (GPS_BAUD==19200)
-          SerialGpsPrint("$PMTK251,19200*22\r\n");     // 19200 baud - minimal speed for 5Hz update rate
+          SerialGpsPrint(PSTR("$PUBX,41,1,0003,0001,19200,0*23\r\n"));     // 19200 baud - minimal speed for 5Hz update rate
         #endif  
         #if (GPS_BAUD==38400)
-          SerialGpsPrint("$PMTK251,38400*27\r\n");     // 38400 baud
+          SerialGpsPrint(PSTR("$PUBX,41,1,0003,0001,38400,0*26\r\n"));     // 38400 baud
         #endif  
         #if (GPS_BAUD==57600)
-          SerialGpsPrint("$PMTK251,57600*2C\r\n");     // 57600 baud
+          SerialGpsPrint(PSTR("$PUBX,41,1,0003,0001,57600,0*2D\r\n"));     // 57600 baud
         #endif  
         #if (GPS_BAUD==115200)
-          SerialGpsPrint("$PMTK251,115200*1F\r\n");    // 115200 baud
+          SerialGpsPrint(PSTR("$PUBX,41,1,0003,0001,115200,0*1E\r\n"));    // 115200 baud
         #endif  
-        delay(20);
+        delay(10);
+      }
+      SerialOpen(GPS_SERIAL,GPS_BAUD);  
+      for(uint8_t i=0; i<sizeof(UBLOX_INIT); i++) {                        // send configuration data in UBX protocol
+        SerialWrite(GPS_SERIAL, pgm_read_byte(UBLOX_INIT+i));
+        delay(2); //simulating a 38400baud pace (or less), otherwise commands are not accepted by the device.
+      }
+    #elif defined(INIT_MTK_GPS)                              // MTK GPS setup
+      for(uint8_t i=0;i<=5;i++){
+        SerialOpen(GPS_SERIAL,init_speed[i]);                // switch UART speed for sending SET BAUDRATE command
+        #if (GPS_BAUD==19200)
+          SerialGpsPrint(PSTR("$PMTK251,19200*22\r\n"));     // 19200 baud - minimal speed for 5Hz update rate
+        #endif  
+        #if (GPS_BAUD==38400)
+          SerialGpsPrint(PSTR("$PMTK251,38400*27\r\n"));     // 38400 baud
+        #endif  
+        #if (GPS_BAUD==57600)
+          SerialGpsPrint(PSTR("$PMTK251,57600*2C\r\n"));     // 57600 baud
+        #endif  
+        #if (GPS_BAUD==115200)
+          SerialGpsPrint(PSTR("$PMTK251,115200*1F\r\n"));    // 115200 baud
+        #endif  
+        delay(10);
       }
       // at this point we have GPS working at selected (via #define GPS_BAUD) baudrate
       SerialOpen(GPS_SERIAL,GPS_BAUD);
-      delay(100);
-      SerialGpsPrint("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n"); // only GGA and RMC sentence
-      SerialGpsPrint("$PMTK220,200*2C\r\n");           // 5 Hz update rate
-      delay(100);
-    #endif      
+      SerialGpsPrint(PSTR("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n")); // only GGA and RMC sentence
+      SerialGpsPrint(PSTR("$PMTK220,200*2C\r\n"));           // 5 Hz update rate
+    #endif     
   }
 #endif
 
