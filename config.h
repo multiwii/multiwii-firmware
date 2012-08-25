@@ -513,7 +513,6 @@
        If RC pulse coming back before reached FAILSAVE_OFF_DELAY time, after the small quard time the RC control is returned to normal.
        If you use serial sum PPM, the sum converter must completly turn off the PPM SUM pusles for this FailSafe functionality.*/
     //#define FAILSAFE                                // uncomment  to activate the failsafe function
-    #define FAILSAFE_PIN       THROTTLEPIN            // Failsave Pin on Standard RX. Possible options: THROTTLEPIN, ROLLPIN, PITCHPIN, YAWPIN
     #define FAILSAVE_DELAY     10                     // Guard time for failsafe activation after signal lost. 1 step = 0.1sec - 1sec in example
     #define FAILSAVE_OFF_DELAY 200                    // Time for Landing before motors stop in 0.1sec. 1 step = 0.1sec - 20sec in example
     #define FAILSAVE_THROTTLE  (MINTHROTTLE + 200)    // Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
@@ -728,8 +727,9 @@
 
     /* same as above, but manual stepping sequence; requires 
        stick input (throttle=low & roll=right & pitch=forward) to 
-       step through each defined telemetry page */
-    //#define LCD_TELEMETRY_STEP "0123456789" // must begin with 0
+       step through each defined telemetry page
+       First page of the sequence gets loaded at startup to allow non-interactive display */
+    //#define LCD_TELEMETRY_STEP "0123456789" // should contain a 0 to allow switching off. First page of sequence gets loaded upon startup
 
 
     /* on telemetry page B (2) it gives a bar graph which shows how much voltage battery has left. Range from 0 to 12 Volt is not very informative

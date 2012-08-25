@@ -228,6 +228,11 @@ static uint16_t intPowerMeterSum, intPowerTrigger1;
   static uint8_t telemetry = 0;
   static uint8_t telemetry_auto = 0;
 #endif
+#ifdef LCD_TELEMETRY_STEP
+  static char telemetryStepSequence []  = LCD_TELEMETRY_STEP;
+  static uint8_t telemetryStepIndex = 0;
+#endif
+
 // ******************
 // rc functions
 // ******************
@@ -455,7 +460,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       // the multi uses ACC and is not calibrated or is too much inclinated
       f.ACC_CALIBRATED = 0;
       LEDPIN_TOGGLE;
-      calibratedAccTime = currentTime + 500000;
+      calibratedAccTime = currentTime + 100000;
     } else {
       f.ACC_CALIBRATED = 1;
     }
@@ -592,7 +597,7 @@ void setup() {
    GPS_Enable = 1;
   #endif
   
-  #if defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64)
+  #if defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) || defined(LCD_TELEMETRY_STEP)
     initLCD();
   #endif
   #ifdef LCD_TELEMETRY_DEBUG
@@ -627,10 +632,6 @@ void loop () {
   static int16_t errorAngleI[2] = {0,0};
   static uint32_t rcTime  = 0;
   static int16_t initialThrottleHold;
-  #ifdef LCD_TELEMETRY_STEP
-    static char telemetryStepSequence []  = LCD_TELEMETRY_STEP;
-    static uint8_t telemetryStepIndex = 0;
-  #endif
 
   #if defined(SPEKTRUM)
     if (rcFrameComplete) computeRC();

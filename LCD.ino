@@ -673,6 +673,9 @@ void initLCD() {
   //  } else {
   //    strcpy_P(line1,PSTR("Config All Parms")); LCDsetLine(2); LCDprintChar(line1);
   //  }
+#ifdef LCD_TELEMETRY_STEP
+  telemetry = telemetryStepSequence[0];
+#endif
 }
 #endif //Support functions for LCD_CONF and LCD_TELEMETRY
 
@@ -1422,40 +1425,40 @@ void fill_line2_fails_values() {
 }
 
 static char checkboxitemNames[][4] = {
-  #if ACC
-    "Ang","Hor",
-  #endif
-  #if BARO
-    "Bar",
-  #endif
-  #if MAG
-    "Mag",
-  #endif
-  #if defined(SERVO_TILT) || defined(GIMBAL)
-    "CSt",
-  #endif
-  #if defined(CAMTRIG)
-    "CTr",
-  #endif
-    "Arm",
-  #if GPS
-    "GHm",
-    "GHd",
-  #endif
-  #if defined(SERVO)
-    "Pas",
-  #endif
-  #if defined(LED_FLASHER)
-    "LED",
-    "LIG",
-  #endif
-  #if MAG
-    "HFr",
-  #endif
-  #if defined(BUZZER)
-    "Bpp",
-  #endif
-  ""};  
+    #if ACC
+      "Ang","Hor",
+    #endif
+    #if BARO
+      "Bar",
+    #endif
+    #if MAG
+      "Mag",
+    #endif
+    #if defined(SERVO_TILT) || defined(GIMBAL)
+      "CSt",
+    #endif
+    #if defined(CAMTRIG)
+      "CTr",
+    #endif
+      "Arm",
+    #if GPS
+      "GHm",
+      "GHd",
+    #endif
+    #if defined(SERVO)
+      "Pas",
+    #endif
+    #if defined(LED_FLASHER)
+      "LED",
+      "LIG",
+    #endif
+    #if MAG
+      "HFr",
+    #endif
+    #if defined(BUZZER)
+      "Bpp",
+    #endif
+      ""};
 void output_checkboxitems() {
   for (uint8_t i=0; i<CHECKBOXITEMS; i++ ) {
     if (rcOptions[i] || ((i==BOXARM)&&(f.ARMED)) ) {
@@ -1733,22 +1736,28 @@ void lcd_telemetry() {
     LCDprint(' ');
     switch (i) {
       case 0:
-      outputSensor(12, gyroData[0], GYROLIMIT);
+        lcdprint_int16(gyroData[0]); LCDprint(' ');
+        outputSensor(10, gyroData[0], GYROLIMIT);
       break;
       case 1:
-      outputSensor(12, gyroData[1], GYROLIMIT);
+        lcdprint_int16(gyroData[1]); LCDprint(' ');
+        outputSensor(10, gyroData[1], GYROLIMIT);
       break;
       case 2:
-      outputSensor(12, gyroData[2], GYROLIMIT);
+        lcdprint_int16(gyroData[2]); LCDprint(' ');
+        outputSensor(10, gyroData[2], GYROLIMIT);
       break;
       case 3:
-      outputSensor(12, accSmooth[0], ACCLIMIT);
+        lcdprint_int16(accSmooth[0]); LCDprint(' ');
+        outputSensor(10, accSmooth[0], ACCLIMIT);
       break;
       case 4:
-      outputSensor(12, accSmooth[1], ACCLIMIT);
+        lcdprint_int16(accSmooth[1]); LCDprint(' ');
+        outputSensor(10, accSmooth[1], ACCLIMIT);
       break;
       case 5:
-      outputSensor(12, accSmooth[2] - acc_1G, ACCLIMIT);
+        lcdprint_int16(accSmooth[2]); LCDprint(' ');
+        outputSensor(10, accSmooth[2] - acc_1G, ACCLIMIT);
       break;
     }
     LCDcrlf();
@@ -1770,6 +1779,7 @@ void lcd_telemetry() {
 //      if (!GPS && (index==6)) index+=2;
       LCDsetLine(linenr++);
       LCDprintChar(checkboxitemNames[index]);
+      //LCDprintChar((PGM_P)(boxnames[index]));
       LCDprint(' ');
       LCDprint( rcOptions[index] ? 'X' : '.');
       LCDcrlf();

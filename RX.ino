@@ -144,6 +144,7 @@ void configureReceiver() {
       RX_PIN_CHECK(7,3);
     #endif
     
+    #define FAILSAFE_PIN       ROLLPIN            // Failsave Pin on Standard RX. Possible options: THROTTLEPIN, ROLLPIN, PITCHPIN, YAWPIN
     #if defined(FAILSAFE) && !defined(PROMICRO)
       if (mask & 1<<FAILSAFE_PIN && dTime>980) {  // If pulse present on FAILSAFE_PIN  and pulse time > 980us, clear FailSafe counter  - added by MIS
         if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
