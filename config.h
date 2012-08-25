@@ -399,7 +399,22 @@
       //#define PROMICRO10
 
 
+  /**************************************************************************************/
+  /********                      override default pin assignments    ********************/
+  /**************************************************************************************/
 
+  /* only enable any of this if you must change the default pin assignment, e.g. your board does not have a specific pin */
+  /* you may need to change PINx and PORTx plus shift # according to the desired pin! */
+  //#define V_BATPIN                   A0 // instead of A3    // Analog PIN 3
+
+  //#define LEDPIN_PINMODE             pinMode (A1, OUTPUT); // use A1 instead of d13
+  //#define LEDPIN_TOGGLE              PINC |= 1<<1; // PINB |= 1<<5;     //switch LEDPIN state (digital PIN 13)
+  //#define LEDPIN_OFF                 PORTC &= ~(1<<1); // PORTB &= ~(1<<5);
+  //#define LEDPIN_ON                  PORTC |= 1<<1;    // was PORTB |= (1<<5);
+
+  //#define BUZZERPIN_PINMODE          pinMode (A2, OUTPUT); // use A2 instead of d8
+  //#define BUZZERPIN_ON               PORTC |= 1<<2 //PORTB |= 1;
+  //#define BUZZERPIN_OFF              PORTC &= ~(1<<2); //PORTB &= ~1;
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/

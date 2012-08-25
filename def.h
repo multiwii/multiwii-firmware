@@ -1501,6 +1501,23 @@
   #define ALT_HOLD_THROTTLE_NEUTRAL_ZONE 20
 #endif 
 
+  /**************************************************************************************/
+  /***************               override default pin assignments ?  ********************/
+  /**************************************************************************************/
+#ifdef OVERRIDE_V_BATPIN
+  #define V_BATPIN OVERRIDE_V_BATPIN
+#endif
+#ifdef OVERRIDE_LEDPIN_PINMODE
+  #define LEDPIN_PINMODE OVERRIDE_LEDPIN_PINMODE
+  #define LEDPIN_TOGGLE OVERRIDE_LEDPIN_TOGGLE
+  #define LEDPIN_OFFOVERRIDE_LEDPIN_OFF
+  #define LEDPIN_ON OVERRIDE_LEDPIN_ON
+#endif
+#ifdef OVERRIDE_BUZZERPIN_PINMODE
+  #define BUZZERPIN_PINMODE OVERRIDE_BUZZERPIN_PINMODE
+  #define BUZZERPIN_ON OVERRIDE_BUZZERPIN_ON
+  #define BUZZERPIN_OFF OVERRIDE_BUZZERPIN_OFF
+#endif
 /**************************************************************************************/
 /***************               Error Checking Section              ********************/
 /**************************************************************************************/
