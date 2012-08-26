@@ -505,7 +505,7 @@
 
 
   /********                          Failsave settings                 ********************/
-    /* Failsafe check pulse on THROTTLE channel. If the pulse is OFF (on only THROTTLE or on all channels) the failsafe procedure is initiated.
+    /* Failsafe check pulse on ROLL channel. If the pulse is OFF (on only ROLL or on all channels) the failsafe procedure is initiated.
        After FAILSAVE_DELAY time of pulse absence, the level mode is on (if ACC or nunchuk is avaliable), PITCH, ROLL and YAW is centered
        and THROTTLE is set to FAILSAVE_THR0TTLE value. You must set this value to descending about 1m/s or so for best results.
        This value is depended from your configuration, AUW and some other params.
