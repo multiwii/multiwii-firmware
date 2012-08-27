@@ -301,6 +301,21 @@ static struct {
   #if defined(GYRO_SMOOTHING)
     uint8_t Smoothing[3];
   #endif
+  #if defined (FAILSAFE)
+    int16_t failsave_throttle;
+  #endif
+  #ifdef VBAT
+    uint8_t vbatscale;
+    uint8_t vbatlevel1_3s;
+    uint8_t vbatlevel2_3s;
+    uint8_t vbatlevel3_3s;
+    uint8_t no_vbat;
+  #endif
+  #ifdef POWERMETER
+    uint16_t psensornull;
+    uint16_t pleveldivsoft;
+    uint16_t pleveldiv;
+  #endif
 } conf;
 
 
@@ -354,7 +369,8 @@ static struct {
   #if defined(BUZZER)  
     static uint8_t beep_toggle = 0,
                    beep_confirmation = 0;
-   #endif
+  #endif
+
 
 void annexCode() { // this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
   static uint32_t calibratedAccTime;
@@ -411,7 +427,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     static uint16_t psensorTimer = 0;
     if (! (++psensorTimer % PSENSORFREQ)) {
       pMeterRaw =  analogRead(PSENSORPIN);
-      powerValue = ( PSENSORNULL > pMeterRaw ? PSENSORNULL - pMeterRaw : pMeterRaw - PSENSORNULL); // do not use abs(), it would induce implicit cast to uint and overrun
+      powerValue = ( conf.psensornull > pMeterRaw ? conf.psensornull - pMeterRaw : pMeterRaw - conf.psensornull); // do not use abs(), it would induce implicit cast to uint and overrun
       if ( powerValue < 333) {  // only accept reasonable values. 333 is empirical
       #ifdef LCD_TELEMETRY
         if (powerValue > powerMax) powerMax = powerValue;
@@ -431,7 +447,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       if (! (++vbatTimer % VBATFREQ)) {
       	vbatRawArray[(ind++)%8] = analogRead(V_BATPIN);
       	for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
-      	vbat = vbatRaw / (VBATSCALE/2);                  // result is Vbatt in 0.1V steps
+      	vbat = vbatRaw / (conf.vbatscale/2);                  // result is Vbatt in 0.1V steps
       }
     #endif
     alarmHandler(); // external buzzer routine that handles buzzer events globally now
@@ -476,7 +492,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #endif
 
   #if defined(POWERMETER)
-    intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
+    intPowerMeterSum = (pMeter[PMOTOR_SUM]/conf.pleveldiv);
     intPowerTrigger1 = conf.powerTrigger1 * PLEVELSCALE; 
   #endif
 
@@ -650,7 +666,7 @@ void loop () {
     #if defined(FAILSAFE)
       if ( failsafeCnt > (5*FAILSAVE_DELAY) && f.ARMED) {                  // Stabilize, and set Throttle to specified level
         for(i=0; i<3; i++) rcData[i] = MIDRC;                               // after specified guard time after RC signal is lost (in 0.1sec)
-        rcData[THROTTLE] = FAILSAVE_THROTTLE;
+        rcData[THROTTLE] = conf.failsave_throttle;
         if (failsafeCnt > 5*(FAILSAVE_DELAY+FAILSAVE_OFF_DELAY)) {          // Turn OFF motors after specified Time (in 0.1sec)
           f.ARMED = 0;   // This will prevent the copter to automatically rearm if failsafe shuts it down and prevents
           f.OK_TO_ARM = 0; // to restart accidentely by just reconnect to the tx - you will have to switch off first to rearm

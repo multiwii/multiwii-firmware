@@ -780,13 +780,6 @@ const char PROGMEM lcd_param_text31 [] = "pMeter  M6";
 const char PROGMEM lcd_param_text32 [] = "pMeter  M7";
 #endif //                                0123456789
 #endif
-#ifdef POWERMETER
-const char PROGMEM lcd_param_text33 [] = "pMeter Sum";
-const char PROGMEM lcd_param_text34 [] = "pAlarm /50"; // change text to represent PLEVELSCALE value
-#endif
-#ifdef VBAT
-const char PROGMEM lcd_param_text35 [] = "Batt Volt ";
-#endif
 #ifdef FLYING_WING
 const char PROGMEM lcd_param_text36 [] = "Trim Ser 1";
 const char PROGMEM lcd_param_text37 [] = "Trim Ser 2";
@@ -841,8 +834,28 @@ const char PROGMEM lcd_param_text96 [] = "NAV Rate P";
 const char PROGMEM lcd_param_text97 [] = "NAV Rate I";
 const char PROGMEM lcd_param_text98 [] = "NAV Rate D";
 #endif
+#if defined (FAILSAFE)
+const char PROGMEM lcd_param_text101 [] = "Fail Throt";
+#endif
+#ifdef VBAT
+const char PROGMEM lcd_param_text35 [] = "Batt Volt ";
+const char PROGMEM lcd_param_text102 [] = "VBAT SCALE";
+const char PROGMEM lcd_param_text103 [] = "BattWarn 1";
+const char PROGMEM lcd_param_text104 [] = "BattWarn 2";
+const char PROGMEM lcd_param_text105 [] = "BattWarn 3";
+const char PROGMEM lcd_param_text106 [] = "VBAT NOBAT";
+#endif
+#ifdef POWERMETER
+const char PROGMEM lcd_param_text33 [] = "pMeter Sum";
+const char PROGMEM lcd_param_text34 [] = "pAlarm /50"; // change text to represent PLEVELSCALE value
+#ifdef POWERMETER_HARD
+  const char PROGMEM lcd_param_text111 [] = "PM SENSOR0";
+#endif
+const char PROGMEM lcd_param_text112 [] = "PM DIVSOFT";
+const char PROGMEM lcd_param_text113 [] = "PM DIV    ";
+#endif
 
-//                                       0123456789.12345
+//                                         0123456789
 
 PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text01, &conf.P8[ROLL], &__P,
@@ -965,7 +978,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
     &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX3,
     &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX4,
   #endif
-#endif
+#endif //lcd.conf.aux
 
 #ifdef LOG_VALUES
 #if (LOG_VALUES == 2)
@@ -998,9 +1011,22 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #ifdef POWERMETER
   &lcd_param_text33, &pMeter[PMOTOR_SUM], &__PS,
   &lcd_param_text34, &conf.powerTrigger1, &__PT,
+  #ifdef POWERMETER_HARD
+    &lcd_param_text111, &conf.psensornull, &__SE,
+  #endif
+  &lcd_param_text112, &conf.pleveldivsoft, &__SE,
+  &lcd_param_text113, &conf.pleveldiv, &__SE,
+#endif
+#if defined (FAILSAFE)
+  &lcd_param_text101, &conf.failsave_throttle, &__ST,
 #endif
 #ifdef VBAT
   &lcd_param_text35, &vbat, &__VB,
+  &lcd_param_text102, &conf.vbatscale, &__PT,
+  &lcd_param_text103, &conf.vbatlevel1_3s, &__P,
+  &lcd_param_text104, &conf.vbatlevel2_3s, &__P,
+  &lcd_param_text105, &conf.vbatlevel3_3s, &__P,
+  &lcd_param_text106, &conf.no_vbat, &__P,
 #endif
 #ifdef FLYING_WING
   &lcd_param_text36, &conf.wing_left_mid, &__SE,
@@ -1099,25 +1125,27 @@ void __uAuxFmt(void * var, uint8_t mul, uint8_t dec, uint8_t aux) {
 #endif
 }
 
-void __upMFmt(void * var, uint8_t mul, uint8_t dec) {
-  uint32_t unit = *(uint32_t*)var;
-  // pmeter values need special treatment, too many digits to fit standard 8 bit scheme
-  unit = unit / PLEVELDIVSOFT;// [0:1000] * 1000/3 samples per second(loop time) * 60 seconds *5 minutes -> [0:10000 e4] per motor
-                              // (that is full throttle for 5 minutes sampling with high sampling rate for wmp only)
-                              // times 6 for a maximum of 6 motors equals [0:60000 e4] for the sum
-                              // we are only interested in the big picture, so divide by 10.000
-  __u16Fmt(&unit, mul, dec);
-}
+#ifdef POWERMETER
+  void __upMFmt(void * var, uint8_t mul, uint8_t dec) {
+    uint32_t unit = *(uint32_t*)var;
+    // pmeter values need special treatment, too many digits to fit standard 8 bit scheme
+    unit = unit / conf.pleveldivsoft;// [0:1000] * 1000/3 samples per second(loop time) * 60 seconds *5 minutes -> [0:10000 e4] per motor
+                                // (that is full throttle for 5 minutes sampling with high sampling rate for wmp only)
+                                // times 6 for a maximum of 6 motors equals [0:60000 e4] for the sum
+                                // we are only interested in the big picture, so divide by 10.000
+    __u16Fmt(&unit, mul, dec);
+  }
 
 void __upSFmt(void * var, uint8_t mul, uint8_t dec) {
   uint32_t unit = *(uint32_t*)var;
 #if defined(POWERMETER_SOFT)
-  unit = unit / PLEVELDIVSOFT;
+  unit = unit / conf.pleveldivsoft;
 #elif defined(POWERMETER_HARD)
-  unit = unit / PLEVELDIV;
+  unit = unit / conf.pleveldiv;
 #endif
   __u16Fmt(&unit, mul, dec);
 }
+#endif
 
 static uint8_t lcdStickState[3];
 #define IsLow(x)  (lcdStickState[x] & 0x1)
@@ -1363,7 +1391,7 @@ void fill_line1_VmA() {
 }
 void output_VmAbars() {
 #ifdef VBAT
-  LCDbar(7, (((vbat-VBATLEVEL1_3S)*100)/VBATREF) );
+  LCDbar(7, (((vbat - conf.vbatlevel1_3s)*100)/VBATREF) );
   LCDprint(' ');
 #else
   LCDprintChar("        ");

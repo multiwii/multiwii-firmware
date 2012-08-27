@@ -18,6 +18,7 @@
   #define VBAT
   #define POWERMETER_HARD
   #define LCD_CONF
+  #define LCD_CONF_AUX
   #define LCD_VT100
   #define LCD_TELEMETRY
   #define LCD_TELEMETRY_STEP "01245"
@@ -27,6 +28,17 @@
   #define SPEKTRUM 2048
   #define LED_RING
   #define GPS_SERIAL 2
+#elif COPTERTEST == 5
+  #define HELI_120_CCPM
+  #define CRIUS_LITE
+  #undef DISABLE_POWER_PIN
+  #define RCAUXPIN8
+  #define OLED_I2C_128x64
+  #define LCD_TELEMETRY
+  #define LOG_VALUES 1
+  #define DEBUG
+  #undef SERVO_RFR_50HZ
+  #define SERVO_RFR_160HZ
 #elif defined(COPTERTEST)
   #error "*** this test is not yet defined"
 #endif

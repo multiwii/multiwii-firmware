@@ -17,19 +17,19 @@
   void alarmHandler(){
     
     #if defined(VBAT)
-      if ( ( (vbat>VBATLEVEL1_3S) 
+      if ( ( (vbat>conf.vbatlevel1_3s)
       #if defined(POWERMETER)
                            && ( (pMeter[PMOTOR_SUM] < pAlarm) || (pAlarm == 0) )
       #endif
-                         )  || (NO_VBAT>vbat)                              ) // ToLuSe
+                         )  || (conf.no_vbat > vbat)                              ) // ToLuSe
       {                                          // VBAT ok AND powermeter ok, alarm off
         warn_vbat = 0;
       #if defined(POWERMETER)
       } else if (pMeter[PMOTOR_SUM] > pAlarm) {                             // sound alarm for powermeter
         warn_vbat = 4;
       #endif
-      } else if (vbat>VBATLEVEL2_3S) warn_vbat = 1;
-      else if (vbat>VBATLEVEL3_3S)   warn_vbat = 2;
+      } else if (vbat > conf.vbatlevel2_3s) warn_vbat = 1;
+      else if (vbat > conf.vbatlevel3_3s)   warn_vbat = 2;
       else                           warn_vbat = 4;
     #endif
  
@@ -298,7 +298,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
       i2c_stop();
     }
   #if defined (VBAT)
-    if (vbat<VBATLEVEL1_3S){ // Uh oh - battery low
+    if (vbat < conf.vbatlevel1_3s){ // Uh oh - battery low
       i2c_rep_start(LED_RING_ADDRESS);
       i2c_write('r');
       i2c_stop();   

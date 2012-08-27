@@ -1,6 +1,6 @@
 #include <avr/eeprom.h>
 
-#define EEPROM_CONF_VERSION 161
+#define EEPROM_CONF_VERSION 162
 
 void readEEPROM() {
   uint8_t i;
@@ -19,7 +19,7 @@ void readEEPROM() {
   }
 
   #if defined(POWERMETER)
-    pAlarm = (uint32_t) conf.powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
+    pAlarm = (uint32_t) conf.powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) conf.pleveldiv; // need to cast before multiplying
   #endif
   #ifdef FLYING_WING
     #ifdef LCD_CONF
@@ -102,5 +102,21 @@ void checkFirstTime() {
       for(uint8_t i=0;i<3;i++) conf.Smoothing[i] = s[i];
     }
   #endif
+  #if defined (FAILSAFE)
+    conf.failsave_throttle = FAILSAVE_THROTTLE;
+  #endif
+  #ifdef VBAT
+    conf.vbatscale = VBATSCALE;
+    conf.vbatlevel1_3s = VBATLEVEL1_3S;
+    conf.vbatlevel2_3s = VBATLEVEL2_3S;
+    conf.vbatlevel3_3s = VBATLEVEL3_3S;
+    conf.no_vbat = NO_VBAT;
+  #endif
+  #ifdef POWERMETER
+    conf.psensornull = PSENSORNULL;
+    conf.pleveldivsoft = PLEVELDIVSOFT;
+    conf.pleveldiv = PLEVELDIV;
+  #endif
+
   writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }
