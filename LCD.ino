@@ -855,7 +855,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text08, &conf.P8[YAW], &__P,
   &lcd_param_text09, &conf.I8[YAW], &__I,
   &lcd_param_text10, &conf.D8[YAW], &__D,
-#if BARO
+#if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
   &lcd_param_text11, &conf.P8[PIDALT], &__P,
   &lcd_param_text12, &conf.I8[PIDALT], &__I,
   &lcd_param_text13, &conf.D8[PIDALT], &__D,
@@ -895,7 +895,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
       &lcd_param_text42, &conf.activate[BOXANGLE], &__AUX4,
     #endif
   #endif
-  #if BARO
+  #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
     &lcd_param_text43, &conf.activate[BOXBARO], &__AUX1,
     &lcd_param_text43, &conf.activate[BOXBARO], &__AUX2,
     #ifndef SUPPRESS_LCD_CONF_AUX34
@@ -1770,13 +1770,6 @@ void lcd_telemetry() {
       static uint8_t index = 0;
       index %= CHECKBOXITEMS;
       if (index == 0) linenr = 1; //vt100 starts linenumbering @1
-//      if (!ACC && (index==0)) index++;
-//      if (!BARO && (index==1)) index++;
-//      if (!MAG && (index==2)) index++;
-//      #if !( defined(SERVO_TILT)|| defined(SERVO_MIX_TILT) || defined(CAMTRIG) || defined(GIMBAL) )
-//        if ( (index==3)) index+=2;
-//      #endif
-//      if (!GPS && (index==6)) index+=2;
       LCDsetLine(linenr++);
       LCDprintChar(checkboxitemNames[index]);
       //LCDprintChar((PGM_P)(boxnames[index]));

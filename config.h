@@ -821,7 +821,18 @@
     #define PSENSORNULL 510 // for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt
     #define PINT2mA 13 // for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
 
+  /********************************************************************/
+  /****           altitude hold                                    ****/
+  /********************************************************************/
 
+    /* uncomment to disable the altitude hold feature.
+     * This is useful if all of the following apply
+     * + you have a baro
+     * + want altitude readout
+     * + do not use altitude hold feature
+     * + want to save memory space
+     */
+    //#define SUPPRESS_BARO_ALTHOLD
 
 
 /*************************************************************************************************/

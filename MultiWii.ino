@@ -13,6 +13,7 @@ July  2012     V2.1
 #include "config.h"
 #include "def.h"
 
+
 #include <avr/pgmspace.h>
 #define  VERSION  210
 
@@ -845,17 +846,19 @@ void loop () {
     #endif
 
     #if BARO
-      if (rcOptions[BOXBARO]) {
-        if (!f.BARO_MODE) {
-          f.BARO_MODE = 1;
-          AltHold = EstAlt;
-          initialThrottleHold = rcCommand[THROTTLE];
-          errorAltitudeI = 0;
-          BaroPID=0;
+      #ifndef SUPPRESS_BARO_ALTHOLD
+        if (rcOptions[BOXBARO]) {
+            if (!f.BARO_MODE) {
+              f.BARO_MODE = 1;
+              AltHold = EstAlt;
+              initialThrottleHold = rcCommand[THROTTLE];
+              errorAltitudeI = 0;
+              BaroPID=0;
+            }
+        } else {
+            f.BARO_MODE = 0;
         }
-      } else {
-        f.BARO_MODE = 0;
-      }
+      #endif
     #endif
     #if MAG
       if (rcOptions[BOXMAG]) {
@@ -1019,7 +1022,7 @@ void loop () {
     } else magHold = heading;
   #endif
 
-  #if BARO
+  #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
     if (f.BARO_MODE) {
       if (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
         f.BARO_MODE = 0; // so that a new althold reference is defined
