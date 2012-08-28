@@ -40,6 +40,12 @@ void readEEPROM() {
   #if GPS
     if (f.I2C_INIT_DONE) GPS_set_pids();
   #endif
+  #ifdef POWERMETER_HARD
+    conf.pleveldivsoft = PLEVELDIVSOFT;
+  #endif
+  #ifdef POWERMETER_SOFT
+     conf.pleveldivsoft = conf.pleveldiv;
+  #endif
 }
 
 void writeParams(uint8_t b) {
@@ -114,8 +120,9 @@ void checkFirstTime() {
   #endif
   #ifdef POWERMETER
     conf.psensornull = PSENSORNULL;
-    conf.pleveldivsoft = PLEVELDIVSOFT;
+    //conf.pleveldivsoft = PLEVELDIVSOFT; // not neccessary; this gets set in the eeprom read function
     conf.pleveldiv = PLEVELDIV;
+    conf.pint2ma = PINT2mA;
   #endif
 
   writeParams(0); // this will also (p)reset checkNewConf with the current version number again.

@@ -747,7 +747,7 @@ const char PROGMEM lcd_param_text07 [] = "Pitch    D";
 const char PROGMEM lcd_param_text08 [] = "Yaw      P";
 const char PROGMEM lcd_param_text09 [] = "Yaw      I";
 const char PROGMEM lcd_param_text10 [] = "Yaw      D";
-#if  BARO
+#if  BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
 const char PROGMEM lcd_param_text11 [] = "Alt      P";
 const char PROGMEM lcd_param_text12 [] = "Alt      I";
 const char PROGMEM lcd_param_text13 [] = "Alt      D";
@@ -851,8 +851,9 @@ const char PROGMEM lcd_param_text34 [] = "pAlarm /50"; // change text to represe
 #ifdef POWERMETER_HARD
   const char PROGMEM lcd_param_text111 [] = "PM SENSOR0";
 #endif
-const char PROGMEM lcd_param_text112 [] = "PM DIVSOFT";
+//const char PROGMEM lcd_param_text112 [] = "PM DIVSOFT";
 const char PROGMEM lcd_param_text113 [] = "PM DIV    ";
+const char PROGMEM lcd_param_text114 [] = "PM INT2MA ";
 #endif
 
 //                                         0123456789
@@ -1014,8 +1015,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   #ifdef POWERMETER_HARD
     &lcd_param_text111, &conf.psensornull, &__SE,
   #endif
-  &lcd_param_text112, &conf.pleveldivsoft, &__SE,
+  //&lcd_param_text112, &conf.pleveldivsoft, &__SE, // gets computed automatically
   &lcd_param_text113, &conf.pleveldiv, &__SE,
+  &lcd_param_text114, &conf.pint2ma, &__PT,
 #endif
 #if defined (FAILSAFE)
   &lcd_param_text101, &conf.failsave_throttle, &__ST,
@@ -1354,12 +1356,12 @@ void fill_line2_AmaxA() {
   uint16_t unit;
   strcpy_P(line2,PSTR("---,-A max---,-A"));
   #ifdef POWERMETER
-    unit = powerValue * PINT2mA;
+    unit = powerValue * conf.pint2ma;
     line2[0] = digit10000(unit);
     line2[1] = digit1000(unit);
     line2[2] = digit100(unit);
     line2[4] = digit10(unit);
-    unit = powerMax * PINT2mA;
+    unit = powerMax * conf.pint2ma;
     line2[10] = digit10000(unit);
     line2[11] = digit1000(unit);
     line2[12] = digit100(unit);

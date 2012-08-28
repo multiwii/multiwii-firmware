@@ -11,6 +11,8 @@
   #define FAILSAFE
   #define LCD_CONF
   #define LCD_TEXTSTAR
+  #define VBAT
+  #define POWERMETER_SOFT
 #elif COPTERTEST == 3
   #define TRI
   #define FREEIMUv035_MS
@@ -39,6 +41,8 @@
   #define DEBUG
   #undef SERVO_RFR_50HZ
   #define SERVO_RFR_160HZ
+  #define VBAT
+  #define POWERMETER_SOFT
 #elif defined(COPTERTEST)
   #error "*** this test is not yet defined"
 #endif

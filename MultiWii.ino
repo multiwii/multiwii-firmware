@@ -15,7 +15,7 @@ July  2012     V2.1
 
 
 #include <avr/pgmspace.h>
-#define  VERSION  210
+#define  VERSION  211
 
 /*********** RC alias *****************/
 enum rc {
@@ -315,6 +315,7 @@ static struct {
     uint16_t psensornull;
     uint16_t pleveldivsoft;
     uint16_t pleveldiv;
+    uint8_t pint2ma;
   #endif
 } conf;
 
@@ -437,6 +438,8 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       }        
       pMeter[PMOTOR_SUM] += (uint32_t) powerValue;
     }
+  #elif defined(POWERMETER_SOFT) && defined(LCD_TELEMETRY)
+    if (powerValue > powerMax) powerMax = powerValue;
   #endif
   #if defined(BUZZER)
     #if defined(VBAT)

@@ -412,7 +412,7 @@ void evaluateCommand() {
      headSerialReply(0);
      break;
    case MSP_EEPROM_WRITE:
-     writeParams(0);
+     if (! f.ARMED) writeParams(0);
      headSerialReply(0);
      break;
    case MSP_DEBUG:
