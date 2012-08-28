@@ -781,15 +781,15 @@ const char PROGMEM lcd_param_text32 [] = "pMeter  M7";
 #endif //                                0123456789
 #endif
 #ifdef FLYING_WING
-const char PROGMEM lcd_param_text36 [] = "Trim Ser 1";
-const char PROGMEM lcd_param_text37 [] = "Trim Ser 2";
+const char PROGMEM lcd_param_text36 [] = "SERvTRIM 1";
+const char PROGMEM lcd_param_text37 [] = "SERvTRIM 2";
 #endif
 #ifdef TRI //                            0123456789
-const char PROGMEM lcd_param_text38 [] = "Trim Ser Y";
+const char PROGMEM lcd_param_text38 [] = "SERvTRIM Y";
 #endif
 #ifdef LOG_VALUES
-const char PROGMEM lcd_param_text39 [] = "Failsafes ";
-const char PROGMEM lcd_param_text40 [] = "i2c Errors";
+const char PROGMEM lcd_param_text39 [] = "failsafes ";
+const char PROGMEM lcd_param_text40 [] = "i2c errors";
 const char PROGMEM lcd_param_text41 [] = "an overrun";
 #endif
 #if defined(LCD_CONF_AUX)
@@ -807,22 +807,22 @@ const char PROGMEM lcd_param_text52 [] = "AUX beeper";
 // 53 to 61 reserved
 #endif
 #ifdef HELI_120_CCPM //                  0123456789
-const char PROGMEM lcd_param_text73 [] = "Trim Ser N";
-const char PROGMEM lcd_param_text74 [] = "Trim Ser L";
-const char PROGMEM lcd_param_text75 [] = "Trim Ser T";
-const char PROGMEM lcd_param_text76 [] = "Trim Ser R";
+const char PROGMEM lcd_param_text73 [] = "SERvTRIM N";
+const char PROGMEM lcd_param_text74 [] = "SERvTRIM L";
+const char PROGMEM lcd_param_text75 [] = "SERvTRIM Y";
+const char PROGMEM lcd_param_text76 [] = "SERvTRIM R";
 #endif
 #ifdef GYRO_SMOOTHING //                 0123456789
-const char PROGMEM lcd_param_text80 [] = "Gsmooth R ";
-const char PROGMEM lcd_param_text81 [] = "Gsmooth P ";
-const char PROGMEM lcd_param_text82 [] = "Gsmooth Y ";
+const char PROGMEM lcd_param_text80 [] = "GSMOOTH R ";
+const char PROGMEM lcd_param_text81 [] = "GSMOOTH P ";
+const char PROGMEM lcd_param_text82 [] = "GSMOOTH Y ";
 #endif
 #ifdef AIRPLANE //                       0123456789
-const char PROGMEM lcd_param_text83 [] = "ServoMid 3";
-const char PROGMEM lcd_param_text84 [] = "ServoMid 4";
-const char PROGMEM lcd_param_text85 [] = "ServoMid 5";
-const char PROGMEM lcd_param_text86 [] = "ServoMid 6";
-const char PROGMEM lcd_param_text87 [] = "ServoMid 7";
+const char PROGMEM lcd_param_text83 [] = "SERVoMID 3";
+const char PROGMEM lcd_param_text84 [] = "SERVoMID 4";
+const char PROGMEM lcd_param_text85 [] = "SERVoMID 5";
+const char PROGMEM lcd_param_text86 [] = "SERVoMID 6";
+const char PROGMEM lcd_param_text87 [] = "SERVoMID 7";
 #endif
 #if GPS
 const char PROGMEM lcd_param_text91 [] = "GPS Pos. P";
@@ -838,15 +838,15 @@ const char PROGMEM lcd_param_text98 [] = "NAV Rate D";
 const char PROGMEM lcd_param_text101 [] = "Fail Throt";
 #endif
 #ifdef VBAT
-const char PROGMEM lcd_param_text35 [] = "Batt Volt ";
+const char PROGMEM lcd_param_text35 [] =  "Batt Volt ";
 const char PROGMEM lcd_param_text102 [] = "VBAT SCALE";
 const char PROGMEM lcd_param_text103 [] = "BattWarn 1";
 const char PROGMEM lcd_param_text104 [] = "BattWarn 2";
 const char PROGMEM lcd_param_text105 [] = "BattWarn 3";
-const char PROGMEM lcd_param_text106 [] = "VBAT NOBAT";
+const char PROGMEM lcd_param_text106 [] = "Batt nobat";
 #endif
 #ifdef POWERMETER
-const char PROGMEM lcd_param_text33 [] = "pMeter Sum";
+const char PROGMEM lcd_param_text33 [] = "pmeter sum";
 const char PROGMEM lcd_param_text34 [] = "pAlarm /50"; // change text to represent PLEVELSCALE value
 #ifdef POWERMETER_HARD
   const char PROGMEM lcd_param_text111 [] = "PM SENSOR0";
@@ -1040,8 +1040,8 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #ifdef HELI_120_CCPM
   &lcd_param_text73, &conf.servoTrim[3], &__ST,
   &lcd_param_text74, &conf.servoTrim[4], &__ST,
-  &lcd_param_text75, &conf.servoTrim[5], &__ST,
   &lcd_param_text76, &conf.servoTrim[6], &__ST,
+  &lcd_param_text75, &conf.servoTrim[5], &__ST,
 #endif
 #ifdef GYRO_SMOOTHING
   &lcd_param_text80, &conf.Smoothing[0], &__D,
