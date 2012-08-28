@@ -156,7 +156,9 @@ static int16_t  nav_takeoff_bearing;
     char b;
     while(b = pgm_read_byte(str)) {
       SerialWrite(GPS_SERIAL, b); 
-      delay(2);
+      #if defined(UBLOX)
+        delay(4);
+      #endif      
       str++;
     }
   }
@@ -180,7 +182,7 @@ static int16_t  nav_takeoff_bearing;
 
   void GPS_SerialInit() {
     SerialOpen(GPS_SERIAL,GPS_BAUD);  
-    delay(400);
+    delay(1000);
     #if defined(UBLOX)
       for(uint8_t i=0;i<=5;i++){
         SerialOpen(GPS_SERIAL,init_speed[i]);          // switch UART speed for sending SET BAUDRATE command (NMEA mode)
@@ -201,7 +203,7 @@ static int16_t  nav_takeoff_bearing;
       SerialOpen(GPS_SERIAL,GPS_BAUD);  
       for(uint8_t i=0; i<sizeof(UBLOX_INIT); i++) {                        // send configuration data in UBX protocol
         SerialWrite(GPS_SERIAL, pgm_read_byte(UBLOX_INIT+i));
-        delay(2); //simulating a 38400baud pace (or less), otherwise commands are not accepted by the device.
+        delay(4); //simulating a 38400baud pace (or less), otherwise commands are not accepted by the device.
       }
     #elif defined(INIT_MTK_GPS)                              // MTK GPS setup
       for(uint8_t i=0;i<=5;i++){

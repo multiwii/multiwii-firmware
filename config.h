@@ -423,8 +423,11 @@
 /*************************************************************************************************/
 
   /******                Serial com speed    *********************************/
-    /* This is the speed of the serial interface */
-    #define SERIAL_COM_SPEED 115200
+    /* This is the speed of the serial interfaces */
+    #define SERIAL0_COM_SPEED 115200
+    #define SERIAL1_COM_SPEED 115200
+    #define SERIAL2_COM_SPEED 115200
+    #define SERIAL3_COM_SPEED 115200
 
     /* interleaving delay in micro seconds between 2 readings WMP/NK in a WMP+NK config
        if the ACC calibration time is very long (20 or 30s), try to increase this delay up to 4000

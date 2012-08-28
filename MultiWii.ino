@@ -554,14 +554,14 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 
 void setup() {
   #if !defined(GPS_PROMINI)
-    SerialOpen(0,SERIAL_COM_SPEED);
+    SerialOpen(0,SERIAL0_COM_SPEED);
     #if defined(PROMICRO)
-      SerialOpen(1,SERIAL_COM_SPEED);
+      SerialOpen(1,SERIAL1_COM_SPEED);
     #endif
     #if defined(MEGA)
-      SerialOpen(1,SERIAL_COM_SPEED);
-      SerialOpen(2,SERIAL_COM_SPEED);
-      SerialOpen(3,SERIAL_COM_SPEED);
+      SerialOpen(1,SERIAL1_COM_SPEED);
+      SerialOpen(2,SERIAL2_COM_SPEED);
+      SerialOpen(3,SERIAL3_COM_SPEED);
     #endif
   #endif
   LEDPIN_PINMODE;
@@ -604,7 +604,7 @@ void setup() {
     }
     if(!GPS_Present){
       SerialEnd(GPS_SERIAL);
-      SerialOpen(0,SERIAL_COM_SPEED);
+      SerialOpen(0,SERIAL0_COM_SPEED);
     }
     #if !defined(GPS_PROMINI)
       GPS_Present = 1;
