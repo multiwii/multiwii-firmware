@@ -1244,7 +1244,7 @@ void configurationLoop() {
       delay(1000);
       if (key == LCD_MENU_NEXT) key=LCD_VALUE_UP; else key = LCD_MENU_NEXT;
     #endif
-    for (i = ROLL; i < THROTTLE; i++) {uint16_t Tmp = readRawRC(i); lcdStickState[i] = (Tmp < MINCHECK) | ((Tmp > MAXCHECK) << 1);};
+    for (i = ROLL; i <= THROTTLE; i++) {uint16_t Tmp = readRawRC(i); lcdStickState[i] = (Tmp < MINCHECK) | ((Tmp > MAXCHECK) << 1);};
     if (key == LCD_MENU_SAVE_EXIT || (IsLow(YAW) && IsHigh(PITCH))) LCD = 0; // save and exit
     else if (key == LCD_MENU_ABORT || (IsHigh(YAW) && IsHigh(PITCH))) LCD = 2;// exit without save: eeprom has only 100.000 write cycles
     else if (key == LCD_MENU_NEXT || (IsLow(PITCH))) { //switch config param with pitch
@@ -1254,12 +1254,12 @@ void configurationLoop() {
     } else if (key == LCD_VALUE_DOWN || (IsLow(ROLL))) { //+ or - param with low and high roll
       refreshLCD = 1;
       lcd_param_def_t* deft = (lcd_param_def_t*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 2]));
-      deft->type->inc((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), -deft->increment);
+      deft->type->inc((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), -(IsHigh(THROTTLE) ? 10: 1) * deft->increment);
       if (p == 0) conf.P8[PITCH] = conf.P8[ROLL];
     } else if (key == LCD_VALUE_UP || (IsHigh(ROLL))) {
       refreshLCD = 1;
       lcd_param_def_t* deft = (lcd_param_def_t*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 2]));
-      deft->type->inc((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), +deft->increment);
+      deft->type->inc((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), +(IsHigh(THROTTLE) ? 10 : 1) * deft->increment);
       if (p == 0) conf.P8[PITCH] = conf.P8[ROLL];
     }
   } // while (LCD == 1)
