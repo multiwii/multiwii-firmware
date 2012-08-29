@@ -970,6 +970,11 @@
   #undef INTERNAL_I2C_PULLUPS
 #endif
 
+#if defined(OSEPPGYRO)
+  #define MPU3050
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #undef INTERNAL_I2C_PULLUPS
+#endif
 
 /**************************************************************************************/
 /***************              Sensor Type definitions              ********************/
@@ -987,7 +992,7 @@
   #define MAG 0
 #endif
 
-#if defined(ITG3200) || defined(L3G4200D) || defined(MPU6050) || defined(WMP)
+#if defined(ITG3200) || defined(L3G4200D) || defined(MPU6050) || defined(MPU3050) || defined(WMP)
   #define GYRO 1
 #else
   #define GYRO 0
@@ -1097,7 +1102,7 @@
 
 // Spektrum Satellite
 #if defined(SPEKTRUM)
-  #define SPEK_MAX_CHANNEL 7
+  #define SPEK_MAX_CHANNEL 12
   #define SPEK_FRAME_SIZE 16
   #if (SPEKTRUM == 1024)
     #define SPEK_CHAN_SHIFT  2       // Assumes 10 bit frames, that is 1024 mode.

@@ -9,6 +9,8 @@
 //RAW RC values will be store here
 #if defined(SBUS)
   volatile uint16_t rcValue[18] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
+#elif defined(SPEKTRUM)
+  volatile uint16_t rcValue[SPEK_MAX_CHANNEL] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
 #else
   volatile uint16_t rcValue[8] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
 #endif
@@ -20,7 +22,7 @@
   static uint8_t rcChannel[18] = {PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4,8,9,10,11,12,13,14,15,16,17};
   static uint16_t sbusIndex=0;
 #elif defined(SPEKTRUM)
-  static uint8_t rcChannel[7] = {PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3};
+  static uint8_t rcChannel[SPEK_MAX_CHANNEL] = {PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4,8,9,10,11};
 #else // Standard Channel order
   static uint8_t rcChannel[8]  = {ROLLPIN, PITCHPIN, YAWPIN, THROTTLEPIN, AUX1PIN,AUX2PIN,AUX3PIN,AUX4PIN};
   static uint8_t PCInt_RX_Pins[PCINT_PIN_COUNT] = {PCINT_RX_BITS}; // if this slowes the PCINT readings we can switch to a define for each pcint bit
@@ -325,7 +327,8 @@ void readSpektrum() {
         uint8_t bh = SerialRead(SPEK_SERIAL_PORT);
         uint8_t bl = SerialRead(SPEK_SERIAL_PORT);
         uint8_t spekChannel = 0x0F & (bh >> SPEK_CHAN_SHIFT);
-        if (spekChannel < SPEK_MAX_CHANNEL) rcValue[spekChannel] = 988 + (((uint16_t)(bh & SPEK_CHAN_MASK) << 8) + bl) SPEK_DATA_SHIFT;
+        if (b == 2) {debug[1]=spekChannel; debug[2]=bh; debug[3]=bl;}
+        if (spekChannel < SPEK_MAX_CHANNEL) rcValue[spekChannel] = 988 + ((((uint16_t)(bh & SPEK_CHAN_MASK) << 8) + bl) SPEK_DATA_SHIFT);
       }
       spekFrameFlags = 0x00;
       #if defined(FAILSAFE)
