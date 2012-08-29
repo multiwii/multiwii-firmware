@@ -138,7 +138,7 @@ void serialCom() {
       #define GPS_COND  && (GPS_SERIAL != CURRENTPORT)
     #endif
     #define SPEK_COND
-    #if defined(SPEKTRUM)
+    #if defined(SPEKTRUM) && (UART_NUMBER > 1)
       #define SPEK_COND  && (SPEK_SERIAL_PORT != CURRENTPORT)
     #endif
     while (SerialAvailable(CURRENTPORT) GPS_COND SPEK_COND) {
