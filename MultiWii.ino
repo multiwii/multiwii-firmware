@@ -438,8 +438,6 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       }        
       pMeter[PMOTOR_SUM] += (uint32_t) powerValue;
     }
-  #elif defined(POWERMETER_SOFT) && defined(LCD_TELEMETRY)
-    if (powerValue > powerMax) powerMax = powerValue;
   #endif
   #if defined(BUZZER)
     #if defined(VBAT)

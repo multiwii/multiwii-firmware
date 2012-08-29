@@ -755,9 +755,9 @@ const char PROGMEM lcd_param_text14 [] = "Vel      P";
 const char PROGMEM lcd_param_text15 [] = "Vel      I";
 const char PROGMEM lcd_param_text16 [] = "Vel      D";
 #endif
-const char PROGMEM lcd_param_text17 [] = "Level    P";
-const char PROGMEM lcd_param_text18 [] = "Level    I";
-const char PROGMEM lcd_param_text188[] = "Level    D";
+const char PROGMEM lcd_param_text17 [] = "Ang/Hor  P";
+const char PROGMEM lcd_param_text18 [] = "Ang/Hor  I";
+const char PROGMEM lcd_param_text188[] = "Ang/Hor  D";
 #if MAG
 const char PROGMEM lcd_param_text19 [] = "Mag      P";
 #endif
@@ -770,14 +770,14 @@ const char PROGMEM lcd_param_text23 [] = "Yaw Rate  ";
 const char PROGMEM lcd_param_text24 [] = "Thrott PID";
 #ifdef LOG_VALUES
 #if (LOG_VALUES == 2)
-const char PROGMEM lcd_param_text25 [] = "pMeter  M0";
-const char PROGMEM lcd_param_text26 [] = "pMeter  M1";
-const char PROGMEM lcd_param_text27 [] = "pMeter  M2";
-const char PROGMEM lcd_param_text28 [] = "pMeter  M3";
-const char PROGMEM lcd_param_text29 [] = "pMeter  M4";
-const char PROGMEM lcd_param_text30 [] = "pMeter  M5";
-const char PROGMEM lcd_param_text31 [] = "pMeter  M6";
-const char PROGMEM lcd_param_text32 [] = "pMeter  M7";
+const char PROGMEM lcd_param_text25 [] = "pmeter  m0";
+const char PROGMEM lcd_param_text26 [] = "pmeter  m1";
+const char PROGMEM lcd_param_text27 [] = "pmeter  m2";
+const char PROGMEM lcd_param_text28 [] = "pmeter  m3";
+const char PROGMEM lcd_param_text29 [] = "pmeter  m4";
+const char PROGMEM lcd_param_text30 [] = "pmeter  m5";
+const char PROGMEM lcd_param_text31 [] = "pmeter  m6";
+const char PROGMEM lcd_param_text32 [] = "pmeter  m7";
 #endif //                                0123456789
 #endif
 #ifdef FLYING_WING
@@ -843,17 +843,17 @@ const char PROGMEM lcd_param_text102 [] = "VBAT SCALE";
 const char PROGMEM lcd_param_text103 [] = "BattWarn 1";
 const char PROGMEM lcd_param_text104 [] = "BattWarn 2";
 const char PROGMEM lcd_param_text105 [] = "BattWarn 3";
-const char PROGMEM lcd_param_text106 [] = "Batt nobat";
+const char PROGMEM lcd_param_text106 [] = "Batt NoBat";
 #endif
 #ifdef POWERMETER
 const char PROGMEM lcd_param_text33 [] = "pmeter sum";
 const char PROGMEM lcd_param_text34 [] = "pAlarm /50"; // change text to represent PLEVELSCALE value
 #ifdef POWERMETER_HARD
   const char PROGMEM lcd_param_text111 [] = "PM SENSOR0";
+  const char PROGMEM lcd_param_text114 [] = "PM INT2MA ";
 #endif
 //const char PROGMEM lcd_param_text112 [] = "PM DIVSOFT";
 const char PROGMEM lcd_param_text113 [] = "PM DIV    ";
-const char PROGMEM lcd_param_text114 [] = "PM INT2MA ";
 #endif
 
 //                                         0123456789
@@ -1014,10 +1014,10 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text34, &conf.powerTrigger1, &__PT,
   #ifdef POWERMETER_HARD
     &lcd_param_text111, &conf.psensornull, &__SE,
+    &lcd_param_text114, &conf.pint2ma, &__PT,
   #endif
   //&lcd_param_text112, &conf.pleveldivsoft, &__SE, // gets computed automatically
   &lcd_param_text113, &conf.pleveldiv, &__SE,
-  &lcd_param_text114, &conf.pint2ma, &__PT,
 #endif
 #if defined (FAILSAFE)
   &lcd_param_text101, &conf.failsave_throttle, &__ST,
@@ -1149,7 +1149,7 @@ void __upSFmt(void * var, uint8_t mul, uint8_t dec) {
 }
 #endif
 
-static uint8_t lcdStickState[3];
+static uint8_t lcdStickState[4];
 #define IsLow(x)  (lcdStickState[x] & 0x1)
 #define IsHigh(x) (lcdStickState[x] & 0x2)
 #define IsMid(x)  (!lcdStickState[x])
@@ -1352,22 +1352,23 @@ void fill_line1_deg() {
   line1[13] = digit10(unit);
   line1[15] = digit1(unit);
 }
+#ifdef POWERMETER_HARD
 void fill_line2_AmaxA() {
   uint16_t unit;
   strcpy_P(line2,PSTR("---,-A max---,-A"));
-  #ifdef POWERMETER
-    unit = powerValue * conf.pint2ma;
-    line2[0] = digit10000(unit);
-    line2[1] = digit1000(unit);
-    line2[2] = digit100(unit);
-    line2[4] = digit10(unit);
-    unit = powerMax * conf.pint2ma;
-    line2[10] = digit10000(unit);
-    line2[11] = digit1000(unit);
-    line2[12] = digit100(unit);
-    line2[14] = digit10(unit);
-  #endif
+  unit = powerValue * conf.pint2ma;
+  line2[0] = digit10000(unit);
+  line2[1] = digit1000(unit);
+  line2[2] = digit100(unit);
+  line2[4] = digit10(unit);
+  unit = powerMax * conf.pint2ma;
+  line2[10] = digit10000(unit);
+  line2[11] = digit1000(unit);
+  line2[12] = digit100(unit);
+  line2[14] = digit10(unit);
 }
+#endif
+
 void fill_line1_VmA() {
   strcpy_P(line1,PSTR("--.-V   -----mAh")); // uint8_t vbat, intPowerMeterSum
   //                   0123456789.12345
@@ -1531,8 +1532,10 @@ void lcd_telemetry() {
       LCDsetLine(1);
       LCDprintChar(line1);
     } else {
-      fill_line2_AmaxA();
-      LCDsetLine(2);LCDprintChar(line2);
+      #ifdef POWERMETER_HARD
+        fill_line2_AmaxA();
+        LCDsetLine(2);LCDprintChar(line2);
+      #endif
     }
     break;
 #endif
@@ -1701,7 +1704,7 @@ void lcd_telemetry() {
 #ifdef DISPLAY_MULTILINE
 
 void lcd_telemetry() {
-  static uint8_t linenr = 0;
+  static uint8_t linenr;
   switch (telemetry) { // output telemetry data
     uint16_t unit;
     uint8_t i;
@@ -1710,52 +1713,58 @@ void lcd_telemetry() {
       break;
     case 1:// overall display
     case '1':
-    switch (linenr++ % 6) { // not really linenumbers
-      case 0:// V, mAh
-      LCDsetLine(1);
-      fill_line1_VmA();
-      #ifdef BUZZER
-        if (isBuzzerON()) { LCDattributesReverse(); } // buzzer on? then add some blink for attention
-      #endif
-      LCDprintChar(line1);
-      break;
-      case 1:// V, mAh bars
-      LCDsetLine(2);
-      output_VmAbars();
-      LCDattributesOff(); // turn Reverse off for rest of display
-      break;
-      case 2:// A, maxA
-      LCDsetLine(3);
-      fill_line2_AmaxA();
-      LCDprintChar(line2);
-      break;
-      case 3:// checkboxstatus
-      LCDsetLine(4);
-      LCDsetLine(5);
-      strcpy_P(line1,PSTR("                "));
-      LCDprintChar(line1);
-      LCDsetLine(5);
-      output_checkboxitems();
-      break;
-      case 4:// uptime, uptime_armed
-      LCDsetLine(6);// to clear the unused line
-      LCDsetLine(7);
-      LCDprintChar("U:"); print_uptime(millis() / 1000 );
-      LCDprintChar("  A:"); print_uptime(armedTime / 1000000);
-      break;
-      case 5:// height
-      LCDsetLine(8);// to clear the unused line
-      LCDsetLine(9);
-#if BARO
-      int16_t h = (BaroAlt - BAROaltStart) / 100;
-      LCDprint('A'); lcdprint_int16(h); LCDprint('m');
-      h = (BAROaltMax - BAROaltStart) / 100;
-      LCDprintChar(" ("); lcdprint_int16(h);
-#endif
-      break;
-    }
-    LCDcrlf();
+    {
+      static uint8_t index = 0;
+      switch (index++ % 6) { // not really linenumbers
+        case 0:// V, mAh
+          linenr = 1;
+          LCDsetLine(linenr++);
+          fill_line1_VmA();
+          #ifdef BUZZER
+            if (isBuzzerON()) { LCDattributesReverse(); } // buzzer on? then add some blink for attention
+          #endif
+          LCDprintChar(line1);
+          break;
+        case 1:// V, mAh bars
+          LCDsetLine(linenr++);
+          output_VmAbars();
+          LCDattributesOff(); // turn Reverse off for rest of display
+          break;
+        case 2:// A, maxA
+          #ifdef POWERMETER_HARD
+            LCDsetLine(linenr++);
+            fill_line2_AmaxA();
+            LCDprintChar(line2);
+          #endif
+          break;
+        case 3:// checkboxstatus
+          LCDsetLine(linenr++);
+          LCDsetLine(linenr);
+          strcpy_P(line1,PSTR("... ... ... ... "));
+          LCDprintChar(line1);
+          LCDsetLine(linenr++);
+          output_checkboxitems();
+          break;
+        case 4:// uptime, uptime_armed
+          LCDsetLine(linenr++);
+          LCDsetLine(linenr++);
+          LCDprintChar("U:"); print_uptime(millis() / 1000 );
+          LCDprintChar("  A:"); print_uptime(armedTime / 1000000);
+          break;
+        case 5:// height
+          #if BARO
+            LCDsetLine(linenr++);
+            LCDsetLine(linenr++);
+            int16_t h = (BaroAlt - BAROaltStart) / 100;
+            LCDprint('A'); lcdprint_int16(h); LCDprint('m');
+            h = (BAROaltMax - BAROaltStart) / 100;
+            LCDprintChar(" ("); lcdprint_int16(h);
+          #endif
+          break;
+      }
+      LCDcrlf();
     break;
+    }
 #ifndef SUPPRESS_TELEMETRY_PAGE_2
     case 2: // sensor readings
     case '2':

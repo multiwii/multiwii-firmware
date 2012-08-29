@@ -1227,7 +1227,6 @@ void mixTable() {
       }
       #if defined(POWERMETER_SOFT)
         pMeter[PMOTOR_SUM]+= ampsum; // total sum over all motors
-        powerValue = ampsum;
       #endif
     }
   #endif
