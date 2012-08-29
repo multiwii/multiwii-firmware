@@ -327,7 +327,6 @@ void readSpektrum() {
         uint8_t bh = SerialRead(SPEK_SERIAL_PORT);
         uint8_t bl = SerialRead(SPEK_SERIAL_PORT);
         uint8_t spekChannel = 0x0F & (bh >> SPEK_CHAN_SHIFT);
-        if (b == 2) {debug[1]=spekChannel; debug[2]=bh; debug[3]=bl;}
         if (spekChannel < SPEK_MAX_CHANNEL) rcValue[spekChannel] = 988 + ((((uint16_t)(bh & SPEK_CHAN_MASK) << 8) + bl) SPEK_DATA_SHIFT);
       }
       spekFrameFlags = 0x00;
