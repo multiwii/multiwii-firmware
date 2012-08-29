@@ -133,11 +133,15 @@ void serialCom() {
     #if !defined(PROMINI)
       CURRENTPORT=n;
     #endif
+    #define GPS_COND
     #if defined(GPS_SERIAL)
-    while (SerialAvailable(CURRENTPORT) && GPS_SERIAL != CURRENTPORT) {
-    #else
-    while (SerialAvailable(CURRENTPORT)) {
+      #define GPS_COND  && (GPS_SERIAL != CURRENTPORT)
     #endif
+    #define SPEK_COND
+    #if defined(SPEKTRUM)
+      #define SPEK_COND  && (SPEK_SERIAL_PORT != CURRENTPORT)
+    #endif
+    while (SerialAvailable(CURRENTPORT) GPS_COND SPEK_COND) {
       uint8_t bytesTXBuff = ((uint8_t)(serialHeadTX[CURRENTPORT]-serialTailTX[CURRENTPORT]))%TX_BUFFER_SIZE; // indicates the number of occupied bytes in TX buffer
       if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (50 bytes margin)
       c = SerialRead(CURRENTPORT);
