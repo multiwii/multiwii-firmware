@@ -1462,7 +1462,7 @@ void Sonar_update() {
 #elif defined(I2C_NAV_SONAR)
 void Sonar_update() {
   
-  lastSonarAlt = sonarAlt;
+//  lastSonarAlt = sonarAlt;
   
   i2c_rep_start(I2C_GPS_ADDRESS<<1);
   i2c_write(I2C_GPS_SONAR);          
