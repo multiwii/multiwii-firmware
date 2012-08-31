@@ -1107,20 +1107,20 @@ void __uAuxFmt4(void * var, uint8_t mul, uint8_t dec) {  __uAuxFmt(var, mul, dec
 
 void __uAuxFmt(void * var, uint8_t mul, uint8_t dec, uint8_t aux) {
   uint16_t unit = *(uint16_t*)var;
-  line2[0] =  (aux == 1 ? '>' : ' ');
+  line2[0] =  (aux == 1 ? '1' : ' ');
   line2[1] =  ( unit & 1<<0 ? 'L' : '.' );
   line2[2] =  ( unit & 1<<1 ? 'M' : '.' );
   line2[3] =  ( unit & 1<<2 ? 'H' : '.' );
-  line2[4] =  (aux == 2 ? '>' : ' ');
+  line2[4] =  (aux == 2 ? '2' : ' ');
   line2[5] =  ( unit & 1<<3 ? 'L' : '.' );
   line2[6] =  ( unit & 1<<4 ? 'M' : '.' );
   line2[7] =  ( unit & 1<<5 ? 'H' : '.' );
 #ifndef OLED_I2C_128x64 // not enough space for 16 chars, sorry
-  line2[8] =  (aux == 3 ? '>' : ' ');
+  line2[8] =  (aux == 3 ? '3' : ' ');
   line2[9] =  ( unit & 1<<6 ? 'L' : '.' );
   line2[10] = ( unit & 1<<7 ? 'M' : '.' );
   line2[11] = ( unit & 1<<8 ? 'H' : '.' );
-  line2[12] = (aux == 4 ? '>' : ' ');
+  line2[12] = (aux == 4 ? '4' : ' ');
   line2[13] = ( unit & 1<<9 ? 'L' : '.' );
   line2[14] = ( unit & 1<<10 ? 'M' : '.' );
   line2[15] = ( unit & 1<<11 ? 'H' : '.' );

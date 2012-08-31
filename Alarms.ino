@@ -87,7 +87,7 @@
     else if (warn_noGPSfix == 1) beep_code('S','S','N','S');    
     else if (beeperOnBox == 1)   beep_code('S','S','S','S');                 //beeperon
     else if (warn_runtime == 1 && f.ARMED == 1)beep_code('S','S','S','N'); //Runtime warning      
-    else if (warn_vbat == 4)     beep_code('M','S','M','L'); // beep_code('S','S','L','D');
+    else if (warn_vbat == 4)     beep_code('M','S','M','S'); // beep_code('S','S','L','D');
     else if (warn_vbat == 2)     beep_code('M','N','M','D'); // beep_code('S','L','N','D');
     else if (warn_vbat == 1)     beep_code('M','N','N','D'); // beep_code('L','N','N','D');
     else if (beep_confirmation == 1) beep_code('L','N','N','L');    
@@ -184,7 +184,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
 /****                         Global Handling                    ****/
 /********************************************************************/
 
-  int useResource(char resource, uint16_t pulse, uint16_t pause){ 
+  void useResource(char resource, uint16_t pulse, uint16_t pause){
     static uint8_t channel = 0; 
     channel = ResourceToChannel(resource);
     if (!channelIsOn[channel] && (millis() >= (channelLastToggleTime[channel] + pause))&& pulse != 0) {	         
