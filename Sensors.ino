@@ -1459,10 +1459,27 @@ void Sonar_update() {
       tinygps_query();
     }
 }
+#elif defined(I2C_NAV_SONAR)
+void Sonar_update() {
+  
+  lastSonarAlt = sonarAlt;
+  
+  i2c_rep_start(I2C_GPS_ADDRESS<<1);
+  i2c_write(I2C_GPS_SONAR);          
+  i2c_rep_start((I2C_GPS_ADDRESS<<1)|1);
+  
+  //read I2C_GPS_SONAR
+  uint8_t *varptr = (uint8_t *)&sonarAlt;
+  *varptr++ = i2c_readAck();
+  *varptr   = i2c_readNak();
+  
+}
+inline void Sonar_init() {}
 #else
 inline void Sonar_init() {}
 inline void Sonar_update() {}
 #endif
+
 
 
 

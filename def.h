@@ -999,7 +999,7 @@
   #define GPS 0
 #endif
 
-#if defined(SRF02) || defined(SRF08) || defined(SRF10) || defined(SRC235) || defined(TINY_GPS_SONAR)
+#if defined(SRF02) || defined(SRF08) || defined(SRF10) || defined(SRC235) || defined(TINY_GPS_SONAR) || defined(I2C_NAV_SONAR)
   #define SONAR 1
 #else
   #define SONAR 0
@@ -1471,6 +1471,8 @@
 #define	I2C_GPS_WP13		                    206
 #define	I2C_GPS_WP14		                    217
 #define	I2C_GPS_WP15		                    228
+
+#define I2C_GPS_SONAR                               239 // Sonar Reading in cm
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // End register definition 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
