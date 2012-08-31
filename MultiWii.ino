@@ -48,7 +48,7 @@ enum box {
     BOXANGLE,
     BOXHORIZON,
   #endif
-  #if BARO
+  #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
     BOXBARO,
   #endif
   #if MAG
@@ -89,7 +89,7 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
     "ANGLE;"
     "HORIZON;"
   #endif
-  #if BARO
+  #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
     "BARO;"
   #endif
   #if MAG
@@ -862,20 +862,18 @@ void loop () {
       if (f.ANGLE_MODE || f.HORIZON_MODE) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
     #endif
 
-    #if BARO
-      #ifndef SUPPRESS_BARO_ALTHOLD
-        if (rcOptions[BOXBARO]) {
-            if (!f.BARO_MODE) {
-              f.BARO_MODE = 1;
-              AltHold = EstAlt;
-              initialThrottleHold = rcCommand[THROTTLE];
-              errorAltitudeI = 0;
-              BaroPID=0;
-            }
-        } else {
-            f.BARO_MODE = 0;
-        }
-      #endif
+    #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
+      if (rcOptions[BOXBARO]) {
+          if (!f.BARO_MODE) {
+            f.BARO_MODE = 1;
+            AltHold = EstAlt;
+            initialThrottleHold = rcCommand[THROTTLE];
+            errorAltitudeI = 0;
+            BaroPID=0;
+          }
+      } else {
+          f.BARO_MODE = 0;
+      }
     #endif
     #if MAG
       if (rcOptions[BOXMAG]) {

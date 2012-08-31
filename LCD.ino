@@ -1459,7 +1459,7 @@ static char checkboxitemNames[][4] = {
     #if ACC
       "Ang","Hor",
     #endif
-    #if BARO
+    #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
       "Bar",
     #endif
     #if MAG

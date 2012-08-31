@@ -248,7 +248,7 @@ void evaluateCommand() {
                    f.ANGLE_MODE<<BOXANGLE|
                    f.HORIZON_MODE<<BOXHORIZON|
                  #endif
-                 #if BARO
+                 #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
                    f.BARO_MODE<<BOXBARO|
                  #endif
                  #if MAG
