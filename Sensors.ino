@@ -37,6 +37,11 @@
   //#define MPU6050_ADDRESS     0x69 // address pin AD0 high (VCC)
 #endif
 
+#if !defined(MPU3050_ADDRESS)
+  #define MPU3050_ADDRESS     0x68 // Switch in "ON" position
+  //#define MPU3050_ADDRESS     0x69 // Switch in "1" position
+#endif
+
 #if !defined(MS561101BA_ADDRESS) 
   #define MS561101BA_ADDRESS 0x77 //CBR=0 0xEE I2C address when pin CSB is connected to LOW (GND)
   //#define MS561101BA_ADDRESS 0x76 //CBR=1 0xEC I2C address when pin CSB is connected to HIGH (VCC)
@@ -100,6 +105,34 @@
 #else
     //Default settings LPF 256Hz/8000Hz sample
     #define MPU6050_DLPF_CFG   0
+#endif
+
+//MPU3050 Gyro LPF setting
+#if defined(MPU3050_LPF_256HZ) || defined(MPU3050_LPF_188HZ) || defined(MPU3050_LPF_98HZ) || defined(MPU3050_LPF_42HZ) || defined(MPU3050_LPF_20HZ) || defined(MPU3050_LPF_10HZ) || defined(MPU3050_LPF_5HZ)
+  #if defined(MPU3050_LPF_256HZ)
+    #define MPU3050_DLPF_CFG   0
+  #endif
+  #if defined(MPU3050_LPF_188HZ)
+    #define MPU3050_DLPF_CFG   1
+  #endif
+  #if defined(MPU3050_LPF_98HZ)
+    #define MPU3050_DLPF_CFG   2
+  #endif
+  #if defined(MPU3050_LPF_42HZ)
+    #define MPU3050_DLPF_CFG   3
+  #endif
+  #if defined(MPU3050_LPF_20HZ)
+    #define MPU3050_DLPF_CFG   4
+  #endif
+  #if defined(MPU3050_LPF_10HZ)
+    #define MPU3050_DLPF_CFG   5
+  #endif
+  #if defined(MPU3050_LPF_5HZ)
+    #define MPU3050_DLPF_CFG   6
+  #endif
+#else
+    //Default settings LPF 256Hz/8000Hz sample
+    #define MPU3050_DLPF_CFG   0
 #endif
 
 #if defined(TINY_GPS) | defined(TINY_GPS_SONAR)
@@ -1177,6 +1210,30 @@ void ACC_getADC () {
     }
   #endif
 #endif
+
+// ************************************************************************************************************
+// I2C Gyroscope MPU3050
+// ************************************************************************************************************
+#if defined(MPU3050)
+
+void Gyro_init() {
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
+  i2c_writeReg(MPU3050_ADDRESS, 0x3E, 0x80);             //PWR_MGMT_1    -- DEVICE_RESET 1
+  delay(5);
+  i2c_writeReg(MPU3050_ADDRESS, 0x3E, 0x03);             //PWR_MGMT_1    -- SLEEP 0; CYCLE 0; TEMP_DIS 0; CLKSEL 3 (PLL with Z Gyro reference)
+  i2c_writeReg(MPU3050_ADDRESS, 0x16, MPU3050_DLPF_CFG + 0x18); // Gyro CONFIG   -- EXT_SYNC_SET 0 (disable input pin for data sync) ; default DLPF_CFG = 0 => GYRO bandwidth = 256Hz); -- FS_SEL = 3: Full scale set to 2000 deg/sec
+}
+
+void Gyro_getADC () {
+  i2c_getSixRawADC(MPU3050_ADDRESS, 0x1D);
+  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/4 , // range: +/- 8192; +/- 2000 deg/sec
+	            ((rawADC[2]<<8) | rawADC[3])/4 ,
+	            ((rawADC[4]<<8) | rawADC[5])/4 );
+  GYRO_Common();
+}
+
+#endif
+
 
 #if defined(WMP) || defined(NUNCHUCK)
 // ************************************************************************************************************
