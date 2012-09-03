@@ -247,7 +247,11 @@ static int16_t rcData[8];          // interval [1000;2000]
 static int16_t rcCommand[4];       // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW 
 static int16_t lookupPitchRollRC[6];// lookup table for expo & RC rate PITCH+ROLL
 static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
-volatile uint8_t rcFrameComplete; // for serial rc receiver Spektrum
+
+#if defined(SPEKTRUM)
+  volatile uint8_t  spekFrameFlags;
+  volatile uint32_t spekTimeLast;
+#endif
 
 #if defined(OPENLRSv2MULTI)
   static uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim or other usages
@@ -652,8 +656,9 @@ void loop () {
   static int16_t initialThrottleHold;
 
   #if defined(SPEKTRUM)
-    if (rcFrameComplete) computeRC();
+    if (spekFrameFlags == 0x01) readSpektrum();
   #endif
+  
   #if defined(OPENLRSv2MULTI) 
     Read_OpenLRS_RC();
   #endif 

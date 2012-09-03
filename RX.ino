@@ -303,8 +303,6 @@ void  readSBus(){
 /***************          combine and sort the RX Datas            ********************/
 /**************************************************************************************/
 #if defined(SPEKTRUM)
-volatile uint8_t  spekFrameFlags;
-volatile uint32_t spekTimeLast;
 void readSpektrum() {
   if ((!f.ARMED) && 
      #if defined(FAILSAFE) || (SPEK_SERIAL_PORT != 0) 
