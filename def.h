@@ -892,6 +892,8 @@
   #define SERVO_3_PINMODE            pinMode(46,OUTPUT);        // CAM TRIG
   #define SERVO_3_PIN_HIGH           PORTL |= 1<<3;
   #define SERVO_3_PIN_LOW            PORTL &= ~(1<<3);
+  #define SERVO_4_PINMODE            pinMode(11,OUTPUT);        // SERVO4 , use hardware PWM
+  #define SERVO_5_PINMODE            pinMode(12,OUTPUT);        // SERVO5 , use hardware PWM
 #endif
 
 #if defined(LADYBIRD)
@@ -1069,6 +1071,10 @@
   #define FIXEDWING
 #endif
 
+#if defined(HELI_120_CCPM) || defined(HELI_90_DEG)
+  #define HELICOPTER
+#endif
+
 #if defined (AIRPLANE) || defined(HELICOPTER)|| defined(SINGLECOPTER)|| defined(DUALCOPTER) && defined(PROMINI) 
   #if defined(D12_POWER)
     #define SERVO_4_PINMODE            ;  // D12
@@ -1081,10 +1087,6 @@
   #endif
 #endif
 
-#if defined(HELI_120_CCPM) || defined(HELI_90_DEG)
-  #define HELICOPTER
-#endif
-
 #if defined(POWERMETER_HARD) || defined(POWERMETER_SOFT)
   #define POWERMETER
 #endif
@@ -1095,14 +1097,13 @@
 
 //all new Special RX's must be added here
 //this is to avoid confusion :)
-#if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(RCSERIALERIAL)
+#if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(RCSERIAL)
   #define STANDARD_RX
 #endif
 
 
 // Spektrum Satellite
 #if defined(SPEKTRUM)
-  #define SPEK_MAX_CHANNEL 12
   #define SPEK_FRAME_SIZE 16
   #if (SPEKTRUM == 1024)
     #define SPEK_CHAN_SHIFT  2       // Assumes 10 bit frames, that is 1024 mode.
@@ -1116,8 +1117,13 @@
   #endif
 #endif
 
-
-
+#if defined(SBUS)
+  #define RC_CHANS 18
+#elif defined(SPEKTRUM) || defined(SERIAL_SUM_PPM)
+  #define RC_CHANS 12
+#else
+  #define RC_CHANS 8
+#endif
 
 /**************************************************************************************/
 /***************             motor and servo numbers               ********************/
@@ -1190,7 +1196,7 @@
       #define SEC_SERVO_FROM   3 // use servo from 3 to 4
       #define SEC_SERVO_TO     4
     #else
-      #if !defined(MEGA_HW_GIMBAL) // if HW Gimbal is active we dont need the SW PWM defines
+      #if !defined(MEGA_HW_PWM_SERVOS) // if HW Gimbal is active we dont need the SW PWM defines
         #define SEC_SERVO_FROM   1 // use servo from 1 to 2
         #define SEC_SERVO_TO     2
       #endif
@@ -1384,6 +1390,10 @@
     #define SERVO_8_LOW SERVO_8_PIN_LOW  
     #define SERVO_8_ARR_POS 7   
   #endif
+#endif
+
+#if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS)
+  #undef SERVO_1_HIGH                                    // No software PWM's if we use hardware MEGA PWM
 #endif
 
 /**************************************************************************************/

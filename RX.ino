@@ -8,23 +8,23 @@
 
 //RAW RC values will be store here
 #if defined(SBUS)
-  volatile uint16_t rcValue[18] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
-#elif defined(SPEKTRUM)
-  volatile uint16_t rcValue[SPEK_MAX_CHANNEL] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
+  volatile uint16_t rcValue[RC_CHANS] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
+#elif defined(SPEKTRUM) || defined(SERIAL_SUM_PPM)
+  volatile uint16_t rcValue[RC_CHANS] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
 #else
-  volatile uint16_t rcValue[8] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
+  volatile uint16_t rcValue[RC_CHANS] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
 #endif
 
 #if defined(SERIAL_SUM_PPM) //Channel order for PPM SUM RX Configs
-  static uint8_t rcChannel[8] = {SERIAL_SUM_PPM};
+  static uint8_t rcChannel[RC_CHANS] = {SERIAL_SUM_PPM};
 #elif defined(SBUS) //Channel order for SBUS RX Configs
   // for 16 + 2 Channels SBUS. The 10 extra channels 8->17 are not used by MultiWii, but it should be easy to integrate them.
-  static uint8_t rcChannel[18] = {PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4,8,9,10,11,12,13,14,15,16,17};
+  static uint8_t rcChannel[RC_CHANS] = {PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4,8,9,10,11,12,13,14,15,16,17};
   static uint16_t sbusIndex=0;
 #elif defined(SPEKTRUM)
-  static uint8_t rcChannel[SPEK_MAX_CHANNEL] = {PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4,8,9,10,11};
+  static uint8_t rcChannel[RC_CHANS] = {PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4,8,9,10,11};
 #else // Standard Channel order
-  static uint8_t rcChannel[8]  = {ROLLPIN, PITCHPIN, YAWPIN, THROTTLEPIN, AUX1PIN,AUX2PIN,AUX3PIN,AUX4PIN};
+  static uint8_t rcChannel[RC_CHANS]  = {ROLLPIN, PITCHPIN, YAWPIN, THROTTLEPIN, AUX1PIN,AUX2PIN,AUX3PIN,AUX4PIN};
   static uint8_t PCInt_RX_Pins[PCINT_PIN_COUNT] = {PCINT_RX_BITS}; // if this slowes the PCINT readings we can switch to a define for each pcint bit
 #endif
 
@@ -148,7 +148,7 @@ void configureReceiver() {
     
     #define FAILSAFE_PIN       ROLLPIN            // Failsave Pin on Standard RX. Possible options: THROTTLEPIN, ROLLPIN, PITCHPIN, YAWPIN
     #if defined(FAILSAFE) && !defined(PROMICRO)
-      if (mask & 1<<FAILSAFE_PIN && dTime>980) {  // If pulse present on FAILSAFE_PIN  and pulse time > 980us, clear FailSafe counter  - added by MIS
+      if (mask & 1<<FAILSAFE_PIN && dTime>985) {  // If pulse present on FAILSAFE_PIN  and pulse time > 985us, clear FailSafe counter  - added by MIS
         if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
     #endif
   }
@@ -240,10 +240,10 @@ void configureReceiver() {
     last = now;
     if(diff>3000) chan = 0;
     else {
-      if(900<diff && diff<2200 && chan<8 ) {   //Only if the signal is between these values it is valid, otherwise the failsafe counter should move up
+      if(900<diff && diff<2200 && chan<RC_CHANS ) {   //Only if the signal is between these values it is valid, otherwise the failsafe counter should move up
         rcValue[chan] = diff;
         #if defined(FAILSAFE)
-          if(chan==2 && diff>980) {        // if Throttle value is higher than 980us
+          if(chan==2 && diff>985) {        // if Throttle value is higher than 985us
             if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // clear FailSafe counter - added by MIS  //incompatible to quadroppm
           }
         #endif
@@ -325,7 +325,7 @@ void readSpektrum() {
         uint8_t bh = SerialRead(SPEK_SERIAL_PORT);
         uint8_t bl = SerialRead(SPEK_SERIAL_PORT);
         uint8_t spekChannel = 0x0F & (bh >> SPEK_CHAN_SHIFT);
-        if (spekChannel < SPEK_MAX_CHANNEL) rcValue[spekChannel] = 988 + ((((uint16_t)(bh & SPEK_CHAN_MASK) << 8) + bl) SPEK_DATA_SHIFT);
+        if (spekChannel < RC_CHANS) rcValue[spekChannel] = 988 + ((((uint16_t)(bh & SPEK_CHAN_MASK) << 8) + bl) SPEK_DATA_SHIFT);
       }
       spekFrameFlags = 0x00;
       #if defined(FAILSAFE)
@@ -344,7 +344,7 @@ uint16_t readRawRC(uint8_t chan) {
   uint16_t data;
   #if defined(SPEKTRUM)
     readSpektrum();
-    if (chan < SPEK_MAX_CHANNEL) {
+    if (chan < RC_CHANS) {
       data = rcValue[rcChannel[chan]];
     } else data = 1500;
   #else
@@ -360,7 +360,7 @@ uint16_t readRawRC(uint8_t chan) {
 /***************          compute and Filter the RX data           ********************/
 /**************************************************************************************/
 void computeRC() {
-  static int16_t rcData4Values[8][4], rcDataMean[8];
+  static int16_t rcData4Values[RC_CHANS][4], rcDataMean[RC_CHANS];
   static uint8_t rc4ValuesIndex = 0;
   uint8_t chan,a;
   #if !(defined(RCSERIAL) || defined(OPENLRSv2MULTI)) // dont know if this is right here
@@ -368,7 +368,7 @@ void computeRC() {
       readSBus();
     #endif
     rc4ValuesIndex++;
-    for (chan = 0; chan < 8; chan++) {
+    for (chan = 0; chan < RC_CHANS; chan++) {
       rcData4Values[chan][rc4ValuesIndex%4] = readRawRC(chan);
       rcDataMean[chan] = 0;
       for (a=0;a<4;a++) rcDataMean[chan] += rcData4Values[chan][a];

@@ -28,7 +28,7 @@
 /**************************************************************************************/
 /***************         Software PWM & Servo variables            ********************/
 /**************************************************************************************/
-#if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || (defined(MEGA) && defined(MEGA_HW_GIMBAL))
+#if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))
   #if defined(SERVO)
     #if defined(AIRPLANE)|| defined(HELICOPTER)
       // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
@@ -83,7 +83,7 @@ void writeServos() {
   #if defined(SERVO)
     #if defined(PRI_SERVO_FROM)    // write primary servos
       for(uint8_t i = (PRI_SERVO_FROM-1); i < PRI_SERVO_TO; i++){
-        #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || (defined(MEGA) && defined(MEGA_HW_GIMBAL))
+        #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))
           atomicServo[i] = (servo[i]-1000)>>2;
         #else
           atomicServo[i] = (servo[i]-1000)<<4;
@@ -111,7 +111,7 @@ void writeServos() {
         }
       #else
         for(uint8_t i = (SEC_SERVO_FROM-1); i < SEC_SERVO_TO; i++){
-          #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || (defined(MEGA) && defined(MEGA_HW_GIMBAL))
+          #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))
             atomicServo[i] = (servo[i]-1000)>>2;
           #else
             atomicServo[i] = (servo[i]-1000)<<4;
@@ -120,9 +120,12 @@ void writeServos() {
       #endif
     #endif
     // write HW PWM gimbal servos for the mega (needs to be also implemented to the MMSERVOGIMBAL)
-    #if defined(MEGA) && defined(MEGA_HW_GIMBAL)
+    #if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS)
       OCR5C = servo[0];
       OCR5B = servo[1];
+      OCR5A = servo[2];
+      OCR1A = servo[3];
+      OCR1B = servo[4];
     #endif
   #endif
 }
@@ -530,25 +533,39 @@ void initializeServo() {
       #define SERVO_1K_US 16000 
     #endif
   #endif
-  // init Timer 5 of the mega for hw PWM gimbal servos
-  #if defined(MEGA) && defined(MEGA_HW_GIMBAL)
+  // init Timer 1 and 5 of the mega for hw PWM gimbal servos
+  #if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS)
+    TIMSK5 &= ~(1<<OCIE5A); // Disable software PWM  
     TCCR5A |= (1<<WGM51); // phase correct mode & prescaler to 8
     TCCR5A &= ~(1<<WGM50);
     TCCR5B &= ~(1<<WGM52) &  ~(1<<CS50) & ~(1<<CS52);
     TCCR5B |= (1<<WGM53) | (1<<CS51);
-    #if defined(SERVO_RFR_50HZ) 
-      ICR5   |= 16700; // TOP to 16700; 
-    #endif
-    #if defined(SERVO_RFR_160HZ) 
-      ICR5   |= 6200; // TOP to 6200; 
-    #endif
-    #if defined(SERVO_RFR_300HZ) 
-      ICR5   |= 3330; // TOP to 3330;  
-    #endif
     pinMode(44,OUTPUT);
     TCCR5A |= (1<<COM5C1); // pin 44
     pinMode(45,OUTPUT);
     TCCR5A |= (1<<COM5B1); // pin 45
+    pinMode(46,OUTPUT);
+    TCCR5A |= (1<<COM5A1); // pin 46
+    TCCR1A |= (1<<WGM11); // phase correct mode & prescaler to 8
+    TCCR1A &= ~(1<<WGM10);
+    TCCR1B &= ~(1<<WGM12) &  ~(1<<CS10) & ~(1<<CS12);
+    TCCR1B |= (1<<WGM13) | (1<<CS11);
+    pinMode(11,OUTPUT);
+    TCCR1A |= (1<<COM1A1); // pin 11
+    pinMode(12,OUTPUT);
+    TCCR1A |= (1<<COM1B1); // pin 12
+    #if defined(SERVO_RFR_50HZ) 
+      ICR1   = 16700; // TOP to 16700; 
+      ICR5   = 16700; // TOP to 16700; 
+    #endif
+    #if defined(SERVO_RFR_160HZ) 
+      ICR1   = 6200; // TOP to 6200; 
+      ICR5   = 6200; // TOP to 6200; 
+    #endif
+    #if defined(SERVO_RFR_300HZ) 
+      ICR1   = 3330; // TOP to 3330;  
+      ICR5   = 3330; // TOP to 3330;  
+    #endif
   #endif
 }
 
@@ -908,7 +925,11 @@ void mixTable() {
     S_PITCH = constrain(S_PITCH, TILT_PITCH_MIN, TILT_PITCH_MAX);
     S_ROLL  = constrain(S_ROLL , TILT_ROLL_MIN, TILT_ROLL_MAX  );   
   #endif
-  
+
+  #if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS) && !defined(FIXEDWING) && !defined(HELICOPTER) && (RC_CHANS>8)
+    servo[3] = rcData[8];
+    servo[4] = rcData[9];
+  #endif
   
  /************************************************************************************************************/ 
  // Bledi Experimentals

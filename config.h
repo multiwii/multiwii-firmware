@@ -872,11 +872,15 @@
     //#define SERVO_RFR_300HZ
     
   /***********************             HW PWM Servos             ***********************/ 
-    /* HW PWM Gimbal for Arduino Mega.. moves:
-      Pitch = pin 44
-      Roll  = pin 45
-      this reduces the PWM resolution for all other servos to 8 bit */
-    //#define MEGA_HW_GIMBAL
+    /* HW PWM Servo outputs for Arduino Mega.. moves:
+      Pitch   = pin 44
+      Roll    = pin 45
+      CamTrig = pin 46
+      SERVO4  = pin 11 (assigned to PPM or SPECTRUM CH9 on copter configuration)
+      SERVO5  = pin 12 (assigned to PPM or SPECTRUM CH10 on copter configuration)
+      this option disable other software PWM's for servos - only five hardware controlled servos avaliable
+      */ 
+    //#define MEGA_HW_PWM_SERVOS
 
   /********************************************************************/
   /****           IMU complimentary filter tuning                  ****/
