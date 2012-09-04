@@ -321,6 +321,9 @@ static struct {
     uint16_t pleveldiv;
     uint8_t pint2ma;
   #endif
+  #ifdef CYCLETIME_FIXATED
+    uint16_t cycletime_fixated;
+  #endif
 } conf;
 
 
@@ -535,7 +538,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     }
   #endif
 
-  #if defined(LOG_VALUES) && (LOG_VALUES == 2)
+  #if defined(LOG_VALUES) && (LOG_VALUES >= 2)
     if (cycleTime > cycleTimeMax) cycleTimeMax = cycleTime; // remember highscore
     if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
   #endif
@@ -654,6 +657,7 @@ void loop () {
   static int16_t errorAngleI[2] = {0,0};
   static uint32_t rcTime  = 0;
   static int16_t initialThrottleHold;
+  static uint32_t timestamp_fixated = 0;
 
   #if defined(SPEKTRUM)
     if (spekFrameFlags == 0x01) readSpektrum();
@@ -1006,6 +1010,17 @@ void loop () {
   cycleTime = currentTime - previousTime;
   previousTime = currentTime;
 
+#ifdef CYCLETIME_FIXATED
+  if (conf.cycletime_fixated) {
+    if ((micros()-timestamp_fixated)>conf.cycletime_fixated) {
+       //debug[0]++;
+    } else {
+       while((micros()-timestamp_fixated)<conf.cycletime_fixated) ; // waste away
+       //debug[1] = micros()-timestamp_fixated - conf.cycletime_fixated;
+    }
+    timestamp_fixated=micros();
+  }
+#endif
   //***********************************
   //**** Experimental FlightModes *****
   //***********************************

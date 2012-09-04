@@ -844,6 +844,13 @@
 /*****************                                                                 ***************/
 /*************************************************************************************************/
 
+  /************ EXperimental: force a stable, fixated (high) cycle time       **********/
+    /* when activated, the displayed cycle time in GUI will not be correct.
+     * Tunable via LCD config menu.
+     * value of 0 turns the feature off.
+     */
+    //#define CYCLETIME_FIXATED 9000
+
   /**************************************************************************************/
   /********   special ESC with extended range [0-2000] microseconds  ********************/
   /**************************************************************************************/
@@ -913,7 +920,8 @@
 
     /* to log values like max loop time and others to come
        logging values are visible via LCD config
-       set to 2, if you want powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> PM_SOFT) */
+       set to 2, if you want more values,
+       set to 3 for additional powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> PM_SOFT) */
     //#define LOG_VALUES 1
 
     /* to add debugging code

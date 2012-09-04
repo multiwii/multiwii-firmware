@@ -1,6 +1,6 @@
 #include <avr/eeprom.h>
 
-#define EEPROM_CONF_VERSION 162
+#define EEPROM_CONF_VERSION 163
 
 void readEEPROM() {
   uint8_t i;
@@ -124,6 +124,8 @@ void checkFirstTime() {
     conf.pleveldiv = PLEVELDIV;
     conf.pint2ma = PINT2mA;
   #endif
-
+#ifdef CYCLETIME_FIXATED
+  conf.cycletime_fixated = CYCLETIME_FIXATED;
+#endif
   writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }

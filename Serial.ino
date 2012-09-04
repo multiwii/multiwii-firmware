@@ -454,7 +454,7 @@ void evaluateOtherData(uint8_t sr) {
       if (!f.ARMED) configurationLoop();
       break;
     #endif
-    #ifdef LCD_TELEMETRY
+    #if defined(LCD_TELEMETRY) && defined(LCD_TEXTSTAR)
     case 'A': // button A press
       toggle_telemetry(1);
       break;
@@ -467,6 +467,14 @@ void evaluateOtherData(uint8_t sr) {
     case 'D': // button D press
       toggle_telemetry(4);
       break;
+    case 'a': // button A release
+    case 'b': // button B release
+    case 'c': // button C release
+    case 'd': // button D release
+      break;
+    #endif
+    #ifdef LCD_TELEMETRY
+    case '0':
     case '1':
     case '2':
     case '3':
@@ -483,11 +491,6 @@ void evaluateOtherData(uint8_t sr) {
     case 'F':
     #endif
       toggle_telemetry(sr);
-      break;
-    case 'a': // button A release
-    case 'b': // button B release
-    case 'c': // button C release
-    case 'd': // button D release
       break;
     #endif // LCD_TELEMETRY
   }

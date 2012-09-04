@@ -191,7 +191,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
       channelIsOn[channel] = 1;      
       ChannelToOutput(channel,1);
       channelLastToggleTime[channel]=millis();      
-    } else if (channelIsOn[channel] && (millis() >= channelLastToggleTime[channel] + pulse)|| pulse==0 ) {        
+    } else if ( (channelIsOn[channel] && (millis() >= channelLastToggleTime[channel] + pulse) ) || pulse==0 ) {
       channelIsOn[channel] = 0;
       ChannelToOutput(channel,0);
       channelLastToggleTime[channel]=millis();

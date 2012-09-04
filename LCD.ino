@@ -582,100 +582,100 @@ void initLCD() {
   #if defined(BUZZER)
     beep_confirmation = 1;
   #endif
-#if defined(LCD_SERIAL3W)
-  SerialEnd(0);
-  //init LCD
-  PINMODE_LCD;//TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
-#elif defined(LCD_TEXTSTAR)
-  // Cat's Whisker Technologies 'TextStar' Module CW-LCD-02
-  // http://cats-whisker.com/resources/documents/cw-lcd-02_datasheet.pdf
-  //LCDprint(0xFE);LCDprint(0x43);LCDprint(0x02); //cursor blink mode
-  LCDprint(0xFE);LCDprint('R');//reset
-#elif defined(LCD_VT100)
-  //LCDprint(0x1b); LCDprint('c'); //RIS
-#elif defined(LCD_ETPP)
-  // Eagle Tree Power Panel - I2C & Daylight Readable LCD
-  i2c_ETPP_init();
-#elif defined(LCD_LCD03)
-  // LCD03 - I2C LCD
-  // http://www.robot-electronics.co.uk/htm/Lcd03tech.htm
-  i2c_LCD03_init();
-#elif defined(OLED_I2C_128x64)
-  i2c_OLED_init();
-  #ifndef SUPPRESS_OLED_I2C_128x64LOGO
-    i2c_OLED_send_logo();
-    #if defined (OLED_I2C_128x64LOGO_PERMANENT)
-      i2c_OLED_Put_Logo();
+  #if defined(LCD_SERIAL3W)
+    SerialEnd(0);
+    //init LCD
+    PINMODE_LCD;//TX PIN for LCD = Arduino RX PIN (more convenient to connect a servo plug on arduino pro mini)
+  #elif defined(LCD_TEXTSTAR)
+    // Cat's Whisker Technologies 'TextStar' Module CW-LCD-02
+    // http://cats-whisker.com/resources/documents/cw-lcd-02_datasheet.pdf
+    //LCDprint(0xFE);LCDprint(0x43);LCDprint(0x02); //cursor blink mode
+    LCDprint(0xFE);LCDprint('R');//reset
+  #elif defined(LCD_VT100)
+    //LCDprint(0x1b); LCDprint('c'); //RIS
+  #elif defined(LCD_ETPP)
+    // Eagle Tree Power Panel - I2C & Daylight Readable LCD
+    i2c_ETPP_init();
+  #elif defined(LCD_LCD03)
+    // LCD03 - I2C LCD
+    // http://www.robot-electronics.co.uk/htm/Lcd03tech.htm
+    i2c_LCD03_init();
+  #elif defined(OLED_I2C_128x64)
+    i2c_OLED_init();
+    #ifndef SUPPRESS_OLED_I2C_128x64LOGO
+      i2c_OLED_send_logo();
+      #if defined (OLED_I2C_128x64LOGO_PERMANENT)
+        i2c_OLED_Put_Logo();
+      #endif
     #endif
   #endif
-#endif
-#ifndef OLED_I2C_128x64LOGO_PERMANENT
-  LCDclear();
-  strcpy_P(line1,PSTR("MultiWii V-.--"));
-//                     0123456789.123456
-  line1[10] = digit100(VERSION);
-  line1[12] = digit10(VERSION);
-  line1[13] = digit1(VERSION);
-  LCDattributesBold();
-  LCDsetLine(1); LCDprintChar(line1);
-  strcpy_P(line2,PSTR("  Unknown Modell"));
-  #if defined(TRI)
-    strcpy_P(line2,PSTR("  TRICopter"));
-  #elif defined(QUADP)
-    strcpy_P(line2,PSTR("  QUAD-P"));
-  #elif defined(QUADX)
-    strcpy_P(line2,PSTR("  QUAD-X"));
-  #elif defined(BI)
-    strcpy_P(line2,PSTR("  BICopter"));
-  #elif defined(Y6)
-    strcpy_P(line2,PSTR("  Y6"));
-  #elif defined(HEX6)
-    strcpy_P(line2,PSTR("  HEX6"));
-  #elif defined(FLYING_WING)
-    strcpy_P(line2,PSTR("  FLYING_WING"));
-  #elif defined(Y4)
-    strcpy_P(line2,PSTR("  Y4"));
-  #elif defined(HEX6X)
-    strcpy_P(line2,PSTR("  HEX6-X"));
-  #elif defined(OCTOX8)
-    strcpy_P(line2,PSTR("  OCTOX8"));
-  #elif defined(OCTOFLATP)
-    strcpy_P(line2,PSTR("  OCTOFLAT-P"));
-  #elif defined(OCTOFLATX)
-    strcpy_P(line2,PSTR("  OCTOFLAT-X"));
-  #elif defined (AIRPLANE)
-    strcpy_P(line2,PSTR("  AIRPLANE"));
-  #elif defined (HELI_120_CCPM) 
-    strcpy_P(line2,PSTR("  HELI_120_CCPM")); 
-  #elif defined (HELI_90_DEG) 
-    strcpy_P(line2,PSTR("  HELI_90_DEG"));
-  #elif defined(VTAIL4)   
-    strcpy_P(line2,PSTR("  VTAIL Quad"));
+  #ifndef OLED_I2C_128x64LOGO_PERMANENT
+    LCDclear();
+    strcpy_P(line1,PSTR("MultiWii V-.--"));
+  //                     0123456789.123456
+    line1[10] = digit100(VERSION);
+    line1[12] = digit10(VERSION);
+    line1[13] = digit1(VERSION);
+    LCDattributesBold();
+    LCDsetLine(1); LCDprintChar(line1);
+    strcpy_P(line2,PSTR("  Unknown Modell"));
+    #if defined(TRI)
+      strcpy_P(line2,PSTR("  TRICopter"));
+    #elif defined(QUADP)
+      strcpy_P(line2,PSTR("  QUAD-P"));
+    #elif defined(QUADX)
+      strcpy_P(line2,PSTR("  QUAD-X"));
+    #elif defined(BI)
+      strcpy_P(line2,PSTR("  BICopter"));
+    #elif defined(Y6)
+      strcpy_P(line2,PSTR("  Y6"));
+    #elif defined(HEX6)
+      strcpy_P(line2,PSTR("  HEX6"));
+    #elif defined(FLYING_WING)
+      strcpy_P(line2,PSTR("  FLYING_WING"));
+    #elif defined(Y4)
+      strcpy_P(line2,PSTR("  Y4"));
+    #elif defined(HEX6X)
+      strcpy_P(line2,PSTR("  HEX6-X"));
+    #elif defined(OCTOX8)
+      strcpy_P(line2,PSTR("  OCTOX8"));
+    #elif defined(OCTOFLATP)
+      strcpy_P(line2,PSTR("  OCTOFLAT-P"));
+    #elif defined(OCTOFLATX)
+      strcpy_P(line2,PSTR("  OCTOFLAT-X"));
+    #elif defined (AIRPLANE)
+      strcpy_P(line2,PSTR("  AIRPLANE"));
+    #elif defined (HELI_120_CCPM)
+      strcpy_P(line2,PSTR("  HELI_120_CCPM"));
+    #elif defined (HELI_90_DEG)
+      strcpy_P(line2,PSTR("  HELI_90_DEG"));
+    #elif defined(VTAIL4)
+      strcpy_P(line2,PSTR("  VTAIL Quad"));
+    #endif
+    //LCDattributesBold();
+    LCDsetLine(2); LCDprintChar(line2);
+    LCDattributesOff();
+  #endif // OLED_I2C_128x64LOGO_PERMANENT
+  #if defined(LCD_TEXTSTAR) || defined(LCD_VT100)
+    delay(2500);
+    LCDclear();
   #endif
-  //LCDattributesBold();
-  LCDsetLine(2); LCDprintChar(line2);
-  LCDattributesOff();
-#endif // OLED_I2C_128x64LOGO_PERMANENT
-#if defined(LCD_TEXTSTAR) || defined(LCD_VT100)
-  delay(2500);
-  LCDclear();
-#endif
-#if defined(OLED_I2C_128x64) && !(defined(OLED_I2C_128x64LOGO_PERMANENT)) && defined(NEW_OLED_FONT) && !(defined(LCD_TELEMETRY))
-  // no need to diplay this, if LCD telemetry is enabled
-  //   optional instruction on the display......
-  LCDsetLine(4); LCDprintChar("To ENTER CONFIG      ");// 21 characters on each line
-  LCDsetLine(5); LCDprintChar("YAW RIGHT & PITCH FWD");
-  LCDsetLine(7); LCDprintChar("To SAVE CONFIG       ");
-  LCDsetLine(8); LCDprintChar("YAW LEFT & PITCH FWD ");
-#endif 
+  #if defined(OLED_I2C_128x64) && !(defined(OLED_I2C_128x64LOGO_PERMANENT)) && defined(NEW_OLED_FONT) && !(defined(LCD_TELEMETRY))
+    // no need to diplay this, if LCD telemetry is enabled
+    //   optional instruction on the display......
+    LCDsetLine(4); LCDprintChar("To ENTER CONFIG      ");// 21 characters on each line
+    LCDsetLine(5); LCDprintChar("YAW RIGHT & PITCH FWD");
+    LCDsetLine(7); LCDprintChar("To SAVE CONFIG       ");
+    LCDsetLine(8); LCDprintChar("YAW LEFT & PITCH FWD ");
+  #endif
   //  if (cycleTime == 0) { //Called from Setup()
   //    strcpy_P(line1,PSTR("Ready to Fly")); LCDsetLine(2); LCDprintChar(line1);
   //  } else {
   //    strcpy_P(line1,PSTR("Config All Parms")); LCDsetLine(2); LCDprintChar(line1);
   //  }
-#ifdef LCD_TELEMETRY_STEP
-  telemetry = telemetryStepSequence[0];
-#endif
+  #ifdef LCD_TELEMETRY_STEP
+    telemetry = telemetryStepSequence[0]; //[++telemetryStepIndex % strlen(telemetryStepSequence)];
+  #endif
 }
 #endif //Support functions for LCD_CONF and LCD_TELEMETRY
 
@@ -769,7 +769,7 @@ const char PROGMEM lcd_param_text22 [] = "P&R Rate  ";
 const char PROGMEM lcd_param_text23 [] = "Yaw Rate  ";
 const char PROGMEM lcd_param_text24 [] = "Thrott PID";
 #ifdef LOG_VALUES
-#if (LOG_VALUES == 2)
+#if (LOG_VALUES >= 3)
 const char PROGMEM lcd_param_text25 [] = "pmeter  m0";
 const char PROGMEM lcd_param_text26 [] = "pmeter  m1";
 const char PROGMEM lcd_param_text27 [] = "pmeter  m2";
@@ -855,7 +855,9 @@ const char PROGMEM lcd_param_text34 [] = "pAlarm /50"; // change text to represe
 //const char PROGMEM lcd_param_text112 [] = "PM DIVSOFT";
 const char PROGMEM lcd_param_text113 [] = "PM DIV    ";
 #endif
-
+#ifdef CYCLETIME_FIXATED
+const char PROGMEM lcd_param_text120 [] = "CYCLE TIME";
+#endif
 //                                         0123456789
 
 PROGMEM const void * const lcd_param_ptr_table [] = {
@@ -982,7 +984,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #endif //lcd.conf.aux
 
 #ifdef LOG_VALUES
-#if (LOG_VALUES == 2)
+#if (LOG_VALUES >= 3)
 #if (NUMBER_MOTOR > 0)
   &lcd_param_text25, &pMeter[0], &__PM,
 #endif
@@ -1053,6 +1055,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text84, &conf.servoTrim[4], &__ST,
   &lcd_param_text85, &conf.servoTrim[5], &__ST,
   &lcd_param_text86, &conf.servoTrim[6], &__ST,
+#endif
+#ifdef CYCLETIME_FIXATED
+  &lcd_param_text120, &conf.cycletime_fixated, &__SE,
 #endif
 #ifdef LOG_VALUES
   &lcd_param_text39, &failsafeEvents, &__L,
@@ -1402,8 +1407,9 @@ void output_VmAbars() {
 #ifdef POWERMETER
   //     intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
   //   pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
-  if (conf.powerTrigger1)
-  LCDbar(8, (intPowerMeterSum/(uint16_t)conf.powerTrigger1) *2 );// bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
+  if (conf.powerTrigger1) {
+    LCDbar(8, 100 - ( intPowerMeterSum/(uint16_t)conf.powerTrigger1) *2 );// bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
+  }
 #endif
 }
 void fill_line1_cycle() {
@@ -1418,7 +1424,7 @@ void fill_line1_cycle() {
 }
 void fill_line2_cycleMinMax() {
   strcpy_P(line2,PSTR("(-----, -----)us")); //uin16_t cycleTimeMax
-#if (LOG_VALUES == 2)
+#if (LOG_VALUES >= 2)
   line2[1] = digit10000(cycleTimeMin );
   line2[2] = digit1000(cycleTimeMin );
   line2[3] = digit100(cycleTimeMin );
@@ -1560,7 +1566,7 @@ void lcd_telemetry() {
       LCDsetLine(1);
       LCDprintChar(line1);
     } else {
-#if (LOG_VALUES == 2)
+#if (LOG_VALUES >= 2)
       fill_line2_cycleMinMax();
       LCDsetLine(2);
       LCDprintChar(line2);
@@ -1903,7 +1909,7 @@ void lcd_telemetry() {
 #ifndef SUPPRESS_TELEMETRY_PAGE_9
     case 9: // diagnostics
     case '9':
-    switch (linenr++ % 4) { // not really linenumbers
+    switch (linenr++ % 8) { // not really linenumbers
       case 0:// cycle
       LCDsetLine(1);
       fill_line1_cycle();
@@ -1924,6 +1930,28 @@ void lcd_telemetry() {
       fill_line2_fails_values();
       LCDprintChar(line2);
       break;
+#ifdef DEBUG
+      case 4:// debug
+      LCDsetLine(5);
+      LCDprintChar("D1 ");
+      lcdprint_int16(debug[0]);
+      break;
+      case 5:// debug
+      LCDsetLine(6);
+      LCDprintChar("D2 ");
+      lcdprint_int16(debug[1]);
+      break;
+      case 6:// debug
+      LCDsetLine(7);
+      LCDprintChar("D3 ");
+      lcdprint_int16(debug[2]);
+      break;
+      case 7:// debug
+      LCDsetLine(8);
+      LCDprintChar("D4 ");
+      lcdprint_int16(debug[3]);
+      break;
+#endif
     }
     LCDcrlf();
     break;
