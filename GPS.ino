@@ -154,12 +154,11 @@ static int16_t  nav_takeoff_bearing;
   uint32_t init_speed[5] = {9600,19200,38400,57600,115200};
   void SerialGpsPrint(prog_char* str) {
     char b;
-    while(b = pgm_read_byte(str)) {
+    while(str && (b = pgm_read_byte(str++))) {
       SerialWrite(GPS_SERIAL, b); 
       #if defined(UBLOX)
         delay(4);
       #endif      
-      str++;
     }
   }
  #endif
@@ -184,7 +183,7 @@ static int16_t  nav_takeoff_bearing;
     SerialOpen(GPS_SERIAL,GPS_BAUD);  
     delay(1000);
     #if defined(UBLOX)
-      for(uint8_t i=0;i<=5;i++){
+      for(uint8_t i=0;i<5;i++){
         SerialOpen(GPS_SERIAL,init_speed[i]);          // switch UART speed for sending SET BAUDRATE command (NMEA mode)
         #if (GPS_BAUD==19200)
           SerialGpsPrint(PSTR("$PUBX,41,1,0003,0001,19200,0*23\r\n"));     // 19200 baud - minimal speed for 5Hz update rate
@@ -198,7 +197,7 @@ static int16_t  nav_takeoff_bearing;
         #if (GPS_BAUD==115200)
           SerialGpsPrint(PSTR("$PUBX,41,1,0003,0001,115200,0*1E\r\n"));    // 115200 baud
         #endif  
-        delay(10);
+        while(!SerialTXfree(GPS_SERIAL)) delay(10);
       }
       SerialOpen(GPS_SERIAL,GPS_BAUD);  
       for(uint8_t i=0; i<sizeof(UBLOX_INIT); i++) {                        // send configuration data in UBX protocol
@@ -206,7 +205,7 @@ static int16_t  nav_takeoff_bearing;
         delay(4); //simulating a 38400baud pace (or less), otherwise commands are not accepted by the device.
       }
     #elif defined(INIT_MTK_GPS)                              // MTK GPS setup
-      for(uint8_t i=0;i<=5;i++){
+      for(uint8_t i=0;i<5;i++){
         SerialOpen(GPS_SERIAL,init_speed[i]);                // switch UART speed for sending SET BAUDRATE command
         #if (GPS_BAUD==19200)
           SerialGpsPrint(PSTR("$PMTK251,19200*22\r\n"));     // 19200 baud - minimal speed for 5Hz update rate
@@ -220,7 +219,7 @@ static int16_t  nav_takeoff_bearing;
         #if (GPS_BAUD==115200)
           SerialGpsPrint(PSTR("$PMTK251,115200*1F\r\n"));    // 115200 baud
         #endif  
-        delay(10);
+        while(!SerialTXfree(GPS_SERIAL)) delay(10);
       }
       // at this point we have GPS working at selected (via #define GPS_BAUD) baudrate
       SerialOpen(GPS_SERIAL,GPS_BAUD);
@@ -296,9 +295,6 @@ void GPS_NewData() {
           varptr = (uint8_t *)&nav[LON];		 
           *varptr++ = i2c_readAck();
           *varptr++ = i2c_readNak();
-          
-          debug[0]=nav[LAT];
-          debug[1]=nav[LON];
           
           i2c_rep_start(I2C_GPS_ADDRESS<<1);
           i2c_write(I2C_GPS_GROUND_SPEED);          

@@ -170,14 +170,19 @@
       //#define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = Z;}
       //#define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
 
-
-
-
 /*************************************************************************************************/
 /*****************                                                                 ***************/
 /****************  SECTION  2 - COPTER TYPE SPECIFIC OPTIONS                               *******/
 /*****************                                                                 ***************/
 /*************************************************************************************************/
+
+    /*************************    Board orientation shift    ************************/
+      /* If you have frame designed only for + mode and you cannot rotate FC phisycally for flying in X mode (or vice versa)
+         you can use one of of this options for virtual sensors rotation by 45 deegres, then set type of multicopter according to flight mode. 
+         Check motors order and directions of motors rotation for matching with new front point!  Uncomment only one option! */
+
+    //#define SENSORS_TILT_45DEG_RIGHT        // rotate the FRONT 45 degres clockwise
+    //#define SENSORS_TILT_45DEG_LEFT         // rotate the FRONT 45 degres counterclockwise 
 
   /********************************    TRI    *********************************/
     #define YAW_DIRECTION 1
@@ -304,9 +309,10 @@
     /****************************    PPM Sum Reciver    ***********************************/
       /* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
          Select the right line depending on your radio brand. Feel free to modify the order in your PPM order is different */
-      //#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4 //For Graupner/Spektrum
-      //#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For Robe/Hitec/Futaba
-      //#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4 //For some Hitec/Sanwa/Others
+      //#define SERIAL_SUM_PPM         THROTTLE,ROLL,PITCH,YAW,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //For Graupner/Spektrum
+      //#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //For Robe/Hitec/Futaba
+      //#define SERIAL_SUM_PPM         ROLL,PITCH,YAW,THROTTLE,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //For Multiplex
+      //#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //For some Hitec/Sanwa/Others
 
       // Uncommenting following line allow to connect PPM_SUM receiver to standard THROTTLE PIN on MEGA boards (eg. A8 in CRIUS AIO)
       //#define PPM_ON_THROTTLE

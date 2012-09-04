@@ -252,9 +252,8 @@ void evaluateCommand() {
                    f.BARO_MODE<<BOXBARO|
                  #endif
                  #if MAG
-                   f.MAG_MODE<<BOXMAG|
+                   f.MAG_MODE<<BOXMAG|f.HEADFREE_MODE<<BOXHEADFREE|rcOptions[BOXHEADADJ]<<BOXHEADADJ|
                  #endif
-                 f.ARMED<<BOXARM|
                  #if defined(SERVO_TILT) || defined(GIMBAL)
                    rcOptions[BOXCAMSTAB]<<BOXCAMSTAB|
                  #endif
@@ -264,22 +263,19 @@ void evaluateCommand() {
                  #if GPS
                    f.GPS_HOME_MODE<<BOXGPSHOME|f.GPS_HOLD_MODE<<BOXGPSHOLD|
                  #endif
-                 #if MAG
-                   f.HEADFREE_MODE<<BOXHEADFREE|
-                 #endif
-                 #if defined(SERVO)
+                 #if defined(FIXEDWING) || defined(HELICOPTER) 
                    f.PASSTHRU_MODE<<BOXPASSTHRU|
                  #endif
                  #if defined(BUZZER)
                    rcOptions[BOXBEEPERON]<<BOXBEEPERON|
                  #endif
                  #if defined(LED_FLASHER)
-                   rcOptions[BOXLEDMAX]<<BOXLEDMAX|rcOptions[BOXLLIGHTS]<<BOXLLIGHTS|
+                   rcOptions[BOXLEDMAX]<<BOXLEDMAX|
                  #endif
-                 #if MAG
-                   rcOptions[BOXHEADADJ]<<BOXHEADADJ|
+                 #if defined(LANDING_LIGHTS_DDR)
+                   rcOptions[BOXLLIGHTS]<<BOXLLIGHTS |
                  #endif
-                 0);
+                 f.ARMED<<BOXARM);
      break;
    case MSP_RAW_IMU:
      headSerialReply(18);
@@ -403,16 +399,18 @@ void evaluateCommand() {
      break;  
    #endif	 
    case MSP_RESET_CONF:
-     conf.checkNewConf++;
-     checkFirstTime();
+     if(!f.ARMED) {
+       conf.checkNewConf++;
+       checkFirstTime();
+     }
      headSerialReply(0);
      break;
    case MSP_ACC_CALIBRATION:
-     calibratingA=400;
+     if(!f.ARMED) calibratingA=400;
      headSerialReply(0);
      break;
    case MSP_MAG_CALIBRATION:
-     f.CALIBRATE_MAG = 1;
+     if(!f.ARMED) f.CALIBRATE_MAG = 1;
      headSerialReply(0);
      break;
    case MSP_EEPROM_WRITE:
@@ -608,6 +606,12 @@ void UartSendData() {
     }
   #endif
 }
+
+#if defined(GPS_SERIAL)
+  bool SerialTXfree(uint8_t port) {
+    return (serialHeadTX[port] == serialTailTX[port]);
+  }
+#endif
 
 static void inline SerialOpen(uint8_t port, uint32_t baud) {
   uint8_t h = ((F_CPU  / 4 / baud -1) / 2) >> 8;

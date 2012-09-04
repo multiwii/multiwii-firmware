@@ -266,6 +266,17 @@ void GYRO_Common() {
   static int16_t previousGyroADC[3] = {0,0,0};
   static int32_t g[3];
   uint8_t axis;
+
+  #if defined(SENSORS_TILT_45DEG_LEFT)
+    int16_t temp  = (gyroADC[PITCH] - gyroADC[ROLL] )/2;
+    gyroADC[ROLL] = (gyroADC[ROLL]  + gyroADC[PITCH])/2;
+    gyroADC[PITCH]= temp;
+  #endif
+  #if defined(SENSORS_TILT_45DEG_RIGHT)
+    int16_t temp  = (gyroADC[PITCH] + gyroADC[ROLL] )/2;
+    gyroADC[ROLL] = (gyroADC[ROLL]  - gyroADC[PITCH])/2;
+    gyroADC[PITCH]= temp;
+  #endif
   
 #if defined MMGYRO       
   // Moving Average Gyros by Magnetron1
@@ -320,6 +331,17 @@ void GYRO_Common() {
 // ****************
 void ACC_Common() {
   static int32_t a[3];
+
+  #if defined(SENSORS_TILT_45DEG_LEFT)
+    int16_t temp = (accADC[PITCH] - accADC[ROLL] )/2;
+    accADC[ROLL] = (accADC[ROLL]  + accADC[PITCH])/2;
+    accADC[PITCH] = temp;
+  #endif
+  #if defined(SENSORS_TILT_45DEG_RIGHT)
+    int16_t temp = (accADC[PITCH] + accADC[ROLL] )/2;
+    accADC[ROLL] = (accADC[ROLL]  - accADC[PITCH])/2;
+    accADC[PITCH] = temp;
+  #endif
   
   if (calibratingA>0) {
     for (uint8_t axis = 0; axis < 3; axis++) {
@@ -1009,6 +1031,17 @@ void Mag_getADC() {
         conf.magZero[axis] = (magZeroTempMin[axis] + magZeroTempMax[axis])/2;
       writeParams(1);
     }
+  } else {
+    #if defined(SENSORS_TILT_45DEG_LEFT)
+      int16_t temp = (magADC[PITCH] - magADC[ROLL] )/2;
+      magADC[ROLL] = (magADC[ROLL]  + magADC[PITCH])/2;
+      magADC[PITCH] = temp;
+    #endif
+    #if defined(SENSORS_TILT_45DEG_RIGHT)
+      int16_t temp = (magADC[PITCH] + magADC[ROLL] )/2;
+      magADC[ROLL] = (magADC[ROLL]  - magADC[PITCH])/2;
+      magADC[PITCH] = temp;
+    #endif
   }
 }
 #endif
