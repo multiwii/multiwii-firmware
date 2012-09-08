@@ -502,7 +502,7 @@
  #define FREEIMUv043
 #endif
 
-#if defined(FREEIMUv043)
+#if defined(FREEIMUv043)  || defined(MICROWII)
   #define MPU6050
   #define HMC5883
   #define MS561101BA
@@ -511,6 +511,10 @@
   #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define MPU6050_I2C_AUX_MASTER // MAG connected to the AUX I2C bus of MPU6050
   #undef INTERNAL_I2C_PULLUPS
+#endif
+
+#if defined(MICROWII)
+  #define A32U4ALLPINS 
 #endif
 
 #if defined(NANOWII)
@@ -878,9 +882,9 @@
   #define MPU6050 
   #define HMC5883 
   #define MS561101BA 
-  #define ACC_ORIENTATION(X, Y, Z) {accADC[ROLL] = -X; accADC[PITCH] = -Y; accADC[YAW] = Z;} 
-  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;} 
-  #define MAG_ORIENTATION(X, Y, Z) {magADC[ROLL] = X; magADC[PITCH] = Y; magADC[YAW] = -Z;} 
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;} 
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;} 
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;} 
   #define MPU6050_I2C_AUX_MASTER // MAG connected to the AUX I2C bus of MPU6050 
   #undef INTERNAL_I2C_PULLUPS 
   #define I2C_SPEED 400000L         //400kHz fast mode
@@ -904,6 +908,27 @@
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
   #undef INTERNAL_I2C_PULLUPS
+#endif
+
+#if defined(MEGAWAP_V2_STD) 
+  #define ITG3200
+  #define BMA180
+  #define HMC5883
+  #define BMP085
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
+#endif
+
+#if defined(MEGAWAP_V2_ADV) 
+  #define MPU6050 
+  #define HMC5883 
+  #define MS561101BA 
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;} 
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;} 
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;} 
+  #define MPU6050_EN_I2C_BYPASS // MAG connected to the AUX I2C bus of MPU6050 
+  #undef INTERNAL_I2C_PULLUPS 
 #endif
 
 #if defined(OPENLRSv2MULTI)
@@ -967,7 +992,7 @@
   #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
   #undef INTERNAL_I2C_PULLUPS
 #endif
-	
+
 #if defined(DESQUARED6DOFV4)
   #define MPU6050
   #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
@@ -1455,7 +1480,7 @@
         
 #define I2C_GPS_GROUND_SPEED                        31   // GPS ground speed in m/s*100 (uint16_t)      (Read Only)
 #define I2C_GPS_ALTITUDE                            33   // GPS altitude in meters (uint16_t)           (Read Only)
-#define I2C_GPS_GROUND_COURSE			    35   // GPS ground course (uint16_t)
+#define I2C_GPS_GROUND_COURSE                       35   // GPS ground course (uint16_t)
 #define I2C_GPS_RES1                                37   // reserved for future use (uint16_t)
 #define I2C_GPS_TIME                                39   // UTC Time from GPS in hhmmss.sss * 100 (uint32_t)(unneccesary precision) (Read Only)
 
@@ -1486,21 +1511,21 @@
 #define I2C_GPS_NAV_IMAX                            62    // nav_IMAX *1 uint8_t
 
 #define I2C_GPS_WP0                                 63   //Waypoint 0 used for RTH location      (R/W)
-#define	I2C_GPS_WP1		                    74
-#define	I2C_GPS_WP2		                    85
-#define	I2C_GPS_WP3		                    96
-#define	I2C_GPS_WP4		                    107
-#define	I2C_GPS_WP5		                    118
-#define	I2C_GPS_WP6		                    129
-#define	I2C_GPS_WP7		                    140
-#define	I2C_GPS_WP8		                    151
-#define	I2C_GPS_WP9		                    162
-#define	I2C_GPS_WP10		                    173
-#define	I2C_GPS_WP11		                    184
-#define	I2C_GPS_WP12		                    195
-#define	I2C_GPS_WP13		                    206
-#define	I2C_GPS_WP14		                    217
-#define	I2C_GPS_WP15		                    228
+#define I2C_GPS_WP1                                 74
+#define I2C_GPS_WP2                                 85
+#define I2C_GPS_WP3                                 96
+#define I2C_GPS_WP4                                 107
+#define I2C_GPS_WP5                                 118
+#define I2C_GPS_WP6                                 129
+#define I2C_GPS_WP7                                 140
+#define I2C_GPS_WP8                                 151
+#define I2C_GPS_WP9                                 162
+#define I2C_GPS_WP10                                173
+#define I2C_GPS_WP11                                184
+#define I2C_GPS_WP12                                195
+#define I2C_GPS_WP13                                206
+#define I2C_GPS_WP14                                217
+#define I2C_GPS_WP15                                228
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // End register definition 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

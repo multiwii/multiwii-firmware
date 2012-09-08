@@ -397,7 +397,7 @@ void evaluateCommand() {
       } 
      }
      break;  
-   #endif	 
+   #endif
    case MSP_RESET_CONF:
      if(!f.ARMED) {
        conf.checkNewConf++;

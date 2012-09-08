@@ -98,6 +98,7 @@
       //#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
       //#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
       //#define MINIWII         // Jussi's MiniWii Flight Controller                                <- confirmed by Alex
+      //#define MICROWII        // MicroWii 10DOF with ATmega32u4, MPU6050, HMC5883L, MS561101BA from http://flyduino.net/
       //#define CITRUSv2_1      // CITRUS from qcrc.ca
       //#define CHERRY6DOFv1_0
       //#define DROTEK_10DOF    // Drotek 10DOF with ITG3200, BMA180, HMC5883, BMP085, w or w/o LLC
@@ -119,14 +120,16 @@
       //#define PROTO_DIY       // 10DOF mega board
       //#define IOI_MINI_MULTIWII// www.bambucopter.com
       //#define Bobs_6DOF_V1     // BobsQuads 6DOF V1 with ITG3200 & BMA180
-      //#define Bobs_9DOF_V1	 // BobsQuads 9DOF V1 with ITG3200, BMA180 & HMC5883L
+      //#define Bobs_9DOF_V1     // BobsQuads 9DOF V1 with ITG3200, BMA180 & HMC5883L
       //#define Bobs_10DOF_BMP_V1 // BobsQuads 10DOF V1 with ITG3200, BMA180, HMC5883L & BMP180 - BMP180 is software compatible with BMP085
       //#define FLYDUINO_MPU
       //#define CRIUS_AIO_PRO_V1
       //#define DESQUARED6DOFV2GO  // DEsquared V2 with ITG3200 only
       //#define DESQUARED6DOFV4    // DEsquared V4 with MPU6050
       //#define LADYBIRD
-      
+      //#define MEGAWAP_V2_STD
+      //#define MEGAWAP_V2_ADV
+
       
     /***************************    independent sensors    ********************************/
       /* leave it commented if you already checked a specific board above */
@@ -273,7 +276,7 @@
     /* Servo mixing for heli 90 
                             {Coll,Nick,Roll} */
     #define SERVO_DIRECTIONS { +1, -1, -1 } // -1 will invert servo
-	
+
     /* Limit Maximum controll for Roll & Nick  in 0-100% */
     #define CONTROLL_RANGE   { 100, 100 }      //  { ROLL,PITCH }
 
@@ -500,8 +503,8 @@
   /* Pseudo-derivative conrtroller for level mode (experimental)
      Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
     //#define LEVEL_PDF
-	
-	
+
+
   /************************        AP FlightMode        **********************************/
     /* Temporarily Disables GPS_HOLD_MODE to be able to make it possible to adjust the Hold-position when moving the sticks.*/
     //#define AP_MODE 10  // Create a deadspan for GPS.
@@ -624,9 +627,9 @@
       - Fix and sat no. >= 5 -> LED blinks, one blink for 5 sat, two blinks for 6 sat, three for 7 ... */
     #define GPS_LED_INDICATOR
 
-    //#define USE_MSP_WP           		//Enables the MSP_WP command, which is used by WinGUI to display and log Home and Poshold positions
-						//Uncomment it if you are planning to use WinGUI - Will cost +208 bytes of Flash
-	
+    //#define USE_MSP_WP                        //Enables the MSP_WP command, which is used by WinGUI to display and log Home and Poshold positions
+                                                //Uncomment it if you are planning to use WinGUI - Will cost +208 bytes of Flash
+
     //#define DONT_RESET_HOME_AT_ARM             // HOME position is reset at every arm, uncomment it to prohibit it (you can set home position with GyroCalibration)
 
     /* GPS navigation can control the heading */
@@ -760,8 +763,8 @@
   /****                             Buzzer                         ****/
   /********************************************************************/
     //#define BUZZER
-    //#define RCOPTIONSBEEP        //uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
-	//#define ARMEDTIMEWARNING 330  // Trigger an alarm after a certain time of being armed [s] to save you lipo (if your TX does not have a countdown)
+    //#define RCOPTIONSBEEP         // uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
+    //#define ARMEDTIMEWARNING 330  // Trigger an alarm after a certain time of being armed [s] to save you lipo (if your TX does not have a countdown)
 
   /********************************************************************/
   /****           battery voltage monitoring                       ****/

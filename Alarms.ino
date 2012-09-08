@@ -187,7 +187,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
   void useResource(char resource, uint16_t pulse, uint16_t pause){
     static uint8_t channel = 0; 
     channel = ResourceToChannel(resource);
-    if (!channelIsOn[channel] && (millis() >= (channelLastToggleTime[channel] + pause))&& pulse != 0) {	         
+    if (!channelIsOn[channel] && (millis() >= (channelLastToggleTime[channel] + pause))&& pulse != 0) {
       channelIsOn[channel] = 1;      
       ChannelToOutput(channel,1);
       channelLastToggleTime[channel]=millis();      
@@ -323,8 +323,8 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
   static uint8_t led_flasher_sequence = 0;
   /* if we load a specific sequence and do not want it change, set this flag */
   static enum {
-  	LED_FLASHER_AUTO,
-  	LED_FLASHER_CUSTOM
+    LED_FLASHER_AUTO,
+    LED_FLASHER_CUSTOM
   } led_flasher_control = LED_FLASHER_AUTO;
   
   void init_led_flasher() {
@@ -394,7 +394,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
   void auto_switch_landing_lights(void) {
     if (rcOptions[BOXLLIGHTS]
     #if defined(LANDING_LIGHTS_AUTO_ALTITUDE) & SONAR
-  	|| (sonarAlt >= 0 && sonarAlt <= LANDING_LIGHTS_AUTO_ALTITUDE && f.ARMED)
+        || (sonarAlt >= 0 && sonarAlt <= LANDING_LIGHTS_AUTO_ALTITUDE && f.ARMED)
     #endif
     ) {
       switch_landing_lights(1);

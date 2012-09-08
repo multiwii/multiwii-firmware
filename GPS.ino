@@ -128,9 +128,9 @@
 
 // This is the angle from the copter to the "next_WP" location
 // with the addition of Crosstrack error in degrees * 100
-static int32_t	nav_bearing;
+static int32_t nav_bearing;
 // saves the bearing at takeof (1deg = 1) used to rotate to takeoff direction when arrives at home
-static int16_t  nav_takeoff_bearing;
+static int16_t nav_takeoff_bearing;
 
 
 #if defined(I2C_GPS)
@@ -243,7 +243,7 @@ void GPS_NewData() {
        f.GPS_FIX = 1;
        
        #if !defined(DONT_RESET_HOME_AT_ARM)
-         if (!f.ARMED) {f.GPS_FIX_HOME = 0;}				//Clear home position if disarmed
+         if (!f.ARMED) {f.GPS_FIX_HOME = 0;}                                          //Clear home position if disarmed
        #endif
        
        if (!f.GPS_FIX_HOME && f.ARMED) {        //if home is not set set home position to WP#0 and activate it
@@ -288,11 +288,11 @@ void GPS_NewData() {
           *varptr++ = i2c_readAck();
           *varptr   = i2c_readAck();
 
-          varptr = (uint8_t *)&nav[LAT];		 
+          varptr = (uint8_t *)&nav[LAT];
           *varptr++ = i2c_readAck();
           *varptr++ = i2c_readAck();
           
-          varptr = (uint8_t *)&nav[LON];		 
+          varptr = (uint8_t *)&nav[LON];
           *varptr++ = i2c_readAck();
           *varptr++ = i2c_readNak();
           
@@ -316,18 +316,18 @@ void GPS_NewData() {
           if (!f.GPS_FIX_HOME) {     //If we don't have home set, do not display anything
              GPS_distanceToHome = 0;
              GPS_directionToHome = 0;
-          }		  
+          }
 
           //Adjust heading when navigating
           if (f.GPS_HOME_MODE)
           {  if ( !(_i2c_gps_status & I2C_GPS_STATUS_WP_REACHED) )
               {
-          	//Tail control	
+                //Tail control
                 if (NAV_CONTROLS_HEADING) {
                   if (NAV_TAIL_FIRST) {
                       magHold = nav_bearing/100-180;
                       if (magHold > 180)  magHold -= 360;
-	              if (magHold < -180) magHold += 360;
+                      if (magHold < -180) magHold += 360;
                   } else {
                       magHold = nav_bearing/100;
                   }
@@ -364,7 +364,7 @@ void GPS_NewData() {
             if (!f.ARMED) {f.GPS_FIX_HOME = 0;}
           #endif
           if (!f.GPS_FIX_HOME && f.ARMED) {
-            GPS_reset_home_position();		  
+            GPS_reset_home_position();
           }
 
           //Apply moving average filter to GPS data
@@ -390,10 +390,10 @@ void GPS_NewData() {
           //dTnav calculation
           //Time for calculating x,y speed and navigation pids
           static uint32_t nav_loopTimer;
-	  dTnav = (float)(millis() - nav_loopTimer)/ 1000.0;
-	  nav_loopTimer = millis();
+          dTnav = (float)(millis() - nav_loopTimer)/ 1000.0;
+          nav_loopTimer = millis();
           // prevent runup from bad GPS
-	  dTnav = min(dTnav, 1.0);  
+          dTnav = min(dTnav, 1.0);  
 
           //calculate distance and bearings for gui and other stuff continously - From home to copter
           uint32_t dist;
@@ -405,7 +405,7 @@ void GPS_NewData() {
           if (!f.GPS_FIX_HOME) {     //If we don't have home set, do not display anything
              GPS_distanceToHome = 0;
              GPS_directionToHome = 0;
-          }		  
+          }
           
           //calculate the current velocity based on gps coordinates continously to get a valid speed at the moment when we start navigating
           GPS_calc_velocity();        
@@ -418,15 +418,15 @@ void GPS_NewData() {
             switch (nav_mode) {
               case NAV_MODE_POSHOLD: 
                 //Desired output is in nav_lat and nav_lon where 1deg inclination is 100 
-		GPS_calc_poshold();
+                GPS_calc_poshold();
                 break;
               case NAV_MODE_WP:
-		int16_t speed = GPS_calc_desired_speed(NAV_SPEED_MAX, NAV_SLOW_NAV);      //slow navigation 
-		// use error as the desired rate towards the target
+                int16_t speed = GPS_calc_desired_speed(NAV_SPEED_MAX, NAV_SLOW_NAV);      //slow navigation 
+                // use error as the desired rate towards the target
                 //Desired output is in nav_lat and nav_lon where 1deg inclination is 100 
-		GPS_calc_nav_rate(speed);
-	
-    	        //Tail control	
+                GPS_calc_nav_rate(speed);
+
+                //Tail control
                 if (NAV_CONTROLS_HEADING) {
                   if (NAV_TAIL_FIRST) {
                     magHold = wrap_18000(nav_bearing-18000)/100;
@@ -435,7 +435,7 @@ void GPS_NewData() {
                   }
                 }
                 // Are we there yet ?(within 2 meters of the destination)
-		if ((wp_distance <= GPS_wp_radius) || check_missed_wp()){         //if yes switch to poshold mode
+                if ((wp_distance <= GPS_wp_radius) || check_missed_wp()){         //if yes switch to poshold mode
                   nav_mode = NAV_MODE_POSHOLD;
                   if (NAV_SET_TAKEOFF_HEADING) { magHold = nav_takeoff_bearing; }
                 } 
@@ -580,7 +580,7 @@ int32_t wrap_18000(int32_t ang) {
 //Andrew Tridgell, Justin Beech, Adam Rivera, Jean-Louis Naudin, Roberto Navoni
 
 ////////////////////////////////////////////////////////////////////////////////////
-// this is used to offset the shrinking longitude as we go towards the poles	
+// this is used to offset the shrinking longitude as we go towards the poles
 // It's ok to calculate this once per waypoint setting, since it changes a little within the reach of a multicopter
 //
 void GPS_calc_longitude_scaling(int32_t lat) {
@@ -611,7 +611,7 @@ static bool check_missed_wp() {
   int32_t temp;
   temp = target_bearing - original_target_bearing;
   temp = wrap_18000(temp);
-  return (abs(temp) > 10000);	// we passed the waypoint by 100 degrees
+  return (abs(temp) > 10000);   // we passed the waypoint by 100 degrees
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -667,11 +667,11 @@ static void GPS_calc_velocity(){
 ////////////////////////////////////////////////////////////////////////////////////
 // Calculate a location error between two gps coordinates
 // Because we are using lat and lon to do our distance errors here's a quick chart:
-//	100 	= 1m
-//	1000 	= 11m	 = 36 feet
-//	1800 	= 19.80m = 60 feet
-//	3000 	= 33m
-//	10000 	= 111m
+//   100  = 1m
+//  1000  = 11m    = 36 feet
+//  1800  = 19.80m = 60 feet
+//  3000  = 33m
+// 10000  = 111m
 //
 static void GPS_calc_location_error( int32_t* target_lat, int32_t* target_lng, int32_t* gps_lat, int32_t* gps_lng ) {
   error[LON] = (float)(*target_lng - *gps_lng) * GPS_scaleLonDown;  // X Error
@@ -682,7 +682,7 @@ static void GPS_calc_location_error( int32_t* target_lat, int32_t* target_lng, i
 // Calculate nav_lat and nav_lon from the x and y error and the speed
 //
 static void GPS_calc_poshold() {
-  int32_t d;						
+  int32_t d;
   int32_t target_speed;
   uint8_t axis;
   
@@ -702,7 +702,7 @@ static void GPS_calc_poshold() {
     #endif
 
     nav[axis] +=d;
-    nav[axis]  = constrain(nav[axis], -NAV_BANK_MAX, NAV_BANK_MAX); 		
+    nav[axis]  = constrain(nav[axis], -NAV_BANK_MAX, NAV_BANK_MAX);
     navPID[axis].integrator = poshold_ratePID[axis].integrator;
   }
 }
@@ -739,9 +739,9 @@ static void GPS_calc_nav_rate(uint16_t max_speed) {
 // when flying to a waypoint.
 //
 static void GPS_update_crosstrack(void) {
-  if (abs(wrap_18000(target_bearing - original_target_bearing)) < 4500) {	 // If we are too far off or too close we don't do track following
+  if (abs(wrap_18000(target_bearing - original_target_bearing)) < 4500) {  // If we are too far off or too close we don't do track following
     float temp = (target_bearing - original_target_bearing) * RADX100;
-    crosstrack_error = sin(temp) * (wp_distance * CROSSTRACK_GAIN);	 // Meters we are off track line
+    crosstrack_error = sin(temp) * (wp_distance * CROSSTRACK_GAIN);  // Meters we are off track line
     nav_bearing = target_bearing + constrain(crosstrack_error, -3000, 3000);
     nav_bearing = wrap_36000(nav_bearing);
   }else{
@@ -753,12 +753,12 @@ static void GPS_update_crosstrack(void) {
 // Determine desired speed when navigating towards a waypoint, also implement slow 
 // speed rampup when starting a navigation
 //
-//	|< WP Radius
-//	0  1   2   3   4   5   6   7   8m
-//	...|...|...|...|...|...|...|...|
-//		  100  |  200	  300	  400cm/s
-//	           |  		 		            +|+
-//	           |< we should slow to 1.5 m/s as we hit the target
+//      |< WP Radius
+//      0  1   2   3   4   5   6   7   8m
+//      ...|...|...|...|...|...|...|...|
+//                100  |  200     300     400cm/s
+//                 |                                        +|+
+//                 |< we should slow to 1.5 m/s as we hit the target
 //
 static uint16_t GPS_calc_desired_speed(uint16_t max_speed, bool _slow) {
   // max_speed is default 400 or 4m/s
@@ -767,7 +767,7 @@ static uint16_t GPS_calc_desired_speed(uint16_t max_speed, bool _slow) {
     //max_speed = max(max_speed, 0);
   }else{
     max_speed = min(max_speed, wp_distance);
-    max_speed = max(max_speed, NAV_SPEED_MIN);	// go at least 100cm/s
+    max_speed = max(max_speed, NAV_SPEED_MIN);  // go at least 100cm/s
   }
 
   // limit the ramp up of the speed
@@ -823,49 +823,48 @@ uint32_t GPS_coord_to_degrees(char* s) {
 }
 */
 
-#define DIGIT_TO_VAL(_x)	(_x - '0')
+#define DIGIT_TO_VAL(_x)        (_x - '0')
 uint32_t GPS_coord_to_degrees(char* s) {
-	char *p, *q;
-	uint8_t deg = 0, min = 0;
-	unsigned int frac_min = 0;
-	uint8_t i;
-        
-	// scan for decimal point or end of field
-	for (p = s; isdigit(*p); p++)
-		;
-	q = s;
+  char *p, *q;
+  uint8_t deg = 0, min = 0;
+  unsigned int frac_min = 0;
+  uint8_t i;
 
-	// convert degrees
-	while ((p - q) > 2) {
-		if (deg)
-			deg *= 10;
-		deg += DIGIT_TO_VAL(*q++);
-	}
-	// convert minutes
-	while (p > q) {
-		if (min)
-			min *= 10;
-		min += DIGIT_TO_VAL(*q++);
-	}
-	// convert fractional minutes
-	// expect up to four digits, result is in
-	// ten-thousandths of a minute
-	if (*p == '.') {
-		q = p + 1;
-		for (i = 0; i < 4; i++) {
-			frac_min *= 10;
-			if (isdigit(*q))
-				frac_min += *q++ - '0';
-		}
-	}
-	return deg * 10000000UL + (min * 1000000UL + frac_min*100UL) / 6;
+  // scan for decimal point or end of field
+  for (p = s; isdigit(*p); p++) ;
+  q = s;
+
+  // convert degrees
+  while ((p - q) > 2) {
+    if (deg)
+      deg *= 10;
+    deg += DIGIT_TO_VAL(*q++);
+  }
+  // convert minutes
+  while (p > q) {
+    if (min)
+      min *= 10;
+    min += DIGIT_TO_VAL(*q++);
+  }
+  // convert fractional minutes
+  // expect up to four digits, result is in
+  // ten-thousandths of a minute
+  if (*p == '.') {
+    q = p + 1;
+    for (i = 0; i < 4; i++) {
+      frac_min *= 10;
+      if (isdigit(*q))
+        frac_min += *q++ - '0';
+    }
+  }
+  return deg * 10000000UL + (min * 1000000UL + frac_min*100UL) / 6;
 }
 
 // helper functions 
 uint16_t grab_fields(char* src, uint8_t mult) {  // convert string to uint16
   uint8_t i;
   uint16_t tmp = 0;
-  
+
   for(i=0; src[i]!=0; i++) {
     if(src[i] == '.') {
       i++;
@@ -878,7 +877,7 @@ uint16_t grab_fields(char* src, uint8_t mult) {  // convert string to uint16
   return tmp;
 }
 
-uint8_t hex_c(uint8_t n) {		// convert '0'..'9','A'..'F' to 0..15
+uint8_t hex_c(uint8_t n) {    // convert '0'..'9','A'..'F' to 0..15
   n -= '0';
   if(n>9)  n -= 7;
   n &= 0x0F;
@@ -930,9 +929,9 @@ bool GPS_newFrame(char c) {
         else if (param == 5 && string[0] == 'W') GPS_coord[LON] = -GPS_coord[LON];
         else if (param == 6)                     {f.GPS_FIX = (string[0]  > '0');}
         else if (param == 7)                     {GPS_numSat = grab_fields(string,0);}
-        else if (param == 9)                     {GPS_altitude = grab_fields(string,0);}	// altitude in meters added by Mis
+        else if (param == 9)                     {GPS_altitude = grab_fields(string,0);}  // altitude in meters added by Mis
       } else if (frame == FRAME_RMC) {
-        if      (param == 7)                     {GPS_speed = ((uint32_t)grab_fields(string,1)*5144L)/1000L;}  //gps speed in cm/s will be used for navigation	
+        if      (param == 7)                     {GPS_speed = ((uint32_t)grab_fields(string,1)*5144L)/1000L;}  //gps speed in cm/s will be used for navigation
         else if (param == 8)                     {GPS_ground_course = grab_fields(string,1); }                 //ground course deg*10 
       }
       param++; offset = 0;
@@ -1149,18 +1148,18 @@ bool GPS_newFrame(char c) {
       _new_position = true;
       break;
     case MSG_STATUS:
-      next_fix	= (_buffer.status.fix_status & NAV_STATUS_FIX_VALID) && (_buffer.status.fix_type == FIX_3D);
+      next_fix  = (_buffer.status.fix_status & NAV_STATUS_FIX_VALID) && (_buffer.status.fix_type == FIX_3D);
       if (!next_fix) f.GPS_FIX = false;
       break;
     case MSG_SOL:
-      next_fix	= (_buffer.solution.fix_status & NAV_STATUS_FIX_VALID) && (_buffer.solution.fix_type == FIX_3D);
+      next_fix  = (_buffer.solution.fix_status & NAV_STATUS_FIX_VALID) && (_buffer.solution.fix_type == FIX_3D);
       if (!next_fix) f.GPS_FIX = false;
-      GPS_numSat	                = _buffer.solution.satellites;
-      //GPS_hdop		        = _buffer.solution.position_DOP;
+      GPS_numSat                        = _buffer.solution.satellites;
+      //GPS_hdop                        = _buffer.solution.position_DOP;
       //debug[3] = GPS_hdop;
       break;
     case MSG_VELNED:
-      //speed_3d	                = _buffer.velned.speed_3d;  // cm/s
+      //speed_3d                        = _buffer.velned.speed_3d;  // cm/s
       GPS_speed                         = _buffer.velned.speed_2d;  // cm/s
       GPS_ground_course                 = (uint16_t)(_buffer.velned.heading_2d / 10000);  // Heading 2D deg * 100000 rescaled to deg * 10
       _new_speed = true;

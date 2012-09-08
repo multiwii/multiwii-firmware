@@ -171,7 +171,7 @@ void i2c_stop(void) {
   //  while(TWCR & (1<<TWSTO));                // <- can produce a blocking state with some WMP clones
 }
 
-void i2c_write(uint8_t data ) {	
+void i2c_write(uint8_t data ) {
   TWDR = data;                                 // send data to the previously addressed device
   TWCR = (1<<TWINT) | (1<<TWEN);
   waitTransmissionI2C();
@@ -207,7 +207,7 @@ void waitTransmissionI2C() {
 }
 
 size_t i2c_read_to_buf(uint8_t add, void *buf, size_t size) {
-  i2c_rep_start((add<<1) | 1);	// I2C read direction
+  i2c_rep_start((add<<1) | 1);  // I2C read direction
   size_t bytes_read = 0;
   uint8_t *b = (uint8_t*)buf;
   while (size--) {
@@ -1186,8 +1186,8 @@ void Gyro_init() {
 void Gyro_getADC () {
   i2c_getSixRawADC(MPU6050_ADDRESS, 0x43);
   GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/4 , // range: +/- 8192; +/- 2000 deg/sec
-	            ((rawADC[2]<<8) | rawADC[3])/4 ,
-	            ((rawADC[4]<<8) | rawADC[5])/4 );
+                    ((rawADC[2]<<8) | rawADC[3])/4 ,
+                    ((rawADC[4]<<8) | rawADC[5])/4 );
   GYRO_Common();
 }
 
@@ -1260,8 +1260,8 @@ void Gyro_init() {
 void Gyro_getADC () {
   i2c_getSixRawADC(MPU3050_ADDRESS, 0x1D);
   GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/4 , // range: +/- 8192; +/- 2000 deg/sec
-	            ((rawADC[2]<<8) | rawADC[3])/4 ,
-	            ((rawADC[4]<<8) | rawADC[5])/4 );
+                    ((rawADC[2]<<8) | rawADC[3])/4 ,
+                    ((rawADC[4]<<8) | rawADC[5])/4 );
   GYRO_Common();
 }
 

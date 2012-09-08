@@ -190,7 +190,7 @@ struct flags_struct {
   static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
   static uint16_t powerMax = 0;           // highest ever current;
   static int32_t  BAROaltStart = 0;       // offset value from powerup
-  static int32_t	BAROaltMax = 0;	        // maximum value
+  static int32_t  BAROaltMax = 0;         // maximum value
 #endif
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)
   static uint32_t armedTime = 0;
@@ -243,7 +243,7 @@ static uint16_t intPowerMeterSum, intPowerTrigger1;
 static int16_t failsafeEvents = 0;
 volatile int16_t failsafeCnt = 0;
 
-static int16_t rcData[8];          // interval [1000;2000]
+static int16_t rcData[RC_CHANS];   // interval [1000;2000]
 static int16_t rcCommand[4];       // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW 
 static int16_t lookupPitchRollRC[6];// lookup table for expo & RC rate PITCH+ROLL
 static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
@@ -453,9 +453,9 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       uint16_t vbatRaw = 0;
       static uint16_t vbatRawArray[8];
       if (! (++vbatTimer % VBATFREQ)) {
-      	vbatRawArray[(ind++)%8] = analogRead(V_BATPIN);
-      	for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
-      	vbat = vbatRaw / (conf.vbatscale/2);                  // result is Vbatt in 0.1V steps
+        vbatRawArray[(ind++)%8] = analogRead(V_BATPIN);
+        for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
+        vbat = vbatRaw / (conf.vbatscale/2);                  // result is Vbatt in 0.1V steps
       }
     #endif
     alarmHandler(); // external buzzer routine that handles buzzer events globally now
@@ -747,8 +747,8 @@ void loop () {
           && failsafeCnt <= 1
         #endif 
         ) {
-	  f.ARMED = 1;
-	  headFreeModeHold = heading;
+          f.ARMED = 1;
+          headFreeModeHold = heading;
         } else if (f.ARMED) f.ARMED = 0;
         rcDelayCommand = 0;
       #ifdef ALLOW_ARM_DISARM_VIA_TX_YAW
@@ -756,8 +756,8 @@ void loop () {
         if (rcDelayCommand == 20) f.ARMED = 0; // rcDelayCommand = 20 => 20x20ms = 0.4s = time to wait for a specific RC command to be acknowledged
       } else if ( (rcData[YAW] > MAXCHECK ) && rcData[PITCH] < MAXCHECK && !f.ARMED && calibratingG == 0 && f.ACC_CALIBRATED) {
         if (rcDelayCommand == 20) {
-	  f.ARMED = 1;
-	  headFreeModeHold = heading;
+          f.ARMED = 1;
+          headFreeModeHold = heading;
         }
       #endif
       #ifdef ALLOW_ARM_DISARM_VIA_TX_ROLL
@@ -1071,7 +1071,6 @@ void loop () {
     } else {
       float sin_yaw_y = sin(heading*0.0174532925f);
       float cos_yaw_x = cos(heading*0.0174532925f);
-	  
    #if defined(NAV_SLEW_RATE)     
       nav_rated[LON] += constrain(wrap_18000(nav[LON]-nav_rated[LON]),-NAV_SLEW_RATE,NAV_SLEW_RATE);
       nav_rated[LAT] += constrain(wrap_18000(nav[LAT]-nav_rated[LAT]),-NAV_SLEW_RATE,NAV_SLEW_RATE);
@@ -1081,7 +1080,6 @@ void loop () {
       GPS_angle[ROLL]   = (nav[LON]*cos_yaw_x - nav[LAT]*sin_yaw_y) /10;
       GPS_angle[PITCH]  = (nav[LON]*sin_yaw_y + nav[LAT]*cos_yaw_x) /10;
    #endif
-	  
     }
   #endif
 

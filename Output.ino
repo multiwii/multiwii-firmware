@@ -179,8 +179,8 @@ void writeMotors() { // [1000;2000] => [125;250]
         OCR2B = motor[6]>>3; //  pin 9
         OCR2A = motor[7]>>3; //  pin 10
       #else
-        OCR2B = ((motor[6]>>2) - 250) + 2);
-        OCR2A = ((motor[7]>>2) - 250) + 2);
+        OCR2B = (motor[6]>>2) - 250;
+        OCR2A = (motor[7]>>2) - 250;
       #endif
     #endif
   #endif
@@ -298,8 +298,8 @@ void writeMotors() { // [1000;2000] => [125;250]
           atomicPWM_PIN6_highState = motor[4]>>3;
           atomicPWM_PIN5_highState = motor[5]>>3;
         #else
-          atomicPWM_PIN6_highState = ((motor[4]>>2) - 250) + 2;
-          atomicPWM_PIN5_highState = ((motor[5]>>2) - 250) + 2;       
+          atomicPWM_PIN6_highState = (motor[4]>>2) - 250;
+          atomicPWM_PIN5_highState = (motor[5]>>2) - 250;
         #endif
         atomicPWM_PIN6_lowState  = 255-atomicPWM_PIN6_highState;
         atomicPWM_PIN5_lowState  = 255-atomicPWM_PIN5_highState; 
@@ -718,37 +718,25 @@ void initializeServo() {
     ISR(SOFT_PWM_ISR1) { 
       static uint8_t state = 0;
       if(state == 0){
-        SOFT_PWM_1_PIN_HIGH;
+        if (atomicPWM_PIN5_highState>0) SOFT_PWM_1_PIN_HIGH;
         SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_highState;
         state = 1;
       }else if(state == 1){
-        SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_highState;
-        state = 2;
-      }else if(state == 2){
         SOFT_PWM_1_PIN_LOW;
         SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_lowState;
-        state = 3;  
-      }else if(state == 3){
-        SOFT_PWM_CHANNEL1 += atomicPWM_PIN5_lowState;
-        state = 0;   
+        state = 0;  
       }
     }
     ISR(SOFT_PWM_ISR2) { 
       static uint8_t state = 0;
       if(state == 0){
-        SOFT_PWM_2_PIN_HIGH;
+        if (atomicPWM_PIN6_highState>0) SOFT_PWM_2_PIN_HIGH;
         SOFT_PWM_CHANNEL2 += atomicPWM_PIN6_highState;
         state = 1;
       }else if(state == 1){
-        SOFT_PWM_CHANNEL2 += atomicPWM_PIN6_highState;
-        state = 2;
-      }else if(state == 2){
         SOFT_PWM_2_PIN_LOW;
         SOFT_PWM_CHANNEL2 += atomicPWM_PIN6_lowState;
-        state = 3;  
-      }else if(state == 3){
-        SOFT_PWM_CHANNEL2 += atomicPWM_PIN6_lowState;
-        state = 0;   
+        state = 0;  
       }
     }
   #else
@@ -1035,12 +1023,11 @@ void mixTable() {
       servo[5]  = servoMid[5]+(rcCommand[YAW]                    *servoReverse[5]);     //   Rudder
       servo[6]  = servoMid[6]+(rcCommand[PITCH]                  *servoReverse[6]);     //   Elevator 
     }else{
-	
       // Assisted modes (gyro only or gyro+acc according to AUX configuration in Gui
       servo[3]  =(servoMid[3] + ((axisPID[ROLL] + flapperons[0]) *servoReverse[3]));   //   Wing 1 
       servo[4]  =(servoMid[4] + ((axisPID[ROLL] + flapperons[1]) *servoReverse[4]));   //   Wing 2
       servo[5]  =(servoMid[5] + (axisPID[YAW]                    *servoReverse[5]));   //   Rudder
-      servo[6]  =(servoMid[6] + (axisPID[PITCH]                  *servoReverse[6]));   //   Elevator	 
+      servo[6]  =(servoMid[6] + (axisPID[PITCH]                  *servoReverse[6]));   //   Elevator
     }  
     #endif
 /*************************************************************************************************************************/
@@ -1071,7 +1058,7 @@ void mixTable() {
       servo[6]  = servoMid[6] + (axisPID[ROLL]  * dcServo[1]) ;  //  ROLLServo  4  D11
       motor[0] = PIDMIX(0,0,-1);                                 //  Pin D9
       motor[1] = PIDMIX(0,0,+1);                                 //  Pin D10
-    #endif	
+    #endif
 
 /*************************************************************************************************************************/ 
 /*************************************************************************************************************************/ 
@@ -1090,7 +1077,7 @@ void mixTable() {
   // Common controlls for Helicopters 
     int16_t heliRoll,heliNick;
     int16_t collRange[3] = COLLECTIVE_RANGE;
-    static int16_t   collective;	
+    static int16_t   collective;
     static int16_t   servoEndpiont[8][2];
     static int16_t   servoHigh[8] = SERVO_ENDPOINT_HIGH; // HIGHpoint on servo
     static int16_t   servoLow[8]  = SERVO_ENDPOINT_LOW ; // LOWpoint on servo
@@ -1123,7 +1110,7 @@ void mixTable() {
     int16_t cRange[2] = CONTROLL_RANGE;
     heliRoll*=cRange[0]*0.01;
     heliNick*=cRange[1]*0.01;
-	
+
   #define HeliXPIDMIX(Z,Y,X) collRange[1]+collective*Z + heliNick*Y +  heliRoll*X
 
   // Yaw is common for Heli 90 & 120
@@ -1138,7 +1125,7 @@ void mixTable() {
     }else {   
       servo[7]  = rcData[THROTTLE]; //   50hz ESC or servo
       if (YAWMOTOR && rcData[THROTTLE] < MINTHROTTLE){servo[5] =  MINCOMMAND;}
-      else{ servo[5] =  yawControll; }     // YawSero	 
+      else{ servo[5] =  yawControll; }     // YawSero
     }
     #ifndef HELI_USE_SERVO_FOR_THROTTLE
       motor[0] = servo[7]; // use real motor output - ESC capable
@@ -1239,7 +1226,7 @@ void mixTable() {
       ampsum = 0;
       for (i =0;i<NUMBER_MOTOR;i++) {
         amp = amperes[ ((motor[i] - 1000)>>4) ] / vbat; // range mapped from [1000:2000] => [0:1000]; then break that up into 64 ranges; lookup amp
-  	    #if (LOG_VALUES >= 3)
+           #if (LOG_VALUES >= 3)
            pMeter[i]+= amp; // sum up over time the mapped ESC input 
         #endif
         #if defined(POWERMETER_SOFT)

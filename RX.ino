@@ -212,7 +212,7 @@ void configureReceiver() {
       static uint16_t last = 0;
       now = micros();  
       if(!(PINE & (1<<6))){
-	diff = now - last;
+        diff = now - last;
         if(900<diff && diff<2200){
           rcValue[3] = diff;
           #if defined(FAILSAFE)
