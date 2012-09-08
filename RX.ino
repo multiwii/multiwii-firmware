@@ -98,13 +98,35 @@ void configureReceiver() {
 /***************               Standard RX Pins reading            ********************/
 /**************************************************************************************/
 #if defined(STANDARD_RX)
-  // predefined PC pin block (thanks to lianj)
-  #define RX_PIN_CHECK(pin_pos, rc_value_pos)                                                        \
-    if (mask & PCInt_RX_Pins[pin_pos]) {                                                             \
-      if (!(pin & PCInt_RX_Pins[pin_pos])) {                                                         \
-        dTime = cTime-edgeTime[pin_pos]; if (900<dTime && dTime<2200) rcValue[rc_value_pos] = dTime; \
-      } else edgeTime[pin_pos] = cTime;                                                              \
+
+#if defined(FAILSAFE) && !defined(PROMICRO)
+   // predefined PC pin block (thanks to lianj)  - Version with failsafe
+  #define RX_PIN_CHECK(pin_pos, rc_value_pos)                        \
+    if (mask & PCInt_RX_Pins[pin_pos]) {                             \
+      if (!(pin & PCInt_RX_Pins[pin_pos])) {                         \
+        dTime = cTime-edgeTime[pin_pos];                             \
+        if(rc_value_pos==THROTTLEPIN) GoodPulses = 0;                \
+        if (900<dTime && dTime<2200) {                               \
+          rcValue[rc_value_pos] = dTime;                             \
+          if((rc_value_pos==THROTTLEPIN || rc_value_pos==YAWPIN ||   \
+              rc_value_pos==PITCHPIN || rc_value_pos==ROLLPIN)       \
+              && dTime>985) GoodPulses++;                            \
+        }                                                            \
+      } else edgeTime[pin_pos] = cTime;                              \
     }
+#else
+   // predefined PC pin block (thanks to lianj)  - Version without failsafe
+  #define RX_PIN_CHECK(pin_pos, rc_value_pos)                        \
+    if (mask & PCInt_RX_Pins[pin_pos]) {                             \
+      if (!(pin & PCInt_RX_Pins[pin_pos])) {                         \
+        dTime = cTime-edgeTime[pin_pos];                             \
+        if (900<dTime && dTime<2200) {                               \
+          rcValue[rc_value_pos] = dTime;                             \
+        }                                                            \
+      } else edgeTime[pin_pos] = cTime;                              \
+    }
+#endif
+
   // port change Interrupt
   ISR(RX_PC_INTERRUPT) { //this ISR is common to every receiver channel, it is call everytime a change state occurs on a RX input pin
     uint8_t mask;
@@ -112,15 +134,17 @@ void configureReceiver() {
     uint16_t cTime,dTime;
     static uint16_t edgeTime[8];
     static uint8_t PCintLast;
+  #if defined(FAILSAFE) && !defined(PROMICRO)
+    static uint8_t GoodPulses;
+  #endif
   
     pin = RX_PCINT_PIN_PORT; // RX_PCINT_PIN_PORT indicates the state of each PIN for the arduino port dealing with Ports digital pins
    
     mask = pin ^ PCintLast;   // doing a ^ between the current interruption and the last one indicates wich pin changed
+    cTime = micros();         // micros() return a uint32_t, but it is not usefull to keep the whole bits => we keep only 16 bits
     sei();                    // re enable other interrupts at this point, the rest of this interrupt is not so time critical and can be interrupted safely
     PCintLast = pin;          // we memorize the current state of all PINs [D0-D7]
   
-    cTime = micros();         // micros() return a uint32_t, but it is not usefull to keep the whole bits => we keep only 16 bits
-    
     #if (PCINT_PIN_COUNT > 0)
       RX_PIN_CHECK(0,2);
     #endif
@@ -146,9 +170,9 @@ void configureReceiver() {
       RX_PIN_CHECK(7,3);
     #endif
     
-    #define FAILSAFE_PIN       ROLLPIN            // Failsave Pin on Standard RX. Possible options: THROTTLEPIN, ROLLPIN, PITCHPIN, YAWPIN
     #if defined(FAILSAFE) && !defined(PROMICRO)
-      if (mask & 1<<FAILSAFE_PIN && dTime>985) {  // If pulse present on FAILSAFE_PIN  and pulse time > 985us, clear FailSafe counter  - added by MIS
+      if (GoodPulses==4) {                        // If all main four chanells have good pulses, clear FailSafe counter  - added by MIS
+        GoodPulses = 0;
         if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
     #endif
   }
@@ -192,7 +216,7 @@ void configureReceiver() {
         if(900<diff && diff<2200){
           rcValue[3] = diff;
           #if defined(FAILSAFE)
-           if(diff>980) {        // if Throttle value is higher than 980us
+           if(diff>985) {        // if Throttle value is higher than 985us
             if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
            }
           #endif 
@@ -234,8 +258,12 @@ void configureReceiver() {
     uint16_t now,diff;
     static uint16_t last = 0;
     static uint8_t chan = 0;
+  #if defined(FAILSAFE)
+    static uint8_t GoodPulses;
+  #endif
   
     now = micros();
+    sei();
     diff = now - last;
     last = now;
     if(diff>3000) chan = 0;
@@ -243,8 +271,11 @@ void configureReceiver() {
       if(900<diff && diff<2200 && chan<RC_CHANS ) {   //Only if the signal is between these values it is valid, otherwise the failsafe counter should move up
         rcValue[chan] = diff;
         #if defined(FAILSAFE)
-          if(chan==2 && diff>985) {        // if Throttle value is higher than 985us
-            if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // clear FailSafe counter - added by MIS  //incompatible to quadroppm
+          if(chan==0) GoodPulses = 0;                  // clear counter at chan 0;
+          if(chan<4 && diff>985)  GoodPulses++;        // if signal is valid - incrament counter
+          if(GoodPulses==4) {                          // If all main four chanells have good pulses, clear FailSafe counter
+            GoodPulses = 0;
+            if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;
           }
         #endif
       }
@@ -351,7 +382,7 @@ uint16_t readRawRC(uint8_t chan) {
     uint8_t oldSREG;
     oldSREG = SREG; cli(); // Let's disable interrupts
     data = rcValue[rcChannel[chan]]; // Let's copy the data Atomically
-    SREG = oldSREG; sei(); // Let's enable the interrupts
+    SREG = oldSREG;        // Let's restore interrupt state
   #endif
   return data; // We return the value correctly copied when the IRQ's where disabled
 }
