@@ -267,17 +267,6 @@ void GYRO_Common() {
   static int32_t g[3];
   uint8_t axis;
 
-  #if defined(SENSORS_TILT_45DEG_LEFT)
-    int16_t temp  = (gyroADC[PITCH] - gyroADC[ROLL] )/2;
-    gyroADC[ROLL] = (gyroADC[ROLL]  + gyroADC[PITCH])/2;
-    gyroADC[PITCH]= temp;
-  #endif
-  #if defined(SENSORS_TILT_45DEG_RIGHT)
-    int16_t temp  = (gyroADC[PITCH] + gyroADC[ROLL] )/2;
-    gyroADC[ROLL] = (gyroADC[ROLL]  - gyroADC[PITCH])/2;
-    gyroADC[PITCH]= temp;
-  #endif
-  
 #if defined MMGYRO       
   // Moving Average Gyros by Magnetron1
   //---------------------------------------------------
@@ -324,6 +313,17 @@ void GYRO_Common() {
 #endif    
     previousGyroADC[axis] = gyroADC[axis];
   }
+
+  #if defined(SENSORS_TILT_45DEG_LEFT)
+    int16_t temp  = ((gyroADC[PITCH] - gyroADC[ROLL] )*7)/10;
+    gyroADC[ROLL] = ((gyroADC[ROLL]  + gyroADC[PITCH])*7)/10;
+    gyroADC[PITCH]= temp;
+  #endif
+  #if defined(SENSORS_TILT_45DEG_RIGHT)
+    int16_t temp  = ((gyroADC[PITCH] + gyroADC[ROLL] )*7)/10;
+    gyroADC[ROLL] = ((gyroADC[ROLL]  - gyroADC[PITCH])*7)/10;
+    gyroADC[PITCH]= temp;
+  #endif
 }
 
 // ****************
@@ -331,17 +331,6 @@ void GYRO_Common() {
 // ****************
 void ACC_Common() {
   static int32_t a[3];
-
-  #if defined(SENSORS_TILT_45DEG_LEFT)
-    int16_t temp = (accADC[PITCH] - accADC[ROLL] )/2;
-    accADC[ROLL] = (accADC[ROLL]  + accADC[PITCH])/2;
-    accADC[PITCH] = temp;
-  #endif
-  #if defined(SENSORS_TILT_45DEG_RIGHT)
-    int16_t temp = (accADC[PITCH] + accADC[ROLL] )/2;
-    accADC[ROLL] = (accADC[ROLL]  - accADC[PITCH])/2;
-    accADC[PITCH] = temp;
-  #endif
   
   if (calibratingA>0) {
     for (uint8_t axis = 0; axis < 3; axis++) {
@@ -416,6 +405,17 @@ void ACC_Common() {
   accADC[ROLL]  -=  conf.accZero[ROLL] ;
   accADC[PITCH] -=  conf.accZero[PITCH];
   accADC[YAW]   -=  conf.accZero[YAW] ;
+
+  #if defined(SENSORS_TILT_45DEG_LEFT)
+    int16_t temp = ((accADC[PITCH] - accADC[ROLL] )*7)/10;
+    accADC[ROLL] = ((accADC[ROLL]  + accADC[PITCH])*7)/10;
+    accADC[PITCH] = temp;
+  #endif
+  #if defined(SENSORS_TILT_45DEG_RIGHT)
+    int16_t temp = ((accADC[PITCH] + accADC[ROLL] )*7)/10;
+    accADC[ROLL] = ((accADC[ROLL]  - accADC[PITCH])*7)/10;
+    accADC[PITCH] = temp;
+  #endif
 }
 
 
@@ -1033,13 +1033,13 @@ void Mag_getADC() {
     }
   } else {
     #if defined(SENSORS_TILT_45DEG_LEFT)
-      int16_t temp = (magADC[PITCH] - magADC[ROLL] )/2;
-      magADC[ROLL] = (magADC[ROLL]  + magADC[PITCH])/2;
+      int16_t temp = ((magADC[PITCH] - magADC[ROLL] )*7)/10;
+      magADC[ROLL] = ((magADC[ROLL]  + magADC[PITCH])*7)/10;
       magADC[PITCH] = temp;
     #endif
     #if defined(SENSORS_TILT_45DEG_RIGHT)
-      int16_t temp = (magADC[PITCH] + magADC[ROLL] )/2;
-      magADC[ROLL] = (magADC[ROLL]  - magADC[PITCH])/2;
+      int16_t temp = ((magADC[PITCH] + magADC[ROLL] )*7)/10;
+      magADC[ROLL] = ((magADC[ROLL]  - magADC[PITCH])*7)/10;
       magADC[PITCH] = temp;
     #endif
   }
