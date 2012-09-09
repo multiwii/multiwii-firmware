@@ -41,10 +41,10 @@ E:
 W:
 
 S: Eagle Tree Power Panel
-D:
+D: Added an i2c, and daylight transflective, LCD pandl to existing LCD menu
 N: Danal
-E:
-W:
+E: danal.estes at gmail.com
+W: 
 
 S: Extended motor range
 D: support for special ESC firmware with range 2 - 252
@@ -195,10 +195,17 @@ E:
 W: http://www.multiwii.com/forum/viewtopic.php?f=8&t=167
 
 S: PROGMEM
-D: 11/21/2001 memory saving
+D: 11/21/2001 memory saving Cut RAM about in half
 N: Danal
-E:
+E: danal.estes@gmail.com
 W:
+
+S: Sensors
+D: Added GY_521 Chinese sensor board (which is an MPU6050)
+D: Added MPU3050 support (register maps)
+N: Danal
+E: danal.estes@gmail.com
+W: 
 
 S: Simplified IMU
 D: 19/04/2011 Version: V1.1
@@ -220,9 +227,11 @@ E:
 W:
 
 S: Spektrum Satellite Receiver
-D:
+D: Allows Spektrum Satellite as only receiver; 1024, 2048, 22 or 11ms all supported
+D: Major rewrite of spektrum code in mid 2012 to have faster interrupts and be more compatible with new MultiWii serial
+D: Added Spektrum support for more than 8 channels in September 2012
 N: Danal
-E:
+E: danal.estes@gmail.com
 W:
 
 S: Telemetry over LCD/OLED serial/i2c
