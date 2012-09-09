@@ -806,6 +806,13 @@
   #undef INTERNAL_I2C_PULLUPS
 #endif
 
+#if defined(GY_521)
+  #define MPU6050
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+
 #if defined(INNOVWORKS_10DOF)
   #define ITG3200
   #define BMA180
