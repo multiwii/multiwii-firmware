@@ -65,7 +65,7 @@ enum box {
     BOXGPSHOME,
     BOXGPSHOLD,
   #endif
-  #if defined(SERVO)
+  #if defined(FIXEDWING) || defined(HELICOPTER)
     BOXPASSTHRU,
   #endif
   #if MAG
@@ -76,6 +76,8 @@ enum box {
   #endif
   #if defined(LED_FLASHER)
     BOXLEDMAX, // we want maximum illumination
+  #endif
+  #if defined(LANDING_LIGHTS_DDR)
     BOXLLIGHTS, // enable landing lights at any altitude
   #endif
   #if MAG
@@ -106,7 +108,7 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
     "GPS HOME;"
     "GPS HOLD;"
   #endif
-  #if defined(SERVO)
+  #if defined(FIXEDWING) || defined(HELICOPTER)
     "PASSTHRU;"
   #endif
   #if MAG
@@ -117,6 +119,8 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
   #endif
   #if defined(LED_FLASHER)
     "LEDMAX;"
+  #endif
+  #if defined(LANDING_LIGHTS_DDR)
     "LLIGHTS;"
   #endif
   #if MAG
