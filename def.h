@@ -1097,6 +1097,8 @@
   #define MULTITYPE 16      
 #elif defined(VTAIL4)
  #define MULTITYPE 17
+ #elif defined(HEX6H)
+ #define MULTITYPE 18
 #endif
 
 /**************************************************************************************/
@@ -1204,7 +1206,7 @@
   #define PRI_SERVO_TO     6
 #elif defined(QUADP) || defined(QUADX) || defined(Y4)|| defined(VTAIL4)
   #define NUMBER_MOTOR     4
-#elif defined(Y6) || defined(HEX6) || defined(HEX6X)
+#elif defined(Y6) || defined(HEX6) || defined(HEX6X) || defined(HEX6H)
   #define NUMBER_MOTOR     6
 #elif defined(OCTOX8) || defined(OCTOFLATP) || defined(OCTOFLATX)
   #define NUMBER_MOTOR     8

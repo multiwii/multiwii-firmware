@@ -38,7 +38,7 @@
     #endif
   #endif
   #if (NUMBER_MOTOR > 4)
-    //for HEX Y6 and HEX6/HEX6X flat for promini
+    //for HEX Y6 and HEX6/HEX6X/HEX6H flat for promini
     volatile uint8_t atomicPWM_PIN5_lowState;
     volatile uint8_t atomicPWM_PIN5_highState;
     volatile uint8_t atomicPWM_PIN6_lowState;
@@ -61,7 +61,7 @@
     #endif
   #endif
   #if (NUMBER_MOTOR > 4)
-    //for HEX Y6 and HEX6/HEX6X and for Promicro
+    //for HEX Y6 and HEX6/HEX6X/HEX6H and for Promicro
     volatile uint16_t atomicPWM_PIN5_lowState;
     volatile uint16_t atomicPWM_PIN5_highState;
     volatile uint16_t atomicPWM_PIN6_lowState;
@@ -857,6 +857,14 @@ void mixTable() {
     motor[3] = PIDMIX(+1/2,-7/8,-1); //FRONT_L
     motor[4] = PIDMIX(-1  ,+0  ,-1); //RIGHT
     motor[5] = PIDMIX(+1  ,+0  ,+1); //LEFT
+  #endif
+  #ifdef HEX6H 
+    motor[0] = PIDMIX(-1,+1,-1); //REAR_R
+    motor[1] = PIDMIX(-1,-1,+1); //FRONT_R
+    motor[2] = PIDMIX(+ 1,+1,+1); //REAR_L
+    motor[3] = PIDMIX(+ 1,-1,-1); //FRONT_L
+    motor[4] = PIDMIX(0 ,0 ,0); //RIGHT
+    motor[5] = PIDMIX(0 ,0 ,0); //LEFT
   #endif
   #ifdef OCTOX8
     motor[0] = PIDMIX(-1,+1,-1); //REAR_R

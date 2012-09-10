@@ -33,6 +33,7 @@
     //#define Y6
     //#define HEX6
     //#define HEX6X
+    //#define HEX6H  // New Model
     //#define OCTOX8
     //#define OCTOFLATP
     //#define OCTOFLATX
@@ -200,7 +201,7 @@
    /* optionally disable stick combinations to arm/disarm the motors.
      * In most cases one of the two options to arm/disarm via TX stick is sufficient */
     #define ALLOW_ARM_DISARM_VIA_TX_YAW
-    #define ALLOW_ARM_DISARM_VIA_TX_ROLL
+    //#define ALLOW_ARM_DISARM_VIA_TX_ROLL
 
   /***********************          Cam Stabilisation             ***********************/
     /* The following lines apply only for a pitch/roll tilt stabilization system. Uncomment the first or second line to activate it */
@@ -266,7 +267,7 @@
     /* Limit the range of Collective Pitch. 100% is Full Range each way and position for Zero Pitch */
     #define COLLECTIVE_RANGE { 80, 1500, 80 }// {Min%, ZeroPitch, Max%}.
     #define YAW_CENTER             1500      // Use servo[5] SERVO_ENDPOINT_HIGH/LOW for the endpoits.
-    #define YAWMOTOR                0       // If a motor is useed as YAW Set to 1 else set to 0.
+    #define YAWMOTOR                 0       // If a motor is useed as YAW Set to 1 else set to 0.
 
     /* Servo mixing for heli 120 Use 1/10 fractions (ex.5 = 5/10 = 1/2)
                          {Coll,Nick,Roll} */

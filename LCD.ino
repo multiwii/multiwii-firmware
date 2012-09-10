@@ -637,6 +637,8 @@ void initLCD() {
       strcpy_P(line2,PSTR("  Y4"));
     #elif defined(HEX6X)
       strcpy_P(line2,PSTR("  HEX6-X"));
+    #elif defined(HEX6H)
+      strcpy_P(line2,PSTR("  HEX6-H"));
     #elif defined(OCTOX8)
       strcpy_P(line2,PSTR("  OCTOX8"));
     #elif defined(OCTOFLATP)
