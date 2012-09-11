@@ -135,7 +135,11 @@ void serialCom() {
     #endif
     #define GPS_COND
     #if defined(GPS_SERIAL)
-      #define GPS_COND  && (GPS_SERIAL != CURRENTPORT)
+      #if defined(GPS_PROMINI)
+        #define GPS_COND       
+      #else
+        #define GPS_COND  && (GPS_SERIAL != CURRENTPORT)
+      #endif      
     #endif
     #define SPEK_COND
     #if defined(SPEKTRUM) && (UART_NUMBER > 1)

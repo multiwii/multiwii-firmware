@@ -1041,7 +1041,7 @@
   #define BARO 0
 #endif
 
-#if defined(GPS_PROMINI_SERIAL)
+#if defined(GPS_PROMINI_SERIAL) && defined(PROMINI)
   #define GPS_SERIAL 0
   #define GPS_PROMINI
   #define GPS_BAUD   GPS_PROMINI_SERIAL
