@@ -65,7 +65,7 @@ enum box {
     BOXGPSHOME,
     BOXGPSHOLD,
   #endif
-  #if defined(FIXEDWING) || defined(HELICOPTER)
+  #if defined(FIXEDWING) || defined(HELICOPTER) || defined(INFLIGHT_ACC_CALIBRATION)
     BOXPASSTHRU,
   #endif
   #if MAG
@@ -108,7 +108,7 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
     "GPS HOME;"
     "GPS HOLD;"
   #endif
-  #if defined(FIXEDWING) || defined(HELICOPTER)
+  #if defined(FIXEDWING) || defined(HELICOPTER) || defined(INFLIGHT_ACC_CALIBRATION)
     "PASSTHRU;"
   #endif
   #if MAG
@@ -966,7 +966,7 @@ void loop () {
       #endif
     #endif
     
-    #if defined(SERVO)
+    #if defined(FIXEDWING) || defined(HELICOPTER) || defined(INFLIGHT_ACC_CALIBRATION)
       if (rcOptions[BOXPASSTHRU]) {f.PASSTHRU_MODE = 1;}
       else {f.PASSTHRU_MODE = 0;}
     #endif

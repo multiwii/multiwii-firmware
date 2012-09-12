@@ -267,7 +267,7 @@ void evaluateCommand() {
                  #if GPS
                    f.GPS_HOME_MODE<<BOXGPSHOME|f.GPS_HOLD_MODE<<BOXGPSHOLD|
                  #endif
-                 #if defined(FIXEDWING) || defined(HELICOPTER) 
+                 #if defined(FIXEDWING) || defined(HELICOPTER) || defined(INFLIGHT_ACC_CALIBRATION) 
                    f.PASSTHRU_MODE<<BOXPASSTHRU|
                  #endif
                  #if defined(BUZZER)

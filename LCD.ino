@@ -963,11 +963,13 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
       &lcd_param_text49, &conf.activate[BOXGPSHOLD], &__AUX4,
     #endif
   #endif
-  &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX1,
-  &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX2,
-  #ifndef SUPPRESS_LCD_CONF_AUX34
-    &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX3,
-    &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX4,
+  #if defined(FIXEDWING) || defined(HELICOPTER) || defined(INFLIGHT_ACC_CALIBRATION)
+    &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX1,
+    &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX34
+      &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX3,
+      &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX4,
+    #endif
   #endif
   #if MAG
     &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX1,
