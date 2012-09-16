@@ -193,8 +193,9 @@ struct flags_struct {
   static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
   static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
   static uint16_t powerMax = 0;           // highest ever current;
-  static int32_t  BAROaltStart = 0;       // offset value from powerup
-  static int32_t  BAROaltMax = 0;         // maximum value
+  static int32_t  BAROaltStart;       // offset value from powerup
+  static int32_t  BAROaltMax;         // maximum value
+  static uint8_t  vbatMin;          // lowest battery voltage in 0.1V steps
 #endif
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)
   static uint32_t armedTime = 0;
@@ -548,6 +549,13 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #endif
   #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)
     if (f.ARMED) armedTime += (uint32_t)cycleTime;
+  #endif
+  #if defined(VBAT) && ( defined(LOG_VALUES) || defined(LCD_TELEMETRY) )
+    if (!f.ARMED) {
+      vbatMin = vbat;
+    } else {
+      if (vbat < vbatMin) vbatMin = vbat;
+    }
   #endif
   #ifdef LCD_TELEMETRY
     #if BARO

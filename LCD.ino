@@ -1416,6 +1416,18 @@ void output_VmAbars() {
   }
 #endif
 }
+void output_Vmin() {
+  strcpy_P(line1,PSTR("--.-Vmin")); // uint8_t vbat, intPowerMeterSum
+  //                   0123456789.12345
+  #ifdef VBAT
+    //LCDbar(7, (((vbatMin - conf.vbatlevel1_3s)*100)/VBATREF) );
+    line1[0] = digit100(vbatMin);
+    line1[1] = digit10(vbatMin);
+    line1[3] = digit1(vbatMin);
+  #endif
+  LCDprintChar(line1);
+}
+
 void fill_line1_cycle() {
   strcpy_P(line1,PSTR("Cycle    -----us")); //uin16_t cycleTime
   // 0123456789.12345*/
@@ -1725,7 +1737,7 @@ void lcd_telemetry() {
     case '1':
     {
       static uint8_t index = 0;
-      switch (index++ % 6) { // not really linenumbers
+      switch (index++ % 7) { // not really linenumbers
         case 0:// V, mAh
           linenr = 1;
           LCDsetLine(linenr++);
@@ -1736,18 +1748,22 @@ void lcd_telemetry() {
           LCDprintChar(line1);
           break;
         case 1:// V, mAh bars
-          LCDsetLine(linenr++);
-          output_VmAbars();
-          LCDattributesOff(); // turn Reverse off for rest of display
-          break;
-        case 2:// A, maxA
+           LCDsetLine(linenr++);
+           output_VmAbars();
+           break;
+        case 2:// Vmin
+           LCDsetLine(linenr++);
+           output_Vmin();
+           LCDattributesOff(); // turn Reverse off for rest of display
+           break;
+        case 3:// A, maxA
           #ifdef POWERMETER_HARD
             LCDsetLine(linenr++);
             fill_line2_AmaxA();
             LCDprintChar(line2);
           #endif
           break;
-        case 3:// checkboxstatus
+        case 4:// checkboxstatus
           LCDsetLine(linenr++);
           LCDsetLine(linenr);
           strcpy_P(line1,PSTR("... ... ... ... "));
@@ -1755,13 +1771,13 @@ void lcd_telemetry() {
           LCDsetLine(linenr++);
           output_checkboxitems();
           break;
-        case 4:// uptime, uptime_armed
+        case 5:// uptime, uptime_armed
           LCDsetLine(linenr++);
           LCDsetLine(linenr++);
           LCDprintChar("U:"); print_uptime(millis() / 1000 );
           LCDprintChar("  A:"); print_uptime(armedTime / 1000000);
           break;
-        case 5:// height
+        case 6:// height
           #if BARO
             LCDsetLine(linenr++);
             LCDsetLine(linenr++);
