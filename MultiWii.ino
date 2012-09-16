@@ -152,6 +152,7 @@ static int16_t  headFreeModeHold;
 static int16_t  gyroADC[3],accADC[3],accSmooth[3],magADC[3];
 static int16_t  heading,magHold;
 static uint8_t  vbat;               // battery voltage in 0.1V steps
+static uint8_t  vbatMin;            // lowest battery voltage in 0.1V steps
 static uint8_t  rcOptions[CHECKBOXITEMS];
 static int32_t  BaroAlt;
 static int32_t  EstAlt;             // in cm
@@ -195,7 +196,6 @@ struct flags_struct {
   static uint16_t powerMax = 0;           // highest ever current;
   static int32_t  BAROaltStart;       // offset value from powerup
   static int32_t  BAROaltMax;         // maximum value
-  static uint8_t  vbatMin;          // lowest battery voltage in 0.1V steps
 #endif
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)
   static uint32_t armedTime = 0;
@@ -550,7 +550,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)
     if (f.ARMED) armedTime += (uint32_t)cycleTime;
   #endif
-  #if defined(VBAT) && ( defined(LOG_VALUES) || defined(LCD_TELEMETRY) )
+  #if defined(VBAT)
     if (!f.ARMED) {
       vbatMin = vbat;
     } else {

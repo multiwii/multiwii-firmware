@@ -1378,56 +1378,43 @@ void fill_line2_AmaxA() {
 }
 #endif
 
-void fill_line1_VmA() {
-  strcpy_P(line1,PSTR("--.-V   -----mAh")); // uint8_t vbat, intPowerMeterSum
-  //                   0123456789.12345
+void output_V() {
   #ifdef VBAT
-    line1[0] = digit100(vbat);
-    line1[1] = digit10(vbat);
-    line1[3] = digit1(vbat);
+    strcpy_P(line1,PSTR(" --.-V"));
+    //                   0123456789.12345
+    line1[1] = digit100(vbat);
+    line1[2] = digit10(vbat);
+    line1[4] = digit1(vbat);
+    LCDbar(7, (((vbat - conf.vbatlevel1_3s)*100)/(VBATNOMINAL-conf.vbatlevel1_3s)) );
+    LCDprintChar(line1);
   #endif
-  #ifdef POWERMETER
-    line1[8] = digit10000(intPowerMeterSum);
-    line1[9] = digit1000(intPowerMeterSum);
-    line1[10] = digit100(intPowerMeterSum);
-    line1[11] = digit10(intPowerMeterSum);
-    line1[12] = digit1(intPowerMeterSum);
-  #endif
-  #ifdef BUZZER
-    if (isBuzzerON()) { // buzzer on? then add some blink for attention
-      line1[5] = '+'; line1[6] = '+'; line1[7] = '+';
-    }
-  #endif
-  // set mark, if we had i2c errors, failsafes or annex650 overruns
-  if (i2c_errors_count || failsafeEvents || annex650_overrun_count) line1[6] = '!';
-}
-void output_VmAbars() {
-#ifdef VBAT
-  LCDbar(7, (((vbat - conf.vbatlevel1_3s)*100)/VBATREF) );
-  LCDprint(' ');
-#else
-  LCDprintChar("        ");
-#endif
-#ifdef POWERMETER
-  //     intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
-  //   pAlarm = (uint32_t) powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
-  if (conf.powerTrigger1) {
-    LCDbar(8, 100 - ( intPowerMeterSum/(uint16_t)conf.powerTrigger1) *2 );// bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
-  }
-#endif
-}
-void output_Vmin() {
-  strcpy_P(line1,PSTR("--.-Vmin")); // uint8_t vbat, intPowerMeterSum
-  //                   0123456789.12345
-  #ifdef VBAT
-    //LCDbar(7, (((vbatMin - conf.vbatlevel1_3s)*100)/VBATREF) );
-    line1[0] = digit100(vbatMin);
-    line1[1] = digit10(vbatMin);
-    line1[3] = digit1(vbatMin);
-  #endif
-  LCDprintChar(line1);
 }
 
+void output_Vmin() {
+  #ifdef VBAT
+    strcpy_P(line1,PSTR(" --.-Vmin"));
+    //                   0123456789.12345
+    line1[1] = digit100(vbatMin);
+    line1[2] = digit10(vbatMin);
+    line1[4] = digit1(vbatMin);
+    LCDbar(7, (vbatMin > conf.vbatlevel3_3s ? (((vbatMin - conf.vbatlevel3_3s)*100)/(VBATNOMINAL-conf.vbatlevel3_3s)) : 0 ));
+    LCDprintChar(line1);
+  #endif
+}
+void output_mAh() {
+  #ifdef POWERMETER
+    strcpy_P(line1,PSTR(" -----mAh"));
+    line1[1] = digit10000(intPowerMeterSum);
+    line1[2] = digit1000(intPowerMeterSum);
+    line1[3] = digit100(intPowerMeterSum);
+    line1[4] = digit10(intPowerMeterSum);
+    line1[5] = digit1(intPowerMeterSum);
+    if (conf.powerTrigger1) {
+      LCDbar(7, 100 - ( intPowerMeterSum/(uint16_t)conf.powerTrigger1) *2 );// bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
+    }
+    LCDprintChar(line1);
+  #endif
+}
 void fill_line1_cycle() {
   strcpy_P(line1,PSTR("Cycle    -----us")); //uin16_t cycleTime
   // 0123456789.12345*/
@@ -1565,12 +1552,11 @@ void lcd_telemetry() {
     case 2: // button B on Textstar LCD -> Voltage, PowerSum and power alarm trigger value
     case '2':
     if (linenr++ % 2) {
-      fill_line1_VmA();
       LCDsetLine(1);
-      LCDprintChar(line1);
+      output_V();
     } else {
       LCDsetLine(2);
-      output_VmAbars();
+      output_mAh();
     }
     break;
 #endif
@@ -1738,22 +1724,21 @@ void lcd_telemetry() {
     {
       static uint8_t index = 0;
       switch (index++ % 7) { // not really linenumbers
-        case 0:// V, mAh
+        case 0:// V
           linenr = 1;
           LCDsetLine(linenr++);
-          fill_line1_VmA();
           #ifdef BUZZER
             if (isBuzzerON()) { LCDattributesReverse(); } // buzzer on? then add some blink for attention
           #endif
-          LCDprintChar(line1);
+          output_V();
           break;
-        case 1:// V, mAh bars
-           LCDsetLine(linenr++);
-           output_VmAbars();
-           break;
-        case 2:// Vmin
+        case 1:// Vmin
            LCDsetLine(linenr++);
            output_Vmin();
+           break;
+        case 2:// mAh
+           LCDsetLine(linenr++);
+           output_mAh();
            LCDattributesOff(); // turn Reverse off for rest of display
            break;
         case 3:// A, maxA

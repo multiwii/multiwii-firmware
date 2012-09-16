@@ -744,12 +744,6 @@
        First page of the sequence gets loaded at startup to allow non-interactive display */
     //#define LCD_TELEMETRY_STEP "0123456789" // should contain a 0 to allow switching off. First page of sequence gets loaded upon startup
 
-
-    /* on telemetry page B (2) it gives a bar graph which shows how much voltage battery has left. Range from 0 to 12 Volt is not very informative
-       so we try do define a meaningful range. For a 3S battery we define full=12,6V and calculate how much it is above first warning level
-       Example: 12.6V - VBATLEVEL1_3S  (for me = 126 - 102 = 24) */
-    #define VBATREF 24
-
     /* if program gets too large (>32k), need to exclude some functionality
        uncomment to suppress some unwanted telemetry pages (only useful if telemetry is enabled) */
     //#define SUPPRESS_TELEMETRY_PAGE_1
@@ -779,6 +773,7 @@
        must be associated with #define BUZZER ! */
     //#define VBAT              // uncomment this line to activate the vbat code
     #define VBATSCALE     131 // change this value if readed Battery voltage is different than real voltage
+    #define VBATNOMINAL   126 // 12,6V full battery nominal voltage
     #define VBATLEVEL1_3S 107 // 10,7V
     #define VBATLEVEL2_3S 103 // 10,3V
     #define VBATLEVEL3_3S 99  // 9.9V
@@ -828,8 +823,8 @@
     //#define PLEVELDIV 1361L // to convert the sum into mAh divide by this value
     /* amploc 25A sensor has 37mV/A
        arduino analog resolution is 4.9mV per unit; units from [0..1023]
-       sampling rate 20ms, approx 19977 micro seconds
-       PLEVELDIV = 37 / 4.9  * 10e6 / 18000  * 3600 / 1000  = 1361L
+       sampling rate is cycle_time * PSENSORFREQ , so 4000*6=24000 micro seconds
+       PLEVELDIV = 37 / 4.9  * 10e6 / 24000  * 3600 / 1000  = 1133
        set to analogRead() value for zero current */
     #define PSENSORNULL 510 // for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt
     #define PINT2mA 13 // for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
