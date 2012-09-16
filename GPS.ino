@@ -971,6 +971,7 @@ bool GPS_newFrame(char c) {
     uint32_t horizontal_accuracy;
     uint32_t vertical_accuracy;
   };
+/*  
   struct ubx_nav_status {
     uint32_t time;  // GPS msToW
     uint8_t fix_type;
@@ -980,6 +981,7 @@ bool GPS_newFrame(char c) {
     uint32_t time_to_first_fix;
     uint32_t uptime;  // milliseconds
    };
+*/   
   struct ubx_nav_solution {
     uint32_t time;
     int32_t time_nsec;
@@ -1050,21 +1052,16 @@ bool GPS_newFrame(char c) {
   static uint16_t _payload_length;
   static uint16_t _payload_counter;
   
-  static bool next_fix;
+//  static bool next_fix;
   static uint8_t _class;
-  
-  // do we have new position information?
-  static bool _new_position;
-  
-  // do we have new speed information?
-  static bool _new_speed;
-  
+
   static uint8_t _disable_counter;
+  static uint8_t _fix_ok;
   
   // Receive buffer
   static union {
     ubx_nav_posllh posllh;
-    ubx_nav_status status;
+//    ubx_nav_status status;
     ubx_nav_solution solution;
     ubx_nav_velned velned;
     uint8_t bytes[];
@@ -1141,38 +1138,25 @@ bool GPS_newFrame(char c) {
     switch (_msg_id) {
     case MSG_POSLLH:
       //i2c_dataset.time                = _buffer.posllh.time;
-      GPS_coord[LON]                    = _buffer.posllh.longitude;
-      GPS_coord[LAT]                    = _buffer.posllh.latitude;
-      GPS_altitude                      = _buffer.posllh.altitude_msl / 10 /100;      //alt in m
-      f.GPS_FIX                         = next_fix;
-      _new_position = true;
-      break;
-    case MSG_STATUS:
-      next_fix  = (_buffer.status.fix_status & NAV_STATUS_FIX_VALID) && (_buffer.status.fix_type == FIX_3D);
-      if (!next_fix) f.GPS_FIX = false;
+      if(_fix_ok) {
+        GPS_coord[LON] = _buffer.posllh.longitude;
+        GPS_coord[LAT] = _buffer.posllh.latitude;
+        GPS_altitude   = _buffer.posllh.altitude_msl / 1000;      //alt in m
+      }
+      f.GPS_FIX = _fix_ok;
+      return true;        // POSLLH message received, allow blink GUI icon and LED
       break;
     case MSG_SOL:
-      next_fix  = (_buffer.solution.fix_status & NAV_STATUS_FIX_VALID) && (_buffer.solution.fix_type == FIX_3D);
-      if (!next_fix) f.GPS_FIX = false;
-      GPS_numSat                        = _buffer.solution.satellites;
-      //GPS_hdop                        = _buffer.solution.position_DOP;
-      //debug[3] = GPS_hdop;
+      _fix_ok = 0;
+      if((_buffer.solution.fix_status & NAV_STATUS_FIX_VALID) && (_buffer.solution.fix_type == FIX_3D || _buffer.solution.fix_type == FIX_2D)) _fix_ok = 1;
+      GPS_numSat = _buffer.solution.satellites;
       break;
     case MSG_VELNED:
-      //speed_3d                        = _buffer.velned.speed_3d;  // cm/s
-      GPS_speed                         = _buffer.velned.speed_2d;  // cm/s
-      GPS_ground_course                 = (uint16_t)(_buffer.velned.heading_2d / 10000);  // Heading 2D deg * 100000 rescaled to deg * 10
-      _new_speed = true;
+      GPS_speed         = _buffer.velned.speed_2d;  // cm/s
+      GPS_ground_course = (uint16_t)(_buffer.velned.heading_2d / 10000);  // Heading 2D deg * 100000 rescaled to deg * 10
       break;
     default:
-      return false;
-    }
-  
-    // we only return true when we get new position and speed data
-    // this ensures we don't use stale data
-    if (_new_position && _new_speed) {
-      _new_speed = _new_position = false;
-      return true;
+      break;
     }
     return false;
   }
