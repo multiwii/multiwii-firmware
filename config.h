@@ -131,7 +131,7 @@
       //#define LADYBIRD
       //#define MEGAWAP_V2_STD
       //#define MEGAWAP_V2_ADV
-	  //#define HK_MultiWii_SE_V2  // Hobbyking board with MPU6050 + HMC5883L + BMP085 
+      //#define HK_MultiWii_SE_V2  // Hobbyking board with MPU6050 + HMC5883L + BMP085 
 
       
     /***************************    independent sensors    ********************************/
