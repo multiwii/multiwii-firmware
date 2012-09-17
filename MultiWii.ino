@@ -151,8 +151,8 @@ static int16_t  acc_25deg;
 static int16_t  headFreeModeHold;
 static int16_t  gyroADC[3],accADC[3],accSmooth[3],magADC[3];
 static int16_t  heading,magHold;
-static uint8_t  vbat;               // battery voltage in 0.1V steps
-static uint8_t  vbatMin;            // lowest battery voltage in 0.1V steps
+static uint8_t  vbat;                   // battery voltage in 0.1V steps
+static uint8_t  vbatMin = VBATNOMINAL;  // lowest battery voltage in 0.1V steps
 static uint8_t  rcOptions[CHECKBOXITEMS];
 static int32_t  BaroAlt;
 static int32_t  EstAlt;             // in cm
@@ -318,6 +318,7 @@ static struct {
     uint8_t vbatlevel1_3s;
     uint8_t vbatlevel2_3s;
     uint8_t vbatlevel3_3s;
+    uint8_t vbatlevel4_3s;
     uint8_t no_vbat;
   #endif
   #ifdef POWERMETER
@@ -551,10 +552,12 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     if (f.ARMED) armedTime += (uint32_t)cycleTime;
   #endif
   #if defined(VBAT)
-    if (!f.ARMED) {
-      vbatMin = vbat;
-    } else {
-      if (vbat < vbatMin) vbatMin = vbat;
+    if (vbat > conf.no_vbat) { // only track possibly sane voltage values
+      if (!f.ARMED) {
+        vbatMin = vbat;
+      } else {
+        if (vbat < vbatMin) vbatMin = vbat;
+      }
     }
   #endif
   #ifdef LCD_TELEMETRY

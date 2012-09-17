@@ -777,6 +777,7 @@
     #define VBATLEVEL1_3S 107 // 10,7V
     #define VBATLEVEL2_3S 103 // 10,3V
     #define VBATLEVEL3_3S 99  // 9.9V
+    #define VBATLEVEL4_3S 93  // 9.3V - if vbat ever goes below this value, permanent alarm is triggered
     #define NO_VBAT       16 // Avoid beeping without any battery
 
 

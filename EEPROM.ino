@@ -1,6 +1,6 @@
 #include <avr/eeprom.h>
 
-#define EEPROM_CONF_VERSION 163
+#define EEPROM_CONF_VERSION 164
 
 void readEEPROM() {
   uint8_t i;
@@ -116,6 +116,7 @@ void checkFirstTime() {
     conf.vbatlevel1_3s = VBATLEVEL1_3S;
     conf.vbatlevel2_3s = VBATLEVEL2_3S;
     conf.vbatlevel3_3s = VBATLEVEL3_3S;
+    conf.vbatlevel4_3s = VBATLEVEL4_3S;
     conf.no_vbat = NO_VBAT;
   #endif
   #ifdef POWERMETER

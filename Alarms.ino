@@ -17,7 +17,7 @@
   void alarmHandler(){
     
     #if defined(VBAT)
-      if (vbatMin < conf.vbatlevel3_3s) {
+      if (vbatMin < conf.vbatlevel4_3s) {
         warn_vbat = 4;
       } else if ( ( (vbat>conf.vbatlevel1_3s)
       #if defined(POWERMETER)
