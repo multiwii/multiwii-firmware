@@ -1734,44 +1734,47 @@ void lcd_telemetry() {
           #endif
           output_V();
           break;
-        case 1:// Vmin
-           LCDsetLine(linenr++);
-           output_Vmin();
-           break;
-        case 2:// mAh
+        case 1:// mAh
            LCDsetLine(linenr++);
            output_mAh();
            LCDattributesOff(); // turn Reverse off for rest of display
            break;
-        case 3:// A, maxA
-          #ifdef POWERMETER_HARD
-            LCDsetLine(linenr++);
-            fill_line2_AmaxA();
-            LCDprintChar(line2);
-          #endif
-          break;
-        case 4:// checkboxstatus
-          LCDsetLine(linenr++);
+        case 2:// checkboxstatus
+          //LCDsetLine(linenr++);
           LCDsetLine(linenr);
           strcpy_P(line1,PSTR("... ... ... ... "));
           LCDprintChar(line1);
           LCDsetLine(linenr++);
           output_checkboxitems();
           break;
-        case 5:// uptime, uptime_armed
+        case 3:// height
           LCDsetLine(linenr++);
+          #if BARO
+             {
+               LCDsetLine(linenr++);
+               int16_t h = (BaroAlt - BAROaltStart) / 100;
+               LCDprint('A'); lcdprint_int16(h); LCDprint('m');
+               h = (BAROaltMax - BAROaltStart) / 100;
+               LCDprintChar(" ("); lcdprint_int16(h);
+             }
+           #endif
+           break;
+        case 4:// uptime, uptime_armed
+          //LCDsetLine(linenr++);
           LCDsetLine(linenr++);
           LCDprintChar("U:"); print_uptime(millis() / 1000 );
           LCDprintChar("  A:"); print_uptime(armedTime / 1000000);
           break;
-        case 6:// height
-          #if BARO
+        case 5:// Vmin
+           LCDsetLine(linenr++);
+           LCDsetLine(linenr++);
+           output_Vmin();
+           break;
+        case 6:// A, maxA
+          #ifdef POWERMETER_HARD
             LCDsetLine(linenr++);
-            LCDsetLine(linenr++);
-            int16_t h = (BaroAlt - BAROaltStart) / 100;
-            LCDprint('A'); lcdprint_int16(h); LCDprint('m');
-            h = (BAROaltMax - BAROaltStart) / 100;
-            LCDprintChar(" ("); lcdprint_int16(h);
+            fill_line2_AmaxA();
+            LCDprintChar(line2);
           #endif
           break;
       }
