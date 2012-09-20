@@ -789,11 +789,11 @@ const char PROGMEM lcd_param_text37 [] = "SERvTRIM 2";
 #ifdef TRI //                            0123456789
 const char PROGMEM lcd_param_text38 [] = "SERvTRIM Y";
 #endif
-#ifdef LOG_VALUES
-const char PROGMEM lcd_param_text39 [] = "failsafes ";
-const char PROGMEM lcd_param_text40 [] = "i2c errors";
-const char PROGMEM lcd_param_text41 [] = "an overrun";
-#endif
+//#ifdef LOG_VALUES
+//const char PROGMEM lcd_param_text39 [] = "failsafes ";
+//const char PROGMEM lcd_param_text40 [] = "i2c errors";
+//const char PROGMEM lcd_param_text41 [] = "an overrun";
+//#endif
 #if defined(LCD_CONF_AUX)
 const char PROGMEM lcd_param_text42 [] = "AUX level ";
 const char PROGMEM lcd_param_text43 [] = "AUX baro  ";
@@ -1065,11 +1065,11 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #ifdef CYCLETIME_FIXATED
   &lcd_param_text120, &conf.cycletime_fixated, &__SE,
 #endif
-#ifdef LOG_VALUES
-  &lcd_param_text39, &failsafeEvents, &__L,
-  &lcd_param_text40, &i2c_errors_count, &__L,
-  &lcd_param_text41, &annex650_overrun_count, &__L
-#endif
+//#ifdef LOG_VALUES
+//  &lcd_param_text39, &failsafeEvents, &__L,
+//  &lcd_param_text40, &i2c_errors_count, &__L,
+//  &lcd_param_text41, &annex650_overrun_count, &__L
+//#endif
 };
 #define PARAMMAX (sizeof(lcd_param_ptr_table)/6 - 1)
 // ************************************************************************************************************
@@ -1458,7 +1458,13 @@ void output_fails() {
   line2[11] = digit1(unit);
   LCDprintChar(line2);
 }
-
+void output_annex() {
+  //                   0123456789
+  strcpy_P(line2,PSTR("annex --"));
+  line2[6] = digit10(annex650_overrun_count);
+  line2[7] = digit1(annex650_overrun_count);
+  LCDprintChar(line2);
+}
 static char checkboxitemNames[][4] = {
     #if ACC
       "Ang","Hor",
@@ -1590,8 +1596,13 @@ void lcd_telemetry() {
 #ifndef SUPPRESS_TELEMETRY_PAGE_5
     case 5:
     case '5':
+    if (linenr++ % 2) {
       LCDsetLine(1);
       output_fails();
+    } else {
+      LCDsetLine(2);
+      output_annex();
+    }
       break;
 #endif
 #ifndef SUPPRESS_TELEMETRY_PAGE_6
@@ -1927,11 +1938,7 @@ void lcd_telemetry() {
       break;
       case 3:// annex-overruns
       LCDsetLine(4);
-      //                   0123456789
-      strcpy_P(line2,PSTR("annex --"));
-      line2[6] = digit10(annex650_overrun_count);
-      line2[7] = digit1(annex650_overrun_count);
-      LCDprintChar(line2);
+      output_annex();
       break;
 #ifdef DEBUG
       case 4:// debug
