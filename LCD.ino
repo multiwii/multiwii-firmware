@@ -676,7 +676,7 @@ void initLCD() {
   //    strcpy_P(line1,PSTR("Config All Parms")); LCDsetLine(2); LCDprintChar(line1);
   //  }
   #ifdef LCD_TELEMETRY_STEP
-    telemetry = telemetryStepSequence[0]; //[++telemetryStepIndex % strlen(telemetryStepSequence)];
+    telemetry = telemetryStepSequence[telemetryStepIndex]; //[++telemetryStepIndex % strlen(telemetryStepSequence)];
   #endif
 }
 #endif //Support functions for LCD_CONF and LCD_TELEMETRY
@@ -1442,28 +1442,21 @@ void fill_line2_cycleMinMax() {
   line2[12] = digit1(cycleTimeMax);
 #endif
 }
-void fill_line1_fails() {
-  strcpy_P(line1,PSTR("Fails i2c t-errs"));
-}
-void fill_line2_fails_values() {
+void output_fails() {
   uint16_t unit;
-  // 0123456789012345
-  strcpy_P(line2,PSTR("  --   --     --"));
+  //                   0123456789012345
+  strcpy_P(line2,PSTR("-- Fails  -- i2c"));
   unit = failsafeEvents;
   //line2[0] = '0' + unit / 1000 - (unit/10000) * 10;
   //line2[1] = '0' + unit / 100  - (unit/1000)  * 10;
-  line2[2] = digit10(unit);
-  line2[3] = digit1(unit);
+  line2[0] = digit10(unit);
+  line2[1] = digit1(unit);
   unit = i2c_errors_count;
   //line2[5] = '0' + unit / 1000 - (unit/10000) * 10;
   //line2[6] = '0' + unit / 100  - (unit/1000)  * 10;
-  line2[7] = digit10(unit);
-  line2[8] = digit1(unit);
-  unit = annex650_overrun_count;
-  //line2[12] = '0' + unit / 1000 - (unit/10000) * 10;
-  //line2[13] = '0' + unit / 100  - (unit/1000)  * 10;
-  line2[14] = digit10(unit);
-  line2[15] = digit1(unit);
+  line2[10] = digit10(unit);
+  line2[11] = digit1(unit);
+  LCDprintChar(line2);
 }
 
 static char checkboxitemNames[][4] = {
@@ -1597,16 +1590,9 @@ void lcd_telemetry() {
 #ifndef SUPPRESS_TELEMETRY_PAGE_5
     case 5:
     case '5':
-    if (linenr++ % 2) {
-      fill_line1_fails();
       LCDsetLine(1);
-      LCDprintChar(line1);
-    } else {
-      fill_line2_fails_values();
-      LCDsetLine(2);
-      LCDprintChar(line2);
-    }
-    break;
+      output_fails();
+      break;
 #endif
 #ifndef SUPPRESS_TELEMETRY_PAGE_6
     case 6: // RX inputs
@@ -1765,8 +1751,13 @@ void lcd_telemetry() {
           LCDprintChar("U:"); print_uptime(millis() / 1000 );
           LCDprintChar("  A:"); print_uptime(armedTime / 1000000);
           break;
-        case 5:// Vmin
+        case 5:// errors, Vmin
            LCDsetLine(linenr++);
+           if (failsafeEvents | (i2c_errors_count>>1)) { // ignore i2c==1 because of bma020-init
+             LCDattributesReverse();
+             output_fails();
+             LCDattributesOff();
+           }
            LCDsetLine(linenr++);
            output_Vmin();
            break;
@@ -1930,14 +1921,16 @@ void lcd_telemetry() {
       fill_line2_cycleMinMax();
       LCDprintChar(line2);
       break;
-      case 2:// Fails.... labels
+      case 2:// Fails, i2c
       LCDsetLine(3);
-      fill_line1_fails();
-      LCDprintChar(line1);
+      output_fails();
       break;
-      case 3:// Fails.... values
+      case 3:// annex-overruns
       LCDsetLine(4);
-      fill_line2_fails_values();
+      //                   0123456789
+      strcpy_P(line2,PSTR("annex --"));
+      line2[6] = digit10(annex650_overrun_count);
+      line2[7] = digit1(annex650_overrun_count);
       LCDprintChar(line2);
       break;
 #ifdef DEBUG
