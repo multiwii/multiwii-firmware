@@ -787,28 +787,13 @@
 
     /* enable monitoring of the power consumption from battery (think of mAh)
        allows to set alarm value in GUI or via LCD
+      Full description and howto here http://www.multiwii.com/wiki/index.php?title=Powermeter
        Two options:
        1 - hard: - (uses hardware sensor, after configuration gives very good results)
-            read full description and howto here http://www.multiwii.com/wiki/index.php?title=Powermeter
-       2 - soft: - (good results +-5% for plush and mystery ESCs @ 2S and 3S, not good with SuperSimple ESC)
-            00. relies on your combo of battery type (Voltage, cpacity), ESC, ESC settings, motors, props and multiwii cycle time
-            01. set POWERMETER soft. Uses PLEVELSCALE = 50, PLEVELDIV = PLEVELDIVSOFT = 5000
-            0. output is a value that linearily scales to power (mAh)
-            1. get voltage reading right first
-            2. start with freshly charged battery
-            3. go fly your typical flight (routine and duration)
-            4. at end connect to GUI or LCD and read the power value; write it down (example 4711)
-            5. charge battery, write down amount of energy needed (example 722 mAh)
-            6. compute alarm value for desired power threshold (example 750 mAh : alarm = 4711 / 722 * 750)
-            7. set alarm value in GUI or LCD
-            8. enjoy your new battery alarm - possibly repeat steps 2 .. 7
-            9. if you want the numbers to represent your mAh value, you must change PLEVELDIV
-    */
+       2 - soft: - (good results +-5% for plush and mystery ESCs @ 2S and 3S, not good with SuperSimple ESC)    */
     //#define POWERMETER_SOFT
     //#define POWERMETER_HARD
-    /* the sum of all powermeters ranges from [0:60000 e4] theoretically.
-       the alarm level from eeprom is out of [0:255], so we multipy alarm level with PLEVELSCALE and with 1e4 before comparing
-       PLEVELSCALE is the step size you can use to set alarm */
+    /* PLEVELSCALE is the step size you can use to set alarm */
     #define PLEVELSCALE 50 // if you change this value for other granularity, you must search for comments in code to change accordingly
     /* larger PLEVELDIV will get you smaller value for power (mAh equivalent) */
     #define PLEVELDIV 5000 // default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
