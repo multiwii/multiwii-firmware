@@ -55,9 +55,9 @@
   #if defined(SERVO)
     #if defined(AIRPLANE)|| defined(HELICOPTER)
       // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
-      volatile uint8_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,8000}; 
+      volatile uint16_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,320}; 
     #else
-      volatile uint16_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,320};
+      volatile uint16_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,8000};
     #endif
   #endif
   #if (NUMBER_MOTOR > 4)
