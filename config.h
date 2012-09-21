@@ -788,7 +788,9 @@
     /* enable monitoring of the power consumption from battery (think of mAh)
        allows to set alarm value in GUI or via LCD
        Two options:
-       1 - soft: - (good results +-5% for plush and mystery ESCs @ 2S and 3S, not good with SuperSimple ESC
+       1 - hard: - (uses hardware sensor, after configuration gives very good results)
+            read full description and howto here http://www.multiwii.com/wiki/index.php?title=Powermeter
+       2 - soft: - (good results +-5% for plush and mystery ESCs @ 2S and 3S, not good with SuperSimple ESC)
             00. relies on your combo of battery type (Voltage, cpacity), ESC, ESC settings, motors, props and multiwii cycle time
             01. set POWERMETER soft. Uses PLEVELSCALE = 50, PLEVELDIV = PLEVELDIVSOFT = 5000
             0. output is a value that linearily scales to power (mAh)
@@ -801,17 +803,7 @@
             7. set alarm value in GUI or LCD
             8. enjoy your new battery alarm - possibly repeat steps 2 .. 7
             9. if you want the numbers to represent your mAh value, you must change PLEVELDIV
-       2 - hard: - (uses hardware sensor, after configuration gives reasonable results
-            00. uses analog pin 2 to read voltage output from sensor.
-            01. set POWERMETER hard. Uses PLEVELSCALE = 50
-            02. install low path filter for 25 Hz to sensor input
-            03. check your average cycle time. If not close to 3ms, then you must change PLEVELDIV accordingly
-            1. compute PLEVELDIV for your sensor (see below for insturctions)
-            2. set PLEVELDIVSOFT to 5000 ( to use LOG_VALUES for individual motor comparison)
-            3. attach, set PSENSORNULL and  PINT2mA
-            4. configure, compile, upload, set alarm value in GUI or LCD
-            3. enjoy true readings of mAh consumed
-       set POWERMETER to "soft" (1) or "hard" (2) depending on sensor you want to utilize */
+    */
     //#define POWERMETER_SOFT
     //#define POWERMETER_HARD
     /* the sum of all powermeters ranges from [0:60000 e4] theoretically.
@@ -821,13 +813,7 @@
     /* larger PLEVELDIV will get you smaller value for power (mAh equivalent) */
     #define PLEVELDIV 5000 // default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
     #define PLEVELDIVSOFT PLEVELDIV // for soft always equal to PLEVELDIV; for hard set to 5000
-    //#define PLEVELDIV 1361L // to convert the sum into mAh divide by this value
-    /* amploc 25A sensor has 37mV/A
-       arduino analog resolution is 4.9mV per unit; units from [0..1023]
-       sampling rate is cycle_time * PSENSORFREQ , so 4000*6=24000 micro seconds
-       PLEVELDIV = 37 / 4.9  * 10e6 / 24000  * 3600 / 1000  = 1133
-       set to analogRead() value for zero current */
-    #define PSENSORNULL 510 // for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt
+    #define PSENSORNULL 510 // set to analogRead() value for zero current; for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt; 
     #define PINT2mA 13 // for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
 
   /********************************************************************/
