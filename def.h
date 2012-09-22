@@ -1199,7 +1199,11 @@
   #define PRI_SERVO_TO     6
   
 #elif defined(AIRPLANE)
-  #define NUMBER_MOTOR     0
+    #if defined (USE_THROTTLESERVO)
+      #define NUMBER_MOTOR     0
+    #else
+      #define NUMBER_MOTOR     1
+    #endif
     #if defined(FLAPS) 
       #define PRI_SERVO_FROM   3 // use servo from 3 to 8    
       #undef CAMTRIG             // Disable Camtrig on A2

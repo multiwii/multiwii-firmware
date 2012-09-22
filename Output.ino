@@ -1073,6 +1073,9 @@ void mixTable() {
 /*************************************************************************************************************************/ 
 /*************************************************************************************************************************/    
     // ServoRates
+    #if !defined(USE_THROTTLESERVO)
+      motor[0]= rcData[THROTTLE];
+    #endif
     for(i=3;i<8;i++){
       servo[i]  = map(servo[i], SERVO_MIN, SERVO_MAX,servoLimit[i][0],servoLimit[i][1]);
       servo[i]  = constrain( servo[i], SERVO_MIN, SERVO_MAX);

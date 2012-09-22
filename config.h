@@ -174,7 +174,7 @@
       /* individual sensor orientation */
       //#define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  Y; accADC[PITCH]  = -X; accADC[YAW]  = Z;}
       //#define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = -Y; gyroADC[PITCH] =  X; gyroADC[YAW] = Z;}
-      //#define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = X; magADC[PITCH]  = Y; magADC[YAW]  = Z;}
+      //#define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = Z;}
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/
@@ -240,6 +240,7 @@
     #define WING_RIGHT_MAX 2000 // limit servo travel range must be inside [1020;2000]
 
   /***********************          Airplane                       ***********************/
+    //#define USE_THROTTLESERVO // For use of standard 50Hz servo on throttle.
     #define SERVO_RATES      {100, 100, 100, 100, 100, 100, 100, 100} // Rates in 0-100%
     #define SERVO_DIRECTION  { -1,   1,   1,   -1,  1,   1,   1,   1 } // Invert servos by setting -1
 
