@@ -129,7 +129,7 @@
       //#define DESQUARED6DOFV2GO  // DEsquared V2 with ITG3200 only
       //#define DESQUARED6DOFV4    // DEsquared V4 with MPU6050
       //#define LADYBIRD
-      //#define MEGAWAP_V2_STD
+      //#define MEGAWAP_V2_STD     // available here: http://www.multircshop.com                    <- confirmed by Alex
       //#define MEGAWAP_V2_ADV
       //#define HK_MultiWii_SE_V2  // Hobbyking board with MPU6050 + HMC5883L + BMP085 
 
