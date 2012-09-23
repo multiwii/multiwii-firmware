@@ -109,7 +109,7 @@ void checkFirstTime() {
     }
   #endif
   #if defined (FAILSAFE)
-    conf.failsave_throttle = FAILSAVE_THROTTLE;
+    conf.failsafe_throttle = FAILSAFE_THROTTLE;
   #endif
   #ifdef VBAT
     conf.vbatscale = VBATSCALE;

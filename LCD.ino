@@ -1027,7 +1027,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text113, &conf.pleveldiv, &__SE,
 #endif
 #if defined (FAILSAFE)
-  &lcd_param_text101, &conf.failsave_throttle, &__ST,
+  &lcd_param_text101, &conf.failsafe_throttle, &__ST,
 #endif
 #ifdef VBAT
   &lcd_param_text35, &vbat, &__VB,

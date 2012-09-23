@@ -55,11 +55,11 @@
     #endif  
      
     #if defined(FAILSAFE)
-      if ( failsafeCnt > (5*FAILSAVE_DELAY) && f.ARMED) {
+      if ( failsafeCnt > (5*FAILSAFE_DELAY) && f.ARMED) {
         warn_failsafe = 1;                                                                   //set failsafe warning level to 1 while landing
-        if (failsafeCnt > 5*(FAILSAVE_DELAY+FAILSAVE_OFF_DELAY)) warn_failsafe = 2;          //start "find me" signal after landing   
+        if (failsafeCnt > 5*(FAILSAFE_DELAY+FAILSAFE_OFF_DELAY)) warn_failsafe = 2;          //start "find me" signal after landing   
       }
-      if ( failsafeCnt > (5*FAILSAVE_DELAY) && !f.ARMED) warn_failsafe = 2;                  // tx turned off while motors are off: start "find me" signal
+      if ( failsafeCnt > (5*FAILSAFE_DELAY) && !f.ARMED) warn_failsafe = 2;                  // tx turned off while motors are off: start "find me" signal
       if ( failsafeCnt == 0) warn_failsafe = 0;                                              // turn off alarm if TX is okay
     #endif
     

@@ -28,6 +28,7 @@
   static uint8_t PCInt_RX_Pins[PCINT_PIN_COUNT] = {PCINT_RX_BITS}; // if this slowes the PCINT readings we can switch to a define for each pcint bit
 #endif
 
+#define FAILSAFE_DETECT_TRESHOLD  985
 
 /**************************************************************************************/
 /***************                   RX Pin Setup                    ********************/
@@ -110,7 +111,7 @@ void configureReceiver() {
           rcValue[rc_value_pos] = dTime;                             \
           if((rc_value_pos==THROTTLEPIN || rc_value_pos==YAWPIN ||   \
               rc_value_pos==PITCHPIN || rc_value_pos==ROLLPIN)       \
-              && dTime>985) GoodPulses++;                            \
+              && dTime>FAILSAFE_DETECT_TRESHOLD) GoodPulses++;       \
         }                                                            \
       } else edgeTime[pin_pos] = cTime;                              \
     }
@@ -190,8 +191,8 @@ void configureReceiver() {
       static uint16_t edgeTime;
     
       pin = PINB;
-      sei();
       cTime = micros();
+      sei();
       #if defined(RCAUXPIN8)
        if (!(pin & 1<<0)) {     //indicates if the bit 0 of the arduino port [B0-B7] is not at a high state (so that we match here only descending PPM pulse)
       #endif
@@ -216,7 +217,7 @@ void configureReceiver() {
         if(900<diff && diff<2200){
           rcValue[3] = diff;
           #if defined(FAILSAFE)
-           if(diff>985) {        // if Throttle value is higher than 985us
+           if(diff>FAILSAFE_DETECT_TRESHOLD) {        // if Throttle value is higher than FAILSAFE_DETECT_TRESHOLD
             if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // If pulse present on THROTTLE pin (independent from ardu version), clear FailSafe counter  - added by MIS
            }
           #endif 
@@ -272,7 +273,7 @@ void configureReceiver() {
         rcValue[chan] = diff;
         #if defined(FAILSAFE)
           if(chan==0) GoodPulses = 0;                  // clear counter at chan 0;
-          if(chan<4 && diff>985)  GoodPulses++;        // if signal is valid - incrament counter
+          if(chan<4 && diff>FAILSAFE_DETECT_TRESHOLD)  GoodPulses++;        // if signal is valid - incrament counter
           if(GoodPulses==4) {                          // If all main four chanells have good pulses, clear FailSafe counter
             GoodPulses = 0;
             if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;
@@ -391,7 +392,7 @@ uint16_t readRawRC(uint8_t chan) {
 /***************          compute and Filter the RX data           ********************/
 /**************************************************************************************/
 void computeRC() {
-  static int16_t rcData4Values[RC_CHANS][4], rcDataMean[RC_CHANS];
+  static uint16_t rcData4Values[RC_CHANS][4], rcDataMean[RC_CHANS];
   static uint8_t rc4ValuesIndex = 0;
   uint8_t chan,a;
   #if !(defined(RCSERIAL) || defined(OPENLRSv2MULTI)) // dont know if this is right here
@@ -400,7 +401,14 @@ void computeRC() {
     #endif
     rc4ValuesIndex++;
     for (chan = 0; chan < RC_CHANS; chan++) {
-      rcData4Values[chan][rc4ValuesIndex%4] = readRawRC(chan);
+      #if defined(FAILSAFE)
+        uint16_t rcval = readRawRC(chan);
+        if(rcval>FAILSAFE_DETECT_TRESHOLD || chan > 3) {        // update controls channel only if pulse is above FAILSAFE_DETECT_TRESHOLD
+          rcData4Values[chan][rc4ValuesIndex%4] = rcval;
+        }
+      #else
+        rcData4Values[chan][rc4ValuesIndex%4] = readRawRC(chan);
+      #endif
       rcDataMean[chan] = 0;
       for (a=0;a<4;a++) rcDataMean[chan] += rcData4Values[chan][a];
       rcDataMean[chan]= (rcDataMean[chan]+2)/4;
