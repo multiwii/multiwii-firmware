@@ -332,6 +332,17 @@
       //#define SPEKTRUM 1024
       //#define SPEKTRUM 2048
       //#define SPEK_SERIAL_PORT 1    // Forced to 0 on Pro Mini and single serial boards; Set to your choice of 0, 1, or 2 on any Mega based board (defaults to 1 on Mega).
+      //**************************
+      // Defines that allow a "Bind" of a Spektrum or Compatible Remote Receiver (aka Satellite) via Configuration GUI.
+      //   Bind mode will be same as declared above, if your TX is capable.
+      //   Ground, Power, and Signal must come from three adjacent pins. 
+      //   By default, these are Ground=4, Power=5, Signal=6.  These pins are in a row on most MultiWii shield boards. Pins can be overriden below.  
+      //   Normally use 3.3V regulator is needed on the power pin!!  If your satellite hangs during bind (blinks, but won't complete bind with a solid light), go direct 5V on all pins. 
+      //**************************
+      //   For Pro Mini, the connector for the Satellite that resides on the FTDI can be unplugged and moved to these three adjacent pins. 
+      //#define SPEK_BIND_GROUND 4
+      //#define SPEK_BIND_POWER  5
+      //#define SPEK_BIND_DATA   6
 
     /*******************************    SBUS RECIVER    ************************************/
       /* The following line apply only for Futaba S-Bus Receiver on MEGA boards at RX1 only (Serial 1).

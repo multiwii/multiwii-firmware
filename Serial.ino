@@ -60,6 +60,8 @@ static uint8_t inBuf[INBUF_SIZE][UART_NUMBER];
 #define MSP_RESET_CONF           208   //in message          no param
 #define MSP_WP_SET               209   //in message          sets a given WP (WP#,lat, lon, alt, flags)
 
+#define MSP_SPEK_BIND            240   //in message          no param
+
 #define MSP_EEPROM_WRITE         250   //in message          no param
 
 #define MSP_DEBUGMSG             253   //out message         debug string buffer
@@ -417,6 +419,12 @@ void evaluateCommand() {
      if(!f.ARMED) f.CALIBRATE_MAG = 1;
      headSerialReply(0);
      break;
+ #if defined(SPEKTRUM)
+   case MSP_SPEK_BIND:
+     spekBind();  
+     headSerialReply(0);
+     break;
+#endif
    case MSP_EEPROM_WRITE:
      writeParams(0);
      headSerialReply(0);

@@ -779,3 +779,46 @@ void checkPots() {
   pot_I = pot_I / 25; //+-20
 }
 #endif
+
+#if defined(SPEKTRUM)  // Bind Support
+void spekBind() {
+  pinMode(SPEK_BIND_DATA, INPUT);     // Data line from sat
+  digitalWrite(SPEK_BIND_DATA,LOW);   // Turn off internal Pull Up resistor
+
+  pinMode(SPEK_BIND_GROUND, INPUT);
+  digitalWrite(SPEK_BIND_GROUND,LOW);
+  pinMode(SPEK_BIND_GROUND, OUTPUT);
+  digitalWrite(SPEK_BIND_GROUND,LOW);
+
+  pinMode(SPEK_BIND_POWER, INPUT);
+  digitalWrite(SPEK_BIND_POWER,LOW);
+  pinMode(SPEK_BIND_POWER,OUTPUT);
+  
+  while(1) {  //Do not return.  User presses reset button to return to normal. 
+    blinkLED(4,300,1);
+    digitalWrite(SPEK_BIND_POWER,LOW); // Power off sat
+    pinMode(SPEK_BIND_DATA, OUTPUT); 
+    digitalWrite(SPEK_BIND_DATA,LOW); 
+    delay(1000); 
+    blinkLED(4,300,1);
+    
+    digitalWrite(SPEK_BIND_POWER,HIGH); // Power on sat
+    delay(10);
+    digitalWrite(SPEK_BIND_DATA,HIGH); 
+    delay(60);                 // Keep data pin steady for 20 to 120ms after power up
+  
+    noInterrupts();    
+    for (byte i = 0; i < SPEK_BIND_PULSES; i++) { 
+      digitalWrite(SPEK_BIND_DATA,LOW); 
+        delayMicroseconds(118);
+      digitalWrite(SPEK_BIND_DATA,HIGH);
+        delayMicroseconds(122);
+    }
+    interrupts();
+    delay(60000);         //Allow one full minute to bind, then try again.
+  }
+}
+#endif
+
+
+
