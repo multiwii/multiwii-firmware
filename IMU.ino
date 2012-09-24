@@ -162,6 +162,18 @@ int16_t _atan2(float y, float x){
   return z;
 }
 
+float InvSqrt (float x){ 
+  union{  
+    int32_t i;  
+    float   f; 
+  } conv; 
+  conv.f = x; 
+  conv.i = 0x5f3759df - (conv.i >> 1); 
+  return 0.5f * conv.f * (3.0f - x * conv.f * conv.f);
+}
+
+int32_t isq(int32_t x){return x * x;}
+
 // Rotate Estimated vector(s) with small angle approximation, according to the gyro data
 void rotateV(struct fp_vector *v,float* delta) {
   fp_vector v_tmp = *v;
@@ -262,6 +274,15 @@ void getEstimatedAttitude(){
 
 #define ACC_Z_DEADBAND (acc_1G/50)
 
+#define applyDeadband(value, deadband)  \
+  if(abs(value) < deadband) {           \
+    value = 0;                          \
+  } else if(value > 0){                 \
+    value -= deadband;                  \
+  } else if(value < 0){                 \
+    value += deadband;                  \
+  }
+
 void getEstimatedAltitude(){
   static uint32_t deadLine = INIT_DELAY;
 
@@ -291,7 +312,7 @@ void getEstimatedAltitude(){
 
   //P
   int16_t error = constrain(AltHold - EstAlt, -300, 300);
-  error = applyDeadband16(error, 10); //remove small P parametr to reduce noise near zero position
+  applyDeadband(error, 10); //remove small P parametr to reduce noise near zero position
   BaroPID = constrain((conf.P8[PIDALT] * error / 100), -150, +150);
   
   //I
@@ -305,20 +326,21 @@ void getEstimatedAltitude(){
   float invG = InvSqrt(isq(EstG.V.X) + isq(EstG.V.Y) + isq(EstG.V.Z));
   int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG - acc_1G; 
   //int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG - 1/invG; 
-  accZ = applyDeadband16(accZ, ACC_Z_DEADBAND);
+  applyDeadband(accZ, ACC_Z_DEADBAND);
   debug[0] = accZ; 
   
   static float vel = 0.0f;
-  static float accVelScale = 9.80665f / acc_1G / 10000.0f;
+  static float accVelScale = 9.80665f / 10000.0f / acc_1G ;
   
   // Integrator - velocity, cm/sec
   vel+= accZ * accVelScale * dTime;
   
-  static int32_t lastBaroAlt = EstAlt;
-  float baroVel = (EstAlt - lastBaroAlt) / (dTime/1000000.0f);
-  baroVel = constrain(baroVel, -300, 300); // constrain baro velocity +/- 300cm/s
-  baroVel = applyDeadbandFloat(baroVel, 10); // to reduce noise near zero  
+  static int32_t lastBaroAlt;
+  float baroVel = (EstAlt - lastBaroAlt) * 1000000.0f / dTime;
   lastBaroAlt = EstAlt;
+
+  baroVel = constrain(baroVel, -300, 300); // constrain baro velocity +/- 300cm/s
+  applyDeadband(baroVel, 10); // to reduce noise near zero  
   debug[1] = baroVel;
   
   // apply Complimentary Filter to keep the calculated velocity based on baro velocity (i.e. near real velocity). 
@@ -328,42 +350,9 @@ void getEstimatedAltitude(){
   debug[2] = vel;
   
   //D
-  BaroPID -= constrain(conf.D8[PIDALT] * applyDeadbandFloat(vel, 5) / 20, -150, 150);
+  applyDeadband(vel, 5);
+  BaroPID -= constrain(conf.D8[PIDALT] * vel / 20, -150, 150);
   debug[3] = BaroPID;
   
   #endif
 }
-
-int16_t applyDeadband16(int16_t value, int16_t deadband) {
-  if(abs(value) < deadband) {
-    value = 0;
-  } else if(value > 0){
-    value -= deadband;
-  } else if(value < 0){
-    value += deadband;
-  }
-  return value;
-}
-
-float applyDeadbandFloat(float value, int16_t deadband) {
-  if(abs(value) < deadband) {
-    value = 0;
-  } else if(value > 0){
-    value -= deadband;
-  } else if(value < 0){
-    value += deadband;
-  }
-  return value;
-}
-
-float InvSqrt (float x){ 
-  union{  
-    int32_t i;  
-    float   f; 
-  } conv; 
-  conv.f = x; 
-  conv.i = 0x5f3759df - (conv.i >> 1); 
-  return 0.5f * conv.f * (3.0f - x * conv.f * conv.f);
-}
-
-int32_t isq(int32_t x){return x * x;}
