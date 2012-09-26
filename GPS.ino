@@ -232,6 +232,7 @@ static int16_t nav_takeoff_bearing;
 void GPS_NewData() {
   uint8_t axis;
   #if defined(I2C_GPS)
+    static uint8_t GPS_pids_initialized;
     static uint8_t _i2c_gps_status;
   
     //Do not use i2c_writereg, since writing a register does not work if an i2c_stop command is issued at the end
@@ -251,6 +252,11 @@ void GPS_NewData() {
        }
        if (_i2c_gps_status & I2C_GPS_STATUS_NEW_DATA) {                               //Check about new data
           if (GPS_update) { GPS_update = 0;} else { GPS_update = 1;}                  //Fancy flash on GUI :D
+          if (!GPS_pids_initialized) {
+            GPS_set_pids();
+            GPS_pids_initialized = 1;
+          } 
+          
           //Read GPS data for distance, heading and gps position 
 
           i2c_rep_start(I2C_GPS_ADDRESS<<1);
@@ -688,6 +694,7 @@ static void GPS_calc_poshold() {
   
   for (axis=0;axis<2;axis++) {
     target_speed = get_P(error[axis], &posholdPID_PARAM); // calculate desired speed from lon error
+    target_speed = constrain(target_speed,-100,100);
     rate_error[axis] = target_speed - actual_speed[axis]; // calc the speed error
 
     nav[axis]      =
