@@ -106,12 +106,12 @@ void configureReceiver() {
     if (mask & PCInt_RX_Pins[pin_pos]) {                             \
       if (!(pin & PCInt_RX_Pins[pin_pos])) {                         \
         dTime = cTime-edgeTime[pin_pos];                             \
-        if(rc_value_pos==THROTTLEPIN) GoodPulses = 0;                \
         if (900<dTime && dTime<2200) {                               \
           rcValue[rc_value_pos] = dTime;                             \
           if((rc_value_pos==THROTTLEPIN || rc_value_pos==YAWPIN ||   \
               rc_value_pos==PITCHPIN || rc_value_pos==ROLLPIN)       \
-              && dTime>FAILSAFE_DETECT_TRESHOLD) GoodPulses++;       \
+              && dTime>FAILSAFE_DETECT_TRESHOLD)                     \
+                GoodPulses |= (1<<rc_value_pos);                     \
         }                                                            \
       } else edgeTime[pin_pos] = cTime;                              \
     }
@@ -172,9 +172,10 @@ void configureReceiver() {
     #endif
     
     #if defined(FAILSAFE) && !defined(PROMICRO)
-      if (GoodPulses==4) {                        // If all main four chanells have good pulses, clear FailSafe counter  - added by MIS
+      if (GoodPulses==(1<<THROTTLEPIN)+(1<<YAWPIN)+(1<<ROLLPIN)+(1<<PITCHPIN)) {  // If all main four chanells have good pulses, clear FailSafe counter
         GoodPulses = 0;
-        if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; }
+        if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0; 
+      }
     #endif
   }
   /*********************      atmega328P's Aux2 Pins      *************************/
@@ -272,9 +273,8 @@ void configureReceiver() {
       if(900<diff && diff<2200 && chan<RC_CHANS ) {   //Only if the signal is between these values it is valid, otherwise the failsafe counter should move up
         rcValue[chan] = diff;
         #if defined(FAILSAFE)
-          if(chan==0) GoodPulses = 0;                  // clear counter at chan 0;
-          if(chan<4 && diff>FAILSAFE_DETECT_TRESHOLD)  GoodPulses++;        // if signal is valid - incrament counter
-          if(GoodPulses==4) {                          // If all main four chanells have good pulses, clear FailSafe counter
+          if(chan<4 && diff>FAILSAFE_DETECT_TRESHOLD) GoodPulses |= (1<<chan); // if signal is valid - mark channel as OK
+          if(GoodPulses==0x0F) {                                               // If first four chanells have good pulses, clear FailSafe counter
             GoodPulses = 0;
             if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;
           }
