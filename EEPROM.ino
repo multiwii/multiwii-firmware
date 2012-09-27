@@ -62,7 +62,7 @@ void writeParams(uint8_t b) {
   conf.checksum = 0x55;                                      // init checksum for non 0 value
   for(i=0;i<sizeof(conf)-1;i++) conf.checksum += *cb++;      // calculate checksum (without checksum byte)
   eeprom_write_block((const void*)&conf, (void*)0, sizeof(conf));
-//  readEEPROM();                                            // not needed and removed to avoid endless loop with bad checksum
+  readEEPROM();
   if (b == 1){ 
     blinkLED(15,20,1);
     #if defined(BUZZER)
