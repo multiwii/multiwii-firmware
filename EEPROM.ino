@@ -1,11 +1,18 @@
 #include <avr/eeprom.h>
 
-#define EEPROM_CONF_VERSION 164
+#define EEPROM_CONF_VERSION 165
 
 void readEEPROM() {
-  uint8_t i;
-
+  uint8_t i,sum;
+  uint8_t *cb = (uint8_t*)&conf;      // address of conf structure in RAM
   eeprom_read_block((void*)&conf, (void*)0, sizeof(conf));
+  sum=0x55;                           // checksum init
+  for(i=0;i<sizeof(conf)-1;i++) sum += *cb++;  // calculate checksum (without checksum byte)
+  if(sum != conf.checksum) {
+    blinkLED(6,100,3);
+    conf.checkNewConf = 0;            // mark config data as invalid
+    checkFirstTime();                 // force load defaults 
+  }
   for(i=0;i<6;i++) {
     lookupPitchRollRC[i] = (2500+conf.rcExpo8*(i*i-25))*i*(int32_t)conf.rcRate8/2500;
   }
@@ -49,9 +56,13 @@ void readEEPROM() {
 }
 
 void writeParams(uint8_t b) {
-  conf.checkNewConf = EEPROM_CONF_VERSION; // make sure we write the current version into eeprom
+  uint8_t i;
+  uint8_t *cb = (uint8_t*)&conf;                             // address of conf structure in RAM
+  conf.checkNewConf = EEPROM_CONF_VERSION;                   // make sure we write the current version into eeprom
+  conf.checksum = 0x55;                                      // init checksum for non 0 value
+  for(i=0;i<sizeof(conf)-1;i++) conf.checksum += *cb++;      // calculate checksum (without checksum byte)
   eeprom_write_block((const void*)&conf, (void*)0, sizeof(conf));
-  readEEPROM();
+//  readEEPROM();                                            // not needed and removed to avoid endless loop with bad checksum
   if (b == 1){ 
     blinkLED(15,20,1);
     #if defined(BUZZER)

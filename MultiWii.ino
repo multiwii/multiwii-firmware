@@ -330,6 +330,7 @@ static struct {
   #ifdef CYCLETIME_FIXATED
     uint16_t cycletime_fixated;
   #endif
+  uint8_t  checksum;      // MUST BE ON LAST POSITION OF CONF STRUCTURE ! 
 } conf;
 
 
