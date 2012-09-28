@@ -159,6 +159,7 @@ static int32_t  EstAlt;             // in cm
 static int16_t  BaroPID = 0;
 static int32_t  AltHold;
 static int16_t  errorAltitudeI = 0;
+static uint8_t  currentSet = 0;
 #if defined(BUZZER)
   static uint8_t  toggleBeep = 0;
 #endif
@@ -591,8 +592,13 @@ void setup() {
   STABLEPIN_PINMODE;
   POWERPIN_OFF;
   initOutput();
-  readEEPROM();
-  checkFirstTime();
+  for(currentSet=0; currentSet<3; currentSet++) {  // check all settings integrity
+    readEEPROM();
+    checkFirstTime();
+  }
+  getSettingNo();
+  readEEPROM();                                    // load setting data
+  blinkLED(2,40,currentSet+1);          
   configureReceiver();
   #if defined(OPENLRSv2MULTI)
     initOpenLRS();
@@ -710,12 +716,29 @@ void loop () {
       errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0; errorGyroI[YAW] = 0;
       errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
       rcDelayCommand++;
-      if (rcData[YAW] < MINCHECK && rcData[PITCH] < MINCHECK && !f.ARMED) {
+/*      if (rcData[YAW] < MINCHECK && rcData[PITCH] < MINCHECK && !f.ARMED) {
         if (rcDelayCommand == 20) {
           calibratingG=400;
           #if GPS 
             GPS_reset_home_position();
           #endif
+        } */
+      if (rcData[YAW] < MINCHECK && !f.ARMED) {                                             // THTOTTLE min, YAW left
+        if(rcData[PITCH] < MINCHECK && rcDelayCommand == 20) {                              // PITCH down -> GYRO cal
+          calibratingG=400;
+          #if GPS 
+            GPS_reset_home_position();
+          #endif
+        }
+        i = 0;
+        if(rcData[ROLL]  < MINCHECK && rcData[PITCH] > 1300 && rcData[PITCH] < 1700) i=1;    // ROLL left  -> SET 1
+        if(rcData[PITCH] > MAXCHECK && rcData[ROLL]  > 1300 && rcData[ROLL]  < 1700) i=2;    // PITCH up   -> SET 2
+        if(rcData[ROLL]  > MAXCHECK && rcData[PITCH] > 1300 && rcData[PITCH] < 1700) i=3;    // ROLL right -> SET 3
+        if(i && rcDelayCommand == 20) {
+          currentSet = i-1;
+          saveSettingNo();
+          readEEPROM();
+          blinkLED(2,40,i);
         }
       } else if (rcData[YAW] > MAXCHECK && rcData[PITCH] > MAXCHECK && !f.ARMED) {
         if (rcDelayCommand == 20) {

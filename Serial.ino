@@ -59,6 +59,7 @@ static uint8_t inBuf[INBUF_SIZE][UART_NUMBER];
 #define MSP_SET_MISC             207   //in message          powermeter trig + 8 free for future use
 #define MSP_RESET_CONF           208   //in message          no param
 #define MSP_WP_SET               209   //in message          sets a given WP (WP#,lat, lon, alt, flags)
+#define MSP_SELECT_SETTING       210   //in message          Select Setting Number (0-2)
 
 #define MSP_SPEK_BIND            240   //in message          no param
 
@@ -237,6 +238,14 @@ void evaluateCommand() {
      #endif
      headSerialReply(0);
      break;
+   case MSP_SELECT_SETTING:
+     currentSet = read8();
+     if(currentSet<3 && !f.ARMED) {
+       saveSettingNo();
+       readEEPROM();
+     } else getSettingNo();
+     headSerialReply(0);
+     break;
    case MSP_IDENT:
      headSerialReply(7);
      serialize8(VERSION);   // multiwii version
@@ -282,6 +291,7 @@ void evaluateCommand() {
                    rcOptions[BOXLLIGHTS]<<BOXLLIGHTS |
                  #endif
                  f.ARMED<<BOXARM);
+//       serialize8(currentSet);   // current setting
      break;
    case MSP_RAW_IMU:
      headSerialReply(18);
@@ -338,7 +348,8 @@ void evaluateCommand() {
    case MSP_BAT:
      headSerialReply(3);
      serialize8(vbat);
-     serialize16(intPowerMeterSum);
+//     serialize16(intPowerMeterSum);
+     serialize16(currentSet+1);   // current setting - until GUI adapt
      break;
    case MSP_RC_TUNING:
      headSerialReply(7);

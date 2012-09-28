@@ -170,7 +170,9 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
         switch_landing_lights(1);
       #endif
       LEDPIN_TOGGLE; // switch LEDPIN state
+      BUZZERPIN_ON;
       delay(ontime);
+      BUZZERPIN_OFF;
       #if defined(LED_FLASHER)
         switch_led_flasher(0);
       #endif

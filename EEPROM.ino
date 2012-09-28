@@ -2,10 +2,24 @@
 
 #define EEPROM_CONF_VERSION 165
 
+
+#define CONF_OFFSET  0x20    // first 32 bytes of eeprom is reserved for future global configuration
+#define SET_NO_ADDR  1       // Last used setting eeprom address 
+
+void saveSettingNo() {
+  eeprom_write_byte((uint8_t*)SET_NO_ADDR, currentSet);    // save selected settings number
+}
+ 
+void getSettingNo() {
+  currentSet = eeprom_read_byte((uint8_t*)SET_NO_ADDR);    // read last used setting number
+  if(currentSet>2) currentSet=0;
+}  
+
 void readEEPROM() {
   uint8_t i,sum;
   uint8_t *cb = (uint8_t*)&conf;      // address of conf structure in RAM
-  eeprom_read_block((void*)&conf, (void*)0, sizeof(conf));
+  if(currentSet>2) currentSet=0;
+  eeprom_read_block((void*)&conf, (void*)(currentSet*sizeof(conf) + CONF_OFFSET), sizeof(conf));
   sum=0x55;                           // checksum init
   for(i=0;i<sizeof(conf)-1;i++) sum += *cb++;  // calculate checksum (without checksum byte)
   if(sum != conf.checksum) {
@@ -58,10 +72,11 @@ void readEEPROM() {
 void writeParams(uint8_t b) {
   uint8_t i;
   uint8_t *cb = (uint8_t*)&conf;                             // address of conf structure in RAM
+  if(currentSet>2) currentSet=0;
   conf.checkNewConf = EEPROM_CONF_VERSION;                   // make sure we write the current version into eeprom
   conf.checksum = 0x55;                                      // init checksum for non 0 value
   for(i=0;i<sizeof(conf)-1;i++) conf.checksum += *cb++;      // calculate checksum (without checksum byte)
-  eeprom_write_block((const void*)&conf, (void*)0, sizeof(conf));
+  eeprom_write_block((const void*)&conf, (void*)(currentSet*sizeof(conf) + CONF_OFFSET), sizeof(conf));
   readEEPROM();
   if (b == 1){ 
     blinkLED(15,20,1);
