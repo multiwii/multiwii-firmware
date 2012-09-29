@@ -1,31 +1,27 @@
 #include <avr/eeprom.h>
 
-#define EEPROM_CONF_VERSION 165
 
+uint8_t calculate_sum(uint8_t *cb , uint8_t siz) {
+  uint8_t sum=0x55;  // checksum init
+  while(--siz) sum += *cb++;  // calculate checksum (without checksum byte)
+  return sum;
+}
 
-#define CONF_OFFSET  0x20    // first 32 bytes of eeprom is reserved for future global configuration
-#define SET_NO_ADDR  1       // Last used setting eeprom address 
-
-void saveSettingNo() {
-  eeprom_write_byte((uint8_t*)SET_NO_ADDR, currentSet);    // save selected settings number
+void readGlobalSet() {
+  eeprom_read_block((void*)&global_conf, (void*)0, sizeof(global_conf));
+  if(calculate_sum((uint8_t*)&global_conf, sizeof(global_conf)) != global_conf.checksum) {
+    global_conf.currentSet = 0;
+    global_conf.accZero[ROLL] = 5000;    // for config error signalization
+  }
 }
  
-void getSettingNo() {
-  currentSet = eeprom_read_byte((uint8_t*)SET_NO_ADDR);    // read last used setting number
-  if(currentSet>2) currentSet=0;
-}  
-
 void readEEPROM() {
-  uint8_t i,sum;
-  uint8_t *cb = (uint8_t*)&conf;      // address of conf structure in RAM
-  if(currentSet>2) currentSet=0;
-  eeprom_read_block((void*)&conf, (void*)(currentSet*sizeof(conf) + CONF_OFFSET), sizeof(conf));
-  sum=0x55;                           // checksum init
-  for(i=0;i<sizeof(conf)-1;i++) sum += *cb++;  // calculate checksum (without checksum byte)
-  if(sum != conf.checksum) {
+  uint8_t i;
+  if(global_conf.currentSet>2) global_conf.currentSet=0;
+  eeprom_read_block((void*)&conf, (void*)(global_conf.currentSet * sizeof(conf) + sizeof(global_conf)), sizeof(conf));
+  if(calculate_sum((uint8_t*)&conf, sizeof(conf)) != conf.checksum) {
     blinkLED(6,100,3);
-    conf.checkNewConf = 0;            // mark config data as invalid
-    checkFirstTime();                 // force load defaults 
+    LoadDefaults();                 // force load defaults 
   }
   for(i=0;i<6;i++) {
     lookupPitchRollRC[i] = (2500+conf.rcExpo8*(i*i-25))*i*(int32_t)conf.rcRate8/2500;
@@ -69,26 +65,21 @@ void readEEPROM() {
   #endif
 }
 
+void writeGlobalSet(uint8_t b) {
+  global_conf.checksum = calculate_sum((uint8_t*)&global_conf, sizeof(global_conf));
+  eeprom_write_block((const void*)&global_conf, (void*)0, sizeof(global_conf));
+  if (b == 1) blinkLED(15,20,1);
+}
+ 
 void writeParams(uint8_t b) {
-  uint8_t i;
-  uint8_t *cb = (uint8_t*)&conf;                             // address of conf structure in RAM
-  if(currentSet>2) currentSet=0;
-  conf.checkNewConf = EEPROM_CONF_VERSION;                   // make sure we write the current version into eeprom
-  conf.checksum = 0x55;                                      // init checksum for non 0 value
-  for(i=0;i<sizeof(conf)-1;i++) conf.checksum += *cb++;      // calculate checksum (without checksum byte)
-  eeprom_write_block((const void*)&conf, (void*)(currentSet*sizeof(conf) + CONF_OFFSET), sizeof(conf));
+  if(global_conf.currentSet>2) global_conf.currentSet=0;
+  conf.checksum = calculate_sum((uint8_t*)&conf, sizeof(conf));
+  eeprom_write_block((const void*)&conf, (void*)(global_conf.currentSet * sizeof(conf) + sizeof(global_conf)), sizeof(conf));
   readEEPROM();
-  if (b == 1){ 
-    blinkLED(15,20,1);
-    #if defined(BUZZER)
-      beep_confirmation = 1;
-    #endif
-  }
-  
+  if (b == 1) blinkLED(15,20,1);
 }
 
-void checkFirstTime() {
-  if (EEPROM_CONF_VERSION == conf.checkNewConf) return;
+void LoadDefaults() {
   conf.P8[ROLL]  = 40;  conf.I8[ROLL] = 30; conf.D8[ROLL]  = 23;
   conf.P8[PITCH] = 40; conf.I8[PITCH] = 30; conf.D8[PITCH] = 23;
   conf.P8[YAW]   = 85;  conf.I8[YAW]  = 45;  conf.D8[YAW]  = 0;

@@ -340,16 +340,16 @@ void ACC_Common() {
       a[axis] +=accADC[axis];
       // Clear global variables for next reading
       accADC[axis]=0;
-      conf.accZero[axis]=0;
+      global_conf.accZero[axis]=0;
     }
     // Calculate average, shift Z down by acc_1G and store values in EEPROM at end of calibration
     if (calibratingA == 1) {
-      conf.accZero[ROLL]  = a[ROLL]/400;
-      conf.accZero[PITCH] = a[PITCH]/400;
-      conf.accZero[YAW]   = a[YAW]/400-acc_1G; // for nunchuk 200=1G
+      global_conf.accZero[ROLL]  = a[ROLL]/400;
+      global_conf.accZero[PITCH] = a[PITCH]/400;
+      global_conf.accZero[YAW]   = a[YAW]/400-acc_1G; // for nunchuk 200=1G
       conf.angleTrim[ROLL]   = 0;
       conf.angleTrim[PITCH]  = 0;
-      writeParams(1); // write accZero in EEPROM
+      writeGlobalSet(1); // write accZero in EEPROM
     }
     calibratingA--;
   }
@@ -359,9 +359,9 @@ void ACC_Common() {
       static int16_t  angleTrim_saved[2] = {0, 0};
       //Saving old zeropoints before measurement
       if (InflightcalibratingA==50) {
-         accZero_saved[ROLL]  = conf.accZero[ROLL] ;
-         accZero_saved[PITCH] = conf.accZero[PITCH];
-         accZero_saved[YAW]   = conf.accZero[YAW] ;
+         accZero_saved[ROLL]  = global_conf.accZero[ROLL] ;
+         accZero_saved[PITCH] = global_conf.accZero[PITCH];
+         accZero_saved[YAW]   = global_conf.accZero[YAW] ;
          angleTrim_saved[ROLL] = conf.angleTrim[ROLL] ;
          angleTrim_saved[PITCH] = conf.angleTrim[PITCH] ;
       }
@@ -383,9 +383,9 @@ void ACC_Common() {
             beep_confirmation = 1;      //buzzer for indicatiing the end of calibration
           #endif
           // recover saved values to maintain current flight behavior until new values are transferred
-          conf.accZero[ROLL]  = accZero_saved[ROLL] ;
-          conf.accZero[PITCH] = accZero_saved[PITCH];
-          conf.accZero[YAW]   = accZero_saved[YAW] ;
+          global_conf.accZero[ROLL]  = accZero_saved[ROLL] ;
+          global_conf.accZero[PITCH] = accZero_saved[PITCH];
+          global_conf.accZero[YAW]   = accZero_saved[YAW] ;
           conf.angleTrim[ROLL] = angleTrim_saved[ROLL] ;
           conf.angleTrim[PITCH] = angleTrim_saved[PITCH] ;
         }
@@ -394,17 +394,17 @@ void ACC_Common() {
       // Calculate average, shift Z down by acc_1G and store values in EEPROM at end of calibration
       if (AccInflightCalibrationSavetoEEProm == 1){  //the copter is landed, disarmed and the combo has been done again
         AccInflightCalibrationSavetoEEProm = 0;
-        conf.accZero[ROLL]  = b[ROLL]/50;
-        conf.accZero[PITCH] = b[PITCH]/50;
-        conf.accZero[YAW]   = b[YAW]/50-acc_1G; // for nunchuk 200=1G
+        global_conf.accZero[ROLL]  = b[ROLL]/50;
+        global_conf.accZero[PITCH] = b[PITCH]/50;
+        global_conf.accZero[YAW]   = b[YAW]/50-acc_1G; // for nunchuk 200=1G
         conf.angleTrim[ROLL]   = 0;
         conf.angleTrim[PITCH]  = 0;
-        writeParams(1); // write accZero in EEPROM
+        writeGlobalSet(1); // write accZero in EEPROM
       }
   #endif
-  accADC[ROLL]  -=  conf.accZero[ROLL] ;
-  accADC[PITCH] -=  conf.accZero[PITCH];
-  accADC[YAW]   -=  conf.accZero[YAW] ;
+  accADC[ROLL]  -=  global_conf.accZero[ROLL] ;
+  accADC[PITCH] -=  global_conf.accZero[PITCH];
+  accADC[YAW]   -=  global_conf.accZero[YAW] ;
 
   #if defined(SENSORS_TILT_45DEG_LEFT)
     int16_t temp = ((accADC[PITCH] - accADC[ROLL] )*7)/10;
@@ -1006,16 +1006,16 @@ void Mag_getADC() {
   if (f.CALIBRATE_MAG) {
     tCal = t;
     for(axis=0;axis<3;axis++) {
-      conf.magZero[axis] = 0;
+      global_conf.magZero[axis] = 0;
       magZeroTempMin[axis] = magADC[axis];
       magZeroTempMax[axis] = magADC[axis];
     }
     f.CALIBRATE_MAG = 0;
   }
   if (magInit) { // we apply offset only once mag calibration is done
-    magADC[ROLL]  -= conf.magZero[ROLL];
-    magADC[PITCH] -= conf.magZero[PITCH];
-    magADC[YAW]   -= conf.magZero[YAW];
+    magADC[ROLL]  -= global_conf.magZero[ROLL];
+    magADC[PITCH] -= global_conf.magZero[PITCH];
+    magADC[YAW]   -= global_conf.magZero[YAW];
   }
  
   if (tCal != 0) {
@@ -1028,8 +1028,8 @@ void Mag_getADC() {
     } else {
       tCal = 0;
       for(axis=0;axis<3;axis++)
-        conf.magZero[axis] = (magZeroTempMin[axis] + magZeroTempMax[axis])/2;
-      writeParams(1);
+        global_conf.magZero[axis] = (magZeroTempMin[axis] + magZeroTempMax[axis])/2;
+      writeGlobalSet(1);
     }
   } else {
     #if defined(SENSORS_TILT_45DEG_LEFT)

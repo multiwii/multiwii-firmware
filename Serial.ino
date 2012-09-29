@@ -239,11 +239,12 @@ void evaluateCommand() {
      headSerialReply(0);
      break;
    case MSP_SELECT_SETTING:
-     currentSet = read8();
-     if(currentSet<3 && !f.ARMED) {
-       saveSettingNo();
+     if(!f.ARMED) {
+       global_conf.currentSet = read8();
+       if(global_conf.currentSet>2) global_conf.currentSet = 0;
+       writeGlobalSet(0);
        readEEPROM();
-     } else getSettingNo();
+     }
      headSerialReply(0);
      break;
    case MSP_IDENT:
@@ -291,7 +292,7 @@ void evaluateCommand() {
                    rcOptions[BOXLLIGHTS]<<BOXLLIGHTS |
                  #endif
                  f.ARMED<<BOXARM);
-//       serialize8(currentSet);   // current setting
+//       serialize8(global_conf.currentSet);   // current setting
      break;
    case MSP_RAW_IMU:
      headSerialReply(18);
@@ -349,7 +350,7 @@ void evaluateCommand() {
      headSerialReply(3);
      serialize8(vbat);
 //     serialize16(intPowerMeterSum);
-     serialize16(currentSet+1);   // current setting - until GUI adapt
+     serialize16(global_conf.currentSet+1);   // current setting - until GUI adapt
      break;
    case MSP_RC_TUNING:
      headSerialReply(7);
@@ -416,10 +417,7 @@ void evaluateCommand() {
      break;  
    #endif
    case MSP_RESET_CONF:
-     if(!f.ARMED) {
-       conf.checkNewConf++;
-       checkFirstTime();
-     }
+     if(!f.ARMED) LoadDefaults();
      headSerialReply(0);
      break;
    case MSP_ACC_CALIBRATION:
