@@ -54,7 +54,7 @@ enum box {
   #if MAG
     BOXMAG,
   #endif
-  #if defined(SERVO_TILT) || defined(GIMBAL)
+  #if defined(SERVO_TILT) || defined(GIMBAL)  || defined(SERVO_MIX_TILT)
     BOXCAMSTAB,
   #endif
   #if defined(CAMTRIG)
