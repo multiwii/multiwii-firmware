@@ -362,7 +362,7 @@ void ACC_Common() {
          accZero_saved[ROLL]  = global_conf.accZero[ROLL] ;
          accZero_saved[PITCH] = global_conf.accZero[PITCH];
          accZero_saved[YAW]   = global_conf.accZero[YAW] ;
-         angleTrim_saved[ROLL] = conf.angleTrim[ROLL] ;
+         angleTrim_saved[ROLL]  = conf.angleTrim[ROLL] ;
          angleTrim_saved[PITCH] = conf.angleTrim[PITCH] ;
       }
       if (InflightcalibratingA>0) {
@@ -373,7 +373,7 @@ void ACC_Common() {
           b[axis] +=accADC[axis];
           // Clear global variables for next reading
           accADC[axis]=0;
-          conf.accZero[axis]=0;
+          global_conf.accZero[axis]=0;
         }
         //all values are measured
         if (InflightcalibratingA == 1) {
@@ -386,7 +386,7 @@ void ACC_Common() {
           global_conf.accZero[ROLL]  = accZero_saved[ROLL] ;
           global_conf.accZero[PITCH] = accZero_saved[PITCH];
           global_conf.accZero[YAW]   = accZero_saved[YAW] ;
-          conf.angleTrim[ROLL] = angleTrim_saved[ROLL] ;
+          conf.angleTrim[ROLL]  = angleTrim_saved[ROLL] ;
           conf.angleTrim[PITCH] = angleTrim_saved[PITCH] ;
         }
         InflightcalibratingA--;
