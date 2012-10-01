@@ -270,7 +270,7 @@ void evaluateCommand() {
                  #if MAG
                    f.MAG_MODE<<BOXMAG|f.HEADFREE_MODE<<BOXHEADFREE|rcOptions[BOXHEADADJ]<<BOXHEADADJ|
                  #endif
-                 #if defined(SERVO_TILT) || defined(GIMBAL)
+                 #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
                    rcOptions[BOXCAMSTAB]<<BOXCAMSTAB|
                  #endif
                  #if defined(CAMTRIG)

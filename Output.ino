@@ -91,7 +91,7 @@ void writeServos() {
       }
     #endif
     #if defined(SEC_SERVO_FROM)   // write secundary servos
-      #if defined(SERVO_TILT) && defined(MMSERVOGIMBAL)
+      #if (defined(SERVO_TILT)|| defined(SERVO_MIX_TILT)) && defined(MMSERVOGIMBAL)
         // Moving Average Servo Gimbal by Magnetron1
         static int16_t mediaMobileServoGimbalADC[3][MMSERVOGIMBALVECTORLENGHT];
         static int32_t mediaMobileServoGimbalADCSum[3];

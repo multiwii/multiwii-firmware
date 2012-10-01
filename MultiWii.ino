@@ -97,7 +97,7 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
   #if MAG
     "MAG;"
   #endif
-  #if defined(SERVO_TILT) || defined(GIMBAL)
+  #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
     "CAMSTAB;"
   #endif
   #if defined(CAMTRIG)

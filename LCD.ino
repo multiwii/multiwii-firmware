@@ -1475,7 +1475,7 @@ static char checkboxitemNames[][4] = {
     #if MAG
       "Mag",
     #endif
-    #if defined(SERVO_TILT) || defined(GIMBAL)
+    #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
       "CSt",
     #endif
     #if defined(CAMTRIG)
