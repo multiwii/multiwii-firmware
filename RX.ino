@@ -780,7 +780,7 @@ void checkPots() {
 }
 #endif
 
-#if defined(SPEKTRUM)  // Bind Support
+#if defined(SPEK_BIND)  // Bind Support
 void spekBind() {
   pinMode(SPEK_BIND_DATA, INPUT);     // Data line from sat
   digitalWrite(SPEK_BIND_DATA,LOW);   // Turn off internal Pull Up resistor

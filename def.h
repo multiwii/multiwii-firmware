@@ -1165,15 +1165,17 @@
     #define SPEK_DATA_SHIFT >> 1     // Assumes 11 bit frames, that is 2048 mode.
     #define SPEK_BIND_PULSES 5
   #endif
-  #if !defined(SPEK_BIND_GROUND)
-    #define SPEK_BIND_GROUND 4
-  #endif  
-  #if !defined(SPEK_BIND_POWER)
-    #define SPEK_BIND_POWER  5
-  #endif  
-  #if !defined(SPEK_BIND_DATA)
-    #define SPEK_BIND_DATA   6
-  #endif  
+  #if defined(SPEK_BIND)
+    #if !defined(SPEK_BIND_GROUND)
+      #define SPEK_BIND_GROUND 4
+    #endif  
+    #if !defined(SPEK_BIND_POWER)
+      #define SPEK_BIND_POWER  5
+    #endif  
+    #if !defined(SPEK_BIND_DATA)
+      #define SPEK_BIND_DATA   6
+    #endif  
+  #endif
 #endif
 
 #if defined(SBUS)

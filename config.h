@@ -340,6 +340,7 @@
       //   Normally use 3.3V regulator is needed on the power pin!!  If your satellite hangs during bind (blinks, but won't complete bind with a solid light), go direct 5V on all pins. 
       //**************************
       //   For Pro Mini, the connector for the Satellite that resides on the FTDI can be unplugged and moved to these three adjacent pins. 
+      //#define SPEK_BIND             //Un-Comment for Spektrum Satellie Bind Support.  Code is ~420 bytes smaller without it. 
       //#define SPEK_BIND_GROUND 4
       //#define SPEK_BIND_POWER  5
       //#define SPEK_BIND_DATA   6

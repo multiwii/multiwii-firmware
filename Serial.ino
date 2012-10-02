@@ -428,7 +428,7 @@ void evaluateCommand() {
      if(!f.ARMED) f.CALIBRATE_MAG = 1;
      headSerialReply(0);
      break;
- #if defined(SPEKTRUM)
+#if defined(SPEK_BIND)
    case MSP_SPEK_BIND:
      spekBind();  
      headSerialReply(0);
