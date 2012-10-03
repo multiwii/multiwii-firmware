@@ -350,8 +350,9 @@ void getEstimatedAltitude(){
   debug[2] = vel;
   
   //D
-  applyDeadband(vel, 5);
-  BaroPID -= constrain(conf.D8[PIDALT] * vel / 20, -150, 150);
+  float vel_tmp = vel;
+  applyDeadband(vel_tmp, 5);
+  BaroPID -= constrain(conf.D8[PIDALT] * vel_tmp / 20, -150, 150);
   debug[3] = BaroPID;
   
   #endif
