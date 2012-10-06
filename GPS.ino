@@ -199,7 +199,7 @@ static int16_t nav_takeoff_bearing;
         #endif  
         while(!SerialTXfree(GPS_SERIAL)) delay(10);
       }
-      delayms(200);
+      delay(200);
       SerialOpen(GPS_SERIAL,GPS_BAUD);  
       for(uint8_t i=0; i<sizeof(UBLOX_INIT); i++) {                        // send configuration data in UBX protocol
         SerialWrite(GPS_SERIAL, pgm_read_byte(UBLOX_INIT+i));
