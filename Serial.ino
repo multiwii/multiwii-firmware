@@ -255,7 +255,7 @@ void evaluateCommand() {
      serialize32(0);        // "capability"
      break;
    case MSP_STATUS:
-     headSerialReply(10);
+     headSerialReply(11);
      serialize16(cycleTime);
      serialize16(i2c_errors_count);
      serialize16(ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4);
@@ -292,7 +292,7 @@ void evaluateCommand() {
                    rcOptions[BOXLLIGHTS]<<BOXLLIGHTS |
                  #endif
                  f.ARMED<<BOXARM);
-//       serialize8(global_conf.currentSet);   // current setting
+       serialize8(global_conf.currentSet);   // current setting
      break;
    case MSP_RAW_IMU:
      headSerialReply(18);
@@ -349,8 +349,7 @@ void evaluateCommand() {
    case MSP_BAT:
      headSerialReply(3);
      serialize8(vbat);
-//     serialize16(intPowerMeterSum);
-     serialize16(global_conf.currentSet+1);   // current setting - until GUI adapt
+     serialize16(intPowerMeterSum);
      break;
    case MSP_RC_TUNING:
      headSerialReply(7);
