@@ -36,13 +36,13 @@ static uint32_t channelLastToggleTime[5] ={0,0,0,0,0};
     #if defined(RCOPTIONSBEEP)
       static uint8_t i = 0,firstrun = 1, last_rcOptions[CHECKBOXITEMS];
                     
-      if (last_rcOptions[i] != rcOptions[i])beep_toggle = 1;
+      if (last_rcOptions[i] != rcOptions[i])notification_toggle = 1;
         last_rcOptions[i] = rcOptions[i]; 
         i++;
       if(i >= CHECKBOXITEMS)i=0;
       
-      if(firstrun == 1 && beep_confirmation == 0){
-        beep_toggle = 0;    //only enable options beep AFTER gyro init
+      if(firstrun == 1 && notification_confirmation == 0){
+        notification_toggle = 0;    //only enable options beep AFTER gyro init
         beeperOnBox = 0;
       }        
       else firstrun = 0;
@@ -83,9 +83,9 @@ static uint32_t channelLastToggleTime[5] ={0,0,0,0,0};
     //D: Double, L: Long, M: Middle, S: Short, N: None
     if (warn_failsafe == 2)      beep_code('L','N','N','D');
     else if (warn_failsafe == 1) beep_code('S','L','L','S');            
-    else if (beep_toggle == 1) {beep_code('S','N','N','N');      } 
-    else if (beep_toggle == 2)    beep_code('S','S','N','N');       
-    else if (beep_toggle > 2)     beep_code('S','S','S','N');     
+    else if (notification_toggle == 1) beep_code('S','N','N','N'); 
+    else if (notification_toggle == 2)    beep_code('S','S','N','N');       
+    else if (notification_toggle > 2)     beep_code('S','S','S','N');     
     else if (warn_noGPSfix == 1) beep_code('S','S','N','S');    
     else if (beeperOnBox == 1)   beep_code('S','S','S','S');
     else if (warn_pMeter == 1 && f.ARMED == 1)  beep_code('S','S','N','M'); 
@@ -93,11 +93,11 @@ static uint32_t channelLastToggleTime[5] ={0,0,0,0,0};
     else if (warn_vbat == 4)     beep_code('M','S','M','S'); // beep_code('S','S','L','D');
     else if (warn_vbat == 2)     beep_code('M','N','M','D'); // beep_code('S','L','N','D');
     else if (warn_vbat == 1)     beep_code('M','N','N','D'); // beep_code('L','N','N','D');
-    else if (beep_confirmation == 1) beep_code('L','N','N','L');    
-    else if (beep_confirmation == 2) beep_code('L','L','N','L');   
-    else if (beep_confirmation == 3) beep_code('L','L','L','L');
-    else if (beep_confirmation == 4) beep_code('L','M','S','N');
-    else if (beep_confirmation > 4) beep_code('L','L','L','L');
+    else if (notification_confirmation == 1) beep_code('L','N','N','L');    
+    else if (notification_confirmation == 2) beep_code('L','L','N','L');   
+    else if (notification_confirmation == 3) beep_code('L','L','L','L');
+    else if (notification_confirmation == 4) beep_code('L','M','S','N');
+    else if (notification_confirmation > 4) beep_code('L','L','L','L');
     else if (buzzerSequenceActive == 1) beep_code('N','N','N','N');                //if no signal is needed, finish sequence if not finished yet
     else{                                                                   //reset everything and keep quiet
       if (channelIsOn[1]) {
@@ -140,8 +140,8 @@ static uint32_t channelLastToggleTime[5] ={0,0,0,0,0};
     }
     if (icnt >=3 && (channelLastToggleTime[1]<millis()-Duration) ){
       icnt=0;
-      if (beep_toggle)beep_toggle = 0;
-      if (beep_confirmation)beep_confirmation = 0;
+      if (notification_toggle)notification_toggle = 0;
+      if (notification_confirmation)notification_confirmation = 0;
       buzzerSequenceActive = 0;                              //sequence is now done, next sequence may begin
       if (channelIsOn[1]) {
         BUZZERPIN_OFF;

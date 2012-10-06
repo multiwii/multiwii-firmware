@@ -389,8 +389,8 @@ static struct {
   static uint8_t nav_mode = NAV_MODE_NONE;            //Navigation mode
 
   #if defined(BUZZER)  
-    static uint8_t beep_toggle = 0,
-                   beep_confirmation = 0;
+    static uint8_t notification_toggle = 0,
+                   notification_confirmation = 0;
   #endif
 
 
@@ -772,9 +772,9 @@ void loop () {
               AccInflightCalibrationArmed = !AccInflightCalibrationArmed; 
               #if defined(BUZZER)
               if (AccInflightCalibrationArmed){
-                beep_toggle = 2;
+                notification_toggle = 2;
               } else {
-                beep_toggle = 3;
+                notification_toggle = 3;
               }
               #endif
             }
