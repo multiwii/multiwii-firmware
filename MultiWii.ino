@@ -605,6 +605,9 @@ void setup() {
   readEEPROM();                                    // load current setting data
   blinkLED(2,40,global_conf.currentSet+1);          
   configureReceiver();
+  #if defined (PILOTLAMP) 
+    PL_INIT;
+  #endif
   #if defined(OPENLRSv2MULTI)
     initOpenLRS();
   #endif

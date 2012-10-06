@@ -76,8 +76,16 @@
   #if !defined(RCAUXPIN8) 
     #if !defined(MONGOOSE1_0)
       #define BUZZERPIN_PINMODE          pinMode (8, OUTPUT);
-      #define BUZZERPIN_ON               PORTB |= 1;
-      #define BUZZERPIN_OFF              PORTB &= ~1;
+      #if NUMBER_MOTOR >4
+        #undef PILOTLAMP
+      #endif
+      #if defined PILOTLAMP && NUMBER_MOTOR <5
+        #define    PL_PIN_ON            PORTB |= 1;
+        #define    PL_PIN_OFF           PORTB &= ~1;
+      #else
+        #define BUZZERPIN_ON            PORTB |= 1;
+        #define BUZZERPIN_OFF           PORTB &= ~1;
+      #endif 
     #endif
   #else
     #define BUZZERPIN_PINMODE          ;
@@ -193,16 +201,32 @@
   #endif
   #if defined(D8BUZZER)
     #define BUZZERPIN_PINMODE          DDRB |= (1<<4);
-    #define BUZZERPIN_ON               PORTB |= 1<<4;
-    #define BUZZERPIN_OFF              PORTB &= ~(1<<4); 
+    #if defined PILOTLAMP
+      #define    PL_PIN_ON            PORTB |= 1<<4;
+      #define    PL_PIN_OFF           PORTB &= ~(1<<4);
+    #else
+      #define BUZZERPIN_ON               PORTB |= 1<<4;
+      #define BUZZERPIN_OFF              PORTB &= ~(1<<4); 
+    #endif 
+    
   #elif defined(A32U4ALLPINS)
     #define BUZZERPIN_PINMODE          DDRD |= (1<<4);
-    #define BUZZERPIN_ON               PORTD |= 1<<4;
-    #define BUZZERPIN_OFF              PORTD &= ~(1<<4);    
+    #if defined PILOTLAMP
+      #define    PL_PIN_ON    PORTD |= 1<<4;
+      #define    PL_PIN_OFF   PORTD &= ~(1<<4);
+    #else
+      #define BUZZERPIN_ON               PORTD |= 1<<4;
+      #define BUZZERPIN_OFF              PORTD &= ~(1<<4);  
+    #endif  
   #else
     #define BUZZERPIN_PINMODE          DDRD |= (1<<3);
-    #define BUZZERPIN_ON               PORTD |= 1<<3;
-    #define BUZZERPIN_OFF              PORTD &= ~(1<<3); 
+    #if defined PILOTLAMP
+      #define    PL_PIN_ON    PORTD |= 1<<3;
+      #define    PL_PIN_OFF   PORTD &= ~(1<<3);
+    #else
+      #define BUZZERPIN_ON               PORTD |= 1<<3;
+      #define BUZZERPIN_OFF              PORTD &= ~(1<<3); 
+    #endif
   #endif
   #define POWERPIN_PINMODE           //
   #define POWERPIN_ON                //
@@ -325,8 +349,14 @@
   #define LEDPIN_ON                  PORTB |= (1<<7); PORTC |= (1<<7);
   #define LEDPIN_OFF                 PORTB &= ~(1<<7);PORTC &= ~(1<<7);
   #define BUZZERPIN_PINMODE          pinMode (32, OUTPUT);
-  #define BUZZERPIN_ON               PORTC |= 1<<5;
-  #define BUZZERPIN_OFF              PORTC &= ~(1<<5);
+  #if defined PILOTLAMP
+    #define    PL_PIN_ON    PORTC |= 1<<5;
+    #define    PL_PIN_OFF   PORTC &= ~(1<<5);
+  #else
+    #define BUZZERPIN_ON               PORTC |= 1<<5;
+    #define BUZZERPIN_OFF              PORTC &= ~(1<<5);
+  #endif 
+    
   #if !defined(DISABLE_POWER_PIN)
     #define POWERPIN_PINMODE           pinMode (37, OUTPUT);
     #define POWERPIN_ON                PORTC |= 1<<0;
@@ -1139,7 +1169,24 @@
   #define POWERMETER
 #endif
 
-#if defined(VBAT)
+#if defined PILOTLAMP 
+  #define    PL_CHANNEL OCR0B  //use B since A can be used by camstab
+  #define    PL_ISR TIMER0_COMPB_vect
+  #define    PL_INIT   TCCR0A=0;TIMSK0|=(1<<OCIE0B);PL_CHANNEL=PL_IDLE;PilotLamp(PL_GRN_OFF);PilotLamp(PL_BLU_OFF);PilotLamp(PL_RED_OFF);PilotLamp(PL_BZR_OFF);
+  #define    BUZZERPIN_ON PilotLamp(PL_BZR_ON);
+  #define    BUZZERPIN_OFF PilotLamp(PL_BZR_OFF);
+  #define    PL_GRN_ON    25    // 100us
+  #define    PL_GRN_OFF   50    // 200us
+  #define    PL_BLU_ON    75    // 300us
+  #define    PL_BLU_OFF   100    // 400us
+  #define    PL_RED_ON    125    // 500us
+  #define    PL_RED_OFF   150    // 600us
+  #define    PL_BZR_ON    175    // 700us
+  #define    PL_BZR_OFF   200    // 800us
+  #define    PL_IDLE      125    // 100us
+  #endif
+
+#if defined(PILOTLAMP) || defined(VBAT)
   #define BUZZER
 #endif
 
