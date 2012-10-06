@@ -379,14 +379,14 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
 
   #if defined(LED_RING)
   
-  #define LED_RING_ADDRESS 0x6D //7 bits
+  #define LED_RING_ADDRESS 0xDA //7 bits
   
   void i2CLedRingState() {
     uint8_t b[10];
   
     b[0]='M'; // MultiwII mode
     if (f.ARMED) { // Motors running = flying
-      if(!f.ANGLE_MODE){ //ACRO
+      if(!(f.ANGLE_MODE||f.HORIZON_MODE)){ //ACRO
         b[0]= 'x';
       }
       else if(f.GPS_HOME_MODE){ //RTH
@@ -395,8 +395,11 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
       else if(f.GPS_HOLD_MODE){//Position Hold
         b[0]= 'v';
       } 
+      else if(f.HORIZON_MODE){ //HORIZON mode
+        b[0]= 'y';
+      }   
       else {
-        b[0]= 'u'; // stable mode
+        b[0]= 'u'; // ANGLE mode
       }  
       i2c_rep_start(LED_RING_ADDRESS);
       i2c_write(b[0]);
@@ -411,14 +414,19 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
     else { // Motors not running = on the ground
       b[0]= 's';
       if (f.ANGLE_MODE) b[1]=1; 
+      else if (f.HORIZON_MODE) b[1]=2; 
       else b[1]= 0;                  
       if (f.BARO_MODE) b[2]=1; 
       else b[2]= 0;                  
       if (f.MAG_MODE) b[3]=1; 
       else b[3]= 0;                  
+  #if GPS
       if (rcOptions[BOXGPSHOME]) b[4]=2;
       else if (rcOptions[BOXGPSHOLD]) b[4]=1;
       else b[4]=0;
+  #else
+      b[4]=0;
+  #endif
       b[5]=(180-heading)/2; // 1 unit = 2 degrees;
       b[6]=GPS_numSat;                                      
       i2c_rep_start(LED_RING_ADDRESS);
