@@ -159,6 +159,7 @@ static int32_t  EstAlt;             // in cm
 static int16_t  BaroPID = 0;
 static int32_t  AltHold;
 static int16_t  errorAltitudeI = 0;
+static int16_t  vario = 0;              // variometer in cm/s
 #if defined(BUZZER)
   static uint8_t  toggleBeep = 0;
 #endif

@@ -30,15 +30,15 @@ static uint8_t inBuf[INBUF_SIZE][UART_NUMBER];
 #define MSP_VERSION              0
 
 #define MSP_IDENT                100   //out message         multitype + multiwii version + protocol version + capability variable
-#define MSP_STATUS               101   //out message         cycletime & errors_count & sensor present & box activation
+#define MSP_STATUS               101   //out message         cycletime & errors_count & sensor present & box activation & current setting number
 #define MSP_RAW_IMU              102   //out message         9 DOF
 #define MSP_SERVO                103   //out message         8 servos
 #define MSP_MOTOR                104   //out message         8 motors
 #define MSP_RC                   105   //out message         8 rc chan
-#define MSP_RAW_GPS              106   //out message         fix, numsat, lat, lon, alt, speed
+#define MSP_RAW_GPS              106   //out message         fix, numsat, lat, lon, alt, speed, ground course
 #define MSP_COMP_GPS             107   //out message         distance home, direction home
 #define MSP_ATTITUDE             108   //out message         2 angles 1 heading
-#define MSP_ALTITUDE             109   //out message         1 altitude
+#define MSP_ALTITUDE             109   //out message         altitude, variometer
 #define MSP_BAT                  110   //out message         vbat, powermetersum
 #define MSP_RC_TUNING            111   //out message         rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
 #define MSP_PID                  112   //out message         up to 16 P I D (8 are used)
@@ -321,13 +321,14 @@ void evaluateCommand() {
      break;
    #if GPS
    case MSP_RAW_GPS:
-     headSerialReply(14);
+     headSerialReply(16);
      serialize8(f.GPS_FIX);
      serialize8(GPS_numSat);
      serialize32(GPS_coord[LAT]);
      serialize32(GPS_coord[LON]);
      serialize16(GPS_altitude);
      serialize16(GPS_speed);
+     serialize16(GPS_ground_course);        // added since r1172
      break;
    case MSP_COMP_GPS:
      headSerialReply(5);
@@ -343,8 +344,9 @@ void evaluateCommand() {
      serialize16(headFreeModeHold);
      break;
    case MSP_ALTITUDE:
-     headSerialReply(4);
+     headSerialReply(6);
      serialize32(EstAlt);
+     serialize16(vario);                  // added since r1172
      break;
    case MSP_BAT:
      headSerialReply(3);
