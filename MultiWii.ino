@@ -160,9 +160,7 @@ static int16_t  BaroPID = 0;
 static int32_t  AltHold;
 static int16_t  errorAltitudeI = 0;
 static int16_t  vario = 0;              // variometer in cm/s
-#if defined(BUZZER)
-  static uint8_t  toggleBeep = 0;
-#endif
+
 #if defined(ARMEDTIMEWARNING)
   static uint32_t  ArmedTimeWarningMicroSeconds = 0;
 #endif
@@ -388,11 +386,10 @@ static struct {
   #define NAV_MODE_POSHOLD       1
   #define NAV_MODE_WP            2
   static uint8_t nav_mode = NAV_MODE_NONE;            //Navigation mode
-
-  #if defined(BUZZER)  
-    static uint8_t notification_toggle = 0,
-                   notification_confirmation = 0;
-  #endif
+ 
+  static uint8_t notification_toggle = 0,
+                 notification_confirmation = 0;
+ 
 
 
 void annexCode() { // this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
@@ -725,8 +722,23 @@ void loop () {
       errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0; errorGyroI[YAW] = 0;
       errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
       rcDelayCommand++;
-      if (rcData[YAW] < MINCHECK && !f.ARMED) {                                             // THTOTTLE min, YAW left
-        if(rcData[PITCH] < MINCHECK && rcDelayCommand == 20) {                              // PITCH down -> GYRO cal
+      if (rcData[YAW] < MINCHECK && !f.ARMED) {            // THTOTTLE min, YAW left
+        #if defined(INFLIGHT_ACC_CALIBRATION)  
+          if (rcData[PITCH] > MAXCHECK && rcData[ROLL] > MAXCHECK && rcDelayCommand == 20){
+            if (AccInflightCalibrationMeasurementDone){                // trigger saving into eeprom after landing
+              AccInflightCalibrationMeasurementDone = 0;
+              AccInflightCalibrationSavetoEEProm = 1;
+            }else{ 
+              AccInflightCalibrationArmed = !AccInflightCalibrationArmed; 
+              #if defined(BUZZER)
+                if (AccInflightCalibrationArmed)  notification_toggle = 2;
+                else notification_toggle = 3;
+              #endif
+            }
+            
+         } 
+       #endif
+       if(rcData[PITCH] < MINCHECK && rcDelayCommand == 20) {                              // PITCH down -> GYRO cal
           calibratingG=400;
           #if GPS 
             GPS_reset_home_position();
@@ -763,25 +775,6 @@ void loop () {
           previousTime = micros();
         }
       }
-      #if defined(INFLIGHT_ACC_CALIBRATION)  
-        else if (!f.ARMED && rcData[YAW] < MINCHECK && rcData[PITCH] > MAXCHECK && rcData[ROLL] > MAXCHECK){
-          if (rcDelayCommand == 20){
-            if (AccInflightCalibrationMeasurementDone){                // trigger saving into eeprom after landing
-              AccInflightCalibrationMeasurementDone = 0;
-              AccInflightCalibrationSavetoEEProm = 1;
-            }else{ 
-              AccInflightCalibrationArmed = !AccInflightCalibrationArmed; 
-              #if defined(BUZZER)
-              if (AccInflightCalibrationArmed){
-                notification_toggle = 2;
-              } else {
-                notification_toggle = 3;
-              }
-              #endif
-            }
-          }
-       } 
-     #endif
       else if (conf.activate[BOXARM] > 0) {
         if ( rcOptions[BOXARM] && f.OK_TO_ARM
         #if defined(FAILSAFE)
