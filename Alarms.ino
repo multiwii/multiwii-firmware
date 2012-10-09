@@ -185,7 +185,8 @@ static uint32_t channelLastToggleTime[5] ={0,0,0,0,0};
       PilotLampSequence(100,B0101<<8|B00010001,4); //sequential pattern 
     }else{
     //==================GREEN LED===========================
-      if (f.ARMED && f.ACC_MODE) useResource('G',1000,1000);
+      if (f.ARMED && f.ANGLE_MODE) useResource('G',1000,1000);
+      else if (f.ARMED && f.HORIZON_MODE) useResource('G',100,1000);
       else if (f.ARMED) useResource('G',1000,0);
       else useResource('G',0,0);    //switch off
     //==================BLUE LED===========================
