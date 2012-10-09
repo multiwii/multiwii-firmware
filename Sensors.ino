@@ -462,9 +462,11 @@ void i2c_BMP085_readCalibration(){
 void  Baro_init() {
   delay(10);
   i2c_BMP085_readCalibration();
-  i2c_BMP085_UT_Start(); 
   delay(5);
-  i2c_BMP085_UT_Read();
+  i2c_BMP085_UT_Start(); 
+//  delay(5);
+//  i2c_BMP085_UT_Read();
+  bmp085_ctx.deadline = currentTime+5000;
 }
 
 // read uncompensated temperature value: send command first
@@ -527,10 +529,24 @@ void i2c_BMP085_Calculate() {
   pressure = p + ((x1 + x2 + 3791) >> 4);
 }
 
-void Baro_update() {
+void Baro_update() {                   // first UT conversion is started in init procedure
   if (currentTime < bmp085_ctx.deadline) return; 
-  bmp085_ctx.deadline = currentTime;
+  bmp085_ctx.deadline = currentTime+6000;
   TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, BMP085 is ok with this speed
+  if (bmp085_ctx.state == 0) {
+    i2c_BMP085_UT_Read(); 
+    i2c_BMP085_UP_Start(); 
+    bmp085_ctx.state = 1; 
+    BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 4433000.0f; //centimeter   , moved here for less timecycle spike
+    bmp085_ctx.deadline += 8000;   // 6000+8000=14000
+  } else {
+    i2c_BMP085_UP_Read(); 
+    i2c_BMP085_UT_Start(); 
+    i2c_BMP085_Calculate(); 
+//    BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 4433000.0f; //centimeter
+    bmp085_ctx.state = 0; 
+  } 
+/*
   switch (bmp085_ctx.state) {
     case 0: 
       i2c_BMP085_UT_Start(); 
@@ -551,6 +567,7 @@ void Baro_update() {
       bmp085_ctx.state = 0; bmp085_ctx.deadline += 5000; 
       break;
   } 
+*/  
 }
 #endif
 
@@ -609,6 +626,9 @@ void  Baro_init() {
   i2c_MS561101BA_reset();
   delay(100);
   i2c_MS561101BA_readCalibration();
+  delay(10);
+  i2c_MS561101BA_UT_Start(); 
+  ms561101ba_ctx.deadline = currentTime+10000; 
 }
 
 // read uncompensated temperature value: send command first
@@ -670,30 +690,22 @@ void i2c_MS561101BA_Calculate() {
   pressure     = (( (ms561101ba_ctx.up.val * sens ) >> 21) - off) >> 15;
 }
 
-void Baro_update() {
+void Baro_update() {                            // first UT conversion is started in init procedure
   if (currentTime < ms561101ba_ctx.deadline) return; 
-  ms561101ba_ctx.deadline = currentTime;
-  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, MS5611 is ok with this speed
-  switch (ms561101ba_ctx.state) {
-    case 0: 
-      i2c_MS561101BA_UT_Start(); 
-      ms561101ba_ctx.state++; ms561101ba_ctx.deadline += 10000; //according to the specs, the pause should be at least 8.22ms
-      break;
-    case 1: 
-      i2c_MS561101BA_UT_Read(); 
-      ms561101ba_ctx.state++;
-      break;
-    case 2: 
-      i2c_MS561101BA_UP_Start(); 
-      ms561101ba_ctx.state++; ms561101ba_ctx.deadline += 10000; //according to the specs, the pause should be at least 8.22ms
-      break;
-    case 3: 
-      i2c_MS561101BA_UP_Read();
-      i2c_MS561101BA_Calculate();
-      BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 4433000.0f; //centimeter
-      ms561101ba_ctx.state = 0; ms561101ba_ctx.deadline += 4000;
-      break;
-  } 
+  ms561101ba_ctx.deadline = currentTime+10000;  // UT and UP conversion take 8.5ms so we do next reading after 10ms 
+  TWBR = ((F_CPU / 400000L) - 16) / 2;          // change the I2C clock rate to 400kHz, MS5611 is ok with this speed
+  if (ms561101ba_ctx.state == 0) {
+    i2c_MS561101BA_UT_Read(); 
+    i2c_MS561101BA_UP_Start(); 
+    BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 4433000.0f; //centimeter  , moved here for less timecycle spike
+    ms561101ba_ctx.state = 1; 
+  } else {
+    i2c_MS561101BA_UP_Read();
+    i2c_MS561101BA_UT_Start(); 
+    i2c_MS561101BA_Calculate();
+//    BaroAlt = (1.0f - pow(pressure/101325.0f, 0.190295f)) * 4433000.0f; //centimeter
+    ms561101ba_ctx.state = 0; 
+  }  
 }
 #endif
 
