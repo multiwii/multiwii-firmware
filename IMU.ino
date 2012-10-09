@@ -327,7 +327,7 @@ void getEstimatedAltitude(){
   int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG - acc_1G; 
   //int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG - 1/invG; 
   applyDeadband(accZ, ACC_Z_DEADBAND);
-  debug[0] = accZ; 
+  //debug[0] = accZ; 
   
   static float vel = 0.0f;
   static float accVelScale = 9.80665f / 10000.0f / acc_1G ;
@@ -341,20 +341,20 @@ void getEstimatedAltitude(){
 
   baroVel = constrain(baroVel, -300, 300); // constrain baro velocity +/- 300cm/s
   applyDeadband(baroVel, 10); // to reduce noise near zero  
-  debug[1] = baroVel;
+  //debug[1] = baroVel;
   
   // apply Complimentary Filter to keep the calculated velocity based on baro velocity (i.e. near real velocity). 
   // By using CF it's possible to correct the drift of integrated accZ (velocity) without loosing the phase, i.e without delay
   vel = vel * 0.985f + baroVel * 0.015f;
   //vel = constrain(vel, -300, 300); // constrain velocity +/- 300cm/s 
-  debug[2] = vel;
+  //debug[2] = vel;
   
   //D
   float vel_tmp = vel;
   applyDeadband(vel_tmp, 5);
   vario = vel_tmp;
   BaroPID -= constrain(conf.D8[PIDALT] * vel_tmp / 20, -150, 150);
-  debug[3] = BaroPID;
+  //debug[3] = BaroPID;
   
   #endif
 }

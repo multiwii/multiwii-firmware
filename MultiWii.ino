@@ -695,8 +695,6 @@ void loop () {
     Read_OpenLRS_RC();
   #endif 
 
-  #define RC_FREQ 50
-
   if (currentTime > rcTime ) { // 50Hz
     rcTime = currentTime + 20000;
     computeRC();
