@@ -523,7 +523,7 @@
 
   /************************        AP FlightMode        **********************************/
     /* Temporarily Disables GPS_HOLD_MODE to be able to make it possible to adjust the Hold-position when moving the sticks.*/
-    //#define AP_MODE 10  // Create a deadspan for GPS.
+    //#define AP_MODE 20  // Create a deadspan for GPS.
         
   /************************   Assisted AcroTrainer    **********************************/
     /* Train Acro with auto recovery. Value set the point where ANGLE_MODE takes over.

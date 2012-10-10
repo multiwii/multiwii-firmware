@@ -1071,7 +1071,6 @@ void loop () {
   #if defined(AP_MODE)
     if(f.ANGLE_MODE || f.HORIZON_MODE){
       if (abs(rcCommand[ROLL])>= AP_MODE || abs(rcCommand[PITCH]) >= AP_MODE) {
-        f.BARO_MODE=0;
         f.GPS_HOME_MODE=0;
         f.GPS_HOLD_MODE=0;
       }
