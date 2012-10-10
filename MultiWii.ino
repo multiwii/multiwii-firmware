@@ -686,13 +686,16 @@ void setup() {
 }
 
 void go_arm() {
+  if(calibratingG == 0 && f.ACC_CALIBRATED
   #if defined(FAILSAFE)
-    if(failsafeCnt > 1) blinkLED(2,800,1); else
-  #endif 
-    {
-      f.ARMED = 1;
-      headFreeModeHold = heading;
-    }
+    && failsafeCnt < 2
+  #endif
+    ) {
+      if(!f.ARMED) {
+        f.ARMED = 1;
+        headFreeModeHold = heading;
+      }
+    } else if(!f.ARMED) blinkLED(2,800,1);
 }
 
 // ******** Main Loop *********
@@ -753,10 +756,14 @@ void loop () {
       if(rcDelayCommand<250) rcDelayCommand++;
     } else rcDelayCommand = 0;
     rcSticks = stTmp;
+    
 // perform actions    
-    if (rcSticks & 0xC0 == THR_LO) {          // THROTTLE at minimum
+    if (rcData[THROTTLE] <= MINCHECK) {            // THROTTLE at minimum
       errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0; errorGyroI[YAW] = 0;
       errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
+      if (conf.activate[BOXARM] > 0) {             // Arming/Disarming via ARM BOX
+        if ( rcOptions[BOXARM] && f.OK_TO_ARM ) go_arm(); else if (f.ARMED) f.ARMED = 0;
+      }
     }
     if(rcDelayCommand == 20) {
       if(f.ARMED) {                   // actions during armed
@@ -816,10 +823,10 @@ void loop () {
           previousTime = micros();
         }
         #ifdef ALLOW_ARM_DISARM_VIA_TX_YAW
-          else if (rcSticks == THR_LO + YAW_HI + PIT_CE + ROL_CE && calibratingG == 0 && f.ACC_CALIBRATED) go_arm();    // Arm via YAW
+          else if (rcSticks == THR_LO + YAW_HI + PIT_CE + ROL_CE) go_arm();      // Arm via YAW
         #endif
         #ifdef ALLOW_ARM_DISARM_VIA_TX_ROLL
-          else if (rcSticks == THR_LO + YAW_CE + PIT_CE + ROL_HI && calibratingG == 0 && f.ACC_CALIBRATED) go_arm();    // Arm via ROLL
+          else if (rcSticks == THR_LO + YAW_CE + PIT_CE + ROL_HI) go_arm();      // Arm via ROLL
         #endif
         #ifdef LCD_TELEMETRY_AUTO
           else if (rcSticks == THR_LO + YAW_CE + PIT_HI + ROL_LO) {              // Auto telemetry ON/OFF
@@ -845,154 +852,13 @@ void loop () {
         else if (rcSticks == THR_HI + YAW_CE + PIT_CE + ROL_LO) {conf.angleTrim[ROLL] -=2; i=1;}
         if (i) {
           writeParams(1);
+          rcDelayCommand = 0;    // allow autorepetition
           #if defined(LED_RING)
             blinkLedRing();
           #endif
         }
       }
     }
-    if (conf.activate[BOXARM] > 0) {
-      if ( rcOptions[BOXARM] && f.OK_TO_ARM ) go_arm(); else if (f.ARMED) f.ARMED = 0;
-    }
-/*  
-    // **********  OLD STICK COMMAND HANDLER  *****************
-    if (rcData[THROTTLE] < MINCHECK) {
-      errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0; errorGyroI[YAW] = 0;
-      errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
-      rcDelayCommand++;
-      if (rcData[YAW] < MINCHECK && !f.ARMED) {            // THTOTTLE min, YAW left
-        #if defined(INFLIGHT_ACC_CALIBRATION)  
-          if (rcData[PITCH] > MAXCHECK && rcData[ROLL] > MAXCHECK && rcDelayCommand == 20){
-            if (AccInflightCalibrationMeasurementDone){                // trigger saving into eeprom after landing
-              AccInflightCalibrationMeasurementDone = 0;
-              AccInflightCalibrationSavetoEEProm = 1;
-            }else{ 
-              AccInflightCalibrationArmed = !AccInflightCalibrationArmed; 
-              #if defined(BUZZER)
-                if (AccInflightCalibrationArmed)  notification_toggle = 2;
-                else notification_toggle = 3;
-              #endif
-            }
-            
-         } 
-       #endif
-       if(rcData[PITCH] < MINCHECK && rcDelayCommand == 20) {                              // PITCH down -> GYRO cal
-          calibratingG=400;
-          #if GPS 
-            GPS_reset_home_position();
-          #endif
-        }
-        i = 0;
-        if(rcData[ROLL]  < MINCHECK && rcData[PITCH] > 1300 && rcData[PITCH] < 1700) i=1;    // ROLL left  -> SET 1
-        if(rcData[PITCH] > MAXCHECK && rcData[ROLL]  > 1300 && rcData[ROLL]  < 1700) i=2;    // PITCH up   -> SET 2
-        if(rcData[ROLL]  > MAXCHECK && rcData[PITCH] > 1300 && rcData[PITCH] < 1700) i=3;    // ROLL right -> SET 3
-        if(i && rcDelayCommand == 20) {
-          global_conf.currentSet = i-1;
-          writeGlobalSet(0);
-          readEEPROM();
-          blinkLED(2,40,i);
-        }
-      } else if (rcData[YAW] > MAXCHECK && rcData[PITCH] > MAXCHECK && !f.ARMED) {
-        if (rcDelayCommand == 20) {
-          #ifdef TRI
-            servo[5] = 1500; // we center the yaw servo in conf mode
-            writeServos();
-          #endif
-          #ifdef FLYING_WING
-            servo[0]  = conf.wing_left_mid;
-            servo[1]  = conf.wing_right_mid;
-            writeServos();
-          #endif
-          #ifdef AIRPLANE
-            for(i = 4; i<7 ;i++) servo[i] = 1500;
-            writeServos();
-          #endif          
-          #if defined(LCD_CONF)
-            configurationLoop(); // beginning LCD configuration
-          #endif
-          previousTime = micros();
-        }
-      }
-      else if (conf.activate[BOXARM] > 0) {
-        if ( rcOptions[BOXARM] && f.OK_TO_ARM
-        #if defined(FAILSAFE)
-          && failsafeCnt <= 1
-        #endif 
-        ) {
-          f.ARMED = 1;
-          headFreeModeHold = heading;
-        } else if (f.ARMED) f.ARMED = 0;
-        rcDelayCommand = 0;
-      #ifdef ALLOW_ARM_DISARM_VIA_TX_YAW
-      } else if ( (rcData[YAW] < MINCHECK )  && f.ARMED) {
-        if (rcDelayCommand == 20) f.ARMED = 0; // rcDelayCommand = 20 => 20x20ms = 0.4s = time to wait for a specific RC command to be acknowledged
-      } else if ( (rcData[YAW] > MAXCHECK ) && rcData[PITCH] < MAXCHECK && !f.ARMED && calibratingG == 0 && f.ACC_CALIBRATED) {
-        if (rcDelayCommand == 20) {
-          f.ARMED = 1;
-          headFreeModeHold = heading;
-        }
-      #endif
-      #ifdef ALLOW_ARM_DISARM_VIA_TX_ROLL
-      } else if ( (rcData[ROLL] < MINCHECK)  && f.ARMED) {
-        if (rcDelayCommand == 20) f.ARMED = 0; // rcDelayCommand = 20 => 20x20ms = 0.4s = time to wait for a specific RC command to be acknowledged
-      } else if ( (rcData[ROLL] > MAXCHECK) && rcData[PITCH] < MAXCHECK && !f.ARMED && calibratingG == 0 && f.ACC_CALIBRATED) {
-        if (rcDelayCommand == 20) {
-          f.ARMED = 1;
-          headFreeModeHold = heading;
-        }
-      #endif
-      #ifdef LCD_TELEMETRY_AUTO
-      } else if (rcData[ROLL] < MINCHECK && rcData[PITCH] > MAXCHECK && !f.ARMED) {
-        if (rcDelayCommand == 20) {
-           if (telemetry_auto) {
-              telemetry_auto = 0;
-              telemetry = 0;
-           } else
-              telemetry_auto = 1;
-        }
-      #endif
-      #ifdef LCD_TELEMETRY_STEP
-      } else if (rcData[ROLL] > MAXCHECK && rcData[PITCH] > MAXCHECK && !f.ARMED) {
-        if (rcDelayCommand == 20) {
-          telemetry = telemetryStepSequence[++telemetryStepIndex % strlen(telemetryStepSequence)];
-          LCDclear(); // make sure to clear away remnants
-        }
-      #endif
-      } else
-        rcDelayCommand = 0;
-    } else if (rcData[THROTTLE] > MAXCHECK && !f.ARMED) {
-      if (rcData[YAW] < MINCHECK && rcData[PITCH] < MINCHECK) {        // throttle=max, yaw=left, pitch=min
-        if (rcDelayCommand == 20) calibratingA=400;
-        rcDelayCommand++;
-      } else if (rcData[YAW] > MAXCHECK && rcData[PITCH] < MINCHECK) { // throttle=max, yaw=right, pitch=min  
-        if (rcDelayCommand == 20) f.CALIBRATE_MAG = 1; // MAG calibration request
-        rcDelayCommand++;
-      } else if (rcData[PITCH] > MAXCHECK) {
-         conf.angleTrim[PITCH]+=2;writeParams(1);
-         #if defined(LED_RING)
-           blinkLedRing();
-         #endif
-      } else if (rcData[PITCH] < MINCHECK) {
-         conf.angleTrim[PITCH]-=2;writeParams(1);
-         #if defined(LED_RING)
-           blinkLedRing();
-         #endif
-      } else if (rcData[ROLL] > MAXCHECK) {
-         conf.angleTrim[ROLL]+=2;writeParams(1);
-         #if defined(LED_RING)
-           blinkLedRing();
-         #endif
-      } else if (rcData[ROLL] < MINCHECK) {
-         conf.angleTrim[ROLL]-=2;writeParams(1);
-         #if defined(LED_RING)
-           blinkLedRing();
-         #endif
-      } else {
-        rcDelayCommand = 0;
-      }
-    }
-*/
-
     #if defined(LED_FLASHER)
       led_flasher_autoselect_sequence();
     #endif
