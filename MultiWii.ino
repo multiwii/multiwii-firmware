@@ -244,6 +244,19 @@ static uint16_t intPowerMeterSum, intPowerTrigger1;
 #define MINCHECK 1100
 #define MAXCHECK 1900
 
+#define ROL_LO  (1<<(2*ROLL))
+#define ROL_CE  (3<<(2*ROLL))
+#define ROL_HI  (2<<(2*ROLL))
+#define PIT_LO  (1<<(2*PITCH))
+#define PIT_CE  (3<<(2*PITCH))
+#define PIT_HI  (2<<(2*PITCH))
+#define YAW_LO  (1<<(2*YAW))
+#define YAW_CE  (3<<(2*YAW))
+#define YAW_HI  (2<<(2*YAW))
+#define THR_LO  (1<<(2*THROTTLE))
+#define THR_CE  (3<<(2*THROTTLE))
+#define THR_HI  (2<<(2*THROTTLE))
+
 static int16_t failsafeEvents = 0;
 volatile int16_t failsafeCnt = 0;
 
@@ -672,9 +685,20 @@ void setup() {
   debugmsg_append_str("initialization completed\n");
 }
 
+void go_arm() {
+  #if defined(FAILSAFE)
+    if(failsafeCnt > 1) blinkLED(2,800,1); else
+  #endif 
+    {
+      f.ARMED = 1;
+      headFreeModeHold = heading;
+    }
+}
+
 // ******** Main Loop *********
 void loop () {
   static uint8_t rcDelayCommand; // this indicates the number of time (multiple of RC measurement at 50Hz) the sticks must be maintained to run or switch off motors
+  static uint8_t rcSticks;       // this hold sticks position for command combos
   uint8_t axis,i;
   int16_t error,errorAngle;
   int16_t delta,deltaSum;
@@ -716,6 +740,122 @@ void loop () {
       failsafeCnt++;
     #endif
     // end of failsafe routine - next change is made with RcOptions setting
+
+// ------------------ STICKS COMMAND HANDLER --------------------
+// checking sticks positions
+    uint8_t stTmp = 0;
+    for(i=0;i<4;i++) {
+      stTmp >>= 2;
+      if(rcData[i] > MINCHECK) stTmp |= 0x80;      // check for MIN
+      if(rcData[i] < MAXCHECK) stTmp |= 0x40;      // check for MAX
+    }
+    if(stTmp == rcSticks) {
+      if(rcDelayCommand<250) rcDelayCommand++;
+    } else rcDelayCommand = 0;
+    rcSticks = stTmp;
+// perform actions    
+    if (rcSticks & 0xC0 == THR_LO) {          // THROTTLE at minimum
+      errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0; errorGyroI[YAW] = 0;
+      errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
+    }
+    if(rcDelayCommand == 20) {
+      if(f.ARMED) {                   // actions during armed
+        #ifdef ALLOW_ARM_DISARM_VIA_TX_YAW
+          if (rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_CE) f.ARMED = 0;    // Disarm via YAW
+        #endif
+        #ifdef ALLOW_ARM_DISARM_VIA_TX_ROLL
+          if (rcSticks == THR_LO + YAW_CE + PIT_CE + ROL_LO) f.ARMED = 0;    // Disarm via ROLL
+        #endif
+      } else {                        // actions during not armed
+        i=0;
+        if (rcSticks == THR_LO + YAW_LO + PIT_LO + ROL_CE) {    // GYRO calibration
+          calibratingG=400;
+          #if GPS 
+            GPS_reset_home_position();
+          #endif
+        }
+        #if defined(INFLIGHT_ACC_CALIBRATION)  
+         else if (rcSticks == THR_LO + YAW_LO + PIT_HI + ROL_HI) {    // Inflight ACC calibration START/STOP
+            if (AccInflightCalibrationMeasurementDone){                // trigger saving into eeprom after landing
+              AccInflightCalibrationMeasurementDone = 0;
+              AccInflightCalibrationSavetoEEProm = 1;
+            }else{ 
+              AccInflightCalibrationArmed = !AccInflightCalibrationArmed; 
+              #if defined(BUZZER)
+               if (AccInflightCalibrationArmed) notification_toggle=2; else   notification_toggle=3;
+              #endif
+            }
+         } 
+        #endif
+        if      (rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_LO) i=1;    // ROLL left  -> Profile 1
+        else if (rcSticks == THR_LO + YAW_LO + PIT_HI + ROL_CE) i=2;    // PITCH up   -> Profile 2
+        else if (rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_HI) i=3;    // ROLL right -> Profile 3
+        if(i) {
+          global_conf.currentSet = i-1;
+          writeGlobalSet(0);
+          readEEPROM();
+          blinkLED(2,40,i);
+        }
+        if (rcSticks == THR_LO + YAW_HI + PIT_HI + ROL_CE) {            // Enter LCD config
+          #ifdef TRI
+            servo[5] = 1500; // we center the yaw servo in conf mode
+            writeServos();
+          #endif
+          #ifdef FLYING_WING
+            servo[0]  = conf.wing_left_mid;
+            servo[1]  = conf.wing_right_mid;
+            writeServos();
+          #endif
+          #ifdef AIRPLANE
+            for(i = 4; i<7 ;i++) servo[i] = 1500;
+            writeServos();
+          #endif          
+          #if defined(LCD_CONF)
+            configurationLoop(); // beginning LCD configuration
+          #endif
+          previousTime = micros();
+        }
+        #ifdef ALLOW_ARM_DISARM_VIA_TX_YAW
+          else if (rcSticks == THR_LO + YAW_HI + PIT_CE + ROL_CE && calibratingG == 0 && f.ACC_CALIBRATED) go_arm();    // Arm via YAW
+        #endif
+        #ifdef ALLOW_ARM_DISARM_VIA_TX_ROLL
+          else if (rcSticks == THR_LO + YAW_CE + PIT_CE + ROL_HI && calibratingG == 0 && f.ACC_CALIBRATED) go_arm();    // Arm via ROLL
+        #endif
+        #ifdef LCD_TELEMETRY_AUTO
+          else if (rcSticks == THR_LO + YAW_CE + PIT_HI + ROL_LO) {              // Auto telemetry ON/OFF
+             if (telemetry_auto) {
+                telemetry_auto = 0;
+                telemetry = 0;
+             } else
+                telemetry_auto = 1;
+          }
+        #endif
+        #ifdef LCD_TELEMETRY_STEP
+          else if (rcSticks == THR_LO + YAW_CE + PIT_HI + ROL_HI) {              // Telemetry next step
+            telemetry = telemetryStepSequence[++telemetryStepIndex % strlen(telemetryStepSequence)];
+            LCDclear(); // make sure to clear away remnants
+          }
+        #endif
+        else if (rcSticks == THR_HI + YAW_LO + PIT_LO + ROL_CE) calibratingA=400;     // throttle=max, yaw=left, pitch=min
+        else if (rcSticks == THR_HI + YAW_HI + PIT_LO + ROL_CE) f.CALIBRATE_MAG = 1;  // throttle=max, yaw=right, pitch=min  
+        i=0;
+        if      (rcSticks == THR_HI + YAW_CE + PIT_HI + ROL_CE) {conf.angleTrim[PITCH]+=2; i=1;}
+        else if (rcSticks == THR_HI + YAW_CE + PIT_LO + ROL_CE) {conf.angleTrim[PITCH]-=2; i=1;}
+        else if (rcSticks == THR_HI + YAW_CE + PIT_CE + ROL_HI) {conf.angleTrim[ROLL] +=2; i=1;}
+        else if (rcSticks == THR_HI + YAW_CE + PIT_CE + ROL_LO) {conf.angleTrim[ROLL] -=2; i=1;}
+        if (i) {
+          writeParams(1);
+          #if defined(LED_RING)
+            blinkLedRing();
+          #endif
+        }
+      }
+    }
+    if (conf.activate[BOXARM] > 0) {
+      if ( rcOptions[BOXARM] && f.OK_TO_ARM ) go_arm(); else if (f.ARMED) f.ARMED = 0;
+    }
+/*  
+    // **********  OLD STICK COMMAND HANDLER  *****************
     if (rcData[THROTTLE] < MINCHECK) {
       errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0; errorGyroI[YAW] = 0;
       errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
@@ -851,6 +991,8 @@ void loop () {
         rcDelayCommand = 0;
       }
     }
+*/
+
     #if defined(LED_FLASHER)
       led_flasher_autoselect_sequence();
     #endif
