@@ -1,166 +1,181 @@
 static uint8_t cycle_Done[5]={0,0,0,0,0}, 
                channelIsOn[5] = {0,0,0,0,0};
 static uint32_t channelLastToggleTime[5] ={0,0,0,0,0};
+
+static uint8_t beeperOnBox = 0,
+               warn_noGPSfix = 0,
+               warn_failsafe = 0, 
+               warn_runtime = 0,
+               warn_vbat = 0,
+               warn_pMeter = 0,
+               SequenceActive=0;
+
 #if defined(BUZZER)
-  static uint8_t beeperOnBox = 0,
-                 warn_noGPSfix = 0,
-                 warn_failsafe = 0, 
-                 warn_runtime = 0,
-                 warn_vbat = 0,
-                 warn_pMeter = 0,
-                 buzzerSequenceActive=0;
-
   uint8_t isBuzzerON() { return channelIsOn[1]; } // returns true while buzzer is buzzing; returns 0 for silent periods
-
+#endif
 /********************************************************************/
 /****                      Alarm Handling                        ****/
 /********************************************************************/
-  void alarmHandler(){
-    
-    #if defined(VBAT)
-      if (vbatMin < conf.vbatlevel4_3s) warn_vbat = 4;
-      else if ( (vbat>conf.vbatlevel1_3s)  || (conf.no_vbat > vbat))warn_vbat = 0;
-      else if (vbat > conf.vbatlevel2_3s) warn_vbat = 1;
-      else if (vbat > conf.vbatlevel3_3s) warn_vbat = 2;
-      else warn_vbat = 4;
-    #endif
+void alarmHandler(){
+
+  #if defined(VBAT)
+    if (vbatMin < conf.vbatlevel4_3s) warn_vbat = 4;
+    else if ( (vbat>conf.vbatlevel1_3s)  || (conf.no_vbat > vbat))warn_vbat = 0;
+    else if (vbat > conf.vbatlevel2_3s) warn_vbat = 1;
+    else if (vbat > conf.vbatlevel3_3s) warn_vbat = 2;
+    else warn_vbat = 4;
+  #endif
  
-    #if defined(POWERMETER)
-      if ( (pMeter[PMOTOR_SUM] < pAlarm) || (pAlarm == 0) ) warn_pMeter = 0;
-      else if (pMeter[PMOTOR_SUM] > pAlarm) warn_pMeter = 1;
-    #endif 
- 
+  #if defined(POWERMETER)
+    if ( (pMeter[PMOTOR_SUM] < pAlarm) || (pAlarm == 0) ) warn_pMeter = 0;
+    else if (pMeter[PMOTOR_SUM] > pAlarm) warn_pMeter = 1;
+  #endif 
+
+  #if defined(BUZZER)
     if ( rcOptions[BOXBEEPERON] )beeperOnBox = 1;
     else beeperOnBox = 0;
-    
-    #if defined(RCOPTIONSBEEP)
-      static uint8_t i = 0,firstrun = 1, last_rcOptions[CHECKBOXITEMS];
-                    
-      if (last_rcOptions[i] != rcOptions[i])notification_toggle = 1;
-        last_rcOptions[i] = rcOptions[i]; 
-        i++;
-      if(i >= CHECKBOXITEMS)i=0;
-      
-      if(firstrun == 1 && notification_confirmation == 0){
-        notification_toggle = 0;    //only enable options beep AFTER gyro init
-        beeperOnBox = 0;
-      }        
-      else firstrun = 0;
-       
-    #endif  
-     
-    #if defined(FAILSAFE)
-      if ( failsafeCnt > (5*FAILSAFE_DELAY) && f.ARMED) {
-        warn_failsafe = 1;                                                                   //set failsafe warning level to 1 while landing
-        if (failsafeCnt > 5*(FAILSAFE_DELAY+FAILSAFE_OFF_DELAY)) warn_failsafe = 2;          //start "find me" signal after landing   
-      }
-      if ( failsafeCnt > (5*FAILSAFE_DELAY) && !f.ARMED) warn_failsafe = 2;                  // tx turned off while motors are off: start "find me" signal
-      if ( failsafeCnt == 0) warn_failsafe = 0;                                              // turn off alarm if TX is okay
-    #endif
-    
-    #if GPS
-      if ((rcOptions[BOXGPSHOME] || rcOptions[BOXGPSHOLD]) && !f.GPS_FIX)warn_noGPSfix = 1;  
-      else warn_noGPSfix = 0;
-    #endif
-
-    #if defined(ARMEDTIMEWARNING)
-      if (armedTime >= ArmedTimeWarningMicroSeconds)warn_runtime = 1;
-    #endif
-
-    buzzerHandler();
-    #if defined(PILOTLAMP)
-      PilotLampHandler();
-    #endif
+  #endif
   
+  #if defined(RCOPTIONSBEEP)
+    static uint8_t i = 0,firstrun = 1, last_rcOptions[CHECKBOXITEMS];
+                  
+    if (last_rcOptions[i] != rcOptions[i])notification_toggle = 1;
+      last_rcOptions[i] = rcOptions[i]; 
+      i++;
+    if(i >= CHECKBOXITEMS)i=0;
     
-  }
+    if(firstrun == 1 && notification_confirmation == 0){
+      notification_toggle = 0;    //only enable options beep AFTER gyro init
+      beeperOnBox = 0;
+    }        
+    else firstrun = 0;
+  #endif  
+     
+  #if defined(FAILSAFE)
+    if ( failsafeCnt > (5*FAILSAFE_DELAY) && f.ARMED) {
+      warn_failsafe = 1;                                                                   //set failsafe warning level to 1 while landing
+      if (failsafeCnt > 5*(FAILSAFE_DELAY+FAILSAFE_OFF_DELAY)) warn_failsafe = 2;          //start "find me" signal after landing   
+    }
+    if ( failsafeCnt > (5*FAILSAFE_DELAY) && !f.ARMED) warn_failsafe = 2;                  // tx turned off while motors are off: start "find me" signal
+    if ( failsafeCnt == 0) warn_failsafe = 0;                                              // turn off alarm if TX is okay
+  #endif
+  
+  #if GPS
+    if ((f.GPS_HOME_MODE || f.GPS_HOLD_MODE) && !f.GPS_FIX)warn_noGPSfix = 1;  
+    else warn_noGPSfix = 0;
+  #endif
 
+  #if defined(ARMEDTIMEWARNING)
+    if (armedTime >= ArmedTimeWarningMicroSeconds)warn_runtime = 1;
+  #endif
+  
+  #if defined(BUZZER)
+    buzzerHandler();
+  #endif
+  #if defined(PILOTLAMP)
+    PilotLampHandler();
+  #endif
+}
+
+#if defined(BUZZER)
   void buzzerHandler(){ 
-    /********************************************************************/
-    /****                      Buzzer Handling                       ****/
-    /********************************************************************/  
+    static char resource = 1;
     // beepcode(length1,length2,length3,pause)
     //D: Double, L: Long, M: Middle, S: Short, N: None
-    if (warn_failsafe == 2)      beep_code('L','N','N','D');
-    else if (warn_failsafe == 1) beep_code('S','L','L','S');            
-    else if (notification_toggle == 1) beep_code('S','N','N','N'); 
-    else if (notification_toggle == 2)    beep_code('S','S','N','N');       
-    else if (notification_toggle > 2)     beep_code('S','S','S','N');     
-    else if (warn_noGPSfix == 1) beep_code('S','S','N','S');    
-    else if (beeperOnBox == 1)   beep_code('S','S','S','S');
-    else if (warn_pMeter == 1 && f.ARMED == 1)  beep_code('S','S','N','M'); 
-    else if (warn_runtime == 1 && f.ARMED == 1)beep_code('S','S','S','N');     
-    else if (warn_vbat == 4)     beep_code('M','S','M','S'); // beep_code('S','S','L','D');
-    else if (warn_vbat == 2)     beep_code('M','N','M','D'); // beep_code('S','L','N','D');
-    else if (warn_vbat == 1)     beep_code('M','N','N','D'); // beep_code('L','N','N','D');
-    else if (notification_confirmation == 1) beep_code('L','N','N','L');    
-    else if (notification_confirmation == 2) beep_code('L','L','N','L');   
-    else if (notification_confirmation == 3) beep_code('L','L','L','L');
-    else if (notification_confirmation == 4) beep_code('L','M','S','N');
-    else if (notification_confirmation > 4) beep_code('L','L','L','L');
-    else if (buzzerSequenceActive == 1) beep_code('N','N','N','N');                //if no signal is needed, finish sequence if not finished yet
+    if (warn_failsafe == 2)      patternDecode(resource,'L','N','N','D');                 //failsafe "find me" signal
+    else if (warn_failsafe == 1 || warn_ACCcalibration == 1) patternDecode(resource,'S','L','L','S');                        
+    else if (notification_toggle == 1) {patternDecode(resource,'S','N','N','N');      } 
+    else if (notification_toggle == 2)    patternDecode(resource,'S','S','N','N');       
+    else if (notification_toggle > 2)     patternDecode(resource,'S','S','S','N');         
+    else if (warn_noGPSfix == 1) patternDecode(resource,'S','S','N','S');    
+    else if (beeperOnBox == 1)   patternDecode(resource,'S','S','S','S');                 //beeperon
+    else if (warn_pMeter == 1 && f.ARMED == 1)patternDecode(resource,'S','S','N','M'); 
+    else if (warn_runtime == 1 && f.ARMED == 1)patternDecode(resource,'S','S','S','N'); //Runtime warning      
+    else if (warn_vbat == 4)     patternDecode(resource,'S','S','L','D');       
+    else if (warn_vbat == 2)     patternDecode(resource,'S','L','N','D');       
+    else if (warn_vbat == 1)     patternDecode(resource,'L','N','N','D'); 
+    else if (notification_confirmation == 1) patternDecode(resource,'L','N','N','L');    
+    else if (notification_confirmation == 2) patternDecode(resource,'L','L','N','L');   
+    else if (notification_confirmation == 3) patternDecode(resource,'L','L','L','L');
+    else if (notification_confirmation == 4) patternDecode(resource,'L','M','S','N');
+    else if (notification_confirmation > 4) patternDecode(resource,'L','L','L','L');
+    else if (SequenceActive == 1) patternDecode(resource,'N','N','N','N');                //if no signal is needed, finish sequence if not finished yet
     else{                                                                   //reset everything and keep quiet
       if (channelIsOn[1]) {
         channelIsOn[1] = 0;
         BUZZERPIN_OFF;
       }
-    }  
+    } 
+  warn_ACCcalibration = 0; 
   }
-  void beep_code(char first, char second, char third, char pause){
-    static char patternChar[4];
-    uint16_t Duration;
-    static uint8_t icnt = 0;
-  
-    if (buzzerSequenceActive == 0){    //only change sequenceparameters if prior sequence is done
-      buzzerSequenceActive = 1;
-      patternChar[0] = first; 
-      patternChar[1] = second;
-      patternChar[2] = third;
-      patternChar[3] = pause;
-    }
-    switch(patternChar[icnt]) {
-      case 'L': 
-        Duration = 200; 
-        break;
-      case 'M': 
-        Duration = 120; 
-        break;
-      case 'D': 
-        Duration = 2000; 
-        break;
-      case 'N': 
-        Duration = 0; 
-        break;
-      default:
-        Duration = 50; 
-        break;
-    }
-    if(icnt <3 && Duration!=0){
-      useResource('S',Duration,50);
-    }
-    if (icnt >=3 && (channelLastToggleTime[1]<millis()-Duration) ){
-      icnt=0;
-      if (notification_toggle)notification_toggle = 0;
-      if (notification_confirmation)notification_confirmation = 0;
-      buzzerSequenceActive = 0;                              //sequence is now done, next sequence may begin
-      if (channelIsOn[1]) {
-        BUZZERPIN_OFF;
-        channelIsOn[1] = 0;
-      }
-      return;
-    }
-    if (cycle_Done[1] == 1 || Duration == 0){
-      if (icnt < 3){icnt++;} 
-      cycle_Done[1] = 0;
-      if (channelIsOn[1]) {
-        BUZZERPIN_OFF;
-        channelIsOn[1] = 0;
-      }
-    }  
-  }  
-  
-#endif  //end of buzzer define
+#endif  
 
+void patternDecode(uint8_t channel,char first, char second, char third, char pause){
+  static char patternChar[4];
+  uint16_t Duration;
+  static uint8_t icnt = 0;
+  
+  if (SequenceActive == 0){    //only change sequenceparameters if prior sequence is done
+    SequenceActive = 1;
+    patternChar[0] = first; 
+    patternChar[1] = second;
+    patternChar[2] = third;
+    patternChar[3] = pause;
+  }
+  switch(patternChar[icnt]) {
+    case 'L': 
+      Duration = 200; 
+      break;
+    case 'M': 
+      Duration = 120; 
+      break;
+    case 'D': 
+      Duration = 2000; 
+      break;
+    case 'N': 
+      Duration = 0; 
+      break;
+    default:
+      Duration = 50; 
+      break;
+  }
+  if(icnt <3 && Duration!=0){
+    useResource(channel,Duration,50);
+  }
+  if (icnt >=3 && (channelLastToggleTime[1]<millis()-Duration) ){//sequence is over: reset everything
+    icnt=0;
+    if (notification_toggle)notification_toggle = 0;
+    if (notification_confirmation)notification_confirmation = 0;
+    SequenceActive = 0;                              //sequence is now done, next sequence may begin
+    if (channel == 1){
+      if (channelIsOn[1]) {
+        BUZZERPIN_OFF;
+        channelIsOn[1] = 0;
+      }
+    }else if (channel == 0){
+      if (channelIsOn[2]) {
+        channelIsOn[2] = 0;
+        LEDPIN_OFF;
+      }
+    }
+    return;
+  }
+  if (cycle_Done[channel] == 1 || Duration == 0){//single on off cycle is done
+    if (icnt < 3){icnt++;} 
+    cycle_Done[channel] = 0;
+    if (channel == 1){
+      if (channelIsOn[1]) {
+        BUZZERPIN_OFF;
+        channelIsOn[1] = 0;
+      }
+    }else if (channel == 0){
+      if (channelIsOn[2]) {
+        channelIsOn[2] = 0;
+        LEDPIN_OFF;
+      }
+    }
+  }  
+}
 
 #if defined (PILOTLAMP) 
   //original code based on mr.rc-cam and jevermeister work
@@ -178,31 +193,47 @@ static uint32_t channelLastToggleTime[5] ={0,0,0,0,0};
     static int16_t  i2c_errors_count_old = 0;
     static uint8_t channel = 0;
     //==================I2C Error ===========================
-    if (i2c_errors_count > i2c_errors_count_old+100){
+    if (i2c_errors_count > i2c_errors_count_old+100 || i2c_errors_count < -1){
       PilotLampSequence(100,B000111,2); //alternate all on, all off pattern
-    }else if (beeperOnBox){
+    }
+    else if (beeperOnBox){
     //==================LED Sequence ===========================
       PilotLampSequence(100,B0101<<8|B00010001,4); //sequential pattern 
     }else{
     //==================GREEN LED===========================
-      if (f.ARMED && f.ANGLE_MODE) useResource('G',1000,1000);
-      else if (f.ARMED && f.HORIZON_MODE) useResource('G',100,1000);
-      else if (f.ARMED) useResource('G',1000,0);
-      else useResource('G',0,0);    //switch off
+      if (f.ARMED && f.ANGLE_MODE) decodePL('G',1000,1000);
+      else if (f.ARMED && f.HORIZON_MODE) decodePL('G',1000,500);
+      else if (f.ARMED) decodePL('G',1000,100);
+      else decodePL('G',0,0);    //switch off
     //==================BLUE LED===========================
       #if GPS
-        if (!f.GPS_FIX) useResource('B',100,100);
-        else if (rcOptions[BOXGPSHOME] || rcOptions[BOXGPSHOLD]) useResource('B',1000,1000);
-        else useResource('B',100,1000);
+        if (!f.GPS_FIX) decodePL('B',100,100);
+        else if (f.GPS_HOME_MODE || f.GPS_HOLD_MODE) decodePL('B',1000,1000);
+        else decodePL('B',100,1000);
       #else
-        useResource('B',0,0);
+        decodePL('B',0,0);
       #endif   
     //==================RED LED===========================
-      if (warn_failsafe==1)useResource('R',100,100);
-      else if (warn_failsafe==2)useResource('R',1000,2000);
-      else useResource('R',0,0);
+      if (warn_failsafe==1)decodePL('R',100,100);
+      else if (warn_failsafe==2)decodePL('R',1000,2000);
+      else decodePL('R',0,0);
    }
  }
+ void decodePL(char channel, uint16_t pulse, uint16_t pause){ 
+    switch(channel) {
+      case 'G': 
+        useResource(2,pulse,pause);
+        break;
+      case 'B': 
+        useResource(3,pulse,pause);
+        break;
+      case 'R': 
+        useResource(4,pulse,pause);
+        break;
+      default:
+        break;
+    }
+  }
 
 //define your light pattern by bits, 0=off 1=on
 //define up to 5 patterns that cycle using 15 bits, pattern starts at bit 0 in groups of 3
@@ -282,13 +313,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
         switch_landing_lights(1);
       #endif
       LEDPIN_TOGGLE; // switch LEDPIN state
-      #if defined(BUZZER)
-        BUZZERPIN_ON;
-      #endif
       delay(ontime);
-      #if defined(BUZZER)
-        BUZZERPIN_OFF;
-      #endif
       #if defined(LED_FLASHER)
         switch_led_flasher(0);
       #endif
@@ -304,10 +329,8 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
 /****                         Global Handling                    ****/
 /********************************************************************/
 
-  void useResource(char resource, uint16_t pulse, uint16_t pause){
-    static uint8_t channel = 0; 
-    channel = ResourceToChannel(resource);
-    if (!channelIsOn[channel] && (millis() >= (channelLastToggleTime[channel] + pause))&& pulse != 0) {
+  int useResource(uint8_t channel, uint16_t pulse, uint16_t pause){ 
+    if (!channelIsOn[channel] && (millis() >= (channelLastToggleTime[channel] + pause))&& pulse != 0) {	         
       channelIsOn[channel] = 1;      
       ChannelToOutput(channel,1);
       channelLastToggleTime[channel]=millis();      
@@ -318,38 +341,15 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
       cycle_Done[channel] = 1;     
     } 
   } 
-  
-  int ResourceToChannel(uint8_t resource){
-    uint8_t channel =0;
-    switch(resource) {
-      case 'L':
-        channel = 0;
-        break;
-      case 'S': 
-        channel = 1;
-        break;
-      case 'G': 
-        channel = 2;
-        break;
-      case 'B': 
-        channel = 3;
-        break;
-      case 'R': 
-        channel = 4;
-        break;
-      default:
-        channel = 0;
-        break;
-    }
-    return channel;
-  }
-  
+ 
   void ChannelToOutput(uint8_t channel, uint8_t activate){
-     switch(channel) {        
+     switch(channel) {     
+        #if defined (BUZZER)   
           case 1:
             if (activate == 1) {BUZZERPIN_ON;}
             else {BUZZERPIN_OFF;}
             break; 
+        #endif
         #if defined (PILOTLAMP) 
           case 2:
             if (activate == 1) PilotLamp(PL_GRN_ON);
