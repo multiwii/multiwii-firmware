@@ -401,7 +401,8 @@ static struct {
   static uint8_t nav_mode = NAV_MODE_NONE;            //Navigation mode
  
   static uint8_t notification_toggle = 0,
-                 notification_confirmation = 0;
+                 notification_confirmation = 0,
+                 warn_ACCcalibration = 0;
  
 
 
@@ -695,7 +696,10 @@ void go_arm() {
         f.ARMED = 1;
         headFreeModeHold = heading;
       }
-    } else if(!f.ARMED) blinkLED(2,800,1);
+    } else if(!f.ARMED){ 
+        blinkLED(2,800,1);
+        warn_ACCcalibration = 1;
+      }
 }
 
 // ******** Main Loop *********
@@ -802,6 +806,7 @@ void loop () {
           writeGlobalSet(0);
           readEEPROM();
           blinkLED(2,40,i);
+          notification_toggle = i;
         }
         if (rcSticks == THR_LO + YAW_HI + PIT_HI + ROL_CE) {            // Enter LCD config
           #ifdef TRI
