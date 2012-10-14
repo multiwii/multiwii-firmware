@@ -404,7 +404,11 @@ static struct {
                  notification_confirmation = 0,
                  warn_ACCcalibration = 0;
  
-
+#if BARO
+  static int32_t baroPressure;
+  static int32_t baroTemperature;
+  static int32_t baroPressureSum;  
+#endif
 
 void annexCode() { // this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
   static uint32_t calibratedAccTime;
@@ -1017,28 +1021,35 @@ void loop () {
     #endif
   } else { // not in rc loop
     static uint8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
-    switch (taskOrder++ % 5) {
+    switch (taskOrder % 4) {
       case 0:
+        taskOrder++;
         #if MAG
-          Mag_getADC();
+          if (Mag_getADC()) { // max 350 µs (HMC5883)
+            break;            // only break when we actually did something
+          }
         #endif
-        break;
       case 1:
+        taskOrder++;
         #if BARO
-          Baro_update();
+          if (Baro_update() != 0 ) {
+            break;
+          } else {
+            if (getEstimatedAltitude() !=0) {
+              break;
+            }
+          }
         #endif
-        break;
       case 2:
-        #if BARO
-          getEstimatedAltitude();
-        #endif
-        break;
-      case 3:
+        taskOrder++;
         #if GPS
-          if(GPS_Enable) GPS_NewData();
+          if(GPS_Enable) {
+            GPS_NewData();
+          }
+          break;
         #endif
-        break;
-      case 4:
+      case 3:
+        taskOrder++;
         #if SONAR
           Sonar_update();debug[2] = sonarAlt;
         #endif
