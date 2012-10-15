@@ -316,8 +316,8 @@ void evaluateCommand() {
      }
      break;
    case MSP_RC:
-     headSerialReply(16);
-     for(uint8_t i=0;i<8;i++) serialize16(rcData[i]);
+     headSerialReply(RC_CHANS * 2);
+     for(uint8_t i=0;i<RC_CHANS;i++) serialize16(rcData[i]);
      break;
    #if GPS
    case MSP_RAW_GPS:

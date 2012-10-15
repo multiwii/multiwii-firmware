@@ -14,7 +14,10 @@
  * 7 - TUNING & DEVELOPER - if you know what you are doing; you have been warned
  */
 
-
+/* Notes:
+ * 1. parameters marked with (*) in the comment are stored in eeprom and can be tweaked via serial monitor or LCD.
+ *    Changing those values in config.h and upload will require a 'Reset' from the GUI to take effect
+ */
 
 
 /*************************************************************************************************/
@@ -197,7 +200,7 @@
     /* you can change the tricopter servo travel here */
       #define TRI_YAW_CONSTRAINT_MIN 1020
       #define TRI_YAW_CONSTRAINT_MAX 2000
-      #define TRI_YAW_MIDDLE 1500 // tail servo center pos. - use this for initial trim; later trim midpoint via LCD
+      #define TRI_YAW_MIDDLE 1500 // (*) tail servo center pos. - use this for initial trim; later trim midpoint via LCD
 
    /********************************    ARM/DISARM    *********************************/
    /* optionally disable stick combinations to arm/disarm the motors.
@@ -233,8 +236,8 @@
     #define PITCH_DIRECTION_R -1  // right servo - pitch orientation (opposite sign to PITCH_DIRECTION_L, if servos are mounted in mirrored orientation)
     #define ROLL_DIRECTION_L 1 // left servo - roll orientation
     #define ROLL_DIRECTION_R 1  // right servo - roll orientation  (same sign as ROLL_DIRECTION_L, if servos are mounted in mirrored orientation)
-    #define WING_LEFT_MID  1500 // left servo center pos. - use this for initial trim; later trim midpoint via LCD
-    #define WING_RIGHT_MID 1500 // right servo center pos. - use this for initial trim; later trim midpoint via LCD
+    #define WING_LEFT_MID  1500 // (*) left servo center pos. - use this for initial trim; later trim midpoint via LCD
+    #define WING_RIGHT_MID 1500 // (*) right servo center pos. - use this for initial trim; later trim midpoint via LCD
     #define WING_LEFT_MIN  1020 // limit servo travel range must be inside [1020;2000]
     #define WING_LEFT_MAX  2000 // limit servo travel range must be inside [1020;2000]
     #define WING_RIGHT_MIN 1020 // limit servo travel range must be inside [1020;2000]
@@ -257,7 +260,7 @@
 
   /***********************      Common for Heli & Airplane         ***********************/
     //#define D12_POWER      // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12
-    #define SERVO_OFFSET     {  0,   0,   0,  0,   0,   0,  0,   0 } // Adjust Servo MID Offset & Swash angles
+    #define SERVO_OFFSET     {  0,   0,   0,  0,   0,   0,  0,   0 } // (*) Adjust Servo MID Offset & Swash angles
     // Selectable channels:=    ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4
 
   /***********************          Heli                           ***********************/
@@ -499,7 +502,7 @@
       /* GYRO_SMOOTHING. In case you cannot reduce vibrations _and_ _after_ you have tried the low pass filter options, you
          may try this gyro smoothing via averaging. Not suitable for multicopters!
          Good results for helicopter, airplanes and flying wings (foamies) with lots of vibrations.*/
-      //#define GYRO_SMOOTHING {20, 20, 3}    // separate averaging ranges for roll, pitch, yaw
+      //#define GYRO_SMOOTHING {20, 20, 3}    // (*) separate averaging ranges for roll, pitch, yaw
 
     /************************    Moving Average Gyros    **********************************/
       //#define MMGYRO                         // Active Moving Average Function for Gyros
@@ -542,7 +545,7 @@
     //#define FAILSAFE                                // uncomment  to activate the failsafe function
     #define FAILSAFE_DELAY     10                     // Guard time for failsafe activation after signal lost. 1 step = 0.1sec - 1sec in example
     #define FAILSAFE_OFF_DELAY 200                    // Time for Landing before motors stop in 0.1sec. 1 step = 0.1sec - 20sec in example
-    #define FAILSAFE_THROTTLE  (MINTHROTTLE + 200)    // Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
+    #define FAILSAFE_THROTTLE  (MINTHROTTLE + 200)    // (*) Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
 
 
   /*****************                DFRobot LED RING    *********************************/
@@ -688,6 +691,7 @@
       //#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
       //#define LCD_TEXTSTAR    // SERIAL LCD: Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
       //#define LCD_VT100       // SERIAL LCD: vt100 compatible terminal emulation (blueterm, putty, etc.)
+      //#define LCD_TTY         // SERIAL LCD: useful to tweak paramters over cable with arduino IDE 'serial monitor'
       //#define LCD_ETPP        // I2C LCD: Eagle Tree Power Panel LCD, which is i2c (not serial)
       //#define LCD_LCD03       // I2C LCD: LCD03, which is i2c
       //#define OLED_I2C_128x64 // I2C LCD: OLED http://www.multiwii.com/forum/viewtopic.php?f=7&t=1350
@@ -701,11 +705,11 @@
       //#define MULTILINE_PRE 2  // multiline configMenu # pref lines
       //#define MULTILINE_POST 6 // multiline configMenu # post lines
     /********************************    Navigation     ***********************************/
-    /* keys to navigate the LCD menu (preset to LCD_TEXTSTAR key-depress codes)*/
-      #define LCD_MENU_PREV 'a'
-      #define LCD_MENU_NEXT 'c'
-      #define LCD_VALUE_UP 'd'
-      #define LCD_VALUE_DOWN 'b'
+    /* keys to navigate the LCD menu */
+      #define LCD_MENU_PREV 'p'
+      #define LCD_MENU_NEXT 'n'
+      #define LCD_VALUE_UP 'u'
+      #define LCD_VALUE_DOWN 'd'
 
       #define LCD_MENU_SAVE_EXIT 's'
       #define LCD_MENU_ABORT 'x'
@@ -787,13 +791,13 @@
        vbat = [0;1023]*16/VBATSCALE
        must be associated with #define BUZZER ! */
     //#define VBAT              // uncomment this line to activate the vbat code
-    #define VBATSCALE     131 // change this value if readed Battery voltage is different than real voltage
+    #define VBATSCALE     131 // (*) change this value if readed Battery voltage is different than real voltage
     #define VBATNOMINAL   126 // 12,6V full battery nominal voltage
-    #define VBATLEVEL1_3S 107 // 10,7V
-    #define VBATLEVEL2_3S 103 // 10,3V
-    #define VBATLEVEL3_3S 99  // 9.9V
-    #define VBATLEVEL4_3S 93  // 9.3V - if vbat ever goes below this value, permanent alarm is triggered
-    #define NO_VBAT       16 // Avoid beeping without any battery
+    #define VBATLEVEL1_3S 107 // (*) 10,7V
+    #define VBATLEVEL2_3S 103 // (*) 10,3V
+    #define VBATLEVEL3_3S 99  // (*) 9.9V
+    #define VBATLEVEL4_3S 93  // (*) 9.3V - if vbat ever goes below this value, permanent alarm is triggered
+    #define NO_VBAT       16  // (*) Avoid beeping without any battery
 
 
   /********************************************************************/
@@ -811,10 +815,10 @@
     /* PLEVELSCALE is the step size you can use to set alarm */
     #define PLEVELSCALE 50 // if you change this value for other granularity, you must search for comments in code to change accordingly
     /* larger PLEVELDIV will get you smaller value for power (mAh equivalent) */
-    #define PLEVELDIV 5000 // default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
+    #define PLEVELDIV 5000 // (*) default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
     #define PLEVELDIVSOFT PLEVELDIV // for soft always equal to PLEVELDIV; for hard set to 5000
-    #define PSENSORNULL 510 // set to analogRead() value for zero current; for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt; 
-    #define PINT2mA 13 // for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
+    #define PSENSORNULL 510 // (*) set to analogRead() value for zero current; for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt;
+    #define PINT2mA 13 // (*) for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
 
   /********************************************************************/
   /****           altitude hold                                    ****/
@@ -841,7 +845,7 @@
      * Tunable via LCD config menu.
      * value of 0 turns the feature off.
      */
-    //#define CYCLETIME_FIXATED 9000
+    //#define CYCLETIME_FIXATED 9000 // (*)
 
   /**************************************************************************************/
   /********   special ESC with extended range [0-2000] microseconds  ********************/

@@ -478,7 +478,7 @@ void LCDprint(uint8_t i) {
   }
   LCDPIN_ON //switch ON digital PIN 0
   delayMicroseconds(BITDELAY);
-#elif defined(LCD_TEXTSTAR) || defined(LCD_VT100)
+#elif defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_TTY)
   SerialWrite(0, i );
 #elif defined(LCD_ETPP)
   i2c_ETPP_send_char(i);
@@ -508,6 +508,8 @@ void LCDclear() {
   LCDprint(0x1B); LCDprint(0x5B); LCDprintChar("2J"); //ED2
   LCDcrlf();
   LCDprint(0x1B); LCDprint(0x5B); LCDprintChar("1;1H");//cursor top left
+#elif defined(LCD_TTY)
+  LCDcrlf();
 #elif defined(LCD_ETPP)
   i2c_ETPP_send_cmd(0x01); // Clear display command, which does NOT clear an Eagle Tree because character set "R" has a '>' at 0x20
   for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');// Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
@@ -533,6 +535,8 @@ void LCDsetLine(byte line) { // Line = 1 or 2 - vt100 has lines 1-99
   LCDprint( digit1(line) );
   LCDprintChar(";1H"); //pos line 1
   LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("2K");//EL2
+#elif defined(LCD_TTY)
+  LCDcrlf();
 #elif defined(LCD_ETPP)
   i2c_ETPP_set_cursor(0,line-1);
 #elif defined(LCD_LCD03)
@@ -593,6 +597,8 @@ void initLCD() {
     LCDprint(0xFE);LCDprint('R');//reset
   #elif defined(LCD_VT100)
     //LCDprint(0x1b); LCDprint('c'); //RIS
+  #elif defined(LCD_TTY)
+    ; // do nothing special to init the serial tty device
   #elif defined(LCD_ETPP)
     // Eagle Tree Power Panel - I2C & Daylight Readable LCD
     i2c_ETPP_init();
@@ -795,7 +801,8 @@ const char PROGMEM lcd_param_text38 [] = "SERvTRIM Y";
 //const char PROGMEM lcd_param_text41 [] = "an overrun";
 //#endif
 #if defined(LCD_CONF_AUX)
-const char PROGMEM lcd_param_text42 [] = "AUX level ";
+const char PROGMEM lcd_param_text41 [] = "AUX angle ";
+const char PROGMEM lcd_param_text42 [] = "AUX horizn";
 const char PROGMEM lcd_param_text43 [] = "AUX baro  ";
 const char PROGMEM lcd_param_text44 [] = "AUX mag   ";
 const char PROGMEM lcd_param_text45 [] = "AUX camstb";
@@ -907,11 +914,15 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #endif
 #ifdef LCD_CONF_AUX
   #if ACC
-    &lcd_param_text42, &conf.activate[BOXANGLE], &__AUX1,
-    &lcd_param_text42, &conf.activate[BOXANGLE], &__AUX2,
+    &lcd_param_text41, &conf.activate[BOXANGLE], &__AUX1,
+    &lcd_param_text41, &conf.activate[BOXANGLE], &__AUX2,
+    &lcd_param_text42, &conf.activate[BOXHORIZON], &__AUX1,
+    &lcd_param_text42, &conf.activate[BOXHORIZON], &__AUX2,
     #ifndef SUPPRESS_LCD_CONF_AUX34
-      &lcd_param_text42, &conf.activate[BOXANGLE], &__AUX3,
-      &lcd_param_text42, &conf.activate[BOXANGLE], &__AUX4,
+      &lcd_param_text41, &conf.activate[BOXANGLE], &__AUX3,
+      &lcd_param_text41, &conf.activate[BOXANGLE], &__AUX4,
+      &lcd_param_text42, &conf.activate[BOXHORIZON], &__AUX3,
+      &lcd_param_text42, &conf.activate[BOXHORIZON], &__AUX4,
     #endif
   #endif
   #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
@@ -1248,7 +1259,7 @@ void configurationLoop() {
     #if defined(SPEKTRUM)
       readRawRC(1); delay(44); // For digital receivers like Spektrum, SBUS, and Serial, to ensure that an "old" frame does not cause immediate exit at startup. 
     #endif
-    #if defined(LCD_TEXTSTAR) || defined(LCD_VT100) // textstar or vt100 can send keys
+    #if defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_TTY) // textstar, vt100 and tty can send keys
       key = ( SerialAvailable(0) ? SerialRead(0) : 0 );
     #endif
     #ifdef LCD_CONF_DEBUG
