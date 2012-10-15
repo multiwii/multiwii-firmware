@@ -97,6 +97,7 @@
       //#define AEROQUADSHIELDv2
       //#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). requires 3.3V power.
       //#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
+      //#define SIRIUSGPS       // Sirius Navigator IMU using external MAG on GPS board
       //#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
       //#define MINIWII         // Jussi's MiniWii Flight Controller                                <- confirmed by Alex
       //#define MICROWII        // MicroWii 10DOF with ATmega32u4, MPU6050, HMC5883L, MS561101BA from http://flyduino.net/
