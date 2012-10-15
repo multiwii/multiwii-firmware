@@ -851,8 +851,7 @@ const char PROGMEM lcd_param_text35 [] =  "batt volt ";
 const char PROGMEM lcd_param_text102 [] = "VBAT SCALE";
 const char PROGMEM lcd_param_text103 [] = "BattWarn 1";
 const char PROGMEM lcd_param_text104 [] = "BattWarn 2";
-const char PROGMEM lcd_param_text105 [] = "BattWarn 3";
-const char PROGMEM lcd_param_text106 [] = "BattWarn 4";
+const char PROGMEM lcd_param_text106 [] = "BattW Crit";
 const char PROGMEM lcd_param_text107 [] = "Batt NoBat";
 #endif
 #ifdef POWERMETER
@@ -1045,8 +1044,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text102, &conf.vbatscale, &__PT,
   &lcd_param_text103, &conf.vbatlevel1_3s, &__P,
   &lcd_param_text104, &conf.vbatlevel2_3s, &__P,
-  &lcd_param_text105, &conf.vbatlevel3_3s, &__P,
-  &lcd_param_text106, &conf.vbatlevel4_3s, &__P,
+  &lcd_param_text106, &conf.vbatlevel_crit, &__P,
   &lcd_param_text107, &conf.no_vbat, &__P,
 #endif
 #ifdef FLYING_WING
@@ -1410,7 +1408,7 @@ void output_Vmin() {
     line1[1] = digit100(vbatMin);
     line1[2] = digit10(vbatMin);
     line1[4] = digit1(vbatMin);
-    LCDbar(7, (vbatMin > conf.vbatlevel4_3s ? (((vbatMin - conf.vbatlevel4_3s)*100)/(VBATNOMINAL-conf.vbatlevel4_3s)) : 0 ));
+    LCDbar(7, (vbatMin > conf.vbatlevel_crit ? (((vbatMin - conf.vbatlevel_crit)*100)/(VBATNOMINAL-conf.vbatlevel_crit)) : 0 ));
     LCDprintChar(line1);
   #endif
 }

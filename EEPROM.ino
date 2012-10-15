@@ -142,8 +142,7 @@ void LoadDefaults() {
     conf.vbatscale = VBATSCALE;
     conf.vbatlevel1_3s = VBATLEVEL1_3S;
     conf.vbatlevel2_3s = VBATLEVEL2_3S;
-    conf.vbatlevel3_3s = VBATLEVEL3_3S;
-    conf.vbatlevel4_3s = VBATLEVEL4_3S;
+    conf.vbatlevel_crit = VBATLEVEL_CRIT;
     conf.no_vbat = NO_VBAT;
   #endif
   #ifdef POWERMETER

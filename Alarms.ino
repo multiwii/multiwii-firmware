@@ -19,10 +19,9 @@ static uint8_t beeperOnBox = 0,
 void alarmHandler(){
 
   #if defined(VBAT)
-    if (vbatMin < conf.vbatlevel4_3s) warn_vbat = 4;
+    if (vbatMin < conf.vbatlevel_crit) warn_vbat = 4;
     else if ( (vbat>conf.vbatlevel1_3s)  || (conf.no_vbat > vbat))warn_vbat = 0;
-    else if (vbat > conf.vbatlevel2_3s) warn_vbat = 1;
-    else if (vbat > conf.vbatlevel3_3s) warn_vbat = 2;
+    else if (vbat > conf.vbatlevel2_3s) warn_vbat = 2;
     else warn_vbat = 4;
   #endif
  
@@ -93,7 +92,7 @@ void alarmHandler(){
     else if (warn_runtime == 1 && f.ARMED == 1)patternDecode(resource,'S','S','S','N'); //Runtime warning      
     else if (warn_vbat == 4)     patternDecode(resource,'S','S','L','D');       
     else if (warn_vbat == 2)     patternDecode(resource,'S','L','N','D');       
-    else if (warn_vbat == 1)     patternDecode(resource,'L','N','N','D'); 
+    //else if (warn_vbat == 1)     patternDecode(resource,'L','N','N','D');
     else if (notification_confirmation == 1) patternDecode(resource,'L','N','N','L');    
     else if (notification_confirmation == 2) patternDecode(resource,'L','L','N','L');   
     else if (notification_confirmation == 3) patternDecode(resource,'L','L','L','L');

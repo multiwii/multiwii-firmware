@@ -336,8 +336,7 @@ static struct {
     uint8_t vbatscale;
     uint8_t vbatlevel1_3s;
     uint8_t vbatlevel2_3s;
-    uint8_t vbatlevel3_3s;
-    uint8_t vbatlevel4_3s;
+    uint8_t vbatlevel_crit;
     uint8_t no_vbat;
   #endif
   #ifdef POWERMETER

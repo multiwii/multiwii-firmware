@@ -794,9 +794,8 @@
     #define VBATSCALE     131 // (*) change this value if readed Battery voltage is different than real voltage
     #define VBATNOMINAL   126 // 12,6V full battery nominal voltage
     #define VBATLEVEL1_3S 107 // (*) 10,7V
-    #define VBATLEVEL2_3S 103 // (*) 10,3V
-    #define VBATLEVEL3_3S 99  // (*) 9.9V
-    #define VBATLEVEL4_3S 93  // (*) 9.3V - if vbat ever goes below this value, permanent alarm is triggered
+    #define VBATLEVEL2_3S  99 // (*) 9.9V
+    #define VBATLEVEL_CRIT 93 // (*) 9.3V - critical condition: if vbat ever goes below this value, permanent alarm is triggered
     #define NO_VBAT       16  // (*) Avoid beeping without any battery
 
 
