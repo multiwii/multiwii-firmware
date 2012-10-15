@@ -1074,7 +1074,7 @@ uint8_t Mag_getADC() { // return 1 when news values are available, 0 otherwise
     magInit = 1;
   }
   
-  #if not defined(MPU6050_I2C_AUX_MASTER)
+  #if !defined(MPU6050_I2C_AUX_MASTER)
     void Device_Mag_getADC() {
       i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
       MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,          
@@ -1140,7 +1140,7 @@ void getADC() {
   #endif
 }
 
-#if not defined(MPU6050_I2C_AUX_MASTER)
+#if !defined(MPU6050_I2C_AUX_MASTER)
 void Device_Mag_getADC() {
   getADC();
 }
