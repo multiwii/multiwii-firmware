@@ -22,7 +22,7 @@ void readEEPROM() {
   if(calculate_sum((uint8_t*)&conf, sizeof(conf)) != conf.checksum) {
     blinkLED(6,100,3);    
     #if defined(BUZZER)
-      notification_confirmation = 3;
+      alarmArray[7] = 3;
     #endif
     LoadDefaults();                 // force load defaults 
   }
@@ -73,7 +73,7 @@ void writeGlobalSet(uint8_t b) {
   eeprom_write_block((const void*)&global_conf, (void*)0, sizeof(global_conf));
   if (b == 1) blinkLED(15,20,1);
   #if defined(BUZZER)
-    notification_confirmation = 1; 
+    alarmArray[7] = 1; 
   #endif
 
 }
@@ -85,7 +85,7 @@ void writeParams(uint8_t b) {
   readEEPROM();
   if (b == 1) blinkLED(15,20,1);
   #if defined(BUZZER)
-    notification_confirmation = 1; //beep if loaded from gui or android
+    alarmArray[7] = 1; //beep if loaded from gui or android
   #endif
 }
 

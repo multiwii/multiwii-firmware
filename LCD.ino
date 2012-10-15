@@ -584,7 +584,7 @@ void lcdprint_int16(int16_t v) {
 void initLCD() {
   blinkLED(20,30,1);
   #if defined(BUZZER)
-    notification_confirmation = 1;
+    alarmArray[7] = 1;
   #endif
   #if defined(LCD_SERIAL3W)
     SerialEnd(0);
@@ -1285,7 +1285,7 @@ void configurationLoop() {
   } // while (LCD == 1)
   blinkLED(20,30,1);
   #if defined(BUZZER)
-    notification_confirmation = 1;
+    alarmArray[7] = 1;
   #endif
 
   LCDclear();

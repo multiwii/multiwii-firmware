@@ -399,9 +399,7 @@ static struct {
   #define NAV_MODE_WP            2
   static uint8_t nav_mode = NAV_MODE_NONE;            //Navigation mode
  
-  static uint8_t notification_toggle = 0,
-                 notification_confirmation = 0,
-                 warn_ACCcalibration = 0;
+  static uint8_t alarmArray[16];           // array
  
 #if BARO
   static int32_t baroPressure;
@@ -701,7 +699,7 @@ void go_arm() {
       }
     } else if(!f.ARMED){ 
         blinkLED(2,800,1);
-        warn_ACCcalibration = 1;
+        alarmArray[8] = 1;
       }
 }
 
@@ -796,7 +794,7 @@ void loop () {
             }else{ 
               AccInflightCalibrationArmed = !AccInflightCalibrationArmed; 
               #if defined(BUZZER)
-               if (AccInflightCalibrationArmed) notification_toggle=2; else   notification_toggle=3;
+               if (AccInflightCalibrationArmed) alarmArray[0]=2; else   alarmArray[0]=3;
               #endif
             }
          } 
@@ -809,7 +807,7 @@ void loop () {
           writeGlobalSet(0);
           readEEPROM();
           blinkLED(2,40,i);
-          notification_toggle = i;
+          alarmArray[0] = i;
         }
         if (rcSticks == THR_LO + YAW_HI + PIT_HI + ROL_CE) {            // Enter LCD config
           #ifdef TRI

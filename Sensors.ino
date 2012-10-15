@@ -289,7 +289,7 @@ void GYRO_Common() {
         gyroZero[axis]=g[axis]/400;
         blinkLED(10,15,1);
       #if defined(BUZZER)
-        notification_confirmation = 4;
+        alarmArray[7] = 4;
       #endif
       }
     }
@@ -380,7 +380,7 @@ void ACC_Common() {
           AccInflightCalibrationActive = 0;
           AccInflightCalibrationMeasurementDone = 1;
           #if defined(BUZZER)
-            notification_confirmation = 1;      //buzzer for indicatiing the end of calibration
+            alarmArray[7] = 1;      //buzzer for indicatiing the end of calibration
           #endif
           // recover saved values to maintain current flight behavior until new values are transferred
           global_conf.accZero[ROLL]  = accZero_saved[ROLL] ;
@@ -1461,7 +1461,7 @@ void i2c_srf08_change_addr(int8_t current, int8_t moveto) {
   i2c_writeReg(current, SRF08_REV_COMMAND, moveto);  delay(30); // now change i2c address
   blinkLED(5,1,2);
   #if defined(BUZZER)
-   notification_confirmation = 2;
+   alarmArray[7] = 2;
   #endif
 }
 
