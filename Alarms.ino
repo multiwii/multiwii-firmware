@@ -189,14 +189,13 @@ void patternDecode(uint8_t channel,char first, char second, char third, char pau
 /********************************************************************/
 /****                   Pilot Lamp Handling                      ****/
 /********************************************************************/
-  void PilotLampHandler(){
+  void PilotLampHandler() {
     static int16_t  i2c_errors_count_old = 0;
     static uint8_t channel = 0;
     //==================I2C Error ===========================
     if (i2c_errors_count > i2c_errors_count_old+100 || i2c_errors_count < -1){
       PilotLampSequence(100,B000111,2); //alternate all on, all off pattern
-    }
-    else if (beeperOnBox){
+    } else if (beeperOnBox) {
     //==================LED Sequence ===========================
       PilotLampSequence(100,B0101<<8|B00010001,4); //sequential pattern 
     }else{

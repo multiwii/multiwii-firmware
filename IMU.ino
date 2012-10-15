@@ -283,6 +283,7 @@ void getEstimatedAttitude(){
     value += deadband;                  \
   }
 
+#if BARO
 uint8_t getEstimatedAltitude(){
   static uint32_t deadLine = INIT_DELAY;
   static float baroGroundPressure = 0; // a float is really needed ?
@@ -356,3 +357,5 @@ uint8_t getEstimatedAltitude(){
   #endif
   return 1;
 }
+#endif //BARO
+
