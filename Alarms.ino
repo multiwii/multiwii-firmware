@@ -507,7 +507,11 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
   }
   
   void inline switch_landing_lights(uint8_t on) {
+    #ifndef LANDING_LIGHTS_INVERT
     if (on) {
+    #else
+    if (!on) {
+    #endif
       LANDING_LIGHTS_PORT |= 1<<LANDING_LIGHTS_BIT;
     } else {
       LANDING_LIGHTS_PORT &= ~(1<<LANDING_LIGHTS_BIT);

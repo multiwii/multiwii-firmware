@@ -570,6 +570,7 @@
     //#define LANDING_LIGHTS_DDR DDRC
     //#define LANDING_LIGHTS_PORT PORTC
     //#define LANDING_LIGHTS_BIT PORTC0
+    //#define LANDING_LIGHTS_INVERT
 
     /* altitude above ground (in cm) as reported by sonar */
     //#define LANDING_LIGHTS_AUTO_ALTITUDE 50
