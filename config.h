@@ -557,6 +557,7 @@
     //#define LED_FLASHER_DDR DDRB
     //#define LED_FLASHER_PORT PORTB
     //#define LED_FLASHER_BIT PORTB4
+    //#define LED_FLASHER_INVERT
     //#define LED_FLASHER_SEQUENCE        0b00000000      // leds OFF
     //#define LED_FLASHER_SEQUENCE_ARMED  0b00000101      // create double flashes
     //#define LED_FLASHER_SEQUENCE_MAX    0b11111111      // full illumination
