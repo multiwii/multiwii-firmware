@@ -29,12 +29,12 @@ void alarmHandler(){
   #if defined(RCOPTIONSBEEP)
     static uint8_t i = 0,firstrun = 1, last_rcOptions[CHECKBOXITEMS];
                   
-    if (last_rcOptions[i] != rcOptions[i])alarmArray[0] = 1;
+    if (last_rcOptions[i] != rcOptions[i]) alarmArray[0] = 1;
       last_rcOptions[i] = rcOptions[i]; 
       i++;
     if(i >= CHECKBOXITEMS)i=0;
     
-    if(firstrun == 1 && alarmArray[7] == 0){
+    if(firstrun == 1 && alarmArray[7] == 0) {
       alarmArray[0] = 0;    //only enable options beep AFTER gyro init
       alarmArray[3] = 0;
     }        
@@ -51,7 +51,7 @@ void alarmHandler(){
   #endif
   
   #if GPS
-    if ((f.GPS_HOME_MODE || f.GPS_HOLD_MODE) && !f.GPS_FIX)alarmArray[2] = 2;  
+    if ((f.GPS_HOME_MODE || f.GPS_HOLD_MODE) && !f.GPS_FIX) alarmArray[2] = 2;
     else if (!f.GPS_FIX)alarmArray[2] = 1;
     else alarmArray[2] = 0;
   #endif
@@ -67,18 +67,18 @@ void alarmHandler(){
   #endif 
   
   #if defined(ARMEDTIMEWARNING)
-    if (armedTime >= ArmedTimeWarningMicroSeconds && f.ARMED)alarmArray[5] = 1;
+    if (armedTime >= ArmedTimeWarningMicroSeconds && f.ARMED) alarmArray[5] = 1;
     else alarmArray[5] = 0;
   #endif
   
   #if defined(VBAT)
     if (vbatMin < conf.vbatlevel_crit) alarmArray[6] = 4;
-    else if ( (vbat>conf.vbatlevel1_3s)  || (conf.no_vbat > vbat))alarmArray[6] = 0;
+    else if ( (vbat>conf.vbatlevel1_3s)  || (conf.no_vbat > vbat)) alarmArray[6] = 0;
     else if (vbat > conf.vbatlevel2_3s) alarmArray[6] = 2;
     else alarmArray[6] = 4;
   #endif
   
-  if (i2c_errors_count > i2c_errors_count_old+100 || i2c_errors_count < -1)alarmArray[9] = 1;
+  if (i2c_errors_count > i2c_errors_count_old+100 || i2c_errors_count < -1) alarmArray[9] = 1;
   else alarmArray[9] = 0;
     
   
@@ -153,7 +153,7 @@ void patternDecode(uint8_t channel,uint16_t first,uint16_t second,uint16_t third
   if(icnt <3 ){
     useResource(channel,patternInt[icnt],50);
   }
-  if (icnt >=3 && (channelLastToggleTime[1]<millis()-patternInt[icnt]) ){//sequence is over: reset everything
+  if (icnt >=3 && (channelLastToggleTime[1]<millis()-patternInt[icnt]) ) {//sequence is over: reset everything
     icnt=0;
     alarmArray[0] = 0;                                //reset toggle bit
     alarmArray[7] = 0;                                //reset confirmation bit
@@ -163,36 +163,40 @@ void patternDecode(uint8_t channel,uint16_t first,uint16_t second,uint16_t third
         BUZZERPIN_OFF;
         channelIsOn[1] = 0;
       }
-    }else if (channel == 0){
+    }else if (channel == 0) {
       if (channelIsOn[0]) {
         channelIsOn[0] = 0;
         LEDPIN_OFF;
       }
-    }else if (channel ==2){
+    }else if (channel ==2) {
       if (channelIsOn[2]) {
         channelIsOn[2] = 0;
-        PL_GRN_OFF;
+        #if defined (PILOTLAMP)
+          PL_GRN_OFF;
+        #endif
       }
     }
     return;
   }
-  if (cycle_Done[channel] == 1 || patternInt[icnt] == 0){//single on off cycle is done
-    if (icnt < 3){icnt++;} 
+  if (cycle_Done[channel] == 1 || patternInt[icnt] == 0) {//single on off cycle is done
+    if (icnt < 3) {icnt++;}
     cycle_Done[channel] = 0;
-    if (channel == 1){
+    if (channel == 1) {
       if (channelIsOn[1]) {
         BUZZERPIN_OFF;
         channelIsOn[1] = 0;
       }
-    }else if (channel == 0){
+    }else if (channel == 0) {
       if (channelIsOn[0]) {
         channelIsOn[0] = 0;
         LEDPIN_OFF;
       }
-    }else if (channel == 2){
+    }else if (channel == 2) {
       if (channelIsOn[2]) {
         channelIsOn[2] = 0;
-        PL_GRN_OFF;
+        #if defined (PILOTLAMP)
+          PL_GRN_OFF;
+        #endif
       }
     }
   }  

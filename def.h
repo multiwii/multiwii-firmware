@@ -1194,7 +1194,7 @@
   #define    PL_BZR_ON    175    // 700us
   #define    PL_BZR_OFF   200    // 800us
   #define    PL_IDLE      125    // 100us
-  #endif
+#endif
 
 #if defined(PILOTLAMP) || defined(VBAT)
   #define BUZZER
