@@ -471,9 +471,13 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
     }
   }
   
-  void auto_switch_led_flasher() {
+  static uint8_t inline led_flasher_on() {
     uint8_t seg = (currentTime/1000/125)%8;
-    if (led_flasher_sequence & 1<<seg) {
+    return (led_flasher_sequence & 1<<seg);
+  }
+
+  void auto_switch_led_flasher() {
+    if (led_flasher_on()) {
       switch_led_flasher(!isBuzzerON());
     } else {
       switch_led_flasher(isBuzzerON());
@@ -526,6 +530,9 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
     if (rcOptions[BOXLLIGHTS]
     #if defined(LANDING_LIGHTS_AUTO_ALTITUDE) & SONAR
         || (sonarAlt >= 0 && sonarAlt <= LANDING_LIGHTS_AUTO_ALTITUDE && f.ARMED)
+    #endif
+    #if defined(LED_FLASHER_DDR) & defined(LANDING_LIGHTS_ADOPT_LED_FLASHER_PATTERN)
+        || (led_flasher_on())
     #endif
     ) {
       switch_landing_lights(1);

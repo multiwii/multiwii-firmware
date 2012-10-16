@@ -576,6 +576,8 @@
     /* altitude above ground (in cm) as reported by sonar */
     //#define LANDING_LIGHTS_AUTO_ALTITUDE 50
 
+    /* adopt the flasher pattern for landing light LEDs */
+    //#define LANDING_LIGHTS_ADOPT_LED_FLASHER_PATTERN
 
   /*************************    INFLIGHT ACC Calibration    *****************************/
     /* This will activate the ACC-Inflight calibration if unchecked */
