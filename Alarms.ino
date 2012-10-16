@@ -451,8 +451,10 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
   } led_flasher_control = LED_FLASHER_AUTO;
   
   void init_led_flasher() {
+    #if defined(LED_FLASHER_DDR)
     LED_FLASHER_DDR |= (1<<LED_FLASHER_BIT);
     LED_FLASHER_PORT &= ~(1<<LED_FLASHER_BIT);
+    #endif
   }
   
   void led_flasher_set_sequence(uint8_t s) {
@@ -460,15 +462,17 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
   }
   
   void inline switch_led_flasher(uint8_t on) {
-#ifndef LED_FLASHER_INVERT
+    #if defined(LED_FLASHER_DDR)
+    #ifndef LED_FLASHER_INVERT
     if (on) {
-#else
+    #else
     if (!on) {
 #endif
       LED_FLASHER_PORT |= (1<<LED_FLASHER_BIT);
     } else {
       LED_FLASHER_PORT &= ~(1<<LED_FLASHER_BIT);
     }
+    #endif
   }
   
   static uint8_t inline led_flasher_on() {
