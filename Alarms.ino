@@ -479,36 +479,48 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
     uint8_t seg = (currentTime/1000/125)%8;
     return (led_flasher_sequence & 1<<seg);
   }
-
-  void auto_switch_led_flasher() {
-    if (led_flasher_on()) {
-      switch_led_flasher(!isBuzzerON());
-    } else {
-      switch_led_flasher(isBuzzerON());
+  
+  #if defined(BUZZER)
+    void auto_switch_led_flasher() {
+      if (led_flasher_on()) {
+        switch_led_flasher(!isBuzzerON());
+      } else {
+        switch_led_flasher(isBuzzerON());
+      }
     }
-  }
+  #endif
   
   /* auto-select a fitting sequence according to the
    * copter situation
    */
   void led_flasher_autoselect_sequence() {
     if (led_flasher_control != LED_FLASHER_AUTO) return;
+
     #if defined(LED_FLASHER_SEQUENCE_MAX)
     /* do we want the complete illumination no questions asked? */
     if (rcOptions[BOXLEDMAX]) {
-    #else
-    if (0) {
-    #endif
       led_flasher_set_sequence(LED_FLASHER_SEQUENCE_MAX);
-    } else {
-      /* do we have a special sequence for armed copters? */
-      #if defined(LED_FLASHER_SEQUENCE_ARMED)
-      led_flasher_set_sequence(f.ARMED ? LED_FLASHER_SEQUENCE_ARMED : LED_FLASHER_SEQUENCE);
-      #else
-      /* Let's load the plain old boring sequence */
-      led_flasher_set_sequence(LED_FLASHER_SEQUENCE);
-      #endif
+      return;
     }
+    #endif
+
+    #if defined(LED_FLASHER_SEQUENCE_LOW)
+    if (rcOptions[BOXLEDLOW]) {
+      led_flasher_set_sequence(LED_FLASHER_SEQUENCE_LOW);
+      return;
+    }
+    #endif
+
+    #if defined(LED_FLASHER_SEQUENCE_ARMED)
+    /* do we have a special sequence for armed copters? */
+    if (f.ARMED) {
+      led_flasher_set_sequence(LED_FLASHER_SEQUENCE_ARMED);
+      return;
+    }
+    #endif
+
+    /* Let's load the plain old boring sequence as a last resort */
+    led_flasher_set_sequence(LED_FLASHER_SEQUENCE);
   }
   
   #endif
