@@ -832,6 +832,22 @@
      */
     //#define SUPPRESS_BARO_ALTHOLD
 
+  /********************************************************************/
+  /****           baord naming                                     ****/
+  /********************************************************************/
+
+    /*
+     * this name is displayed together with the MultiWii version number
+     * upon powerup on the LCD.
+     * If you are without a DISPLAYD then You may enable LCD_TTY and
+     * use arduino IDE's serial monitor to view the info.
+     *
+     * You must preserve the format of this string!
+     * It must be 16 characters total,
+     * The last 4 characters will be overwritten with the version number.
+     */
+    #define BOARD_NAME "MultiWii   V-.--"
+    //                  123456789.123456
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/
