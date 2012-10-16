@@ -505,7 +505,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     }
   #endif
 
-  #if defined(LED_FLASHER) && defined(BUZZER)
+  #if defined(LED_FLASHER)
     auto_switch_led_flasher();
   #endif
 

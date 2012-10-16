@@ -7,7 +7,9 @@ static uint8_t SequenceActive=0;
 
 #if defined(BUZZER)
   uint8_t isBuzzerON() { return channelIsOn[1]; } // returns true while buzzer is buzzing; returns 0 for silent periods
-#endif
+#else
+  uint8_t isBuzzerON() { return 0; }
+#endif  //end of buzzer define
 /********************************************************************/
 /****                      Alarm Handling                        ****/
 /********************************************************************/
@@ -480,15 +482,13 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
     return (led_flasher_sequence & 1<<seg);
   }
   
-  #if defined(BUZZER)
-    void auto_switch_led_flasher() {
-      if (led_flasher_on()) {
-        switch_led_flasher(!isBuzzerON());
-      } else {
-        switch_led_flasher(isBuzzerON());
-      }
+  void auto_switch_led_flasher() {
+    if (led_flasher_on()) {
+      switch_led_flasher(1);
+    } else {
+      switch_led_flasher(0);
     }
-  #endif
+  }
   
   /* auto-select a fitting sequence according to the
    * copter situation
