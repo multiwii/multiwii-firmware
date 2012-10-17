@@ -508,7 +508,7 @@ void i2c_BMP085_Calculate() {
   x1 = ((int32_t)bmp085_ctx.ut.val - bmp085_ctx.ac6) * bmp085_ctx.ac5 >> 15;
   x2 = ((int32_t)bmp085_ctx.mc << 11) / (x1 + bmp085_ctx.md);
   b5 = x1 + x2;
-  baroTemperature = b5; // in 0.01 degC (same as MS561101BA temperature)
+  baroTemperature = (b5 * 10 + 8) >> 4; // in 0.01 degC (same as MS561101BA temperature)
   // Pressure calculations
   b6 = b5 - 4000;
   x1 = (bmp085_ctx.b2 * (b6 * b6 >> 12)) >> 11; 

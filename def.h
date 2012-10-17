@@ -532,6 +532,10 @@
  #define FREEIMUv043
 #endif
 
+#if defined(MultiWiiMega)
+ #define FREEIMUv043
+#endif
+
 #if defined(FREEIMUv043)  || defined(MICROWII)
   #define MPU6050
   #define HMC5883
