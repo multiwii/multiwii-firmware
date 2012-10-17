@@ -216,10 +216,12 @@
     #define TILT_PITCH_MAX    2000    //servo travel max, max value=2000
     #define TILT_PITCH_MIDDLE 1500    //servo neutral value
     #define TILT_PITCH_PROP   10      //servo proportional (tied to angle) ; can be negative to invert movement
+    #define TILT_PITCH_AUX_CH AUX3    //AUX channel to overwrite CAM pitch (AUX1-AUX4), comment to disable manual input and free the AUX channel
     #define TILT_ROLL_MIN     1020
     #define TILT_ROLL_MAX     2000
     #define TILT_ROLL_MIDDLE  1500
     #define TILT_ROLL_PROP    10
+    #define TILT_ROLL_AUX_CH  AUX4    //AUX channel to overwrite CAM Roll (AUX1-AUX4), comment to disable manual input and free the AUX channel
 
     /* camera trigger function : activated via Rc Options in the GUI, servo output=A2 on promini */
     //#define CAMTRIG
