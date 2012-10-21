@@ -19,6 +19,14 @@ static volatile uint8_t serialHeadTX[UART_NUMBER],serialTailTX[UART_NUMBER];
 static uint8_t serialBufferTX[TX_BUFFER_SIZE][UART_NUMBER];
 static uint8_t inBuf[INBUF_SIZE][UART_NUMBER];
 
+#define BIND_CAPABLE 0;  //Used for Spektrum today; can be used in the future for any RX type that needs a bind and has a MultiWii module. 
+#if defined(SPEK_BIND)
+  #define BIND_CAPABLE 1;
+#endif
+// Capability is bit flags; next defines should be 2, 4, 8...
+
+const uint32_t PROGMEM capability = 0+BIND_CAPABLE;
+
 #ifdef DEBUGMSG
   #define DEBUG_MSG_BUFFER_SIZE 128
   static char debug_buf[DEBUG_MSG_BUFFER_SIZE];
@@ -252,7 +260,7 @@ void evaluateCommand() {
      serialize8(VERSION);   // multiwii version
      serialize8(MULTITYPE); // type of multicopter
      serialize8(MSP_VERSION);         // MultiWii Serial Protocol Version
-     serialize32(0);        // "capability"
+     serialize32(pgm_read_dword(&(capability)));        // "capability"
      break;
    case MSP_STATUS:
      headSerialReply(11);
