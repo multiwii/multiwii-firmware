@@ -656,7 +656,6 @@
     #define GPS_LED_INDICATOR
 
     //#define USE_MSP_WP                        //Enables the MSP_WP command, which is used by WinGUI to display and log Home and Poshold positions
-                                                //Uncomment it if you are planning to use WinGUI - Will cost +208 bytes of Flash
 
     //#define DONT_RESET_HOME_AT_ARM             // HOME position is reset at every arm, uncomment it to prohibit it (you can set home position with GyroCalibration)
 

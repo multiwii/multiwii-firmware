@@ -66,7 +66,7 @@ const uint32_t PROGMEM capability = 0+BIND_CAPABLE;
 #define MSP_MAG_CALIBRATION      206   //in message          no param
 #define MSP_SET_MISC             207   //in message          powermeter trig + 8 free for future use
 #define MSP_RESET_CONF           208   //in message          no param
-#define MSP_WP_SET               209   //in message          sets a given WP (WP#,lat, lon, alt, flags)
+#define MSP_SET_WP               209   //in message          sets a given WP (WP#,lat, lon, alt, flags)
 #define MSP_SELECT_SETTING       210   //in message          Select Setting Number (0-2)
 
 #define MSP_SPEK_BIND            240   //in message          no param
@@ -406,7 +406,7 @@ void evaluateCommand() {
    #if defined(USE_MSP_WP)    
    case MSP_WP:
      {
-      uint8_t wp_no = read8();    //get the wp number  
+      uint8_t wp_no = read8();           //get the wp number  
       headSerialReply(12);
       if (wp_no == 0) {
         serialize8(0);                   //wp0
@@ -423,7 +423,19 @@ void evaluateCommand() {
         serialize8(0);                   //nav flag will come here
       } 
      }
-     break;  
+     break;
+   case MSP_SET_WP:
+     {
+      uint8_t wp_no = read8();          //get the wp number  
+      if (wp_no == 0) {
+        GPS_home[LAT] = read32();
+        GPS_home[LON] = read32();
+        read32();                       // future: to set altitude
+        read8();                        // future: to set nav flag
+      }
+     }
+     headSerialReply(0);
+     break;
    #endif
    case MSP_RESET_CONF:
      if(!f.ARMED) LoadDefaults();
