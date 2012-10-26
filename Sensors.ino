@@ -265,7 +265,7 @@ uint8_t i2c_readReg(uint8_t add, uint8_t reg) {
 void GYRO_Common() {
   static int16_t previousGyroADC[3] = {0,0,0};
   static int32_t g[3];
-  uint8_t axis;
+  uint8_t axis, tilt=0;
 
 #if defined MMGYRO       
   // Moving Average Gyros by Magnetron1
@@ -279,7 +279,14 @@ void GYRO_Common() {
   if (calibratingG>0) {
     for (axis = 0; axis < 3; axis++) {
       // Reset g[axis] at start of calibration
-      if (calibratingG == 400) g[axis]=0;
+      if (calibratingG == 400) {
+        g[axis]=0;
+        previousGyroADC[axis] = gyroADC[axis];
+      }
+      if (calibratingG % 10 == 0) {
+        if(abs(gyroADC[axis] - previousGyroADC[axis]) > 8) tilt=1;
+        previousGyroADC[axis] = gyroADC[axis];
+      }
       // Sum up 400 readings
       g[axis] +=gyroADC[axis];
       // Clear global variables for next reading
@@ -293,7 +300,14 @@ void GYRO_Common() {
       #endif
       }
     }
-    calibratingG--;
+    if(tilt) {
+      calibratingG=1000;
+      LEDPIN_ON;
+    } else {
+      calibratingG--;
+      LEDPIN_OFF;
+    }
+    return;
   }
 
 #ifdef MMGYRO       
