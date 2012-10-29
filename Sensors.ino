@@ -281,11 +281,14 @@ void GYRO_Common() {
       // Reset g[axis] at start of calibration
       if (calibratingG == 400) {
         g[axis]=0;
-        previousGyroADC[axis] = gyroADC[axis];
-      }
-      if (calibratingG % 10 == 0) {
-        if(abs(gyroADC[axis] - previousGyroADC[axis]) > 8) tilt=1;
-        previousGyroADC[axis] = gyroADC[axis];
+        
+        #if defined(GYROCALIBRATIONFAILSAFE)
+            previousGyroADC[axis] = gyroADC[axis];
+          }
+          if (calibratingG % 10 == 0) {
+            if(abs(gyroADC[axis] - previousGyroADC[axis]) > 8) tilt=1;
+            previousGyroADC[axis] = gyroADC[axis];
+       #endif
       }
       // Sum up 400 readings
       g[axis] +=gyroADC[axis];
@@ -300,14 +303,19 @@ void GYRO_Common() {
       #endif
       }
     }
-    if(tilt) {
-      calibratingG=1000;
-      LEDPIN_ON;
-    } else {
+    #if defined(GYROCALIBRATIONFAILSAFE)
+      if(tilt) {
+        calibratingG=1000;
+        LEDPIN_ON;
+      } else {
+        calibratingG--;
+        LEDPIN_OFF;
+      }
+      return;
+    #else
       calibratingG--;
-      LEDPIN_OFF;
-    }
-    return;
+    #endif
+    
   }
 
 #ifdef MMGYRO       
