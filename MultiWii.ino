@@ -147,8 +147,9 @@ static uint32_t currentTime = 0;
 static uint16_t previousTime = 0;
 static uint16_t cycleTime = 0;     // this is the number in micro second to achieve a full loop, it can differ a little and is taken into account in the PID loop
 static uint16_t calibratingA = 0;  // the calibration is done in the main loop. Calibrating decreases at each cycle down to 0, then we enter in a normal mode.
+static uint16_t calibratingB = 0;  // baro calibration = get new ground pressure value
 static uint16_t calibratingG;
-static uint16_t acc_1G;             // this is the 1G measured acceleration
+static uint16_t acc_1G;            // this is the 1G measured acceleration
 static int16_t  acc_25deg;
 static int16_t  headFreeModeHold;
 static int16_t  gyroADC[3],accADC[3],accSmooth[3],magADC[3];
@@ -405,8 +406,9 @@ static struct {
  
 #if BARO
   static int32_t baroPressure;
+  static int32_t baroGroundPressure;
   static int32_t baroTemperature;
-  static int32_t baroPressureSum;  
+  static int32_t baroPressureSum;
 #endif
 
 void annexCode() { // this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
@@ -635,6 +637,7 @@ void setup() {
    calibratingA = 400;
   #endif
   calibratingG = 400;
+  calibratingB = 200;  // 10 seconds init_delay + 200 * 25 ms = 15 seconds before ground pressure settles
   #if defined(POWERMETER)
     for(uint8_t i=0;i<=PMOTOR_SUM;i++)
       pMeter[i]=0;
@@ -786,6 +789,9 @@ void loop () {
           calibratingG=400;
           #if GPS 
             GPS_reset_home_position();
+          #endif
+          #if BARO
+            calibratingB=10;  // calibrate baro to new ground level (10 * 25 ms = ~250 ms non blocking)
           #endif
         }
         #if defined(INFLIGHT_ACC_CALIBRATION)  
@@ -1020,7 +1026,7 @@ void loop () {
     #endif
   } else { // not in rc loop
     static uint8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
-    switch (taskOrder % 4) {
+    switch (taskOrder % 5) {
       case 0:
         taskOrder++;
         #if MAG
@@ -1033,13 +1039,16 @@ void loop () {
         #if BARO
           if (Baro_update() != 0 ) {
             break;
-          } else {
-            if (getEstimatedAltitude() !=0) {
-              break;
-            }
           }
         #endif
       case 2:
+        taskOrder++;
+        #if BARO
+          if (getEstimatedAltitude() !=0) {
+            break;
+          }
+        #endif    
+      case 3:
         taskOrder++;
         #if GPS
           if(GPS_Enable) {
@@ -1047,7 +1056,7 @@ void loop () {
           }
           break;
         #endif
-      case 3:
+      case 4:
         taskOrder++;
         #if SONAR
           Sonar_update();debug[2] = sonarAlt;

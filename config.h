@@ -530,8 +530,7 @@
     //#define LEVEL_PDF
 
   /************************        AP FlightMode        **********************************/
-  /* Gyrocalibration will be repeated if copter is moving during calibration. 
-  Beware: May lead to unflyable copter, because of Temperature drift ob cheap gyros. */
+  /* Gyrocalibration will be repeated if copter is moving during calibration. */
     //#define GYROCALIBRATIONFAILSAFE
   /************************        AP FlightMode        **********************************/
     /* Temporarily Disables GPS_HOLD_MODE to be able to make it possible to adjust the Hold-position when moving the sticks.*/
