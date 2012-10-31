@@ -868,6 +868,9 @@ const char PROGMEM lcd_param_text113 [] = "PM DIV    ";
 #ifdef CYCLETIME_FIXATED
 const char PROGMEM lcd_param_text120 [] = "CYCLE TIME";
 #endif
+#ifdef MMGYRO
+const char PROGMEM lcd_param_text121 [] = "MMGYRO    ";
+#endif
 //                                         0123456789
 
 PROGMEM const void * const lcd_param_ptr_table [] = {
@@ -1075,6 +1078,10 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #ifdef CYCLETIME_FIXATED
   &lcd_param_text120, &conf.cycletime_fixated, &__SE,
 #endif
+#ifdef MMGYRO
+  &lcd_param_text121, &conf.mmgyro, &__D,
+#endif
+
 //#ifdef LOG_VALUES
 //  &lcd_param_text39, &failsafeEvents, &__L,
 //  &lcd_param_text40, &i2c_errors_count, &__L,
@@ -1769,12 +1776,13 @@ void lcd_telemetry() {
         case 4:// uptime, uptime_armed
           //LCDsetLine(linenr++);
           LCDsetLine(linenr++);
-          LCDprintChar("U:"); print_uptime(millis() / 1000 );
-          LCDprintChar("  A:"); print_uptime(armedTime / 1000000);
+          LCDprintChar("U"); print_uptime(millis() / 1000 );
+          strcpy_P(line1,PSTR(" - A")); line1[1] = digit1(global_conf.currentSet);
+          LCDprintChar(line1); print_uptime(armedTime / 1000000);
           break;
         case 5:// errors, Vmin
            LCDsetLine(linenr++);
-           if (failsafeEvents | (i2c_errors_count>>1)) { // ignore i2c==1 because of bma020-init
+           if (failsafeEvents || (i2c_errors_count>>1)) { // ignore i2c==1 because of bma020-init
              LCDattributesReverse();
              output_fails();
              LCDattributesOff();

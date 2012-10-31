@@ -510,8 +510,8 @@
       //#define GYRO_SMOOTHING {20, 20, 3}    // (*) separate averaging ranges for roll, pitch, yaw
 
     /************************    Moving Average Gyros    **********************************/
-      //#define MMGYRO                         // Active Moving Average Function for Gyros
-      //#define MMGYROVECTORLENGHT 10          // Lenght of Moving Average Vector
+      //#define MMGYRO 10                      // (*) Active Moving Average Function for Gyros
+      //#define MMGYROVECTORLENGTH 15          // Length of Moving Average Vector (maximum value for tunable MMGYRO
       /* Moving Average ServoGimbal Signal Output */
       //#define MMSERVOGIMBAL                  // Active Output Moving Average Function for Servos Gimbal
       //#define MMSERVOGIMBALVECTORLENGHT 32   // Lenght of Moving Average Vector

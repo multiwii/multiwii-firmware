@@ -46,6 +46,8 @@
   #define SERVO_RFR_160HZ
   #define VBAT
   #define POWERMETER_SOFT
+  #define MMGYRO 10
+  #define MMGYROVECTORLENGTH 15
 #elif defined(COPTERTEST)
   #error "*** this test is not yet defined"
 #endif

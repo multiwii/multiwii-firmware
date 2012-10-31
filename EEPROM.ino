@@ -151,8 +151,11 @@ void LoadDefaults() {
     conf.pleveldiv = PLEVELDIV;
     conf.pint2ma = PINT2mA;
   #endif
-#ifdef CYCLETIME_FIXATED
-  conf.cycletime_fixated = CYCLETIME_FIXATED;
-#endif
+  #ifdef CYCLETIME_FIXATED
+    conf.cycletime_fixated = CYCLETIME_FIXATED;
+  #endif
+  #ifdef MMGYRO
+    conf.mmgyro = MMGYRO;
+  #endif
   writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }
