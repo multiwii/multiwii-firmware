@@ -576,28 +576,19 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     if (cycleTime > cycleTimeMax) cycleTimeMax = cycleTime; // remember highscore
     if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
   #endif
-  #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)
-    if (f.ARMED) armedTime += (uint32_t)cycleTime;
-  #endif
-  #if defined(VBAT)
-    if (vbat > conf.no_vbat) { // only track possibly sane voltage values
-      if (!f.ARMED) {
-        vbatMin = vbat;
-      } else {
-        if (vbat < vbatMin) vbatMin = vbat;
-      }
-    }
-  #endif
-  #ifdef LCD_TELEMETRY
-    #if BARO
-      if (!f.ARMED) {
-        BAROaltStart = BaroAlt;
-        BAROaltMax = BaroAlt;
-      } else {
-        if (BaroAlt > BAROaltMax) BAROaltMax = BaroAlt;
-      }
+  if (f.ARMED)  {
+    #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)
+      armedTime += (uint32_t)cycleTime;
     #endif
-  #endif
+    #if defined(VBAT)
+      if ( (vbat > conf.no_vbat) && (vbat < vbatMin) ) vbatMin = vbat;
+    #endif
+    #ifdef LCD_TELEMETRY
+      #if BARO
+        if ( (BaroAlt > BAROaltMax) ) BAROaltMax = BaroAlt;
+      #endif
+    #endif
+  }
 }
 
 void setup() {
@@ -618,9 +609,14 @@ void setup() {
   STABLEPIN_PINMODE;
   POWERPIN_OFF;
   initOutput();
-  for(global_conf.currentSet=0; global_conf.currentSet<3; global_conf.currentSet++) {  // check all settings integrity
+  #ifdef MULTIPLE_CONFIGURATION_PROFILES
+    for(global_conf.currentSet=0; global_conf.currentSet<3; global_conf.currentSet++) {  // check all settings integrity
+      readEEPROM();
+    }
+  #else
+    global_conf.currentSet=0;
     readEEPROM();
-  }
+  #endif
   readGlobalSet();
   readEEPROM();                                    // load current setting data
   blinkLED(2,40,global_conf.currentSet+1);          
@@ -701,9 +697,18 @@ void go_arm() {
     && failsafeCnt < 2
   #endif
     ) {
-      if(!f.ARMED) {
+      if(!f.ARMED) { // arm now!
         f.ARMED = 1;
         headFreeModeHold = heading;
+        #if defined(VBAT)
+          if (vbat > conf.no_vbat) vbatMin = vbat;
+        #endif
+        #ifdef LCD_TELEMETRY // reset some values when arming
+          #if BARO
+              BAROaltStart = BaroAlt;
+              BAROaltMax = BaroAlt;
+          #endif
+        #endif
       }
     } else if(!f.ARMED){ 
         blinkLED(2,800,1);
@@ -810,16 +815,18 @@ void loop () {
             }
          } 
         #endif
-        if      (rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_LO) i=1;    // ROLL left  -> Profile 1
-        else if (rcSticks == THR_LO + YAW_LO + PIT_HI + ROL_CE) i=2;    // PITCH up   -> Profile 2
-        else if (rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_HI) i=3;    // ROLL right -> Profile 3
-        if(i) {
-          global_conf.currentSet = i-1;
-          writeGlobalSet(0);
-          readEEPROM();
-          blinkLED(2,40,i);
-          alarmArray[0] = i;
-        }
+        #ifdef MULTIPLE_CONFIGURATION_PROFILES
+          if      (rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_LO) i=1;    // ROLL left  -> Profile 1
+          else if (rcSticks == THR_LO + YAW_LO + PIT_HI + ROL_CE) i=2;    // PITCH up   -> Profile 2
+          else if (rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_HI) i=3;    // ROLL right -> Profile 3
+          if(i) {
+            global_conf.currentSet = i-1;
+            writeGlobalSet(0);
+            readEEPROM();
+            blinkLED(2,40,i);
+            alarmArray[0] = i;
+          }
+        #endif
         if (rcSticks == THR_LO + YAW_HI + PIT_HI + ROL_CE) {            // Enter LCD config
           #ifdef TRI
             servo[5] = 1500; // we center the yaw servo in conf mode

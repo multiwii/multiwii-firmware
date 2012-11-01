@@ -246,6 +246,7 @@ void evaluateCommand() {
      #endif
      headSerialReply(0);
      break;
+#ifdef MULTIPLE_CONFIGURATION_PROFILES
    case MSP_SELECT_SETTING:
      if(!f.ARMED) {
        global_conf.currentSet = read8();
@@ -255,6 +256,7 @@ void evaluateCommand() {
      }
      headSerialReply(0);
      break;
+#endif
    case MSP_IDENT:
      headSerialReply(7);
      serialize8(VERSION);   // multiwii version

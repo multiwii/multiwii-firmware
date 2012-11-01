@@ -17,7 +17,11 @@ void readGlobalSet() {
  
 void readEEPROM() {
   uint8_t i;
-  if(global_conf.currentSet>2) global_conf.currentSet=0;
+  #ifdef MULTIPLE_CONFIGURATION_PROFILES
+    if(global_conf.currentSet>2) global_conf.currentSet=0;
+  #else
+    global_conf.currentSet=0;
+  #endif
   eeprom_read_block((void*)&conf, (void*)(global_conf.currentSet * sizeof(conf) + sizeof(global_conf)), sizeof(conf));
   if(calculate_sum((uint8_t*)&conf, sizeof(conf)) != conf.checksum) {
     blinkLED(6,100,3);    
@@ -79,7 +83,11 @@ void writeGlobalSet(uint8_t b) {
 }
  
 void writeParams(uint8_t b) {
-  if(global_conf.currentSet>2) global_conf.currentSet=0;
+  #ifdef MULTIPLE_CONFIGURATION_PROFILES
+    if(global_conf.currentSet>2) global_conf.currentSet=0;
+  #else
+    global_conf.currentSet=0;
+  #endif
   conf.checksum = calculate_sum((uint8_t*)&conf, sizeof(conf));
   eeprom_write_block((const void*)&conf, (void*)(global_conf.currentSet * sizeof(conf) + sizeof(global_conf)), sizeof(conf));
   readEEPROM();

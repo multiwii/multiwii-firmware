@@ -689,7 +689,7 @@
     /* uncomment this line if you plan to use a LCD or OLED */
       //#define LCD_CONF
 
-    /* to include setting the aux switches for AUX1 -> AUX4 via LCD */ //to review (activate[] is now 16 bit long)
+    /* to include setting the aux switches for AUX1 -> AUX4 via LCD */
       //#define LCD_CONF_AUX
 
     /* if program gets too large (>32k), need to exclude some functionality */
@@ -702,7 +702,7 @@
       //#define LCD_SERIAL3W    // Alex' initial variant with 3 wires, using rx-pin for transmission @9600 baud fixed
       //#define LCD_TEXTSTAR    // SERIAL LCD: Cat's Whisker LCD_TEXTSTAR Module CW-LCD-02 (Which has 4 input keys for selecting menus)
       //#define LCD_VT100       // SERIAL LCD: vt100 compatible terminal emulation (blueterm, putty, etc.)
-      //#define LCD_TTY         // SERIAL LCD: useful to tweak paramters over cable with arduino IDE 'serial monitor'
+      //#define LCD_TTY         // SERIAL LCD: useful to tweak parameters over cable with arduino IDE 'serial monitor'
       //#define LCD_ETPP        // I2C LCD: Eagle Tree Power Panel LCD, which is i2c (not serial)
       //#define LCD_LCD03       // I2C LCD: LCD03, which is i2c
       //#define OLED_I2C_128x64 // I2C LCD: OLED http://www.multiwii.com/forum/viewtopic.php?f=7&t=1350
@@ -710,7 +710,7 @@
     /******************************   Logo settings     ***********************************/
       //#define SUPPRESS_OLED_I2C_128x64LOGO  // suppress display of OLED logo to save memory
 
-    /* style of display - AUTODETECTED via LCD_ setting - only activate to overwrite defaults */
+    /* style of display - AUTODETECTED via LCD_ setting - only activate to override defaults */
       //#define DISPLAY_2LINES
       //#define DISPLAY_MULTILINE
       //#define MULTILINE_PRE 2  // multiline configMenu # pref lines
@@ -764,7 +764,7 @@
        set it to the sequence of telemetry pages you want to see
        2 line displays support pages 1-9
        multiline displays support pages 1-5 */
-    //#define LCD_TELEMETRY_AUTO "123452679" // pages 1 to 7 in ascending order
+    //#define LCD_TELEMETRY_AUTO "123452679" // pages 1 to 9 in ascending order
     //#define LCD_TELEMETRY_AUTO  "212232425262729" // strong emphasis on page 2
 
     /* same as above, but manual stepping sequence; requires 
@@ -859,6 +859,9 @@
      */
     #define BOARD_NAME "MultiWii   V-.--"
     //                  123456789.123456
+
+    /****      Support multiple configuration profile in EEPROM   ****/
+    //#define MULTIPLE_CONFIGURATION_PROFILES
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/
