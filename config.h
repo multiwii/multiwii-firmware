@@ -205,6 +205,11 @@
       #define TRI_YAW_CONSTRAINT_MAX 2000
       #define TRI_YAW_MIDDLE 1500 // (*) tail servo center pos. - use this for initial trim; later trim midpoint via LCD
 
+  /********************************    BI    *********************************/
+    /* you can change the bicopter servo travel direction here */     
+    //#define BI_PITCH_DIRECTION 1
+     #define BI_PITCH_DIRECTION -1
+
    /********************************    ARM/DISARM    *********************************/
    /* optionally disable stick combinations to arm/disarm the motors.
      * In most cases one of the two options to arm/disarm via TX stick is sufficient */
