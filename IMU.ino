@@ -182,8 +182,9 @@ void rotateV(struct fp_vector *v,float* delta) {
   v->Y += delta[PITCH] * v_tmp.Z + delta[YAW]   * v_tmp.X; 
 }
 
-#define ACC_LPF_FOR_VELOCITY 10
-static float accLPFVel[3];
+#define ACC_LPF_FOR_VELOCITY 12
+static float accLPFVel[3]={0, 0, acc_1G};
+
 static t_fp_vector EstG;
 
 void getEstimatedAttitude(){
@@ -196,7 +197,7 @@ void getEstimatedAttitude(){
   static int16_t mgSmooth[3]; 
 #endif
 #if defined(ACC_LPF_FACTOR)
-  static float accLPF[3];
+  static float accLPF[3]={0, 0, acc_1G};
 #endif
   static uint16_t previousT;
   uint16_t currentT = micros();
@@ -272,7 +273,7 @@ void getEstimatedAttitude(){
 #define INIT_DELAY      10000000  // 10 sec initialization delay
 #define BARO_TAB_SIZE   21
 
-#define ACC_Z_DEADBAND (acc_1G/50)
+#define ACC_Z_DEADBAND (acc_1G/40)
 
 #define applyDeadband(value, deadband)  \
   if(abs(value) < deadband) {           \
@@ -323,8 +324,15 @@ uint8_t getEstimatedAltitude(){
     // projection of ACC vector to global Z, with 1G subtructed
     // Math: accZ = A * G / |G| - 1G
     float invG = InvSqrt(isq(EstG.V.X) + isq(EstG.V.Y) + isq(EstG.V.Z));
-    int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG - acc_1G; 
-    //int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG - 1/invG; 
+    int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG;
+    //int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG - acc_1G;
+    
+    static int16_t acc_1G_calculated = acc_1G*6;
+    if (!f.ARMED) {
+      acc_1G_calculated -= acc_1G_calculated/6;
+      acc_1G_calculated += accZ;
+    }  
+    accZ -= acc_1G_calculated/6;
     applyDeadband(accZ, ACC_Z_DEADBAND);
     //debug[0] = accZ; 
     
@@ -352,7 +360,7 @@ uint8_t getEstimatedAltitude(){
     float vel_tmp = vel;
     applyDeadband(vel_tmp, 5);
     vario = vel_tmp;
-    BaroPID -= constrain(conf.D8[PIDALT] * vel_tmp / 20, -150, 150);
+    BaroPID -= constrain(conf.D8[PIDALT] * vel_tmp / 20, -200, 200);
     //debug[3] = BaroPID;
   #endif
   return 1;

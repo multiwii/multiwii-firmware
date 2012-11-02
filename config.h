@@ -848,6 +848,12 @@
      */
     //#define SUPPRESS_BARO_ALTHOLD
 
+  /* Natural alt change for rapid pilots. It's temporary switch OFF the althold when throttle stick is out of deadband defined with ALT_HOLD_THROTTLE_NEUTRAL_ZONE
+   * but if it's commented: Smooth alt change routine is activated, for slow auto and aerophoto modes (in general solution from alexmos). It's slowly increase/decrease 
+   * altitude proportional to stick movement (+/-100 throttle gives about +/-50 cm in 1 second with cycle time about 3-4ms)
+   */
+  #define ALTHOLD_FAST_THROTTLE_CHANGE
+
   /********************************************************************/
   /****           baord naming                                     ****/
   /********************************************************************/

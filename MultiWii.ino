@@ -1132,10 +1132,49 @@ void loop () {
 
   #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
     if (f.BARO_MODE) {
-      if (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
+      /*if (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
         f.BARO_MODE = 0; // so that a new althold reference is defined
+      }*/
+      
+    static uint8_t isAltHoldChanged = 0;
+    #if defined(ALTHOLD_FAST_THROTTLE_CHANGE)
+      
+      if (abs(rcCommand[THROTTLE]-initialThrottleHold) > ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
+        errorAltitudeI = 0;
+        isAltHoldChanged = 1;
+        
+        rcCommand[THROTTLE] += (rcCommand[THROTTLE] > initialThrottleHold) ? -ALT_HOLD_THROTTLE_NEUTRAL_ZONE : ALT_HOLD_THROTTLE_NEUTRAL_ZONE;
+      
+      } else {
+        if (isAltHoldChanged) {
+          // much usefull to use BaroAlt instead of EstAlt because it has less delay value when alt hold activated during the vertical movement
+          AltHold = BaroAlt;
+          isAltHoldChanged = 0;
       }
       rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
+    }
+      
+    #else
+      static int16_t AltHoldCorr = 0;
+      if (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
+        // Slowly increase/decrease AltHold proportional to stick movement ( +100 throttle gives ~ +50 cm in 1 second with cycle time about 3-4ms)
+        AltHoldCorr+= rcCommand[THROTTLE] - initialThrottleHold;
+        if(abs(AltHoldCorr) > 500) {
+          AltHold += AltHoldCorr/500;
+          AltHoldCorr %= 500;
+        }
+        errorAltitudeI = 0;
+        isAltHoldChanged = 1;
+      
+      } else if (isAltHoldChanged) {
+        AltHold = BaroAlt;
+        isAltHoldChanged = 0;
+      }
+
+      rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
+
+    #endif  
+      
     }
   #endif
   #if GPS

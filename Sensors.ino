@@ -802,7 +802,8 @@ void ACC_init () {
   delay(5);
   uint8_t control = i2c_readReg(BMA180_ADDRESS, 0x20);
   control = control & 0x0F;        // save tcs register
-  control = control | (0x01 << 4); // register: bw_tcs reg: bits 4-7 to set bw -- value: set low pass filter to 20Hz
+  //control = control | (0x01 << 4); // register: bw_tcs reg: bits 4-7 to set bw -- value: set low pass filter to 20Hz
+  control = control | (0x00 << 4); // set low pass filter to 10Hz (bits value = 0000xxxx)
   i2c_writeReg(BMA180_ADDRESS, 0x20, control);
   delay(5);
   control = i2c_readReg(BMA180_ADDRESS, 0x30);
