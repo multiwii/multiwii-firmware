@@ -611,8 +611,8 @@
     //#define DEADBAND 6
 
     /* defines the neutral zone of throttle stick during altitude hold, default setting is
-       +/-20 uncommend and change the value below if you want to change it. */
-    //#define ALT_HOLD_THROTTLE_NEUTRAL_ZONE 20 
+       +/-40 uncommend and change the value below if you want to change it. */
+    //#define ALT_HOLD_THROTTLE_NEUTRAL_ZONE 40 
 
 
   /**************************************************************************************/
