@@ -275,8 +275,8 @@ void i2c_OLED_send_logo(void){
   i2c_OLED_send_cmd(0X40);              // Display start line register to 0
   i2c_OLED_send_cmd(0);                 // Set low col address to 0
   i2c_OLED_send_cmd(0x10);              // Set high col address to 0
-  for(int i=0; i<1024; i++) {          // fill the display's RAM with graphic... 128*64 pixel picture
-    buffer = pgm_read_byte(&(LOGO[i]));
+  for(uint16_t k=0; k<1024; k++) {          // fill the display's RAM with graphic... 128*64 pixel picture
+    buffer = pgm_read_byte(&(LOGO[k]));
     i2c_OLED_send_byte(buffer);
   }
   i2c_OLED_send_cmd(0x81);             // Setup CONTRAST CONTROL, following byte is the contrast Value... always a 2 byte instruction

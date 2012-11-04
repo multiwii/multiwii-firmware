@@ -311,12 +311,12 @@ uint8_t getEstimatedAltitude(){
 
   #ifndef SUPPRESS_BARO_ALTHOLD
     //P
-    int16_t error = constrain(AltHold - EstAlt, -300, 300);
-    applyDeadband(error, 10); //remove small P parametr to reduce noise near zero position
-    BaroPID = constrain((conf.P8[PIDALT] * error / 100), -150, +150);
+    int16_t error16 = constrain(AltHold - EstAlt, -300, 300);
+    applyDeadband(error16, 10); //remove small P parametr to reduce noise near zero position
+    BaroPID = constrain((conf.P8[PIDALT] * error16 / 100), -150, +150);
     
     //I
-    errorAltitudeI += error * conf.I8[PIDALT]/50;
+    errorAltitudeI += error16 * conf.I8[PIDALT]/50;
     errorAltitudeI = constrain(errorAltitudeI,-30000,30000);
     BaroPID += (errorAltitudeI / 500); //I in range +/-60
     
