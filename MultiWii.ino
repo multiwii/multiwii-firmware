@@ -196,7 +196,6 @@ struct flags_struct {
   static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
   static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
   static uint16_t powerMax = 0;           // highest ever current;
-  static int32_t  BAROaltStart;       // offset value from powerup
   static int32_t  BAROaltMax;         // maximum value
 #endif
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)
@@ -705,7 +704,6 @@ void go_arm() {
         #endif
         #ifdef LCD_TELEMETRY // reset some values when arming
           #if BARO
-              BAROaltStart = BaroAlt;
               BAROaltMax = BaroAlt;
           #endif
         #endif

@@ -1766,9 +1766,9 @@ void lcd_telemetry() {
           #if BARO
              {
                LCDsetLine(linenr++);
-               int16_t h = (BaroAlt - BAROaltStart) / 100;
+               int16_t h = BaroAlt / 100;
                LCDprint('A'); lcdprint_int16(h); LCDprint('m');
-               h = (BAROaltMax - BAROaltStart) / 100;
+               h = BAROaltMax / 100;
                LCDprintChar(" ("); lcdprint_int16(h);
              }
            #endif
@@ -1989,12 +1989,11 @@ void lcd_telemetry() {
     //Reset logvalues
     cycleTimeMax = 0;// reset min/max on transition on->off
     cycleTimeMin = 65535;
-#if BARO
-    BAROaltStart = 0;
-#if defined(LOG_VALUES)
-    BAROaltMax = 0;
-#endif
-#endif
+    #if BARO
+      #if defined(LOG_VALUES)
+        BAROaltMax = 0;
+      #endif
+    #endif
     telemetry = 0; // no use to repeat this forever
     break;
 #endif // case R
