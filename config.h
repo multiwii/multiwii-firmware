@@ -530,14 +530,15 @@
 /*****************                                                                 ***************/
 /*************************************************************************************************/
 
-  /************************        AP FlightMode        **********************************/
+  /************************        continuous gyro calibration        ********************/
   /* Gyrocalibration will be repeated if copter is moving during calibration. */
     //#define GYROCALIBRATIONFAILSAFE
+
   /************************        AP FlightMode        **********************************/
     /* Temporarily Disables GPS_HOLD_MODE to be able to make it possible to adjust the Hold-position when moving the sticks.*/
     //#define AP_MODE 20  // Create a deadspan for GPS.
         
-  /************************   Assisted AcroTrainer    **********************************/
+  /************************   Assisted AcroTrainer    ************************************/
     /* Train Acro with auto recovery. Value set the point where ANGLE_MODE takes over.
        Remember to activate ANGLE_MODE first!...
        A Value on 200 will give a very distinct transfer */
@@ -867,7 +868,7 @@
     #define BOARD_NAME "MultiWii   V-.--"
     //                  123456789.123456
 
-    /****      Support multiple configuration profile in EEPROM   ****/
+  /*************      Support multiple configuration profiles in EEPROM     ************/
     //#define MULTIPLE_CONFIGURATION_PROFILES
 
 /*************************************************************************************************/

@@ -549,18 +549,22 @@ void LCDsetLine(byte line) { // Line = 1 or 2 - vt100 has lines 1-99
 #endif
 }
 #if defined(LCD_VT100)
-void LCDattributesBold() {LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("1m");}
-void LCDattributesReverse() {LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("7m");}
-void LCDattributesOff() {LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("0m");}
+  void LCDattributesBold() {LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("1m");}
+  void LCDattributesReverse() {LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("7m");}
+  void LCDattributesOff() {LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("0m");}
+  void LCDalarmAndReverse() {LCDprint(0x07); LCDattributesReverse(); }
 #elif defined(OLED_I2C_128x64)
-void LCDattributesBold() {/*CHAR_FORMAT = 0b01111111; */}
-void LCDattributesReverse() {CHAR_FORMAT = 0b01111111; }
-void LCDattributesOff() {CHAR_FORMAT = 0; }
+  void LCDattributesBold() {/*CHAR_FORMAT = 0b01111111; */}
+  void LCDattributesReverse() {CHAR_FORMAT = 0b01111111; }
+  void LCDattributesOff() {CHAR_FORMAT = 0; }
+  void LCDalarmAndReverse() {LCDattributesReverse(); }
 #else
-void LCDattributesBold() {}
-void LCDattributesReverse() {}
-void LCDattributesOff() {}
+  void LCDattributesBold() {}
+  void LCDattributesReverse() {}
+  void LCDattributesOff() {}
+  void LCDalarmAndReverse() {}
 #endif
+
 #define LCD_FLUSH {/*UartSendData();*/ delayMicroseconds(20000); }
 
 void lcdprint_int16(int16_t v) {
@@ -1726,6 +1730,23 @@ void lcd_telemetry() {
 #endif // DISPLAY_2LINES
 /* ------------ DISPLAY_MULTILINE ------------------------------------*/
 #ifdef DISPLAY_MULTILINE
+#ifndef SUPPRESS_TELEMETRY_PAGE_5
+void outputMotorServo(uint8_t i, uint16_t unit) {
+  static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
+      "S1", "S2","S3", "S4", "S5", "S6", "S7", "S8",};
+   LCDprintChar(outputNames[i]);
+   LCDprint(' ');
+   //unit = servo[j-1]; // [1000 ; 2000]
+   LCDprint( digit1000(unit) );
+   LCDprint( digit100(unit) );
+   LCDprint( digit10(unit) );
+   LCDprint( digit1(unit) );
+   LCDprint(' ');
+   unit = constrain(unit,1000,2000);
+   LCDbar(12, (unit-1000)/10 );
+   LCDcrlf();
+}
+#endif
 
 void lcd_telemetry() {
   static uint8_t linenr;
@@ -1735,6 +1756,7 @@ void lcd_telemetry() {
     case '0': // request to turn telemetry off - workaround, cannot enter binary zero \000 into string
       telemetry = 0;
       break;
+#ifndef SUPPRESS_TELEMETRY_PAGE_1
     case 1:// overall display
     case '1':
     {
@@ -1744,7 +1766,7 @@ void lcd_telemetry() {
           linenr = 1;
           LCDsetLine(linenr++);
           #ifdef BUZZER
-            if (isBuzzerON()) { LCDattributesReverse(); } // buzzer on? then add some blink for attention
+            if (isBuzzerON()) { LCDalarmAndReverse(); } // buzzer on? then add some blink for attention
           #endif
           output_V();
           break;
@@ -1783,7 +1805,7 @@ void lcd_telemetry() {
         case 5:// errors, Vmin
            LCDsetLine(linenr++);
            if (failsafeEvents || (i2c_errors_count>>1)) { // ignore i2c==1 because of bma020-init
-             LCDattributesReverse();
+             LCDalarmAndReverse();
              output_fails();
              LCDattributesOff();
            }
@@ -1801,6 +1823,7 @@ void lcd_telemetry() {
       LCDcrlf();
     break;
     }
+#endif
 #ifndef SUPPRESS_TELEMETRY_PAGE_2
     case 2: // sensor readings
     case '2':
@@ -1879,28 +1902,18 @@ void lcd_telemetry() {
     break;
 #endif
 #ifndef SUPPRESS_TELEMETRY_PAGE_5
-    case 5: // outputs motors+sensors
+    case 5: // outputs motors+servos
     case '5':
     {
-      static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
-          "S1", "S2","S3", "S4", "S5", "S6", "S7", "S8",};
+//      static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
+//          "S1", "S2","S3", "S4", "S5", "S6", "S7", "S8",};
       static uint8_t index = 0;
       i = index++ % 16;
       if (i == 0) linenr = 1; //vt100 starts linenumbering @1
       LCDsetLine(linenr);
       if (i < 8) {
         if (i < NUMBER_MOTOR) {
-          LCDprintChar(outputNames[i]);
-          LCDprint(' ');
-          unit = motor[i]; // [1000 ; 2000]
-          LCDprint( digit1000(unit) );
-          LCDprint( digit100(unit) );
-          LCDprint( digit10(unit) );
-          LCDprint( digit1(unit) );
-          LCDprint(' ');
-          unit = constrain(motor[i],1000,2000);
-          LCDbar(12, (unit-1000)/10 );
-          LCDcrlf();
+          outputMotorServo(i, motor[i]);
           linenr++;
         } else {
           index = 8;
@@ -1916,17 +1929,7 @@ void lcd_telemetry() {
         #endif
         #if defined(PRI_SERVO_FROM) || defined(SEC_SERVO_FROM)
           {
-            LCDprintChar(outputNames[i]);
-            LCDprint(' ');
-            unit = servo[j-1]; // [1000 ; 2000]
-            LCDprint( digit1000(unit) );
-            LCDprint( digit100(unit) );
-            LCDprint( digit10(unit) );
-            LCDprint( digit1(unit) );
-            LCDprint(' ');
-            unit = constrain(servo[j-1],1000,2000);
-            LCDbar(12, (unit-1000)/10 );
-            LCDcrlf();
+            outputMotorServo(i, servo[j-1]);
             linenr++;
             break;
           }
