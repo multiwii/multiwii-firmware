@@ -709,7 +709,7 @@ void go_arm() {
         #endif
       }
     } else if(!f.ARMED){ 
-        blinkLED(2,800,1);
+        blinkLED(2,255,1);
         alarmArray[8] = 1;
       }
 }
@@ -721,7 +721,8 @@ void loop () {
   uint8_t axis,i;
   int16_t error,errorAngle;
   int16_t delta,deltaSum;
-  int16_t PTerm,ITerm,PTermACC,ITermACC,PTermGYRO,ITermGYRO,DTerm;
+  int16_t PTerm,ITerm,DTerm;
+  int16_t PTermACC = 0 , ITermACC = 0 , PTermGYRO = 0 , ITermGYRO = 0;
   static int16_t lastGyro[3] = {0,0,0};
   static int16_t delta1[3],delta2[3];
   static int16_t errorGyroI[3] = {0,0,0};

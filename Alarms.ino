@@ -114,7 +114,7 @@ void alarmPatternComposer(){
     else if (alarmArray[7] == 1)  patternDecode(resource,200,0,0,50,200,0);                        //confirmation indicator 1x
     else if (alarmArray[7] == 2)  patternDecode(resource,200,200,0,50,200,0);                      //confirmation indicator 2x 
     else if (alarmArray[7] > 2)   patternDecode(resource,200,200,200,50,200,0);                    //confirmation indicator 3x
-    else if (SequenceActive[resource] == 1) patternDecode(resource,0,0,0,0,0,1);                   // finish last sequence if not finished yet
+    else if (SequenceActive[(uint8_t)resource] == 1) patternDecode(resource,0,0,0,0,0,1);                   // finish last sequence if not finished yet
     else turnOff(resource);                                                                        // turn off the resource 
     alarmArray[8] = 0;                                                                             //reset acc not calibrated
     
@@ -321,12 +321,12 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
 /****                   Global Resource Handling                 ****/
 /********************************************************************/
 
-  int setTiming(uint8_t resource, uint16_t pulse, uint16_t pause){ 
+  void setTiming(uint8_t resource, uint16_t pulse, uint16_t pause){
     if (!resourceIsOn[resource] && (millis() >= (resourceLastToggleTime[resource] + pause))&& pulse != 0) {	         
       resourceIsOn[resource] = 1;      
       toggleResource(resource,1);
       resourceLastToggleTime[resource]=millis();      
-    } else if (resourceIsOn[resource] && (millis() >= resourceLastToggleTime[resource] + pulse)|| (pulse==0 && resourceIsOn[resource]) ) {       
+    } else if ( (resourceIsOn[resource] && (millis() >= resourceLastToggleTime[resource] + pulse) ) || (pulse==0 && resourceIsOn[resource]) ) {
       resourceIsOn[resource] = 0;
       toggleResource(resource,0);
       resourceLastToggleTime[resource]=millis();

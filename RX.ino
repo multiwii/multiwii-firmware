@@ -412,8 +412,8 @@ void computeRC() {
       rcDataMean[chan] = 0;
       for (a=0;a<4;a++) rcDataMean[chan] += rcData4Values[chan][a];
       rcDataMean[chan]= (rcDataMean[chan]+2)/4;
-      if ( rcDataMean[chan] < rcData[chan] -3)  rcData[chan] = rcDataMean[chan]+2;
-      if ( rcDataMean[chan] > rcData[chan] +3)  rcData[chan] = rcDataMean[chan]-2;
+      if ( rcDataMean[chan] < (uint16_t)rcData[chan] -3)  rcData[chan] = rcDataMean[chan]+2;
+      if ( rcDataMean[chan] > (uint16_t)rcData[chan] +3)  rcData[chan] = rcDataMean[chan]-2;
     }
   #endif
 }
@@ -795,12 +795,12 @@ void spekBind() {
   pinMode(SPEK_BIND_POWER,OUTPUT);
   
   while(1) {  //Do not return.  User presses reset button to return to normal. 
-    blinkLED(4,300,1);
+    blinkLED(4,255,1);
     digitalWrite(SPEK_BIND_POWER,LOW); // Power off sat
     pinMode(SPEK_BIND_DATA, OUTPUT); 
     digitalWrite(SPEK_BIND_DATA,LOW); 
     delay(1000); 
-    blinkLED(4,300,1);
+    blinkLED(4,255,1);
     
     digitalWrite(SPEK_BIND_POWER,HIGH); // Power on sat
     delay(10);
