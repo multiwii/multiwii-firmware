@@ -530,10 +530,6 @@
 /*****************                                                                 ***************/
 /*************************************************************************************************/
 
-  /* Pseudo-derivative conrtroller for level mode (experimental)
-     Additional information: http://www.multiwii.com/forum/viewtopic.php?f=8&t=503 */
-    //#define LEVEL_PDF
-
   /************************        AP FlightMode        **********************************/
   /* Gyrocalibration will be repeated if copter is moving during calibration. */
     //#define GYROCALIBRATIONFAILSAFE

@@ -1756,7 +1756,7 @@ void lcd_telemetry() {
         case 2:// checkboxstatus
           //LCDsetLine(linenr++);
           LCDsetLine(linenr);
-          strcpy_P(line1,PSTR("... ... ... ... "));
+          strcpy_P(line1,PSTR(".   .   .   .   "));
           LCDprintChar(line1);
           LCDsetLine(linenr++);
           output_checkboxitems();
