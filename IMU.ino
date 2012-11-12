@@ -326,12 +326,12 @@ uint8_t getEstimatedAltitude(){
     float invG = InvSqrt(isq(EstG.V.X) + isq(EstG.V.Y) + isq(EstG.V.Z));
     accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG;
     
-    static int16_t acc_1G_calculated = acc_1G*6;
+    static int16_t accZoffset = acc_1G*6;
     if (!f.ARMED) {
-      acc_1G_calculated -= acc_1G_calculated/6;
-      acc_1G_calculated += accZ;
+      accZoffset -= accZoffset/6;
+      accZoffset += accZ;
     }  
-    accZ -= acc_1G_calculated/6;
+    accZ -= accZoffset/6;
     applyDeadband(accZ, ACC_Z_DEADBAND);
     //debug[0] = accZ; 
     
@@ -342,11 +342,14 @@ uint8_t getEstimatedAltitude(){
     vel += accZ * accVelScale * dTime;
     
     static int32_t lastBaroAlt;
-    float baroVel = (EstAlt - lastBaroAlt) * 1000000.0f / dTime;
+    int16_t baroVel = (EstAlt - lastBaroAlt) * 1000000.0f / dTime;
     lastBaroAlt = EstAlt;
   
     baroVel = constrain(baroVel, -300, 300); // constrain baro velocity +/- 300cm/s
-    applyDeadband(baroVel, 10); // to reduce noise near zero  
+    applyDeadband(baroVel, 10); // to reduce noise near zero
+    if (!f.ARMED) {
+      baroVel = 0;
+    }
     //debug[1] = baroVel;
     
     // apply Complimentary Filter to keep the calculated velocity based on baro velocity (i.e. near real velocity). 
@@ -355,7 +358,7 @@ uint8_t getEstimatedAltitude(){
     //debug[2] = vel;
     
     //D
-    float vel_tmp = vel;
+    int16_t vel_tmp = vel;
     applyDeadband(vel_tmp, 5);
     vario = vel_tmp;
     BaroPID -= constrain(conf.D8[PIDALT] * vel_tmp / 20, -200, 200);
