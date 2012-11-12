@@ -324,8 +324,7 @@ uint8_t getEstimatedAltitude(){
     // projection of ACC vector to global Z, with 1G subtructed
     // Math: accZ = A * G / |G| - 1G
     float invG = InvSqrt(isq(EstG.V.X) + isq(EstG.V.Y) + isq(EstG.V.Z));
-    int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG;
-    //int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG - acc_1G;
+    accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG;
     
     static int16_t acc_1G_calculated = acc_1G*6;
     if (!f.ARMED) {
@@ -340,7 +339,7 @@ uint8_t getEstimatedAltitude(){
     static float accVelScale = 9.80665f / 10000.0f / acc_1G ;
     
     // Integrator - velocity, cm/sec
-    vel+= accZ * accVelScale * dTime;
+    vel += accZ * accVelScale * dTime;
     
     static int32_t lastBaroAlt;
     float baroVel = (EstAlt - lastBaroAlt) * 1000000.0f / dTime;
@@ -353,7 +352,6 @@ uint8_t getEstimatedAltitude(){
     // apply Complimentary Filter to keep the calculated velocity based on baro velocity (i.e. near real velocity). 
     // By using CF it's possible to correct the drift of integrated accZ (velocity) without loosing the phase, i.e without delay
     vel = vel * 0.985f + baroVel * 0.015f;
-    //vel = constrain(vel, -300, 300); // constrain velocity +/- 300cm/s 
     //debug[2] = vel;
     
     //D

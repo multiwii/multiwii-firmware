@@ -159,6 +159,7 @@ static uint8_t  vbatMin = VBATNOMINAL;  // lowest battery voltage in 0.1V steps
 static uint8_t  rcOptions[CHECKBOXITEMS];
 static int32_t  BaroAlt;
 static int32_t  EstAlt;             // in cm
+static int16_t  accZ;
 static int16_t  BaroPID = 0;
 static int32_t  AltHold;
 static int16_t  errorAltitudeI = 0;
@@ -691,7 +692,7 @@ void setup() {
 }
 
 void go_arm() {
-  if(calibratingG == 0 && f.ACC_CALIBRATED
+  if(calibratingG == 0 && f.ACC_CALIBRATED && !f.BARO_MODE
   #if defined(FAILSAFE)
     && failsafeCnt < 2
   #endif
@@ -728,7 +729,7 @@ void loop () {
   static int16_t errorGyroI[3] = {0,0,0};
   static int16_t errorAngleI[2] = {0,0};
   static uint32_t rcTime  = 0;
-  static int16_t initialThrottleHold;
+  static int16_t initialThrottleHold, initialThrottleHoldOutput;
   static uint32_t timestamp_fixated = 0;
 
   #if defined(SPEKTRUM)
@@ -776,8 +777,10 @@ void loop () {
     
 // perform actions    
     if (rcData[THROTTLE] <= MINCHECK) {            // THROTTLE at minimum
+      if (!f.BARO_MODE) {
       errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0; errorGyroI[YAW] = 0;
       errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
+      }  
       if (conf.activate[BOXARM] > 0) {             // Arming/Disarming via ARM BOX
         if ( rcOptions[BOXARM] && f.OK_TO_ARM ) go_arm(); else if (f.ARMED) f.ARMED = 0;
       }
@@ -938,8 +941,19 @@ void loop () {
       if (rcOptions[BOXBARO]) {
           if (!f.BARO_MODE) {
             f.BARO_MODE = 1;
-            AltHold = EstAlt;
+            // much usefull to use BaroAlt instead of EstAlt because it has less delay value when alt hold activated during the vertical movement
+            AltHold = BaroAlt;
+            
+          #ifdef INITIAL_THROTTLE_HOLD_FROM_MID_EXPO_POINT
             initialThrottleHold = rcCommand[THROTTLE];
+            uint16_t tmp = conf.thrMid8/10;
+            initialThrottleHoldOutput = lookupThrottleRC[tmp] + (conf.thrMid8%10)*(lookupThrottleRC[tmp+1]-lookupThrottleRC[tmp])/10 + INITIAL_THROTTLE_HOLD_FROM_MID_EXPO_POINT;
+            initialThrottleHoldOutput = min(MAXTHROTTLE, initialThrottleHoldOutput);
+          #else 
+            initialThrottleHold = rcCommand[THROTTLE];
+            initialThrottleHoldOutput = initialThrottleHold;
+          #endif
+            
             errorAltitudeI = 0;
             BaroPID=0;
           }
@@ -1131,28 +1145,46 @@ void loop () {
 
   #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
     if (f.BARO_MODE) {
-      /*if (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
-        f.BARO_MODE = 0; // so that a new althold reference is defined
-      }*/
       
-    static uint8_t isAltHoldChanged = 0;
-    #if defined(ALTHOLD_FAST_THROTTLE_CHANGE)
+    static uint8_t isAltChanged = 0;
+    #if defined(VARIO_ALT_CHANGE)
       
-      if (abs(rcCommand[THROTTLE]-initialThrottleHold) > ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
-        errorAltitudeI = 0;
-        isAltHoldChanged = 1;
+      int16_t throttleDiff = rcCommand[THROTTLE]-initialThrottleHold;
+      if (abs(throttleDiff) > ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
         
-        rcCommand[THROTTLE] += (rcCommand[THROTTLE] > initialThrottleHold) ? -ALT_HOLD_THROTTLE_NEUTRAL_ZONE : ALT_HOLD_THROTTLE_NEUTRAL_ZONE;
+        if (!isAltChanged) {
+          // when you activate the althold, initial throttle taken from stick (or calculated from INITIAL_THROTTLE_HOLD_FROM_MID_EXPO_POINT, see below), 
+          // but actually it's not precised throttle for hovering... after one-two second it's become stabilized by althold PID regulator 
+          // and BaroPID it's correction for initial throttle... And when we start regulate altitude, initial throttle will be corrected for hovering...
+          initialThrottleHoldOutput = initialThrottleHoldOutput + BaroPID; 
+          isAltChanged = 1;
+        }
+        
+        int16_t targetVario = throttleDiff - ((rcCommand[THROTTLE] > initialThrottleHold) ? ALT_HOLD_THROTTLE_NEUTRAL_ZONE : -ALT_HOLD_THROTTLE_NEUTRAL_ZONE);
+        
+        int16_t varioError = constrain(targetVario - vario, -300, 300);
+        
+        static float accScale = 980.665f / acc_1G; // don't worry, it's calculated only one time because it's static init ;)
+        
+        rcCommand[THROTTLE] = initialThrottleHoldOutput + constrain((VARIO_P*varioError/20 - VARIO_D*accZ*accScale/40), -300, 300);
+        
+        //debug[0] = VARIO_P*varioError/20;
+        //debug[1] = VARIO_D*accZ*accScale/40;
+        //debug[3] = rcCommand[THROTTLE] - initialThrottleHoldOutput;
       
       } else {
-        if (isAltHoldChanged) {
+        
+        if (isAltChanged) {
           // much usefull to use BaroAlt instead of EstAlt because it has less delay value when alt hold activated during the vertical movement
           AltHold = BaroAlt;
-          isAltHoldChanged = 0;
+          errorAltitudeI = 0; 
+          isAltChanged = 0;
       }
-      rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
+        
+        rcCommand[THROTTLE] = initialThrottleHoldOutput + BaroPID;
     }
       
+     
     #else
       static int16_t AltHoldCorr = 0;
       if (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
@@ -1163,14 +1195,14 @@ void loop () {
           AltHoldCorr %= 500;
         }
         errorAltitudeI = 0;
-        isAltHoldChanged = 1;
+        isAltChanged = 1;
       
-      } else if (isAltHoldChanged) {
+      } else if (isAltChanged) {
         AltHold = BaroAlt;
-        isAltHoldChanged = 0;
+        isAltChanged = 0;
       }
 
-      rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
+      rcCommand[THROTTLE] = initialThrottleHoldOutput + BaroPID;
 
     #endif  
       

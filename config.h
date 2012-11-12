@@ -845,11 +845,23 @@
      */
     //#define SUPPRESS_BARO_ALTHOLD
 
-  /* Natural alt change for rapid pilots. It's temporary switch OFF the althold when throttle stick is out of deadband defined with ALT_HOLD_THROTTLE_NEUTRAL_ZONE
-   * but if it's commented: Smooth alt change routine is activated, for slow auto and aerophoto modes (in general solution from alexmos). It's slowly increase/decrease 
-   * altitude proportional to stick movement (+/-100 throttle gives about +/-50 cm in 1 second with cycle time about 3-4ms)
+  /* In this mode, throttle stick position gives a desired vario. Regulation is divided into two parts, when throttle stick is inside ALT_HOLD_THROTTLE_NEUTRAL_ZONE, 
+   * the current althold regulation is used. When throttle stick is out of deadband, it ascend or descend with a desired vario.
+   *
+   * but if it's commented: Smooth alt change routine is activated, for slow auto and aerophoto modes (in general solution from alexmos). 
+   * It's slowly increase/decrease altitude proportional to stick movement (+/-100 throttle gives about +/-50 cm in 1 second with cycle time about 3-4ms).
    */
-  #define ALTHOLD_FAST_THROTTLE_CHANGE
+  #define VARIO_ALT_CHANGE
+  #define VARIO_P 15     // it's force to get desired vario
+  #define VARIO_D 10     // regulate the speed of vario change and prevent oscillations of PID controller, e.g. if VARIO_D=0 it means that speed to get desired vario (by throttle stick) will be max
+      
+  /*  Predefined initial throttle for AltHold will be calculated from MID (middle/hover) point of expo throttle from GUI 
+   *  (BUT not taken from current throttle value on AltHold activation).
+   *  I.e. pls. use GUI to set MID point of throttle expo as initial throttle.
+   *  Note: Value specified by define it's additional compensation for battery consumption 
+   */
+  //#define INITIAL_THROTTLE_HOLD_FROM_MID_EXPO_POINT 50  
+  
 
   /********************************************************************/
   /****           baord naming                                     ****/
