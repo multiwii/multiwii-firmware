@@ -324,7 +324,7 @@ uint8_t getEstimatedAltitude(){
     // projection of ACC vector to global Z, with 1G subtructed
     // Math: accZ = A * G / |G| - 1G
     float invG = InvSqrt(isq(EstG.V.X) + isq(EstG.V.Y) + isq(EstG.V.Z));
-    accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG;
+    int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG;
     
     static int16_t accZoffset = acc_1G*6;
     if (!f.ARMED) {
@@ -347,9 +347,6 @@ uint8_t getEstimatedAltitude(){
   
     baroVel = constrain(baroVel, -300, 300); // constrain baro velocity +/- 300cm/s
     applyDeadband(baroVel, 10); // to reduce noise near zero
-    if (!f.ARMED) {
-      baroVel = 0;
-    }
     //debug[1] = baroVel;
     
     // apply Complimentary Filter to keep the calculated velocity based on baro velocity (i.e. near real velocity). 
@@ -361,7 +358,7 @@ uint8_t getEstimatedAltitude(){
     int16_t vel_tmp = vel;
     applyDeadband(vel_tmp, 5);
     vario = vel_tmp;
-    BaroPID -= constrain(conf.D8[PIDALT] * vel_tmp / 20, -200, 200);
+    BaroPID -= constrain(conf.D8[PIDALT] * vel_tmp / 20, -150, 150);
     //debug[3] = BaroPID;
   #endif
   return 1;

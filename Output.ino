@@ -1228,7 +1228,11 @@ void mixTable() {
     if (maxMotor > MAXTHROTTLE) // this is a way to still have good gyro corrections if at least one motor reaches its max.
       motor[i] -= maxMotor - MAXTHROTTLE;
     motor[i] = constrain(motor[i], MINTHROTTLE, MAXTHROTTLE);    
-    if ((rcData[THROTTLE] < MINCHECK) && !f.BARO_MODE)
+    #if defined(ALTHOLD_FAST_THROTTLE_CHANGE)
+      if (rcData[THROTTLE] < MINCHECK)
+    #else
+      if ((rcData[THROTTLE] < MINCHECK) && !f.BARO_MODE)
+    #endif 
       #ifndef MOTOR_STOP
         motor[i] = MINTHROTTLE;
       #else
