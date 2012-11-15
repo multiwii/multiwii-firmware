@@ -605,14 +605,6 @@ void vario_signaling() {
     uint8_t up = (vario > 0 ? 1 : 0 ); //, down = (vario < 0 ? 1 : 0 );
     //int16_t v = abs(vario) - up * TRESHOLD_UP - down * TRESHOLD_DOWN;
     v = abs(vario) - up * (TRESHOLD_UP_MINUS_DOWN) - TRESHOLD_DOWN;
-    //  {
-    //    static uint8_t x=0;
-    //    if (! (--x % 10)) {
-    //      LCDcrlf();
-    //      lcdprint_int16(vario);
-    //      LCDbar(40, (vario+100)/2);
-    //    }
-    //  }
     if (silence>0) silence--; else silence = 0;
     if (v > 0) {
       // going up or down
@@ -626,11 +618,6 @@ void vario_signaling() {
       if (v > max_v) {
         max_v = v;
         max_up = up;
-        //      LCDcrlf();
-        //      LCDprintChar(" silence="); lcdprint_int16(silence);
-        //      LCDprintChar(" vario="); lcdprint_int16(vario);
-        //      LCDprintChar(" max_v="); lcdprint_int16(max_v);
-        //      LCDprintChar(" max_up="); lcdprint_int16(max_up);
       }
     } // end of (v>0)
   }
@@ -642,16 +629,11 @@ void vario_signaling() {
     if (!(t++ % ALTITUDE_INTERVAL)) {
       static int32_t last_BaroAlt = 0;
       int32_t delta_BaroAlt = BaroAlt - last_BaroAlt;
-      //LCDcrlf();
-      //LCDprintChar(" !!! BaroAlt="); lcdprint_int16(BaroAlt);
-      //LCDprintChar(" delta_BaroAlt="); lcdprint_int16(delta_BaroAlt);
       if (abs(delta_BaroAlt) > DELTA_ALT_TRESHOLD) {
         // inject suitable values
         max_v = abs(delta_BaroAlt / DELTA_T);
         max_up = (delta_BaroAlt > 0 ? 1 : 0);
         silence = 0;
-        //LCDprintChar(" max_v="); lcdprint_int16(max_v);
-        //LCDprintChar(" max_up="); lcdprint_int16(max_up);
       }
       last_BaroAlt = BaroAlt;
     }
@@ -693,14 +675,6 @@ void vario_output(uint16_t d, uint8_t up) {
     if (d2<1) d2 = 1;
     for (uint8_t i=0; i<d2; i++) LCDprint(s2);
   #endif
-//  LCDprintChar((up ? "            up " : " down "));
-//  char line[6] = "--:--";
-//  line[0] = digit10(d1);
-//  line[1] = digit1(d1);
-//  line[3] = digit10(d2);
-//  line[4] = digit1(d2);
-//  LCDprintChar(line);
-//  LCDcrlf();
 }
 
 #endif
