@@ -852,6 +852,22 @@
   #define ALTHOLD_FAST_THROTTLE_CHANGE
 
   /********************************************************************/
+  /****           altitude variometer                              ****/
+  /********************************************************************/
+
+    /* enable to get audio feedback upon rising/falling copter/plane.
+     * Requires a working baro.
+     * For now, Output gets sent to an enabled vt100 terminal program over the serial line.
+     * choice of two methods (enable either one or both)
+     * method 1 : use short term movement from baro ( bigger code size)
+     * method 2 : use long term observation of altitude from baro (smaller code size)
+     */
+    //#define VARIOMETER 12            // possible values: 12 = methods 1 & 2 ; 1 = method 1 ; 2 = method 2
+    //#define SUPPRESS_VARIOMETER_UP   // if no signaling for up movement is desired
+    //#define SUPPRESS_VARIOMETER_DOWN // if no signaling for down movement is desired
+    //#define VARIOMETER_SINGLE_TONE   // use only one tone (BEL); neccessary for non-patched vt100 terminals
+
+  /********************************************************************/
   /****           baord naming                                     ****/
   /********************************************************************/
 
@@ -953,8 +969,9 @@
 
     /* to log values like max loop time and others to come
        logging values are visible via LCD config
-       set to 2, if you want more values,
-       set to 3 for additional powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> PM_SOFT) */
+       set to 1, enable 'R' option to reset values, max current, max altitude
+       set to 2, adds min/max cycleTimes
+       set to 3, adds additional powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> PM_SOFT) */
     //#define LOG_VALUES 1
 
     /* to add debugging code

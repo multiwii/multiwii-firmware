@@ -15,7 +15,7 @@ July  2012     V2.1
 
 
 #include <avr/pgmspace.h>
-#define  VERSION  211
+#define  VERSION  213
 
 /*********** RC alias *****************/
 enum rc {
@@ -65,7 +65,7 @@ enum box {
     BOXGPSHOME,
     BOXGPSHOLD,
   #endif
-  #if defined(FIXEDWING) || defined(HELICOPTER) || defined(INFLIGHT_ACC_CALIBRATION)
+  #if defined(FIXEDWING) || defined(HELICOPTER)
     BOXPASSTHRU,
   #endif
   #if MAG
@@ -83,6 +83,12 @@ enum box {
   #endif
   #if MAG
     BOXHEADADJ, // acquire heading for HEADFREE mode
+  #endif
+  #ifdef VARIOMETER
+    BOXVARIO,
+  #endif
+  #ifdef INFLIGHT_ACC_CALIBRATION
+    BOXCALIB,
   #endif
   CHECKBOXITEMS
 };
@@ -109,7 +115,7 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
     "GPS HOME;"
     "GPS HOLD;"
   #endif
-  #if defined(FIXEDWING) || defined(HELICOPTER) || defined(INFLIGHT_ACC_CALIBRATION)
+  #if defined(FIXEDWING) || defined(HELICOPTER)
     "PASSTHRU;"
   #endif
   #if MAG
@@ -127,6 +133,12 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
   #endif
   #if MAG
     "HEADADJ;"  
+  #endif
+  #ifdef VARIOMETER
+    "VARIO;"
+  #endif
+  #ifdef INFLIGHT_ACC_CALIBRATION
+    "CALIB;"
   #endif
 ;
 
@@ -189,6 +201,7 @@ struct flags_struct {
   uint8_t GPS_FIX_HOME :1 ;
   uint8_t SMALL_ANGLES_25 :1 ;
   uint8_t CALIBRATE_MAG :1 ;
+  uint8_t VARIO_MODE :1;
 } f;
 
 //for log
@@ -891,7 +904,7 @@ void loop () {
         InflightcalibratingA = 50;
         AccInflightCalibrationArmed = 0;
       }  
-      if (rcOptions[BOXPASSTHRU]) {      // Use the Passthru Option to activate : Passthru = TRUE Meausrement started, Land and passtrhu = 0 measurement stored
+      if (rcOptions[BOXCALIB]) {      // Use the Calib Option to activate : Calib = TRUE Meausrement started, Land and Calib = 0 measurement stored
         if (!AccInflightCalibrationActive && !AccInflightCalibrationMeasurementDone){
           InflightcalibratingA = 50;
         }
@@ -934,18 +947,29 @@ void loop () {
       if (f.ANGLE_MODE || f.HORIZON_MODE) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
     #endif
 
-    #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
-      if (rcOptions[BOXBARO]) {
-          if (!f.BARO_MODE) {
-            f.BARO_MODE = 1;
-            AltHold = EstAlt;
-            initialThrottleHold = rcCommand[THROTTLE];
-            errorAltitudeI = 0;
-            BaroPID=0;
-          }
-      } else {
-          f.BARO_MODE = 0;
-      }
+    #if BARO
+      #if (!defined(SUPPRESS_BARO_ALTHOLD))
+        if (rcOptions[BOXBARO]) {
+            if (!f.BARO_MODE) {
+              f.BARO_MODE = 1;
+              AltHold = EstAlt;
+              initialThrottleHold = rcCommand[THROTTLE];
+              errorAltitudeI = 0;
+              BaroPID=0;
+            }
+        } else {
+            f.BARO_MODE = 0;
+        }
+      #endif
+      #ifdef VARIO
+        if (rcOptions[BOXVARIO]) {
+            if (!f.VARIO_MODE) {
+              f.VARIO_MODE = 1;
+            }
+        } else {
+            f.VARIO_MODE = 0;
+        }
+      #endif
     #endif
     #if MAG
       if (rcOptions[BOXMAG]) {
@@ -1025,7 +1049,7 @@ void loop () {
       #endif
     #endif
     
-    #if defined(FIXEDWING) || defined(HELICOPTER) || defined(INFLIGHT_ACC_CALIBRATION)
+    #if defined(FIXEDWING) || defined(HELICOPTER)
       if (rcOptions[BOXPASSTHRU]) {f.PASSTHRU_MODE = 1;}
       else {f.PASSTHRU_MODE = 0;}
     #endif
@@ -1072,6 +1096,9 @@ void loop () {
         #endif
         #ifdef LANDING_LIGHTS_DDR
           auto_switch_landing_lights();
+        #endif
+        #ifdef VARIOMETER
+          if (f.VARIO_MODE) vario_signaling();
         #endif
         break;
     }

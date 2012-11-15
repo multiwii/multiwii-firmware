@@ -308,8 +308,7 @@ uint8_t getEstimatedAltitude(){
 
   EstAlt = (EstAlt * 6 + BaroAlt * 2) >> 3; // additional LPF to reduce baro noise (faster by 30 µs)
 
-
-  #ifndef SUPPRESS_BARO_ALTHOLD
+  #if (defined(VARIOMETER) && (VARIOMETER != 2)) || !defined(SUPPRESS_BARO_ALTHOLD)
     //P
     int16_t error16 = constrain(AltHold - EstAlt, -300, 300);
     applyDeadband(error16, 10); //remove small P parametr to reduce noise near zero position

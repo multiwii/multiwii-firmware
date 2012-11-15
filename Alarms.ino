@@ -567,3 +567,141 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
     }
   }
 #endif
+
+  /********************************************************************/
+  /****                    Variometer signaling                    ****/
+  /********************************************************************/
+#ifdef VARIOMETER
+#define TRESHOLD_UP    50           // (m1) treshhold for up velocity
+#define TRESHOLD_DOWN  40           // (m1) treshhold for up velocity
+#define TRESHOLD_UP_MINUS_DOWN  10  // (m1) you compute: TRESHOLD_UP - TRESHOLD_DOWN
+#define ALTITUDE_INTERVAL 400       // (m2) in calls; interval to perodically observe altitude change
+#define DELTA_ALT_TRESHOLD 200      // (m2) in cm; treshold for delta altitude after ALTITUDE_INTERVAL
+#define DELTA_T 5                   // (m2) divisor for delta_alt to compute vel
+#define SIGNAL_SCALE   4       // you compute: (50ms per beep / 5*3ms cycle time)
+#define SILENCE_M      200     // max duration of silence in calls
+#define SILENCE_SCALE  33      // vario scale: larger -> slower decay of silence
+#define SILENCE_A      6600    // you compute: SILENCE_M * SILENCE_SCALE
+#define DURATION_SUP   5       // sup duration of signal
+#define DURATION_SCALE 100     // vario scale: larger -> slower rise of length
+
+  /* vario_signaling() gets called every 5th cycle (~2ms - 5ms) -> (~10ms - 25ms)
+   * modulates silence duration between tones and tone duration
+   * higher abs(vario) -> shorther silence & longer signal duration.
+   * Utilize two methods for combined short and long term observation
+   */
+void vario_signaling() {
+  static int16_t last_v = 0;
+  static uint16_t silence = 0;
+  static int16_t max_v = 0;
+  static uint8_t max_up = 0;
+
+  uint16_t s = 0;
+  int16_t v = 0;
+
+  /* method 1: use vario to follow short term up/down movement : */
+  #if (VARIOMETER == 1) || (VARIOMETER == 12)
+  {
+    uint8_t up = (vario > 0 ? 1 : 0 ); //, down = (vario < 0 ? 1 : 0 );
+    //int16_t v = abs(vario) - up * TRESHOLD_UP - down * TRESHOLD_DOWN;
+    v = abs(vario) - up * (TRESHOLD_UP_MINUS_DOWN) - TRESHOLD_DOWN;
+    //  {
+    //    static uint8_t x=0;
+    //    if (! (--x % 10)) {
+    //      LCDcrlf();
+    //      lcdprint_int16(vario);
+    //      LCDbar(40, (vario+100)/2);
+    //    }
+    //  }
+    if (silence>0) silence--; else silence = 0;
+    if (v > 0) {
+      // going up or down
+      if (v > last_v) {
+        // current speed greater than speed for last signal,
+        // so shorten the remaining silence period
+        s = (SILENCE_A) / (SILENCE_SCALE + v);
+        if (silence > s)  silence = s;
+      }
+      // remember interim max v
+      if (v > max_v) {
+        max_v = v;
+        max_up = up;
+        //      LCDcrlf();
+        //      LCDprintChar(" silence="); lcdprint_int16(silence);
+        //      LCDprintChar(" vario="); lcdprint_int16(vario);
+        //      LCDprintChar(" max_v="); lcdprint_int16(max_v);
+        //      LCDprintChar(" max_up="); lcdprint_int16(max_up);
+      }
+    } // end of (v>0)
+  }
+  #endif // end method 1
+  /* method 2: use altitude to follow long term up/down movement : */
+  #if (VARIOMETER == 2) || (VARIOMETER == 12)
+  {
+    static uint16_t t = 0;
+    if (!(t++ % ALTITUDE_INTERVAL)) {
+      static int32_t last_BaroAlt = 0;
+      int32_t delta_BaroAlt = BaroAlt - last_BaroAlt;
+      //LCDcrlf();
+      //LCDprintChar(" !!! BaroAlt="); lcdprint_int16(BaroAlt);
+      //LCDprintChar(" delta_BaroAlt="); lcdprint_int16(delta_BaroAlt);
+      if (abs(delta_BaroAlt) > DELTA_ALT_TRESHOLD) {
+        // inject suitable values
+        max_v = abs(delta_BaroAlt / DELTA_T);
+        max_up = (delta_BaroAlt > 0 ? 1 : 0);
+        silence = 0;
+        //LCDprintChar(" max_v="); lcdprint_int16(max_v);
+        //LCDprintChar(" max_up="); lcdprint_int16(max_up);
+      }
+      last_BaroAlt = BaroAlt;
+    }
+  }
+  #endif // end method 2
+  /* something to signal now? */
+  if ( (silence == 0) && (max_v > 0) ) {
+    // create new signal
+    uint16_t d = (DURATION_SUP * max_v)/(DURATION_SCALE + max_v);
+    s = (SILENCE_A) / (SILENCE_SCALE + max_v);
+    s+= d * SIGNAL_SCALE;
+    //LCDprintChar(" max_v="); lcdprint_int16(max_v);
+    vario_output(d, max_up);
+    last_v = v;
+    max_v = 0;
+    max_up = 0;
+    silence = s;
+   }
+} // end of vario_signaling()
+
+void vario_output(uint16_t d, uint8_t up) {
+  #if defined(SUPPRESS_VARIOMETER_UP)
+    if (up) return;
+  #elif defined(SUPPRESS_VARIOMETER_DOWN)
+    if (!up) return;
+  #endif
+  #ifdef VARIOMETER_SINGLE_TONE
+    uint8_t s1 = 0x07;
+    uint8_t d1 = d;
+  #else
+    uint8_t s1 = (up ? 0x05 : 0x07);
+    uint8_t d1 = d/2;
+  #endif
+  if (d1<1) d1 = 1;
+  for (uint8_t i=0; i<d1; i++) LCDprint(s1);
+  #ifndef VARIOMETER_SINGLE_TONE
+    uint8_t s2 = (up ? 0x07 : 0x05);
+    uint8_t d2 = d-d1;
+    if (d2<1) d2 = 1;
+    for (uint8_t i=0; i<d2; i++) LCDprint(s2);
+  #endif
+//  LCDprintChar((up ? "            up " : " down "));
+//  char line[6] = "--:--";
+//  line[0] = digit10(d1);
+//  line[1] = digit1(d1);
+//  line[3] = digit10(d2);
+//  line[4] = digit1(d2);
+//  LCDprintChar(line);
+//  LCDcrlf();
+}
+
+#endif
+

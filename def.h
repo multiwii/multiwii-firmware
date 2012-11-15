@@ -25,6 +25,8 @@
   #define LCD_TELEMETRY
   #define LCD_TELEMETRY_STEP "01245"
   #define LOG_VALUES 1
+  #define SUPPRESS_BARO_ALTHOLD
+  #define VARIOMETER 12
 #elif COPTERTEST == 4
   #define QUADX
   #define CRIUS_SE
@@ -48,6 +50,8 @@
   #define POWERMETER_SOFT
   #define MMGYRO 10
   #define MMGYROVECTORLENGTH 15
+  #define GYRO_SMOOTHING {45, 45, 50}
+  #define INFLIGHT_ACC_CALIBRATION
 #elif defined(COPTERTEST)
   #error "*** this test is not yet defined"
 #endif

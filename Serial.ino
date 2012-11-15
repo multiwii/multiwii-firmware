@@ -289,7 +289,7 @@ void evaluateCommand() {
                  #if GPS
                    f.GPS_HOME_MODE<<BOXGPSHOME|f.GPS_HOLD_MODE<<BOXGPSHOLD|
                  #endif
-                 #if defined(FIXEDWING) || defined(HELICOPTER) || defined(INFLIGHT_ACC_CALIBRATION) 
+                 #if defined(FIXEDWING) || defined(HELICOPTER)
                    f.PASSTHRU_MODE<<BOXPASSTHRU|
                  #endif
                  #if defined(BUZZER)
@@ -300,6 +300,12 @@ void evaluateCommand() {
                  #endif
                  #if defined(LANDING_LIGHTS_DDR)
                    rcOptions[BOXLLIGHTS]<<BOXLLIGHTS |
+                 #endif
+                 #if defined(VARIOMETER)
+                   rcOptions[BOXVARIO]<<BOXVARIO |
+                 #endif
+                 #if defined(INFLIGHT_ACC_CALIBRATION)
+                   rcOptions[BOXCALIB]<<BOXCALIB |
                  #endif
                  f.ARMED<<BOXARM);
        serialize8(global_conf.currentSet);   // current setting
@@ -526,7 +532,7 @@ void evaluateOtherData(uint8_t sr) {
     case '7':
     case '8':
     case '9':
-    #if defined(LOG_VALUES) && defined(DEBUG)
+    #if defined(LOG_VALUES) || defined(DEBUG)
     case 'R':
     #endif
     #ifdef DEBUG

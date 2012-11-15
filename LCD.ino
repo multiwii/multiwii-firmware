@@ -552,7 +552,7 @@ void LCDsetLine(byte line) { // Line = 1 or 2 - vt100 has lines 1-99
   void LCDattributesBold() {LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("1m");}
   void LCDattributesReverse() {LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("7m");}
   void LCDattributesOff() {LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("0m");}
-  void LCDalarmAndReverse() {LCDprint(0x07); LCDattributesReverse(); }
+  void LCDalarmAndReverse() {if (f.ARMED) LCDprint(0x07); LCDattributesReverse(); } // audio for errors only while armed
 #elif defined(OLED_I2C_128x64)
   void LCDattributesBold() {/*CHAR_FORMAT = 0b01111111; */}
   void LCDattributesReverse() {CHAR_FORMAT = 0b01111111; }
@@ -817,7 +817,9 @@ const char PROGMEM lcd_param_text48 [] = "AUX gpshom";
 const char PROGMEM lcd_param_text49 [] = "AUX gpshld";
 const char PROGMEM lcd_param_text50 [] = "AUX passth";
 const char PROGMEM lcd_param_text51 [] = "AUX headfr";
-const char PROGMEM lcd_param_text52 [] = "AUX beeper";
+const char PROGMEM lcd_param_text52 [] = "AUX buzzer";
+const char PROGMEM lcd_param_text53 [] = "AUX vario ";
+const char PROGMEM lcd_param_text54 [] = "AUX calib ";
 // 53 to 61 reserved
 #endif
 #ifdef HELI_120_CCPM //                  0123456789
@@ -982,7 +984,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
       &lcd_param_text49, &conf.activate[BOXGPSHOLD], &__AUX4,
     #endif
   #endif
-  #if defined(FIXEDWING) || defined(HELICOPTER) || defined(INFLIGHT_ACC_CALIBRATION)
+  #if defined(FIXEDWING) || defined(HELICOPTER)
     &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX1,
     &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX2,
     #ifndef SUPPRESS_LCD_CONF_AUX34
@@ -1003,6 +1005,22 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   #ifndef SUPPRESS_LCD_CONF_AUX34
     &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX3,
     &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX4,
+  #endif
+  #ifdef VARIOMETER
+    &lcd_param_text53, &conf.activate[BOXVARIO],&__AUX1,
+    &lcd_param_text53, &conf.activate[BOXVARIO],&__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX34
+      &lcd_param_text53, &conf.activate[BOXVARIO],&__AUX3,
+      &lcd_param_text53, &conf.activate[BOXVARIO],&__AUX4,
+    #endif
+  #endif
+  #ifdef INFLIGHT_ACC_CALIBRATION
+    &lcd_param_text54, &conf.activate[BOXCALIB],&__AUX1,
+    &lcd_param_text54, &conf.activate[BOXCALIB],&__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX34
+      &lcd_param_text54, &conf.activate[BOXCALIB],&__AUX3,
+      &lcd_param_text54, &conf.activate[BOXCALIB],&__AUX4,
+    #endif
   #endif
 #endif //lcd.conf.aux
 
@@ -1346,7 +1364,7 @@ void LCDbar(uint8_t n,uint8_t v) {
   for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
 #elif defined(LCD_TEXTSTAR)
   LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v);
-#elif defined(LCD_VT100)
+#elif defined(LCD_VT100) || defined(LCD_TTY)
   uint8_t i, j = (n*v)/100;
   for (i=0; i< j; i++) LCDprint( '=' );
   for (i=j; i< n; i++) LCDprint( '.' );
@@ -1403,7 +1421,7 @@ void fill_line2_AmaxA() {
 
 void output_V() {
   #ifdef VBAT
-    strcpy_P(line1,PSTR(" --.-V"));
+    strcpy_P(line1,PSTR(" --.-V  "));
     //                   0123456789.12345
     line1[1] = digit100(vbat);
     line1[2] = digit10(vbat);
@@ -1415,6 +1433,7 @@ void output_V() {
 
 void output_Vmin() {
   #ifdef VBAT
+    if (vbatMin < conf.vbatlevel_crit) LCDattributesReverse();
     strcpy_P(line1,PSTR(" --.-Vmin"));
     //                   0123456789.12345
     line1[1] = digit100(vbatMin);
@@ -1422,6 +1441,7 @@ void output_Vmin() {
     line1[4] = digit1(vbatMin);
     LCDbar(7, (vbatMin > conf.vbatlevel_crit ? (((vbatMin - conf.vbatlevel_crit)*100)/(VBATNOMINAL-conf.vbatlevel_crit)) : 0 ));
     LCDprintChar(line1);
+    LCDattributesOff;
   #endif
 }
 void output_mAh() {
@@ -1507,20 +1527,32 @@ static char checkboxitemNames[][4] = {
       "GHm",
       "GHd",
     #endif
-    #if defined(SERVO)
+    #if defined(FIXEDWING) || defined(HELICOPTER)
       "Pas",
-    #endif
-    #if defined(LED_FLASHER)
-      "LED",
-      "LIG",
     #endif
     #if MAG
       "HFr",
     #endif
     #if defined(BUZZER)
-      "Bpp",
+      "Buz",
     #endif
-      ""};
+    #if defined(LED_FLASHER)
+      "LEM",
+      "LEL",
+    #endif
+    #if defined(LANDING_LIGHTS_DDR)
+      "LLs",
+    #endif
+    #if MAG
+      "HAd",
+    #endif
+    #ifdef VARIOMETER
+      "Var",
+    #endif
+    #ifdef INFLIGHT_ACC_CALIBRATION
+      "Cal",
+    #endif
+  ""};
 void output_checkboxitems() {
   for (uint8_t i=0; i<CHECKBOXITEMS; i++ ) {
     if (rcOptions[i] || ((i==BOXARM)&&(f.ARMED)) ) {
@@ -1533,7 +1565,7 @@ void output_checkboxitems() {
 #define GYROLIMIT 60 // threshold: for larger values replace bar with dots
 #define ACCLIMIT 60 // threshold: for larger values replace bar with dots
 void outputSensor(uint8_t num, int16_t data, int16_t limit) {
-  if (data < -limit) {LCDprintChar("<<<");}
+  if (data < -limit)     {LCDprintChar("<<<<");}
   else if (data > limit) {LCDprintChar(">>>>");}
   else LCDbar(num, limit + data *50/limit);
 }
@@ -1775,14 +1807,21 @@ void lcd_telemetry() {
            output_mAh();
            LCDattributesOff(); // turn Reverse off for rest of display
            break;
-        case 2:// checkboxstatus
-          //LCDsetLine(linenr++);
-          LCDsetLine(linenr);
-          strcpy_P(line1,PSTR(".   .   .   .   "));
-          LCDprintChar(line1);
-          LCDsetLine(linenr++);
-          output_checkboxitems();
-          break;
+        case 2:// errors or checkboxstatus
+           if (failsafeEvents || (i2c_errors_count>>1)) { // ignore i2c==1 because of bma020-init
+             LCDsetLine(linenr++);
+             LCDalarmAndReverse();
+             output_fails();
+             LCDattributesOff();
+           } else {
+             //LCDsetLine(linenr++);
+             LCDsetLine(linenr);
+             strcpy_P(line1,PSTR(".   .   .   .   "));
+             LCDprintChar(line1);
+             LCDsetLine(linenr++);
+             output_checkboxitems();
+           }
+           break;
         case 3:// height
           LCDsetLine(linenr++);
           #if BARO
@@ -1795,20 +1834,14 @@ void lcd_telemetry() {
              }
            #endif
            break;
-        case 4:// uptime, uptime_armed
+        case 4:// uptime, uptime_armed, eeprom set#
           //LCDsetLine(linenr++);
           LCDsetLine(linenr++);
           LCDprintChar("U"); print_uptime(millis() / 1000 );
           strcpy_P(line1,PSTR(" - A")); line1[1] = digit1(global_conf.currentSet);
           LCDprintChar(line1); print_uptime(armedTime / 1000000);
           break;
-        case 5:// errors, Vmin
-           LCDsetLine(linenr++);
-           if (failsafeEvents || (i2c_errors_count>>1)) { // ignore i2c==1 because of bma020-init
-             LCDalarmAndReverse();
-             output_fails();
-             LCDattributesOff();
-           }
+        case 5:// Vmin
            LCDsetLine(linenr++);
            output_Vmin();
            break;
@@ -1987,7 +2020,7 @@ void lcd_telemetry() {
     LCDcrlf();
     break;
 #endif // page 9
-#if defined(LOG_VALUES) && defined(DEBUG)
+#if defined(LOG_VALUES) || defined(DEBUG)
     case 'R':
     //Reset logvalues
     cycleTimeMax = 0;// reset min/max on transition on->off
@@ -1997,6 +2030,9 @@ void lcd_telemetry() {
         BAROaltMax = 0;
       #endif
     #endif
+    failsafeEvents = 0; // reset failsafe counter
+    i2c_errors_count = 0;
+    f.OK_TO_ARM = 1; // allow arming again
     telemetry = 0; // no use to repeat this forever
     break;
 #endif // case R
