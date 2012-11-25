@@ -127,25 +127,25 @@ void alarmPatternComposer(){
       if (f.ARMED && f.ANGLE_MODE) patternDecode(resource,100,100,100,100,1000,1);                //Green Slow Blink-->angle
       else if (f.ARMED && f.HORIZON_MODE) patternDecode(resource,200,200,200,100,1000,1);         //Green mid Blink-->horizon
       else if (f.ARMED) patternDecode(resource,100,100,0,100,1000,1);                             //Green fast Blink-->acro
-      else setTiming(resource,0,0);                                                               //switch off
+      else turnOff(resource);                                                               //switch off
       resource = 3; 
       #if GPS
         if (alarmArray[2]==1) patternDecode(resource,100,100,100,100,100,1);                      // blue fast blink -->no gps fix
         else if (f.GPS_HOME_MODE || f.GPS_HOLD_MODE) patternDecode(resource,100,100,100,100,1000,1); //blue slow blink --> gps active
         else setTiming(resource,100,1000);                                                        //blue short blink -->gps fix ok
       #else
-        setTiming(resource,0,0);
+        turnOff(resource);
       #endif   
       resource = 4; 
       if (alarmArray[1] == 1)       setTiming(resource,100,100);                                  //Red fast blink--> failsafe panic
       else if (alarmArray[1] == 2)  patternDecode(resource,1000,0,0,0,2000,1);                    //red slow blink--> failsafe find me
-      else setTiming(resource,0,0);
+      else turnOff(resource); 
     }
   #endif 
 }
 
 void patternDecode(uint8_t resource,uint16_t first,uint16_t second,uint16_t third,uint16_t cyclepause, uint16_t endpause, uint8_t Loop){
-  static uint16_t patternInt[5][4];
+  static uint16_t patternInt[5][5];
   static uint8_t icnt[5] = {0,0,0,0,0};
   
   if(icnt[resource] == 0){
@@ -154,9 +154,10 @@ void patternDecode(uint8_t resource,uint16_t first,uint16_t second,uint16_t thir
     patternInt[resource][1] = second;
     patternInt[resource][2] = third;
     patternInt[resource][3] = endpause;
+    patternInt[resource][4] = cyclepause;
   }
   if(icnt[resource] <3 ){
-    setTiming(resource,patternInt[resource][icnt[resource]],cyclepause);
+    setTiming(resource,patternInt[resource][icnt[resource]],patternInt[resource][4]);
   }
   else if (resourceLastToggleTime[resource]<millis()-patternInt[resource][icnt[resource]])  {  //sequence is over: reset everything
     icnt[resource]=0;
@@ -192,21 +193,21 @@ void turnOff(uint8_t resource){
     if (resourceIsOn[2]) {
       resourceIsOn[2] = 0;
       #if defined (PILOTLAMP)
-        PL_GRN_OFF;
+        PilotLamp(PL_GRN_OFF);
       #endif
     }
   }else if (resource == 3) {
     if (resourceIsOn[3]) {
       resourceIsOn[3] = 0;
       #if defined (PILOTLAMP)
-        PL_BLU_OFF;
+        PilotLamp(PL_BLU_OFF);
       #endif
     }
   }else if (resource == 4) {
     if (resourceIsOn[4]) {
       resourceIsOn[4] = 0;
       #if defined (PILOTLAMP)
-        PL_RED_OFF;
+        PilotLamp(PL_RED_OFF);
       #endif
     }
   }
