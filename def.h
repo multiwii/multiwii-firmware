@@ -955,6 +955,7 @@
   #define GYRO_ORIENTATION(X, Y, Z){gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;} 
   #define MAG_ORIENTATION(X, Y, Z) {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;} 
   #undef INTERNAL_I2C_PULLUPS 
+  #define V_BATPIN A7
 #endif
 
 #if defined(CRIUS_AIO_PRO_V1) 
