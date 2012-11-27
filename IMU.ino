@@ -263,7 +263,12 @@ void getEstimatedAttitude(){
     // Attitude of the cross product vector GxM
     heading = _atan2( EstG.V.X * EstM.V.Z - EstG.V.Z * EstM.V.X , EstG.V.Z * EstM.V.Y - EstG.V.Y * EstM.V.Z  );
     heading += MAG_DECLINIATION * 10; //add declination
-    heading = heading /10;
+    heading = heading / 10;
+
+    #if defined(HK_MultiWii_328P)
+      heading -= 90;
+    #endif
+
     if ( heading > 180)      heading = heading - 360;
     else if (heading < -180) heading = heading + 360;
   #endif
