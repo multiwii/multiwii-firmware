@@ -1,6 +1,6 @@
-static uint8_t next[5]={0,0,0,0,0}, 
+static uint8_t cycleDone[5]={0,0,0,0,0}, 
                resourceIsOn[5] = {0,0,0,0,0};
-static uint32_t resourceLastToggleTime[5] ={0,0,0,0,0};
+static uint32_t LastToggleTime[5] ={0,0,0,0,0};
 static int16_t  i2c_errors_count_old = 0;
 
 static uint8_t SequenceActive[5]={0,0,0,0,0};
@@ -145,33 +145,35 @@ void alarmPatternComposer(){
 }
 
 void patternDecode(uint8_t resource,uint16_t first,uint16_t second,uint16_t third,uint16_t cyclepause, uint16_t endpause){
-  static uint16_t patternInt[5][5];
+  static uint16_t pattern[5][5];
   static uint8_t icnt[5] = {0,0,0,0,0};
   
   if(SequenceActive[resource] == 0){
     SequenceActive[resource] = 1; 
-    patternInt[resource][0] = first; 
-    patternInt[resource][1] = second;
-    patternInt[resource][2] = third;
-    patternInt[resource][3] = endpause;
-    patternInt[resource][4] = cyclepause;
+    pattern[resource][0] = first; 
+    pattern[resource][1] = second;
+    pattern[resource][2] = third;
+    pattern[resource][3] = endpause;
+    pattern[resource][4] = cyclepause;
   }
   if(icnt[resource] <3 ){
-    setTiming(resource,patternInt[resource][icnt[resource]],patternInt[resource][4]);
+    if (pattern[resource][icnt[resource]] != 0){
+      setTiming(resource,pattern[resource][icnt[resource]],pattern[resource][4]);
+     }
   }
-  else if (resourceLastToggleTime[resource]<millis()-patternInt[resource][icnt[resource]])  {  //sequence is over: reset everything
+  else if (LastToggleTime[resource] < (millis()-pattern[resource][3]))  {  //sequence is over: reset everything
     icnt[resource]=0;
-    SequenceActive[resource] = 0;                               //sequence is now done, next sequence may begin
+    SequenceActive[resource] = 0;                               //sequence is now done, cycleDone sequence may begin
     alarmArray[0] = 0;                                //reset toggle bit
     alarmArray[7] = 0;                                //reset confirmation bit
     turnOff(resource);   
     return;
   }
-  if (next[resource] == 1 || patternInt[resource][icnt[resource]] == 0) {            //single on off cycle is done
+  if (cycleDone[resource] == 1 || pattern[resource][icnt[resource]] == 0) {            //single on off cycle is done
     if (icnt[resource] < 3) {
       icnt[resource]++;
     }
-    next[resource] = 0;
+    cycleDone[resource] = 0;
     turnOff(resource);    
   }  
 }
@@ -321,15 +323,15 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
 /********************************************************************/
 
   void setTiming(uint8_t resource, uint16_t pulse, uint16_t pause){
-    if (!resourceIsOn[resource] && (millis() >= (resourceLastToggleTime[resource] + pause))&& pulse != 0) {	         
+    if (!resourceIsOn[resource] && (millis() >= (LastToggleTime[resource] + pause))&& pulse != 0) {	         
       resourceIsOn[resource] = 1;      
       toggleResource(resource,1);
-      resourceLastToggleTime[resource]=millis();      
-    } else if ( (resourceIsOn[resource] && (millis() >= resourceLastToggleTime[resource] + pulse) ) || (pulse==0 && resourceIsOn[resource]) ) {
+      LastToggleTime[resource]=millis();      
+    } else if ( (resourceIsOn[resource] && (millis() >= LastToggleTime[resource] + pulse) ) || (pulse==0 && resourceIsOn[resource]) ) {
       resourceIsOn[resource] = 0;
       toggleResource(resource,0);
-      resourceLastToggleTime[resource]=millis();
-      next[resource] = 1;     
+      LastToggleTime[resource]=millis();
+      cycleDone[resource] = 1;     
     } 
   } 
  
