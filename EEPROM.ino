@@ -39,7 +39,7 @@ void readEEPROM() {
     if (tmp>0) y = 100-conf.thrMid8;
     if (tmp<0) y = conf.thrMid8;
     lookupThrottleRC[i] = 10*conf.thrMid8 + tmp*( 100-conf.thrExpo8+(int32_t)conf.thrExpo8*(tmp*tmp)/(y*y) )/10; // [0;1000]
-    lookupThrottleRC[i] = MINTHROTTLE + (int32_t)(MAXTHROTTLE-MINTHROTTLE)* lookupThrottleRC[i]/1000;            // [0;1000] -> [MINTHROTTLE;MAXTHROTTLE]
+    lookupThrottleRC[i] = conf.minthrottle + (int32_t)(MAXTHROTTLE-conf.minthrottle)* lookupThrottleRC[i]/1000;            // [0;1000] -> [conf.minthrottle;MAXTHROTTLE]
   }
 
   #if defined(POWERMETER)
@@ -69,6 +69,9 @@ void readEEPROM() {
   #endif
   #ifdef POWERMETER_SOFT
      conf.pleveldivsoft = conf.pleveldiv;
+  #endif
+  #if defined(ARMEDTIMEWARNING)
+    ArmedTimeWarningMicroSeconds = (conf.armedtimewarning *1000000);
   #endif
 }
 
@@ -148,8 +151,8 @@ void LoadDefaults() {
   #endif
   #ifdef VBAT
     conf.vbatscale = VBATSCALE;
-    conf.vbatlevel1_3s = VBATLEVEL1_3S;
-    conf.vbatlevel2_3s = VBATLEVEL2_3S;
+    conf.vbatlevel_warn1 = VBATLEVEL_WARN1;
+    conf.vbatlevel_warn2 = VBATLEVEL_WARN2;
     conf.vbatlevel_crit = VBATLEVEL_CRIT;
     conf.no_vbat = NO_VBAT;
   #endif
@@ -165,5 +168,9 @@ void LoadDefaults() {
   #ifdef MMGYRO
     conf.mmgyro = MMGYRO;
   #endif
+  #if defined(ARMEDTIMEWARNING)
+    conf.armedtimewarning = ARMEDTIMEWARNING;
+  #endif
+  conf.minthrottle = MINTHROTTLE;
   writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }

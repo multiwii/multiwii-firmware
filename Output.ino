@@ -1156,7 +1156,7 @@ void mixTable() {
       if (YAWMOTOR){servo[5] =  MINCOMMAND;} else {servo[5] =  yawControll; } // Kill YAWMOTOR when disarmed
     }else {   
       servo[7]  = rcData[THROTTLE]; //   50hz ESC or servo
-      if (YAWMOTOR && rcData[THROTTLE] < MINTHROTTLE){servo[5] =  MINCOMMAND;}
+      if (YAWMOTOR && rcData[THROTTLE] < conf.minthrottle){servo[5] =  MINCOMMAND;}
       else{ servo[5] =  yawControll; }     // YawSero
     }
     #ifndef HELI_USE_SERVO_FOR_THROTTLE
@@ -1227,14 +1227,14 @@ void mixTable() {
   for (i = 0; i < NUMBER_MOTOR; i++) {
     if (maxMotor > MAXTHROTTLE) // this is a way to still have good gyro corrections if at least one motor reaches its max.
       motor[i] -= maxMotor - MAXTHROTTLE;
-    motor[i] = constrain(motor[i], MINTHROTTLE, MAXTHROTTLE);    
+    motor[i] = constrain(motor[i], conf.minthrottle, MAXTHROTTLE);
     #if defined(ALTHOLD_FAST_THROTTLE_CHANGE)
       if (rcData[THROTTLE] < MINCHECK)
     #else
       if ((rcData[THROTTLE] < MINCHECK) && !f.BARO_MODE)
     #endif 
       #ifndef MOTOR_STOP
-        motor[i] = MINTHROTTLE;
+        motor[i] = conf.minthrottle;
       #else
         motor[i] = MINCOMMAND;
       #endif

@@ -349,8 +349,8 @@ static struct {
   #endif
   #ifdef VBAT
     uint8_t vbatscale;
-    uint8_t vbatlevel1_3s;
-    uint8_t vbatlevel2_3s;
+    uint8_t vbatlevel_warn1;
+    uint8_t vbatlevel_warn2;
     uint8_t vbatlevel_crit;
     uint8_t no_vbat;
   #endif
@@ -366,6 +366,10 @@ static struct {
   #ifdef MMGYRO
     uint8_t mmgyro;
   #endif
+  #ifdef ARMEDTIMEWARNING
+    uint16_t armedtimewarning;
+  #endif
+  int16_t minthrottle;
   uint8_t  checksum;      // MUST BE ON LAST POSITION OF CONF STRUCTURE ! 
 } conf;
 
@@ -465,7 +469,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   tmp = constrain(rcData[THROTTLE],MINCHECK,2000);
   tmp = (uint32_t)(tmp-MINCHECK)*1000/(2000-MINCHECK); // [MINCHECK;2000] -> [0;1000]
   tmp2 = tmp/100;
-  rcCommand[THROTTLE] = lookupThrottleRC[tmp2] + (tmp-tmp2*100) * (lookupThrottleRC[tmp2+1]-lookupThrottleRC[tmp2]) / 100; // [0;1000] -> expo -> [MINTHROTTLE;MAXTHROTTLE]
+  rcCommand[THROTTLE] = lookupThrottleRC[tmp2] + (tmp-tmp2*100) * (lookupThrottleRC[tmp2+1]-lookupThrottleRC[tmp2]) / 100; // [0;1000] -> expo -> [conf.minthrottle;MAXTHROTTLE]
 
   if(f.HEADFREE_MODE) { //to optimize
     float radDiff = (heading - headFreeModeHold) * 0.0174533f; // where PI/180 ~= 0.0174533
@@ -652,9 +656,6 @@ void setup() {
   #if defined(POWERMETER)
     for(uint8_t i=0;i<=PMOTOR_SUM;i++)
       pMeter[i]=0;
-  #endif
-  #if defined(ARMEDTIMEWARNING)
-    ArmedTimeWarningMicroSeconds = (ARMEDTIMEWARNING *1000000);
   #endif
   /************************************/
   #if defined(GPS_SERIAL)
@@ -961,7 +962,7 @@ void loop () {
             f.BARO_MODE = 0;
         }
       #endif
-      #ifdef VARIO
+      #ifdef VARIOMETER
         if (rcOptions[BOXVARIO]) {
             if (!f.VARIO_MODE) {
               f.VARIO_MODE = 1;

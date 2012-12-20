@@ -55,7 +55,7 @@
     //#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
     //#define MINTHROTTLE 1064 // special ESC (simonk)
     //#define MINTHROTTLE 1050 // for brushed ESCs like ladybird
-    #define MINTHROTTLE 1150
+    #define MINTHROTTLE 1150 // (*)
 
   /****************************    Motor maxthrottle    *******************************/
     /* this is the maximum value for the ESCs at full power, this value can be increased up to 2000 */
@@ -792,7 +792,7 @@
   /********************************************************************/
     //#define BUZZER
     //#define RCOPTIONSBEEP         // uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
-    //#define ARMEDTIMEWARNING 330  // Trigger an alarm after a certain time of being armed [s] to save you lipo (if your TX does not have a countdown)
+    //#define ARMEDTIMEWARNING 330  // (*) Trigger an alarm after a certain time of being armed [s] to save you lipo (if your TX does not have a countdown)
     //#define PILOTLAMP             //Uncomment if you are using a X-Arcraft Pilot Lamp
 
   /********************************************************************/
@@ -804,12 +804,12 @@
        vbat = [0;1023]*16/VBATSCALE
        must be associated with #define BUZZER ! */
     //#define VBAT              // uncomment this line to activate the vbat code
-    #define VBATSCALE     131 // (*) change this value if readed Battery voltage is different than real voltage
-    #define VBATNOMINAL   126 // 12,6V full battery nominal voltage
-    #define VBATLEVEL1_3S 107 // (*) 10,7V
-    #define VBATLEVEL2_3S  99 // (*) 9.9V
-    #define VBATLEVEL_CRIT 93 // (*) 9.3V - critical condition: if vbat ever goes below this value, permanent alarm is triggered
-    #define NO_VBAT       16  // (*) Avoid beeping without any battery
+    #define VBATSCALE       131 // (*) change this value if readed Battery voltage is different than real voltage
+    #define VBATNOMINAL     126 // 12,6V full battery nominal voltage - only used for lcd.telemetry
+    #define VBATLEVEL_WARN1 107 // (*) 10,7V
+    #define VBATLEVEL_WARN2  99 // (*) 9.9V
+    #define VBATLEVEL_CRIT   93 // (*) 9.3V - critical condition: if vbat ever goes below this value, permanent alarm is triggered
+    #define NO_VBAT          16  // (*) Avoid beeping without any battery
 
 
   /********************************************************************/

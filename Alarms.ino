@@ -77,14 +77,14 @@ void alarmHandler(){
   #endif 
   
   #if defined(ARMEDTIMEWARNING)
-    if (armedTime >= ArmedTimeWarningMicroSeconds && f.ARMED) alarmArray[5] = 1;
+    if (ArmedTimeWarningMicroSeconds > 0 && armedTime >= ArmedTimeWarningMicroSeconds && f.ARMED) alarmArray[5] = 1;
     else alarmArray[5] = 0;
   #endif
   
   #if defined(VBAT)
     if (vbatMin < conf.vbatlevel_crit) alarmArray[6] = 4;
-    else if ( (vbat>conf.vbatlevel1_3s)  || (conf.no_vbat > vbat)) alarmArray[6] = 0;
-    else if (vbat > conf.vbatlevel2_3s) alarmArray[6] = 2;
+    else if ( (vbat>conf.vbatlevel_warn1)  || (conf.no_vbat > vbat)) alarmArray[6] = 0;
+    else if (vbat > conf.vbatlevel_warn2) alarmArray[6] = 2;
     else alarmArray[6] = 4;
   #endif
   
@@ -430,7 +430,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
       i2c_stop();
     }
   #if defined (VBAT)
-    if (vbat < conf.vbatlevel1_3s){ // Uh oh - battery low
+    if (vbat < conf.vbatlevel_warn1){ // Uh oh - battery low
       i2c_rep_start(LED_RING_ADDRESS);
       i2c_write('r');
       i2c_stop();   
@@ -646,7 +646,6 @@ void vario_signaling() {
     uint16_t d = (DURATION_SUP * max_v)/(DURATION_SCALE + max_v);
     s = (SILENCE_A) / (SILENCE_SCALE + max_v);
     s+= d * SIGNAL_SCALE;
-    //LCDprintChar(" max_v="); lcdprint_int16(max_v);
     vario_output(d, max_up);
     last_v = v;
     max_v = 0;
@@ -656,6 +655,7 @@ void vario_signaling() {
 } // end of vario_signaling()
 
 void vario_output(uint16_t d, uint8_t up) {
+  if (d == 0) return;
   #if defined(SUPPRESS_VARIOMETER_UP)
     if (up) return;
   #elif defined(SUPPRESS_VARIOMETER_DOWN)
