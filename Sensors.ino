@@ -297,9 +297,10 @@ void GYRO_Common() {
       gyroZero[axis]=0;
       if (calibratingG == 1) {
         gyroZero[axis]=g[axis]/400;
-        blinkLED(10,15,1);
       #if defined(BUZZER)
         alarmArray[7] = 4;
+      #else
+        blinkLED(10,15,1); //the delay causes to beep the buzzer really long 
       #endif
       }
     }
