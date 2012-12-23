@@ -712,6 +712,14 @@
     /******************************   Logo settings     ***********************************/
       //#define SUPPRESS_OLED_I2C_128x64LOGO  // suppress display of OLED logo to save memory
 
+    /* double font height for better readability. Reduces visible #lines by half.
+     * The lower part of each page is accessible under the name of shifted keyboard letter :
+     * 1 - ! , 2 - @ , 3 - # , 4 - $ , 5 - % , 6 - ^ , 7 - & , 8 - * , 9 - (
+     * You must add both to your lcd.telemetry.* sequences
+     *
+     */
+      //#define DISPLAY_FONT_DSIZE //currently only aplicable for OLED_I2C_128x64
+
     /* style of display - AUTODETECTED via LCD_ setting - only activate to override defaults */
       //#define DISPLAY_2LINES
       //#define DISPLAY_MULTILINE
@@ -1008,7 +1016,7 @@
        example: with cycle time of approx 3ms, do action every 6*3ms=18ms
        value must be [1; 65535] */
     #define LCD_TELEMETRY_FREQ 23       // to send telemetry data over serial 23 <=> 60ms <=> 16Hz (only sending interlaced, so 8Hz update rate)
-    #define LCD_TELEMETRY_AUTO_FREQ 667 // to step to next telemetry page 667 <=> 2s
+    #define LCD_TELEMETRY_AUTO_FREQ 967 // to step to next telemetry page 967 <=> 3s
     #define PSENSORFREQ 6               // to read hardware powermeter sensor 6 <=> 18ms
     #define VBATFREQ PSENSORFREQ        // to read battery voltage - keep equal to PSENSORFREQ unless you know what you are doing
 

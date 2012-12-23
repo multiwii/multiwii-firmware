@@ -283,3 +283,9 @@ D: Alarm-Handling and control of PilotLamp
 N: mr.rc-cam, jevermeister, doughboy 
 E: 
 W:
+
+S: Variometer
+D: audio output to indicate rising/falling copter. Output over (wireless) serial to vt100 terminal program
+N: Hamburger
+E:
+W: http://www.multiwii.com/forum/viewtopic.php?f=7&t=2754&start=0#p26774

@@ -1662,6 +1662,13 @@
   #if !(defined(MULTILINE_POST))
     #define MULTILINE_POST 9
   #endif
+#elif (defined(OLED_I2C_128x64) && defined(DISPLAY_FONT_DSIZE))
+  #if !(defined(MULTILINE_PRE))
+    #define MULTILINE_PRE 1
+  #endif
+  #if !(defined(MULTILINE_POST))
+    #define MULTILINE_POST 3
+  #endif
 #elif (defined(OLED_I2C_128x64))
   #if !(defined(MULTILINE_PRE))
     #define MULTILINE_PRE 3

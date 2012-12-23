@@ -3,6 +3,9 @@
 // ************************************************************************************************************
 #if defined(LCD_CONF) || defined(LCD_TELEMETRY)
 static char line1[17],line2[17];
+#ifdef DISPLAY_FONT_DSIZE
+  static uint8_t line_is_valid = 0;
+#endif
 
 char digit10000(uint16_t v) {return '0' + v / 10000;}
 char digit1000(uint16_t v) {return '0' + v / 1000 - (v/10000) * 10;}
@@ -239,6 +242,18 @@ void  i2c_OLED_init(void){
 //  i2c_OLED_send_cmd(0xa7);            // Set BLACK chars on WHITE backround
   i2c_OLED_send_cmd(0x81);            // Setup CONTRAST CONTROL, following byte is the contrast Value
   i2c_OLED_send_cmd(0xaf);            // contrast value between 1 ( == dull) to 256 ( == bright)
+//  i2c_OLED_send_cmd(0xd3);            // Display Offset :
+//  i2c_OLED_send_cmd(0x0);            // 0
+//  delay(20);
+//  i2c_OLED_send_cmd(0x40);            // Display start line [0;63] -> [0x40;0x7f]
+//  delay(20);
+  #ifdef DISPLAY_FONT_DSIZE
+    i2c_OLED_send_cmd(0xd6);            // zoom
+    i2c_OLED_send_cmd(0x01);            // on
+  #else
+//    i2c_OLED_send_cmd(0xd6);            // zoom
+//    i2c_OLED_send_cmd(0x00);            // off
+  #endif
   delay(20);
   i2c_OLED_send_cmd(0xaf);          //display on
   delay(20);
@@ -469,27 +484,30 @@ void i2c_LCD03_set_cursor (byte col, byte row) {
 #endif // LCD_LCD03
 /* ------------------------------------------------------------------ */
 void LCDprint(uint8_t i) {
-#if defined(LCD_SERIAL3W)
-  // 1000000 / 9600  = 104 microseconds at 9600 baud.
-  // we set it below to take some margin with the running interrupts
-#define BITDELAY 102
-  LCDPIN_OFF;
-  delayMicroseconds(BITDELAY);
-  for (uint8_t mask = 0x01; mask; mask <<= 1) {
-    if (i & mask) {LCDPIN_ON;} else {LCDPIN_OFF;} // choose bit
+  #ifdef DISPLAY_FONT_DSIZE
+   if (! line_is_valid) return;
+  #endif
+  #if defined(LCD_SERIAL3W)
+    // 1000000 / 9600  = 104 microseconds at 9600 baud.
+    // we set it below to take some margin with the running interrupts
+  #define BITDELAY 102
+    LCDPIN_OFF;
     delayMicroseconds(BITDELAY);
-  }
-  LCDPIN_ON //switch ON digital PIN 0
-  delayMicroseconds(BITDELAY);
-#elif defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_TTY)
-  SerialWrite(0, i );
-#elif defined(LCD_ETPP)
-  i2c_ETPP_send_char(i);
-#elif defined(LCD_LCD03)
-  i2c_LCD03_send_char(i);
-#elif defined(OLED_I2C_128x64)
-  i2c_OLED_send_char(i);
-#endif
+    for (uint8_t mask = 0x01; mask; mask <<= 1) {
+      if (i & mask) {LCDPIN_ON;} else {LCDPIN_OFF;} // choose bit
+      delayMicroseconds(BITDELAY);
+    }
+    LCDPIN_ON //switch ON digital PIN 0
+    delayMicroseconds(BITDELAY);
+  #elif defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_TTY)
+    SerialWrite(0, i );
+  #elif defined(LCD_ETPP)
+    i2c_ETPP_send_char(i);
+  #elif defined(LCD_LCD03)
+    i2c_LCD03_send_char(i);
+  #elif defined(OLED_I2C_128x64)
+    i2c_OLED_send_char(i);
+  #endif
 }
 
 void LCDprintChar(const char *s) {
@@ -526,32 +544,40 @@ void LCDclear() {
 }
 
 void LCDsetLine(byte line) { // Line = 1 or 2 - vt100 has lines 1-99
-#if defined(LCD_SERIAL3W)
-  if (line==1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
-#elif defined(LCD_TEXTSTAR)
-  LCDcrlf(); LCDprint(0xfe);LCDprint('L');LCDprint(line);
-#elif defined(LCD_VT100)
-  #ifndef DEBUG // sanity check for production only. Debug runs with all possible side effects
-    if (line<1 || line>(MULTILINE_PRE+MULTILINE_POST)) line = 1;
+  #ifdef DISPLAY_FONT_DSIZE
+    if (line >=1 && line <= (MULTILINE_PRE+MULTILINE_POST)) {
+      line_is_valid = 1;
+    } else {
+      line_is_valid = 0;
+      return;
+    }
   #endif
-  LCDcrlf();
-  LCDprint(0x1b); LCDprint(0x5b);
-  LCDprint( digit10(line) );
-  LCDprint( digit1(line) );
-  LCDprintChar(";1H"); //pos line 1
-  LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("2K");//EL2
-#elif defined(LCD_TTY)
-  LCDcrlf();
-#elif defined(LCD_ETPP)
-  i2c_ETPP_set_cursor(0,line-1);
-#elif defined(LCD_LCD03)
-  i2c_LCD03_set_cursor(0,line-1);
-#elif defined(OLED_I2C_128x64)
-  #ifndef DEBUG // sanity check for production only. Debug runs with all possible side effects
-    if (line<1 || line>(MULTILINE_PRE+MULTILINE_POST)) line = 1;
+  #if defined(LCD_SERIAL3W)
+    if (line==1) {LCDprint(0xFE);LCDprint(128);} else {LCDprint(0xFE);LCDprint(192);}
+  #elif defined(LCD_TEXTSTAR)
+    LCDcrlf(); LCDprint(0xfe);LCDprint('L');LCDprint(line);
+  #elif defined(LCD_VT100)
+    #ifndef DEBUG // sanity check for production only. Debug runs with all possible side effects
+      if (line<1 || line>(MULTILINE_PRE+MULTILINE_POST)) line = 1;
+    #endif
+    LCDcrlf();
+    LCDprint(0x1b); LCDprint(0x5b);
+    LCDprint( digit10(line) );
+    LCDprint( digit1(line) );
+    LCDprintChar(";1H"); //pos line 1
+    LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("2K");//EL2
+  #elif defined(LCD_TTY)
+    LCDcrlf();
+  #elif defined(LCD_ETPP)
+    i2c_ETPP_set_cursor(0,line-1);
+  #elif defined(LCD_LCD03)
+    i2c_LCD03_set_cursor(0,line-1);
+  #elif defined(OLED_I2C_128x64)
+  //  #ifndef DEBUG // sanity check for production only. Debug runs with all possible side effects
+  //    if (line<1 || line>(MULTILINE_PRE+MULTILINE_POST)) line = 1;
+  //  #endif
+    i2c_OLED_set_line(line-1);
   #endif
-  i2c_OLED_set_line(line-1);
-#endif
 }
 #if defined(LCD_VT100)
   void LCDattributesBold() {LCDprint(0x1b); LCDprint(0x5b); LCDprintChar("1m");}
@@ -1603,7 +1629,7 @@ void print_uptime(uint16_t sec) {
 #if GPS
 void fill_line1_gps_lat(uint8_t sat) {
   int32_t aGPS_latitude = abs(GPS_coord[LAT]);
-  strcpy_P(line1,PSTR(". ---.----      "));
+  strcpy_P(line1,PSTR(".---.-----      "));
   //                   0123456789012345
   line1[0] = GPS_coord[LAT]<0?'S':'N';
   if (sat) {
@@ -1611,10 +1637,10 @@ void fill_line1_gps_lat(uint8_t sat) {
     line1[14] = digit10(GPS_numSat);
     line1[15] = digit1(GPS_numSat);
   }
-  //line1[1] = '0' + aGPS_latitude / 10000000- (aGPS_latitude/100000000)* 10;
+  line1[1] = '0' + aGPS_latitude / 10000000- (aGPS_latitude/100000000)* 10;
   line1[2] = '0' + aGPS_latitude / 1000000 - (aGPS_latitude/10000000) * 10;
   line1[3] = '0' + aGPS_latitude / 100000  - (aGPS_latitude/1000000)  * 10;
-  line1[4] = '0' + aGPS_latitude / 10000   - (aGPS_latitude/100000)   * 10;
+  line1[5] = '0' + aGPS_latitude / 10000   - (aGPS_latitude/100000)   * 10;
   line1[6] = '0' + aGPS_latitude / 1000 -    (aGPS_latitude/10000) * 10;
   line1[7] = '0' + aGPS_latitude / 100  -    (aGPS_latitude/1000)  * 10;
   line1[8] = '0' + aGPS_latitude / 10   -    (aGPS_latitude/100)   * 10;
@@ -1622,17 +1648,17 @@ void fill_line1_gps_lat(uint8_t sat) {
 }
 void fill_line2_gps_lon(uint8_t status) {
   int32_t aGPS_longitude = abs(GPS_coord[LON]);
-  strcpy_P(line2,PSTR(". ---.----      "));
+  strcpy_P(line2,PSTR(".---.-----      "));
   //                   0123456789012345
   line2[0] = GPS_coord[LON]<0?'W':'E';
   if (status) {
     line2[13] = (GPS_update ? 'U' : '.');
     line2[15] = (GPS_Present ? 'P' : '.');
   }
-  //line2[1] = '0' + aGPS_longitude / 10000000- (aGPS_longitude/100000000)* 10;
+  line2[1] = '0' + aGPS_longitude / 10000000- (aGPS_longitude/100000000)* 10;
   line2[2] = '0' + aGPS_longitude / 1000000 - (aGPS_longitude/10000000) * 10;
   line2[3] = '0' + aGPS_longitude / 100000  - (aGPS_longitude/1000000)  * 10;
-  line2[4] = '0' + aGPS_longitude / 10000   - (aGPS_longitude/100000)   * 10;
+  line2[5] = '0' + aGPS_longitude / 10000   - (aGPS_longitude/100000)   * 10;
   line2[6] = '0' + aGPS_longitude / 1000    - (aGPS_longitude/10000) * 10;
   line2[7] = '0' + aGPS_longitude / 100     - (aGPS_longitude/1000)  * 10;
   line2[8] = '0' + aGPS_longitude / 10      - (aGPS_longitude/100)   * 10;
@@ -1796,24 +1822,35 @@ void lcd_telemetry() {
 #ifdef DISPLAY_MULTILINE
 #ifndef SUPPRESS_TELEMETRY_PAGE_5
 void outputMotorServo(uint8_t i, uint16_t unit) {
-  static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
+  #ifdef HELICOPTER
+    static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
+      "S1", "S2","S3", "SN", "SL", "ST", "SR", "SM",};
+  #else
+    static char outputNames[16][3] = {"M1", " 2"," 3", " 4", " 5", " 6", " 7", " 8",
       "S1", "S2","S3", "S4", "S5", "S6", "S7", "S8",};
-   LCDprintChar(outputNames[i]);
-   LCDprint(' ');
-   //unit = servo[j-1]; // [1000 ; 2000]
-   LCDprint( digit1000(unit) );
-   LCDprint( digit100(unit) );
-   LCDprint( digit10(unit) );
-   LCDprint( digit1(unit) );
-   LCDprint(' ');
-   unit = constrain(unit,1000,2000);
-   LCDbar(12, (unit-1000)/10 );
-   LCDcrlf();
+  #endif
+  LCDprintChar(outputNames[i]);
+  LCDprint(' ');
+  //unit = servo[j-1]; // [1000 ; 2000]
+  LCDprint( digit1000(unit) );
+  LCDprint( digit100(unit) );
+  LCDprint( digit10(unit) );
+  LCDprint( digit1(unit) );
+  LCDprint(' ');
+  unit = constrain(unit,1000,2000);
+  LCDbar(12, (unit-1000)/10 );
+  LCDcrlf();
 }
 #endif
 
 void lcd_telemetry() {
   static uint8_t linenr = 0;
+  #ifdef DISPLAY_FONT_DSIZE
+    uint8_t offset = 0;
+    #define POSSIBLE_OFFSET offset
+  #else
+    #define POSSIBLE_OFFSET 0
+  #endif
   switch (telemetry) { // output telemetry data
     uint16_t unit;
     uint8_t i;
@@ -1821,20 +1858,25 @@ void lcd_telemetry() {
       telemetry = 0;
       break;
 #ifndef SUPPRESS_TELEMETRY_PAGE_1
+  #ifdef DISPLAY_FONT_DSIZE
+    case '!':
+      { offset = 4; }
+      // no break !!
+  #endif
     case 1:// overall display
     case '1':
     {
       static uint8_t index = 0;
       linenr = (index++ % 7) + 1;
       LCDsetLine(linenr);
-      switch (linenr) { // not really linenumbers
+      switch (linenr + POSSIBLE_OFFSET) { // not really linenumbers
         case 1:// V
           output_V();
           break;
         case 2:// mAh
           output_mAh();
           break;
-        case 3:// errors or checkboxstatus
+        case 4:// errors or checkboxstatus
           if (failsafeEvents || (i2c_errors_count>>1)) { // errors
             // ignore i2c==1 because of bma020-init
             LCDalarmAndReverse();
@@ -1852,7 +1894,7 @@ void lcd_telemetry() {
             LCDattributesOff();
           }
           break;
-        case 4:// height
+        case 6:// height
           #if BARO
              {
                int16_t h = BaroAlt / 100;
@@ -1872,7 +1914,7 @@ void lcd_telemetry() {
           LCDattributesOff();
           print_uptime(armedTime / 1000000);
           break;
-        case 6:// Vmin
+        case 3:// Vmin
            output_Vmin();
            break;
         case 7:// A, maxA
@@ -1887,11 +1929,16 @@ void lcd_telemetry() {
     }
 #endif
 #ifndef SUPPRESS_TELEMETRY_PAGE_2
+  #ifdef DISPLAY_FONT_DSIZE
+    case '@':
+      { offset = 3; }
+      // no break !!
+  #endif
     case 2: // sensor readings
     case '2':
-    static char sensorNames[6][3] = {"Gx", " y", " z", "Ax", " y", " z"};
+    static char sensorNames[6][3] = {"Gx", "Gy", "Gz", "Ax", "Ay", "Az"};
     i = linenr++ % 6;
-    LCDsetLine(i+1);
+    LCDsetLine((i - POSSIBLE_OFFSET)%6 + 1);
     LCDprintChar(sensorNames[i]);
     LCDprint(' ');
     switch (i) {
@@ -1924,13 +1971,18 @@ void lcd_telemetry() {
     break;
 #endif
 #ifndef SUPPRESS_TELEMETRY_PAGE_3
+  #ifdef DISPLAY_FONT_DSIZE
+    case '#':
+      { offset = 4; }
+    // no break !!
+  #endif
     case 3: // checkboxes and modes
     case '3':
     {
       static uint8_t index = 0;
       index %= CHECKBOXITEMS;
       if (index == 0) linenr = 1;
-      LCDsetLine(linenr++);
+      LCDsetLine((linenr++ + POSSIBLE_OFFSET)%CHECKBOXITEMS);
       LCDprintChar(checkboxitemNames[index]);
       //LCDprintChar((PGM_P)(boxnames[index]));
       LCDprint(' ');
@@ -1941,13 +1993,18 @@ void lcd_telemetry() {
     }
 #endif
 #ifndef SUPPRESS_TELEMETRY_PAGE_4
+  #ifdef DISPLAY_FONT_DSIZE
+    case '$':
+      { offset = 4; }
+      // no break !!
+  #endif
     case 4: // RX inputs
     case '4':
     static char channelNames[8][4] = {"Ail", "Ele", "Yaw", "Thr", "Ax1", "Ax2", "Ax3", "Ax4"};
     i = linenr++ % 8; // 8 channels
+    LCDsetLine((i - POSSIBLE_OFFSET)%8 + 1);
     //strcpy_P(line1,PSTR("-Thr ---- "));
     //                   0123456789.12345
-    LCDsetLine(i+1);
     LCDprint( '0' + i+1);// channel numbering [1;8]
     LCDprint(' ');
     LCDprintChar(channelNames[i]);
@@ -1964,6 +2021,11 @@ void lcd_telemetry() {
     break;
 #endif
 #ifndef SUPPRESS_TELEMETRY_PAGE_5
+  #ifdef DISPLAY_FONT_DSIZE
+    case '%':
+      { offset = 4; }
+      // no break !!
+  #endif
     case 5: // outputs motors+servos
     case '5':
     {
@@ -1971,8 +2033,8 @@ void lcd_telemetry() {
 //          "S1", "S2","S3", "S4", "S5", "S6", "S7", "S8",};
       static uint8_t index = 0;
       i = index++ % 16;
-      if (i == 0) linenr = 1; //vt100 starts linenumbering @1
-      LCDsetLine(linenr);
+      if (i == 0) linenr = 0; //vt100 starts linenumbering @1
+      LCDsetLine((linenr - POSSIBLE_OFFSET)%8 +1);
       if (i < 8) {
         if (i < NUMBER_MOTOR) {
           outputMotorServo(i, motor[i]);
@@ -2004,12 +2066,17 @@ void lcd_telemetry() {
 
 #ifndef SUPPRESS_TELEMETRY_PAGE_7
   #if GPS
+    #ifdef DISPLAY_FONT_DSIZE
+    case '&':
+      { offset = 4; }
+      // no break !!
+    #endif
     case 7: // GPS
     case '7':
       linenr++;
       linenr %= 6;
       LCDsetLine(linenr+1);
-      switch (linenr) {
+      switch (linenr + POSSIBLE_OFFSET) {
         case 0: // lat
           fill_line1_gps_lat(0); // skip #sat
           LCDprintChar(line1);
@@ -2057,12 +2124,17 @@ void lcd_telemetry() {
 #endif // page 7
 
 #ifndef SUPPRESS_TELEMETRY_PAGE_9
+  #ifdef DISPLAY_FONT_DSIZE
+      case '(':
+      { offset = 4; }
+      // no break !!
+  #endif
     case 9: // diagnostics
     case '9':
     linenr++;
     linenr %= 8;
     LCDsetLine(linenr+1);
-    switch (linenr) {
+    switch (linenr + POSSIBLE_OFFSET) {
       case 0:// cycle
       fill_line1_cycle();
       LCDprintChar(line1);
