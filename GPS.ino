@@ -1,9 +1,69 @@
 #if GPS
+
 #if defined(TINY_GPS)
   #include "tinygps.h"
 #endif
 
+
+#if defined(INIT_MTK_GPS)
+
+#define MTK_SET_BINARY          PSTR("$PGCMD,16,0,0,0,0,0*6A\r\n")
+ #define MTK_SET_NMEA            PSTR("$PGCMD,16,1,1,1,1,1*6B\r\n")
+ #define MTK_SET_NMEA_SENTENCES  PSTR("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n")
+ #define MTK_OUTPUT_4HZ          PSTR("$PMTK220,250*29\r\n")
+ #define MTK_OUTPUT_5HZ          PSTR("$PMTK220,200*2C\r\n")
+ #define MTK_OUTPUT_10HZ         PSTR("$PMTK220,100*2F\r\n")
+ #define MTK_NAVTHRES_OFF        PSTR("$PMTK397,0*23\r\n") // Set Nav Threshold (the minimum speed the GPS must be moving to update the position) to 0 m/s  
+ #define SBAS_ON                 PSTR("$PMTK313,1*2E\r\n")
+ #define WAAS_ON                 PSTR("$PMTK301,2*2E\r\n")
+ #define SBAS_TEST_MODE			 PSTR("$PMTK319,0*25\r\n")	//Enable test use of sbas satelite in test mode (usually PRN124 is in test mode)
+
+#endif
+
 #if defined(GPS_SERIAL) || defined(GPS_FROM_OSD) || defined(TINY_GPS)
+
+#if defined(GPS_LEAD_FILTER)
+// Set up gps lag
+#if defined(UBLOX)
+  #define GPS_LAG 0.5f			//UBLOX GPS has a smaller lag than MTK and other
+#else 
+  #define GPS_LAG 1.0f				//We assumes that MTK GPS has a 1 sec lag
+#endif  
+
+static int32_t  GPS_coord_lead[2];						   // Lead filtered gps coordinates
+
+class LeadFilter {
+public:
+    LeadFilter() :
+        _last_velocity(0) {
+    }
+
+    // setup min and max radio values in CLI
+    int32_t         get_position(int32_t pos, int16_t vel, float lag_in_seconds = 1.0);
+    void            clear() { _last_velocity = 0; }
+
+private:
+    int16_t         _last_velocity;
+
+};
+
+int32_t LeadFilter::get_position(int32_t pos, int16_t vel, float lag_in_seconds)
+{
+    int16_t accel_contribution = (vel - _last_velocity) * lag_in_seconds * lag_in_seconds;
+    int16_t vel_contribution = vel * lag_in_seconds;
+
+    // store velocity for next iteration
+    _last_velocity = vel;
+
+    return pos + vel_contribution + accel_contribution;
+}
+
+
+LeadFilter xLeadFilter;      // Long GPS lag filter 
+LeadFilter yLeadFilter;      // Lat  GPS lag filter 
+
+#endif
+
   typedef struct PID_PARAM_ {
     float kP;
     float kI;
@@ -223,12 +283,30 @@ static int16_t nav_takeoff_bearing;
         while(!SerialTXfree(GPS_SERIAL)) delay(80);
       }
       // at this point we have GPS working at selected (via #define GPS_BAUD) baudrate
+	  // So now we have to set the desired mode and update rate (which depends on the NMEA or MTK_BINARYxx settings)
       SerialOpen(GPS_SERIAL,GPS_BAUD);
-      SerialGpsPrint(PSTR("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n")); // only GGA and RMC sentence
-      SerialGpsPrint(PSTR("$PMTK220,200*2C\r\n"));           // 5 Hz update rate
-    #endif     
+
+	  SerialGpsPrint(MTK_NAVTHRES_OFF);
+	  while(!SerialTXfree(GPS_SERIAL)) delay(80);
+      SerialGpsPrint(SBAS_ON);
+	  while(!SerialTXfree(GPS_SERIAL)) delay(80);
+      SerialGpsPrint(WAAS_ON);
+	  while(!SerialTXfree(GPS_SERIAL)) delay(80);
+      SerialGpsPrint(SBAS_TEST_MODE);
+	  while(!SerialTXfree(GPS_SERIAL)) delay(80);
+      SerialGpsPrint(MTK_OUTPUT_5HZ);           // 5 Hz update rate
+
+      #if defined(NMEA)
+        SerialGpsPrint(MTK_SET_NMEA_SENTENCES); // only GGA and RMC sentence
+      #endif     
+	  #if defined(MTK_BINARY19) || defined(MTK_BINARY16)
+		SerialGpsPrint(MTK_SET_BINARY);
+      #endif
+
+
+#endif  //elif init_mtk_gps
   }
-#endif
+#endif //gps_serial
 
 void GPS_NewData() {
   uint8_t axis;
@@ -396,6 +474,7 @@ void GPS_NewData() {
               }
             }
           #endif
+
           //dTnav calculation
           //Time for calculating x,y speed and navigation pids
           static uint32_t nav_loopTimer;
@@ -421,9 +500,13 @@ void GPS_NewData() {
           
           if (f.GPS_HOLD_MODE || f.GPS_HOME_MODE){    //ok we are navigating 
             //do gps nav calculations here, these are common for nav and poshold  
+			#if defined(GPS_LEAD_FILTER)
+            GPS_distance_cm_bearing(&GPS_coord_lead[LAT],&GPS_coord_lead[LON],&GPS_WP[LAT],&GPS_WP[LON],&wp_distance,&target_bearing);
+            GPS_calc_location_error(&GPS_WP[LAT],&GPS_WP[LON],&GPS_coord_lead[LAT],&GPS_coord_lead[LON]);
+			#else
             GPS_distance_cm_bearing(&GPS_coord[LAT],&GPS_coord[LON],&GPS_WP[LAT],&GPS_WP[LON],&wp_distance,&target_bearing);
             GPS_calc_location_error(&GPS_WP[LAT],&GPS_WP[LON],&GPS_coord[LAT],&GPS_coord[LON]);
-
+			#endif
             switch (nav_mode) {
               case NAV_MODE_POSHOLD: 
                 //Desired output is in nav_lat and nav_lon where 1deg inclination is 100 
@@ -635,6 +718,7 @@ void GPS_distance_cm_bearing(int32_t* lat1, int32_t* lon1, int32_t* lat2, int32_
   if (*bearing < 0) *bearing += 36000;
 }
 
+#if defined(OBSOLATED)
 ////////////////////////////////////////////////////////////////////////////////////
 // keep old calculation function for compatibility (could be removed later) distance in meters, bearing in degree 
 //
@@ -645,32 +729,48 @@ void GPS_distance(int32_t lat1, int32_t lon1, int32_t lat2, int32_t lon2, uint16
   *dist = d1 / 100;          //convert to meters
   *bearing = d2 /  100;      //convert to degrees
 }
+#endif
 
-////////////////////////////////////////////////////////////////////////////////////
-// Calculate our current speed vector from gps position data
-//
+
+//*******************************************************************************************************
+// calc_velocity_and_filtered_position - velocity in lon and lat directions calculated from GPS position
+//       and accelerometer data
+// lon_speed expressed in cm/s.  positive numbers mean moving east
+// lat_speed expressed in cm/s.  positive numbers when moving north
+// Note: we use gps locations directly to calculate velocity instead of asking gps for velocity because
+//       this is more accurate below 1.5m/s
+// Note: even though the positions are projected using a lead filter, the velocities are calculated
+//       from the unaltered gps locations.  We do not want noise from our lead filter affecting velocity
+//*******************************************************************************************************
 static void GPS_calc_velocity(){
   static int16_t speed_old[2] = {0,0};
   static int32_t last[2] = {0,0};
   static uint8_t init = 0;
-  // y_GPS_speed positve = Up
-  // x_GPS_speed positve = Right
 
   if (init) {
     float tmp = 1.0/dTnav;
     actual_speed[_X] = (float)(GPS_coord[LON] - last[LON]) *  GPS_scaleLonDown * tmp;
     actual_speed[_Y] = (float)(GPS_coord[LAT]  - last[LAT])  * tmp;
-  
+
+#if !defined(GPS_LEAD_FILTER) 
     actual_speed[_X] = (actual_speed[_X] + speed_old[_X]) / 2;
     actual_speed[_Y] = (actual_speed[_Y] + speed_old[_Y]) / 2;
   
     speed_old[_X] = actual_speed[_X];
     speed_old[_Y] = actual_speed[_Y];
+
+#endif
   }
   init=1;
 
   last[LON] = GPS_coord[LON];
   last[LAT] = GPS_coord[LAT];
+
+#if defined(GPS_LEAD_FILTER)
+  GPS_coord_lead[LON] = xLeadFilter.get_position(GPS_coord[LON], actual_speed[_X], GPS_LAG);
+  GPS_coord_lead[LAT] = yLeadFilter.get_position(GPS_coord[LAT], actual_speed[_Y], GPS_LAG);
+#endif
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -697,19 +797,18 @@ static void GPS_calc_poshold() {
   
   for (axis=0;axis<2;axis++) {
     target_speed = get_P(error[axis], &posholdPID_PARAM); // calculate desired speed from lat/lon error
-    target_speed = constrain(target_speed,-100,100);
+    target_speed = constrain(target_speed,-100,100);      // Constrain the target speed in poshold mode to 1m/s it helps avoid runaways..
     rate_error[axis] = target_speed - actual_speed[axis]; // calc the speed error
 
     nav[axis]      =
         get_P(rate_error[axis],                                               &poshold_ratePID_PARAM)
        +get_I(rate_error[axis] + error[axis], &dTnav, &poshold_ratePID[axis], &poshold_ratePID_PARAM);
+
     d = get_D(error[axis],                    &dTnav, &poshold_ratePID[axis], &poshold_ratePID_PARAM);
 
     d = constrain(d, -2000, 2000);
     // get rid of noise
-    #if defined(GPS_LOW_SPEED_D_FILTER)
-      if(abs(actual_speed[axis]) < 50) d = 0;
-    #endif
+    if(abs(actual_speed[axis]) < 50) d = 0;
 
     nav[axis] +=d;
     nav[axis]  = constrain(nav[axis], -NAV_BANK_MAX, NAV_BANK_MAX);
@@ -900,6 +999,9 @@ bool GPS_newFrame(char c) {
   #endif
   #if defined(UBLOX)
     return GPS_UBLOX_newFrame(c);
+  #endif
+  #if defined(MTK_BINARY16) || defined(MTK_BINARY19)
+    return GPS_MTK_newFrame(c);
   #endif
 }
 
@@ -1160,6 +1262,161 @@ bool GPS_newFrame(char c) {
     return false;
   }
 #endif //UBLOX
+
+#if defined(MTK_BINARY16) || defined(MTK_BINARY19)
+
+  struct diyd_mtk_msg {
+        int32_t		latitude;
+        int32_t		longitude;
+        int32_t		altitude;
+        int32_t		ground_speed;
+        int32_t		ground_course;
+        uint8_t		satellites;
+        uint8_t		fix_type;
+        uint32_t	utc_date;
+        uint32_t	utc_time;
+        uint16_t	hdop;
+    };
+// #pragma pack(pop)
+    enum diyd_mtk_fix_type {
+       FIX_NONE = 1,
+	   FIX_2D = 2,
+	   FIX_3D = 3,
+	   FIX_2D_SBAS = 6,
+	   FIX_3D_SBAS = 7 
+    };
+
+#if defined(MTK_BINARY16)
+    enum diyd_mtk_protocol_bytes {
+        PREAMBLE1 = 0xd0,
+        PREAMBLE2 = 0xdd,
+    };
+#endif
+
+#if defined(MTK_BINARY19)
+    enum diyd_mtk_protocol_bytes {
+        PREAMBLE1 = 0xd1,
+        PREAMBLE2 = 0xdd,
+    };
+#endif
+
+    // Packet checksum accumulators
+    uint8_t 	_ck_a;
+    uint8_t 	_ck_b;
+
+    // State machine state
+    uint8_t 	_step;
+    uint8_t		_payload_counter;
+
+    // Time from UNIX Epoch offset
+    long		_time_offset;
+    bool		_offset_calculated;
+
+    // Receive buffer
+    union {
+        diyd_mtk_msg	msg;
+        uint8_t			bytes[];
+    } _buffer;
+
+inline long _swapl(const void *bytes)
+{
+    const uint8_t	*b = (const uint8_t *)bytes;
+    union {
+        long	v;
+        uint8_t b[4];
+    } u;
+
+    u.b[0] = b[3];
+    u.b[1] = b[2];
+    u.b[2] = b[1];
+    u.b[3] = b[0];
+
+    return(u.v);
+}
+
+bool GPS_MTK_newFrame(uint8_t data)
+{
+       bool parsed = false;
+
+restart:
+        switch(_step) {
+
+            // Message preamble, class, ID detection
+            //
+            // If we fail to match any of the expected bytes, we
+            // reset the state machine and re-consider the failed
+            // byte as the first byte of the preamble.  This
+            // improves our chances of recovering from a mismatch
+            // and makes it less likely that we will be fooled by
+            // the preamble appearing as data in some other message.
+            //
+        case 0:
+            if(PREAMBLE1 == data)
+                _step++;
+            break;
+        case 1:
+            if (PREAMBLE2 == data) {
+                _step++;
+                break;
+            }
+            _step = 0;
+            goto restart;
+        case 2:
+            if (sizeof(_buffer) == data) {
+                _step++;
+                _ck_b = _ck_a = data;				// reset the checksum accumulators
+                _payload_counter = 0;
+            } else {
+                _step = 0;							// reset and wait for a message of the right class
+                goto restart;
+            }
+            break;
+
+            // Receive message data
+            //
+        case 3:
+            _buffer.bytes[_payload_counter++] = data;
+            _ck_b += (_ck_a += data);
+            if (_payload_counter == sizeof(_buffer))
+                _step++;
+            break;
+
+            // Checksum and message processing
+            //
+        case 4:
+            _step++;
+            if (_ck_a != data) {
+                _step = 0;
+            }
+            break;
+        case 5:
+            _step = 0;
+            if (_ck_b != data) {
+                break;
+            }
+
+            f.GPS_FIX 			= ((_buffer.msg.fix_type == FIX_3D) || (_buffer.msg.fix_type == FIX_3D_SBAS));
+
+#if defined(MTK_BINARY16)
+            GPS_coord[LAT]		= _buffer.msg.latitude * 10;	// XXX doc says *10e7 but device says otherwise
+            GPS_coord[LON]		= _buffer.msg.longitude * 10;	// XXX doc says *10e7 but device says otherwise
+#endif
+#if defined(MTK_BINARY19)
+            GPS_coord[LAT]		= _buffer.msg.latitude;			// With 1.9 now we have real 10e7 precision
+            GPS_coord[LON]		= _buffer.msg.longitude;	
+#endif
+            GPS_altitude		= _buffer.msg.altitude /100;		// altitude in meter
+            GPS_speed	        = _buffer.msg.ground_speed;	        // in m/s * 100 == in cm/s
+            GPS_ground_course	= _buffer.msg.ground_course/100;	//in degrees
+            GPS_numSat		    = _buffer.msg.satellites;
+            //GPS_hdop			= _buffer.msg.hdop;
+            parsed = true;
+            GPS_Present = 1;
+        }
+    return parsed;
+}
+#endif //MTK
+
 
 
 #endif //SERIAL GPS
