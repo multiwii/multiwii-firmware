@@ -323,7 +323,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
 /********************************************************************/
 
   void setTiming(uint8_t resource, uint16_t pulse, uint16_t pause){
-    if (!resourceIsOn[resource] && (millis() >= (LastToggleTime[resource] + pause))&& pulse != 0) {	         
+    if (!resourceIsOn[resource] && (millis() >= (LastToggleTime[resource] + pause))&& pulse != 0) {
       resourceIsOn[resource] = 1;      
       toggleResource(resource,1);
       LastToggleTime[resource]=millis();      
@@ -357,7 +357,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
             else PilotLamp(PL_RED_OFF);
             break;
         #endif
-	case 0:	
+        case 0:
         default:
           if (activate == 1) {LEDPIN_ON;}
           else LEDPIN_OFF;

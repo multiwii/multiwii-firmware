@@ -69,7 +69,7 @@ const uint32_t PROGMEM capability = 0+BIND_CAPABLE;
 #define MSP_SET_WP               209   //in message          sets a given WP (WP#,lat, lon, alt, flags)
 #define MSP_SELECT_SETTING       210   //in message          Select Setting Number (0-2)
 
-#define MSP_SPEK_BIND            240   //in message          no param
+#define MSP_BIND                 240   //in message          no param
 
 #define MSP_EEPROM_WRITE         250   //in message          no param
 
@@ -458,7 +458,7 @@ void evaluateCommand() {
      headSerialReply(0);
      break;
 #if defined(SPEK_BIND)
-   case MSP_SPEK_BIND:
+   case MSP_BIND:
      spekBind();  
      headSerialReply(0);
      break;
