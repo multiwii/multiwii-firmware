@@ -467,7 +467,7 @@ static struct {
   uint8_t  state;
   uint32_t deadline;
 } bmp085_ctx;  
-#define OSS 2 //we can get more unique samples and get better precision using average
+#define OSS 3
 
 void i2c_BMP085_readCalibration(){
   delay(10);
@@ -486,8 +486,6 @@ void  Baro_init() {
   i2c_BMP085_readCalibration();
   delay(5);
   i2c_BMP085_UT_Start(); 
-//  delay(5);
-//  i2c_BMP085_UT_Read();
   bmp085_ctx.deadline = currentTime+5000;
 }
 
@@ -555,14 +553,14 @@ void i2c_BMP085_Calculate() {
 //return 0: no data available, no computation ;  1: new value available  ; 2: no new value, but computation time
 uint8_t Baro_update() {                   // first UT conversion is started in init procedure
   if (currentTime < bmp085_ctx.deadline) return 0; 
-  bmp085_ctx.deadline = currentTime+6000;
+  bmp085_ctx.deadline = currentTime+6000; // 1.5ms margin according to the spec (4.5ms T convetion time)
   TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz, BMP085 is ok with this speed
   if (bmp085_ctx.state == 0) {
     i2c_BMP085_UT_Read(); 
     i2c_BMP085_UP_Start(); 
     bmp085_ctx.state = 1; 
     Baro_Common();
-    bmp085_ctx.deadline += 8000;   // 6000+8000=14000
+    bmp085_ctx.deadline += 21000;   // 6000+21000=27000 1.5ms margin according to the spec (25.5ms P convetion time with OSS=3)
     return 1;
   } else {
     i2c_BMP085_UP_Read(); 
@@ -716,9 +714,10 @@ uint8_t Baro_update() {                            // first UT conversion is sta
 #if BARO
   void Baro_Common() {
     static int32_t baroHistTab[BARO_TAB_SIZE];
-    static int8_t baroHistIdx;
+    static uint8_t baroHistIdx;
   
-    uint8_t indexplus1 = (baroHistIdx + 1)%BARO_TAB_SIZE;
+    uint8_t indexplus1 = (baroHistIdx + 1);
+    if (indexplus1 == BARO_TAB_SIZE) indexplus1 = 0;
     baroHistTab[baroHistIdx] = baroPressure;
     baroPressureSum += baroHistTab[baroHistIdx];
     baroPressureSum -= baroHistTab[indexplus1];

@@ -381,12 +381,13 @@ static struct {
   static int32_t  GPS_home[2];
   static int32_t  GPS_hold[2];
   static uint8_t  GPS_numSat;
-  static uint16_t GPS_distanceToHome;                          // distance to home in meters
-  static int16_t  GPS_directionToHome;                         // direction to home in degrees
-  static uint16_t GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s
-  static uint8_t  GPS_update = 0;                              // it's a binary toogle to distinct a GPS position update
-  static int16_t  GPS_angle[2] = { 0, 0};                      // it's the angles that must be applied for GPS correction
-  static uint16_t GPS_ground_course = 0;                       // degrees*10
+  static uint16_t GPS_distanceToHome;                          // distance to home  - unit: meter
+  static int16_t  GPS_directionToHome;                         // direction to home - unit: degree
+  static uint16_t GPS_altitude;                                // GPS altitude      - unit: meter
+  static uint16_t GPS_speed;                                   // GPS speed         - unit: cm/s
+  static uint8_t  GPS_update = 0;                              // a binary toogle to distinct a GPS position update
+  static int16_t  GPS_angle[2] = { 0, 0};                      // the angles that must be applied for GPS correction
+  static uint16_t GPS_ground_course = 0;                       //                   - unit: degree*10
   static uint8_t  GPS_Present = 0;                             // Checksum from Gps serial
   static uint8_t  GPS_Enable  = 0;
 
@@ -419,13 +420,12 @@ static struct {
   #define NAV_MODE_NONE          0
   #define NAV_MODE_POSHOLD       1
   #define NAV_MODE_WP            2
-  static uint8_t nav_mode = NAV_MODE_NONE;            //Navigation mode
+  static uint8_t nav_mode = NAV_MODE_NONE; // Navigation mode
  
   static uint8_t alarmArray[16];           // array
  
 #if BARO
   static int32_t baroPressure;
-  static int32_t baroGroundPressure;
   static int32_t baroTemperature;
   static int32_t baroPressureSum;
 #endif
@@ -710,22 +710,22 @@ void go_arm() {
     && failsafeCnt < 2
   #endif
     ) {
-      if(!f.ARMED) { // arm now!
-        f.ARMED = 1;
-        headFreeModeHold = heading;
-        #if defined(VBAT)
-          if (vbat > conf.no_vbat) vbatMin = vbat;
+    if(!f.ARMED) { // arm now!
+      f.ARMED = 1;
+      headFreeModeHold = heading;
+      #if defined(VBAT)
+        if (vbat > conf.no_vbat) vbatMin = vbat;
+      #endif
+      #ifdef LCD_TELEMETRY // reset some values when arming
+        #if BARO
+           BAROaltMax = BaroAlt;
         #endif
-        #ifdef LCD_TELEMETRY // reset some values when arming
-          #if BARO
-              BAROaltMax = BaroAlt;
-          #endif
-        #endif
-      }
-    } else if(!f.ARMED){ 
-        blinkLED(2,255,1);
-        alarmArray[8] = 1;
-      }
+      #endif
+    }
+  } else if(!f.ARMED) { 
+    blinkLED(2,255,1);
+    alarmArray[8] = 1;
+  }
 }
 
 // ******** Main Loop *********
@@ -775,8 +775,8 @@ void loop () {
     #endif
     // end of failsafe routine - next change is made with RcOptions setting
 
-// ------------------ STICKS COMMAND HANDLER --------------------
-// checking sticks positions
+    // ------------------ STICKS COMMAND HANDLER --------------------
+    // checking sticks positions
     uint8_t stTmp = 0;
     for(i=0;i<4;i++) {
       stTmp >>= 2;
@@ -788,7 +788,7 @@ void loop () {
     } else rcDelayCommand = 0;
     rcSticks = stTmp;
     
-// perform actions    
+    // perform actions    
     if (rcData[THROTTLE] <= MINCHECK) {            // THROTTLE at minimum
       errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0; errorGyroI[YAW] = 0;
       errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
@@ -867,11 +867,11 @@ void loop () {
         #endif
         #ifdef LCD_TELEMETRY_AUTO
           else if (rcSticks == THR_LO + YAW_CE + PIT_HI + ROL_LO) {              // Auto telemetry ON/OFF
-             if (telemetry_auto) {
-                telemetry_auto = 0;
-                telemetry = 0;
-             } else
-                telemetry_auto = 1;
+            if (telemetry_auto) {
+              telemetry_auto = 0;
+              telemetry = 0;
+            } else
+              telemetry_auto = 1;
           }
         #endif
         #ifdef LCD_TELEMETRY_STEP
@@ -964,11 +964,11 @@ void loop () {
       #endif
       #ifdef VARIOMETER
         if (rcOptions[BOXVARIO]) {
-            if (!f.VARIO_MODE) {
-              f.VARIO_MODE = 1;
-            }
+          if (!f.VARIO_MODE) {
+            f.VARIO_MODE = 1;
+          }
         } else {
-            f.VARIO_MODE = 0;
+          f.VARIO_MODE = 0;
         }
       #endif
     #endif
@@ -997,15 +997,14 @@ void loop () {
       #if defined(I2C_GPS)
       static uint8_t GPSNavReset = 1;
       if (f.GPS_FIX && GPS_numSat >= 5 ) {
-        if (!rcOptions[BOXGPSHOME] && !rcOptions[BOXGPSHOLD] )
-          {    //Both boxes are unselected
-            if (GPSNavReset == 0 ) { 
-               GPSNavReset = 1; 
-               GPS_I2C_command(I2C_GPS_COMMAND_STOP_NAV,0);
-            }
-          }  
+        if (!rcOptions[BOXGPSHOME] && !rcOptions[BOXGPSHOLD] ) { // Both boxes are unselected
+          if (GPSNavReset == 0 ) { 
+             GPSNavReset = 1; 
+             GPS_I2C_command(I2C_GPS_COMMAND_STOP_NAV,0);
+          }
+        }  
         if (rcOptions[BOXGPSHOME]) {
-         if (!f.GPS_HOME_MODE)  {
+          if (!f.GPS_HOME_MODE)  {
             f.GPS_HOME_MODE = 1;
             GPSNavReset = 0;
             GPS_I2C_command(I2C_GPS_COMMAND_START_NAV,0);        //waypoint zero
@@ -1060,34 +1059,27 @@ void loop () {
     #endif
   } else { // not in rc loop
     static uint8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
-    switch (taskOrder % 5) {
+    if(taskOrder>4) taskOrder-=5;
+    switch (taskOrder) {
       case 0:
         taskOrder++;
         #if MAG
-          if (Mag_getADC()) { // max 350 µs (HMC5883)
-            break;            // only break when we actually did something
-          }
+          if (Mag_getADC()) break; // max 350 µs (HMC5883) // only break when we actually did something
         #endif
       case 1:
         taskOrder++;
         #if BARO
-          if (Baro_update() != 0 ) {
-            break;
-          }
+          if (Baro_update() != 0 ) break;
         #endif
       case 2:
         taskOrder++;
         #if BARO
-          if (getEstimatedAltitude() !=0) {
-            break;
-          }
+          if (getEstimatedAltitude() !=0) break;
         #endif    
       case 3:
         taskOrder++;
         #if GPS
-          if(GPS_Enable) {
-            GPS_NewData();
-          }
+          if(GPS_Enable) GPS_NewData();
           break;
         #endif
       case 4:
@@ -1111,17 +1103,17 @@ void loop () {
   cycleTime = currentTime - previousTime;
   previousTime = currentTime;
 
-#ifdef CYCLETIME_FIXATED
-  if (conf.cycletime_fixated) {
-    if ((micros()-timestamp_fixated)>conf.cycletime_fixated) {
-       //debug[0]++;
-    } else {
-       while((micros()-timestamp_fixated)<conf.cycletime_fixated) ; // waste away
-       //debug[1] = micros()-timestamp_fixated - conf.cycletime_fixated;
+  #ifdef CYCLETIME_FIXATED
+    if (conf.cycletime_fixated) {
+      if ((micros()-timestamp_fixated)>conf.cycletime_fixated) {
+         //debug[0]++;
+      } else {
+         while((micros()-timestamp_fixated)<conf.cycletime_fixated) ; // waste away
+         //debug[1] = micros()-timestamp_fixated - conf.cycletime_fixated;
+      }
+      timestamp_fixated=micros();
     }
-    timestamp_fixated=micros();
-  }
-#endif
+  #endif
   //***********************************
   //**** Experimental FlightModes *****
   //***********************************
@@ -1153,51 +1145,42 @@ void loop () {
       int16_t dif = heading - magHold;
       if (dif <= - 180) dif += 360;
       if (dif >= + 180) dif -= 360;
-      if ( f.SMALL_ANGLES_25 ) rcCommand[YAW] -= dif*conf.P8[PIDMAG]/30;  // 18 deg
+      if ( f.SMALL_ANGLES_25 ) rcCommand[YAW] -= dif*conf.P8[PIDMAG]/30;
     } else magHold = heading;
   #endif
 
   #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
     if (f.BARO_MODE) {
-      
-    static uint8_t isAltHoldChanged = 0;
-    #if defined(ALTHOLD_FAST_THROTTLE_CHANGE)
-      
-      if (abs(rcCommand[THROTTLE]-initialThrottleHold) > ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
-        errorAltitudeI = 0;
-        isAltHoldChanged = 1;
-        
-        rcCommand[THROTTLE] += (rcCommand[THROTTLE] > initialThrottleHold) ? -ALT_HOLD_THROTTLE_NEUTRAL_ZONE : ALT_HOLD_THROTTLE_NEUTRAL_ZONE;
-      
-      } else {
-        if (isAltHoldChanged) {
+      static uint8_t isAltHoldChanged = 0;
+      #if defined(ALTHOLD_FAST_THROTTLE_CHANGE)
+        if (abs(rcCommand[THROTTLE]-initialThrottleHold) > ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
+          errorAltitudeI = 0;
+          isAltHoldChanged = 1;
+          rcCommand[THROTTLE] += (rcCommand[THROTTLE] > initialThrottleHold) ? -ALT_HOLD_THROTTLE_NEUTRAL_ZONE : ALT_HOLD_THROTTLE_NEUTRAL_ZONE;
+        } else {
+          if (isAltHoldChanged) {
+            AltHold = EstAlt;
+            isAltHoldChanged = 0;
+          }
+          rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
+        }
+      #else
+        static int16_t AltHoldCorr = 0;
+        if (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
+          // Slowly increase/decrease AltHold proportional to stick movement ( +100 throttle gives ~ +50 cm in 1 second with cycle time about 3-4ms)
+          AltHoldCorr+= rcCommand[THROTTLE] - initialThrottleHold;
+          if(abs(AltHoldCorr) > 500) {
+            AltHold += AltHoldCorr/500;
+            AltHoldCorr %= 500;
+          }
+          errorAltitudeI = 0;
+          isAltHoldChanged = 1;
+        } else if (isAltHoldChanged) {
           AltHold = EstAlt;
           isAltHoldChanged = 0;
-      }
-      rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
-    }
-      
-    #else
-      static int16_t AltHoldCorr = 0;
-      if (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
-        // Slowly increase/decrease AltHold proportional to stick movement ( +100 throttle gives ~ +50 cm in 1 second with cycle time about 3-4ms)
-        AltHoldCorr+= rcCommand[THROTTLE] - initialThrottleHold;
-        if(abs(AltHoldCorr) > 500) {
-          AltHold += AltHoldCorr/500;
-          AltHoldCorr %= 500;
         }
-        errorAltitudeI = 0;
-        isAltHoldChanged = 1;
-      
-      } else if (isAltHoldChanged) {
-        AltHold = EstAlt;
-        isAltHoldChanged = 0;
-      }
-
-      rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
-
-    #endif  
-      
+        rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
+      #endif
     }
   #endif
   #if GPS

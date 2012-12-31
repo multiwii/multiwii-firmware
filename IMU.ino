@@ -287,24 +287,24 @@ void getEstimatedAttitude(){
 #if BARO
 uint8_t getEstimatedAltitude(){
   static uint32_t deadLine = INIT_DELAY;
- 
+  static int32_t baroGroundPressure;
+
   if (abs(currentTime - deadLine) < UPDATE_INTERVAL) return 0;
 
   uint16_t dTime = currentTime - deadLine;
   deadLine = currentTime;
 
   if(calibratingB > 0) {
-    baroGroundPressure = baroPressureSum/(float)(BARO_TAB_SIZE - 1) + 0.5f; // +0.5 for correct rounding
+    baroGroundPressure = baroPressureSum/(BARO_TAB_SIZE - 1);
     calibratingB--;
+    return 0;
   }
-  // log(0) is bad!
-  if(baroGroundPressure != 0) {
-    // pressure relative to ground pressure with temperature compensation (fast!)
-    // see: https://code.google.com/p/ardupilot-mega/source/browse/libraries/AP_Baro/AP_Baro.cpp
-    BaroAlt = log( baroGroundPressure / (baroPressureSum/(float)(BARO_TAB_SIZE - 1)) ) * (baroTemperature+27315) * 29.271267f; // in cemtimeter 
-  } else {
-    BaroAlt = 0;
-  }
+  
+  // pressure relative to ground pressure with temperature compensation (fast!)
+  // baroGroundPressure is not supposed to be 0 here
+  // see: https://code.google.com/p/ardupilot-mega/source/browse/libraries/AP_Baro/AP_Baro.cpp
+  BaroAlt = log( baroGroundPressure / (baroPressureSum/(float)(BARO_TAB_SIZE - 1)) ) * (baroTemperature+27315) * 29.271267f; // in cemtimeter 
+
 
   EstAlt = (EstAlt * 6 + BaroAlt * 2) >> 3; // additional LPF to reduce baro noise (faster by 30 µs)
 
@@ -325,14 +325,13 @@ uint8_t getEstimatedAltitude(){
     float invG = InvSqrt(isq(EstG.V.X) + isq(EstG.V.Y) + isq(EstG.V.Z));
     int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG;
     
-    static int16_t accZoffset = acc_1G*6;
+    static int16_t accZoffset = 0; // = acc_1G*6; //58 bytes saved and convergence is fast enough to omit init
     if (!f.ARMED) {
       accZoffset -= accZoffset/6;
       accZoffset += accZ;
     }  
     accZ -= accZoffset/6;
     applyDeadband(accZ, ACC_Z_DEADBAND);
-    //debug[0] = accZ; 
     
     static float vel = 0.0f;
     static float accVelScale = 9.80665f / 10000.0f / acc_1G ;
@@ -346,19 +345,16 @@ uint8_t getEstimatedAltitude(){
   
     baroVel = constrain(baroVel, -300, 300); // constrain baro velocity +/- 300cm/s
     applyDeadband(baroVel, 10); // to reduce noise near zero
-    //debug[1] = baroVel;
     
     // apply Complimentary Filter to keep the calculated velocity based on baro velocity (i.e. near real velocity). 
     // By using CF it's possible to correct the drift of integrated accZ (velocity) without loosing the phase, i.e without delay
     vel = vel * 0.985f + baroVel * 0.015f;
-    //debug[2] = vel;
     
     //D
     int16_t vel_tmp = vel;
     applyDeadband(vel_tmp, 5);
     vario = vel_tmp;
     BaroPID -= constrain(conf.D8[PIDALT] * vel_tmp / 20, -150, 150);
-    //debug[3] = BaroPID;
   #endif
   return 1;
 }

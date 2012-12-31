@@ -101,9 +101,9 @@ void writeParams(uint8_t b) {
 }
 
 void LoadDefaults() {
-  conf.P8[ROLL]  = 40;  conf.I8[ROLL] = 30; conf.D8[ROLL]  = 23;
-  conf.P8[PITCH] = 40; conf.I8[PITCH] = 30; conf.D8[PITCH] = 23;
-  conf.P8[YAW]   = 85;  conf.I8[YAW]  = 45;  conf.D8[YAW]  = 0;
+  conf.P8[ROLL]     = 40;  conf.I8[ROLL]    = 30; conf.D8[ROLL]     = 23;
+  conf.P8[PITCH]    = 40; conf.I8[PITCH]    = 30; conf.D8[PITCH]    = 23;
+  conf.P8[YAW]      = 85;  conf.I8[YAW]     = 45;  conf.D8[YAW]     = 0;
   conf.P8[PIDALT]   = 50; conf.I8[PIDALT]   = 20; conf.D8[PIDALT]   = 30;
   
   conf.P8[PIDPOS]  = POSHOLD_P * 100;     conf.I8[PIDPOS]    = POSHOLD_I * 100;       conf.D8[PIDPOS]    = 0;
@@ -111,9 +111,9 @@ void LoadDefaults() {
   conf.P8[PIDNAVR] = NAV_P * 10;          conf.I8[PIDNAVR]   = NAV_I * 100;           conf.D8[PIDNAVR]   = NAV_D * 1000;
 
   conf.P8[PIDLEVEL] = 70; conf.I8[PIDLEVEL] = 10; conf.D8[PIDLEVEL] = 100;
-  conf.P8[PIDMAG] = 40;
+  conf.P8[PIDMAG]   = 40;
   
-  conf.P8[PIDVEL] = 0;  conf.I8[PIDVEL] = 0;  conf.D8[PIDVEL] = 0;
+  conf.P8[PIDVEL] = 0;      conf.I8[PIDVEL] = 0;    conf.D8[PIDVEL] = 0;
   
   conf.rcRate8 = 90; conf.rcExpo8 = 65;
   conf.rollPitchRate = 0;
