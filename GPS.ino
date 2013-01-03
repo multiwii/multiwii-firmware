@@ -639,15 +639,16 @@ void GPS_set_pids() {
     deg = (uint32_t)c->deg * GPS_SCALE_FACTOR;
   
     uint32_t min = 0;
-    min = (uint32_t)c->min * GPS_SCALE_FACTOR;
     /* add up the BCD fractions */
-    uint16_t divisor = (uint16_t)GPS_SCALE_FACTOR/10;
+    uint16_t divisor = 1000;
     for (i=0; i<NMEA_MINUTE_FRACTS; i++) {
       uint8_t b = c->frac[i/2];
-      uint8_t n = (i%2 ? b&0x0F : b>>4);
+      uint8_t n = (i%2 ? b>>4 : b&0x0F);
       min += n*(divisor);
       divisor /= 10;
     }
+    min *= 1000; // <-- NEW
+    min += (uint32_t)c->min * GPS_SCALE_FACTOR;
     /* now sum up degrees and minutes */
     return deg + min/60;
   }
