@@ -561,15 +561,15 @@ void GPS_reset_nav() {
   uint8_t i;
   
   for(i=0;i<2;i++) {
-    GPS_angle[i]  = 0;
     nav_rated[i] = 0;
     nav[i] = 0;
     #if defined(I2C_GPS)
-      //GPS_I2C_command(I2C_GPS_COMMAND_STOP_NAV,0);
+      GPS_I2C_command(I2C_GPS_COMMAND_STOP_NAV,0);
     #else
       reset_PID(&posholdPID[i]);
       reset_PID(&poshold_ratePID[i]);
       reset_PID(&navPID[i]);
+      nav_mode = NAV_MODE_NONE;
     #endif
   }
 }

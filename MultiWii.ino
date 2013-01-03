@@ -933,7 +933,8 @@ void loop () {
         // failsafe support
         f.ANGLE_MODE = 0;
       }
-      if ( rcOptions[BOXHORIZON] ) { 
+      if ( rcOptions[BOXHORIZON] ) {
+        f.ANGLE_MODE = 0;
         if (!f.HORIZON_MODE) {
           errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
           f.HORIZON_MODE = 1;
@@ -994,69 +995,53 @@ void loop () {
     #endif
     
     #if GPS
-      #if defined(I2C_GPS)
       static uint8_t GPSNavReset = 1;
       if (f.GPS_FIX && GPS_numSat >= 5 ) {
-        if (!rcOptions[BOXGPSHOME] && !rcOptions[BOXGPSHOLD] ) { // Both boxes are unselected
-          if (GPSNavReset == 0 ) { 
-             GPSNavReset = 1; 
-             GPS_I2C_command(I2C_GPS_COMMAND_STOP_NAV,0);
-          }
-        }  
-        if (rcOptions[BOXGPSHOME]) {
+        if (rcOptions[BOXGPSHOME]) {  // if both GPS_HOME & GPS_HOLD are checked => GPS_HOME is the priority
           if (!f.GPS_HOME_MODE)  {
             f.GPS_HOME_MODE = 1;
+            f.GPS_HOLD_MODE = 0;
             GPSNavReset = 0;
-            GPS_I2C_command(I2C_GPS_COMMAND_START_NAV,0);        //waypoint zero
+            #if defined(I2C_GPS)
+              GPS_I2C_command(I2C_GPS_COMMAND_START_NAV,0);        //waypoint zero
+            #else // SERIAL
+              GPS_set_next_wp(&GPS_home[LAT],&GPS_home[LON]);
+              nav_mode    = NAV_MODE_WP;
+            #endif
           }
         } else {
           f.GPS_HOME_MODE = 0;
-        }
-        if (rcOptions[BOXGPSHOLD]) {
-          if (!f.GPS_HOLD_MODE & !f.GPS_HOME_MODE) {
-            f.GPS_HOLD_MODE = 1;
-            GPSNavReset = 0;
-            GPS_I2C_command(I2C_GPS_COMMAND_POSHOLD,0);
+          if (rcOptions[BOXGPSHOLD] && abs(rcCommand[ROLL])< AP_MODE && abs(rcCommand[PITCH]) < AP_MODE) {
+            if (!f.GPS_HOLD_MODE) {
+              f.GPS_HOLD_MODE = 1;
+              GPSNavReset = 0;
+              #if defined(I2C_GPS)
+                GPS_I2C_command(I2C_GPS_COMMAND_POSHOLD,0);
+              #else
+                GPS_hold[LAT] = GPS_coord[LAT];
+                GPS_hold[LON] = GPS_coord[LON];
+                GPS_set_next_wp(&GPS_hold[LAT],&GPS_hold[LON]);
+                nav_mode = NAV_MODE_POSHOLD;
+              #endif
+             
+            }
+          } else {
+            f.GPS_HOLD_MODE = 0;
+            // both boxes are unselected here, nav is reset if not already done
+            if (GPSNavReset == 0 ) {
+              GPSNavReset = 1;
+              GPS_reset_nav();
+            }
           }
-        } else {
-          f.GPS_HOLD_MODE = 0;
         }
       }
-      #endif 
-      #if defined(GPS_SERIAL) || defined(TINY_GPS) || defined(GPS_FROM_OSD)
-      if (f.GPS_FIX && GPS_numSat >= 5 ) {
-        if (rcOptions[BOXGPSHOME]) {
-          if (!f.GPS_HOME_MODE)  {
-            f.GPS_HOME_MODE = 1;
-            GPS_set_next_wp(&GPS_home[LAT],&GPS_home[LON]);
-            nav_mode    = NAV_MODE_WP;
-          }
-        } else {
-          f.GPS_HOME_MODE = 0;
-        }
-        if (rcOptions[BOXGPSHOLD]) {
-          if (!f.GPS_HOLD_MODE) {
-            f.GPS_HOLD_MODE = 1;
-            GPS_hold[LAT] = GPS_coord[LAT];
-            GPS_hold[LON] = GPS_coord[LON];
-            GPS_set_next_wp(&GPS_hold[LAT],&GPS_hold[LON]);
-            nav_mode = NAV_MODE_POSHOLD;
-          }
-        } else {
-          f.GPS_HOLD_MODE = 0;
-        }
-      }
-      #endif
     #endif
     
     #if defined(FIXEDWING) || defined(HELICOPTER)
       if (rcOptions[BOXPASSTHRU]) {f.PASSTHRU_MODE = 1;}
       else {f.PASSTHRU_MODE = 0;}
     #endif
-    
-    #ifdef FIXEDWING 
-      f.HEADFREE_MODE = 0;
-    #endif
+ 
   } else { // not in rc loop
     static uint8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
     if(taskOrder>4) taskOrder-=5;
@@ -1106,10 +1091,8 @@ void loop () {
   #ifdef CYCLETIME_FIXATED
     if (conf.cycletime_fixated) {
       if ((micros()-timestamp_fixated)>conf.cycletime_fixated) {
-         //debug[0]++;
       } else {
          while((micros()-timestamp_fixated)<conf.cycletime_fixated) ; // waste away
-         //debug[1] = micros()-timestamp_fixated - conf.cycletime_fixated;
       }
       timestamp_fixated=micros();
     }
@@ -1129,17 +1112,9 @@ void loop () {
       }
     }
   #endif
-  #if defined(AP_MODE)
-    if(f.ANGLE_MODE || f.HORIZON_MODE){
-      if (abs(rcCommand[ROLL])>= AP_MODE || abs(rcCommand[PITCH]) >= AP_MODE) {
-        f.GPS_HOME_MODE=0;
-        f.GPS_HOLD_MODE=0;
-      }
-    }
-  #endif
+
  //*********************************** 
-
-
+ 
   #if MAG
     if (abs(rcCommand[YAW]) <70 && f.MAG_MODE) {
       int16_t dif = heading - magHold;
@@ -1184,20 +1159,21 @@ void loop () {
     }
   #endif
   #if GPS
-    if ( (!f.GPS_HOME_MODE && !f.GPS_HOLD_MODE) || !f.GPS_FIX_HOME ) {
-      GPS_reset_nav(); // If GPS is not activated. Reset nav loops and all nav related parameters
-    } else {
+    if ( (f.GPS_HOME_MODE || f.GPS_HOLD_MODE) && f.GPS_FIX_HOME ) {
       float sin_yaw_y = sin(heading*0.0174532925f);
       float cos_yaw_x = cos(heading*0.0174532925f);
-   #if defined(NAV_SLEW_RATE)     
-      nav_rated[LON] += constrain(wrap_18000(nav[LON]-nav_rated[LON]),-NAV_SLEW_RATE,NAV_SLEW_RATE);
-      nav_rated[LAT] += constrain(wrap_18000(nav[LAT]-nav_rated[LAT]),-NAV_SLEW_RATE,NAV_SLEW_RATE);
-      GPS_angle[ROLL]   = (nav_rated[LON]*cos_yaw_x - nav_rated[LAT]*sin_yaw_y) /10;
-      GPS_angle[PITCH]  = (nav_rated[LON]*sin_yaw_y + nav_rated[LAT]*cos_yaw_x) /10;
-   #else 
-      GPS_angle[ROLL]   = (nav[LON]*cos_yaw_x - nav[LAT]*sin_yaw_y) /10;
-      GPS_angle[PITCH]  = (nav[LON]*sin_yaw_y + nav[LAT]*cos_yaw_x) /10;
-   #endif
+      #if defined(NAV_SLEW_RATE)     
+        nav_rated[LON]   += constrain(wrap_18000(nav[LON]-nav_rated[LON]),-NAV_SLEW_RATE,NAV_SLEW_RATE);
+        nav_rated[LAT]   += constrain(wrap_18000(nav[LAT]-nav_rated[LAT]),-NAV_SLEW_RATE,NAV_SLEW_RATE);
+        GPS_angle[ROLL]   = (nav_rated[LON]*cos_yaw_x - nav_rated[LAT]*sin_yaw_y) /10;
+        GPS_angle[PITCH]  = (nav_rated[LON]*sin_yaw_y + nav_rated[LAT]*cos_yaw_x) /10;
+      #else 
+        GPS_angle[ROLL]   = (nav[LON]*cos_yaw_x - nav[LAT]*sin_yaw_y) /10;
+        GPS_angle[PITCH]  = (nav[LON]*sin_yaw_y + nav[LAT]*cos_yaw_x) /10;
+      #endif
+    } else {
+      GPS_angle[ROLL]  = 0;
+      GPS_angle[PITCH] = 0;
     }
   #endif
 
