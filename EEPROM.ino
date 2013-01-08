@@ -172,5 +172,10 @@ void LoadDefaults() {
     conf.armedtimewarning = ARMEDTIMEWARNING;
   #endif
   conf.minthrottle = MINTHROTTLE;
+  #ifdef GOVERNOR_P
+    conf.governorP = GOVERNOR_P;
+    conf.governorD = GOVERNOR_D;
+    conf.governorR = GOVERNOR_R;
+  #endif
   writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }

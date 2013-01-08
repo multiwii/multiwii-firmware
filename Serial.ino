@@ -307,6 +307,9 @@ void evaluateCommand() {
                  #if defined(INFLIGHT_ACC_CALIBRATION)
                    rcOptions[BOXCALIB]<<BOXCALIB |
                  #endif
+                 #if defined(GOVERNOR_P)
+                   rcOptions[BOXGOV]<<BOXGOV |
+                 #endif
                  f.ARMED<<BOXARM);
        serialize8(global_conf.currentSet);   // current setting
      break;

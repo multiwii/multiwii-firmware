@@ -273,6 +273,15 @@
     #define SERVO_OFFSET     {  0,   0,   0,  0,   0,   0,  0,   0 } // (*) Adjust Servo MID Offset & Swash angles
     // Selectable channels:=    ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4
 
+    /* Governor: attempts to maintain rpm through pitch and voltage changes
+     * predictive approach: observe input signals and voltage and guess appropriate corrections.
+     * (the throttle curve must leave room for the governor, so 0-50-75-80-80 is ok, 0-50-95-100-100 is _not_ ok.
+     * Can be toggled via aux switch.
+     */
+    //#define GOVERNOR_P 7     // (*) proportional factor. Higher value -> higher throttle increase. Must be >=1; 0 = turn off
+    //#define GOVERNOR_D 4     // (*) decay timing. Higher value -> takes longer to return throttle to normal. Must be >=1;
+    //#define GOVERNOR_R 10    // (*) voltage impact correction scale in 0.1 units. Higher value -> more compensation for voltage drops. normal is value 10 <=> 1.0; 0 is off
+
   /***********************          Heli                           ***********************/
     /* Channel to control CollectivePitch */
     #define COLLECTIVE_PITCH      THROTTLE

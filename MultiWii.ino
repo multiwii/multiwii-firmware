@@ -90,6 +90,9 @@ enum box {
   #ifdef INFLIGHT_ACC_CALIBRATION
     BOXCALIB,
   #endif
+  #ifdef GOVERNOR_P
+    BOXGOV,
+  #endif
   CHECKBOXITEMS
 };
 
@@ -139,6 +142,9 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
   #endif
   #ifdef INFLIGHT_ACC_CALIBRATION
     "CALIB;"
+  #endif
+  #ifdef GOVERNOR_P
+    "GOVERNOR;"
   #endif
 ;
 
@@ -370,6 +376,11 @@ static struct {
     uint16_t armedtimewarning;
   #endif
   int16_t minthrottle;
+  #ifdef GOVERNOR_P
+   int16_t governorP;
+   int16_t governorD;
+   int8_t  governorR;
+  #endif
   uint8_t  checksum;      // MUST BE ON LAST POSITION OF CONF STRUCTURE ! 
 } conf;
 
@@ -505,7 +516,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       if (! (++vbatTimer % VBATFREQ)) {
         vbatRawArray[(ind++)%8] = analogRead(V_BATPIN);
         for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
-        vbat = vbatRaw / (conf.vbatscale/2);                  // result is Vbatt in 0.1V steps
+        vbat = (vbatRaw*2) / conf.vbatscale; // result is Vbatt in 0.1V steps
       }
     #endif
     alarmHandler(); // external buzzer routine that handles buzzer events globally now

@@ -775,6 +775,7 @@ static lcd_param_def_t __VB = {&LTU8, 1, 1, 0};
 static lcd_param_def_t __L = {&LTU8, 0, 1, 0};
 static lcd_param_def_t __FS = {&LTU8, 1, 1, 0};
 static lcd_param_def_t __SE = {&LTU16, 0, 1, 10};
+static lcd_param_def_t __SE1 = {&LTU16, 0, 1, 1};
 static lcd_param_def_t __ST = {&LTS16, 0, 1, 10};
 static lcd_param_def_t __AUX1 = {&LAUX1, 0, 1, 1};
 static lcd_param_def_t __AUX2 = {&LAUX2, 0, 1, 8};
@@ -853,6 +854,7 @@ const char PROGMEM lcd_param_text51 [] = "AUX headfr";
 const char PROGMEM lcd_param_text52 [] = "AUX buzzer";
 const char PROGMEM lcd_param_text53 [] = "AUX vario ";
 const char PROGMEM lcd_param_text54 [] = "AUX calib ";
+const char PROGMEM lcd_param_text55 [] = "AUX govern";
 // 53 to 61 reserved
 #endif
 #ifdef HELI_120_CCPM //                  0123456789
@@ -913,6 +915,11 @@ const char PROGMEM lcd_param_text121 [] = "MMGYRO    ";
 const char PROGMEM lcd_param_text131 [] = "MINTHROTLE";
 #if defined(ARMEDTIMEWARNING)
 const char PROGMEM lcd_param_text132 [] = "ArmedTWarn";
+#endif
+#if defined(GOVERNOR_P)
+const char PROGMEM lcd_param_text133 [] = "Govern   P";
+const char PROGMEM lcd_param_text134 [] = "Govern   D";
+const char PROGMEM lcd_param_text135 [] = "Govern Rpm";
 #endif
 //                                         0123456789
 
@@ -1059,6 +1066,14 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
       &lcd_param_text54, &conf.activate[BOXCALIB],&__AUX4,
     #endif
   #endif
+#ifdef GOVERNOR_P
+  &lcd_param_text55, &conf.activate[BOXGOV],&__AUX1,
+  &lcd_param_text55, &conf.activate[BOXGOV],&__AUX2,
+  #ifndef SUPPRESS_LCD_CONF_AUX34
+    &lcd_param_text55, &conf.activate[BOXGOV],&__AUX3,
+    &lcd_param_text55, &conf.activate[BOXGOV],&__AUX4,
+  #endif
+#endif
 #endif //lcd.conf.aux
 
 #ifdef LOG_VALUES
@@ -1093,7 +1108,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text33, &pMeter[PMOTOR_SUM], &__PS,
   &lcd_param_text34, &conf.powerTrigger1, &__PT,
   #ifdef POWERMETER_HARD
-    &lcd_param_text111, &conf.psensornull, &__SE,
+    &lcd_param_text111, &conf.psensornull, &__SE1,
     &lcd_param_text114, &conf.pint2ma, &__PT,
   #endif
   //&lcd_param_text112, &conf.pleveldivsoft, &__SE, // gets computed automatically
@@ -1127,6 +1142,12 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text76, &conf.servoTrim[6], &__ST,
   &lcd_param_text75, &conf.servoTrim[5], &__ST,
 #endif
+#ifdef GOVERNOR_P
+  &lcd_param_text133, &conf.governorP, &__D,
+  &lcd_param_text134, &conf.governorD, &__D,
+  &lcd_param_text135, &conf.governorR, &__P,
+#endif
+
 #ifdef GYRO_SMOOTHING
   &lcd_param_text80, &conf.Smoothing[0], &__D,
   &lcd_param_text81, &conf.Smoothing[1], &__D,
@@ -1597,6 +1618,9 @@ static char checkboxitemNames[][4] = {
     #endif
     #ifdef INFLIGHT_ACC_CALIBRATION
       "Cal",
+    #endif
+    #ifdef GOVERNOR_P
+      "Gov",
     #endif
   ""};
 void output_checkboxitems() {

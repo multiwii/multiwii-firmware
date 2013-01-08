@@ -1113,7 +1113,9 @@ void mixTable() {
     static int16_t   servoEndpiont[8][2];
     static int16_t   servoHigh[8] = SERVO_ENDPOINT_HIGH; // HIGHpoint on servo
     static int16_t   servoLow[8]  = SERVO_ENDPOINT_LOW ; // LOWpoint on servo
-
+    #ifdef GOVERNOR_P
+      static int16_t last_collective = 0, delta_collective = 0, governorThrottle = 0;
+    #endif
   /***************************
    * servo settings Heli. 
    ***************************/
@@ -1129,6 +1131,21 @@ void mixTable() {
     } else{
       collective = collect * (collRange[0]*0.01); 
     } 
+    #ifdef GOVERNOR_P
+      delta_collective = collective - last_collective;
+      last_collective = collective;
+      if (! f.ARMED || ! rcOptions[BOXGOV] || (rcData[THROTTLE] < conf.minthrottle) )
+        governorThrottle = 0; // clear subito
+      else if (delta_collective > 0) {
+        governorThrottle += delta_collective * conf.governorP; // attack
+        // avoid overshooting governor (would result in overly long decay phase)
+        if (rcData[THROTTLE] + governorThrottle > MAXTHROTTLE) governorThrottle = MAXTHROTTLE - rcData[THROTTLE];
+      } else {
+        static uint8_t d = 0;
+        if (! (++d % conf.governorD)) governorThrottle -= 10; // decay; signal stepsize 10 should  be smooth on most ESCs
+      }
+      if (governorThrottle < 0) governorThrottle = 0; // always beware of negative impact of governor on throttle
+    #endif
 
     if(f.PASSTHRU_MODE){ // Use Rcdata Without sensors
       heliRoll=  rcCommand[ROLL] ;
@@ -1156,6 +1173,9 @@ void mixTable() {
       if (YAWMOTOR){servo[5] =  MINCOMMAND;} else {servo[5] =  yawControll; } // Kill YAWMOTOR when disarmed
     }else {   
       servo[7]  = rcData[THROTTLE]; //   50hz ESC or servo
+      #ifdef GOVERNOR_P
+        servo[7]  += governorThrottle;
+     #endif
       if (YAWMOTOR && rcData[THROTTLE] < conf.minthrottle){servo[5] =  MINCOMMAND;}
       else{ servo[5] =  yawControll; }     // YawSero
     }
@@ -1221,6 +1241,15 @@ void mixTable() {
   #endif
   
   /****************                Filter the Motors values                ******************/
+#ifdef GOVERNOR_P
+    if (rcOptions[BOXGOV] ) {
+      static int8_t g[37] = { 0,3,5,8,11,14,17,19,22,25,28,31,34,38,41,44,47,51,54,58,61,65,68,72,76,79,83,87,91,95,99,104,108,112,117,121,126 };
+      uint8_t v = constrain( VBATNOMINAL - constrain(vbat, conf.vbatlevel_crit, VBATNOMINAL), 0, 36);
+      for (i = 0; i < NUMBER_MOTOR; i++) {
+        motor[i] += ( ( (int32_t)(motor[i]-1000) * (int32_t)g[v] ) * (int32_t)conf.governorR )/ 5000;
+      }
+    }
+#endif
   maxMotor=motor[0];
   for(i=1;i< NUMBER_MOTOR;i++)
     if (motor[i]>maxMotor) maxMotor=motor[i];
