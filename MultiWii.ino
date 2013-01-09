@@ -11,7 +11,6 @@ July  2012     V2.1
 #include <avr/io.h>
 
 #include "config.h"
-#include "Test-LOG.h"
 #include "def.h"
 
 
