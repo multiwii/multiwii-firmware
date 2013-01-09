@@ -452,17 +452,17 @@
   /**************************************************************************************/
 
   /* only enable any of this if you must change the default pin assignment, e.g. your board does not have a specific pin */
-  /* you may need to change PINx and PORTx plus shift # according to the desired pin! */
-  //#define V_BATPIN                   A0 // instead of A3    // Analog PIN 3
+  /* you may need to change PINx and PORTx plus #shift according to the desired pin! */
+  //#define OVERRIDE_V_BATPIN                   A0 // instead of A3    // Analog PIN 3
 
-  //#define LEDPIN_PINMODE             pinMode (A1, OUTPUT); // use A1 instead of d13
-  //#define LEDPIN_TOGGLE              PINC |= 1<<1; // PINB |= 1<<5;     //switch LEDPIN state (digital PIN 13)
-  //#define LEDPIN_OFF                 PORTC &= ~(1<<1); // PORTB &= ~(1<<5);
-  //#define LEDPIN_ON                  PORTC |= 1<<1;    // was PORTB |= (1<<5);
+  //#define OVERRIDE_LEDPIN_PINMODE             pinMode (A1, OUTPUT); // use A1 instead of d13
+  //#define OVERRIDE_LEDPIN_TOGGLE              PINC |= 1<<1; // PINB |= 1<<5;     //switch LEDPIN state (digital PIN 13)
+  //#define OVERRIDE_LEDPIN_OFF                 PORTC &= ~(1<<1); // PORTB &= ~(1<<5);
+  //#define OVERRIDE_LEDPIN_ON                  PORTC |= 1<<1;    // was PORTB |= (1<<5);
 
-  //#define BUZZERPIN_PINMODE          pinMode (A2, OUTPUT); // use A2 instead of d8
-  //#define BUZZERPIN_ON               PORTC |= 1<<2 //PORTB |= 1;
-  //#define BUZZERPIN_OFF              PORTC &= ~(1<<2); //PORTB &= ~1;
+  //#define OVERRIDE_BUZZERPIN_PINMODE          pinMode (A2, OUTPUT); // use A2 instead of d8
+  //#define OVERRIDE_BUZZERPIN_ON               PORTC |= 1<<2 //PORTB |= 1;
+  //#define OVERRIDE_BUZZERPIN_OFF              PORTC &= ~(1<<2); //PORTB &= ~1;
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/
@@ -994,6 +994,18 @@
        set to 2, adds min/max cycleTimes
        set to 3, adds additional powerconsumption on a per motor basis (this uses the big array and is a memory hog, if POWERMETER <> PM_SOFT) */
     //#define LOG_VALUES 1
+
+    /* Permanent logging to eeprom - survives (most) upgrades and parameter resets.
+     * used to track number of flights etc. over lifetime of controller board.
+     * Writes to end of eeprom - should not conflict with stored parameters yet.
+     * Logged values: accumulated lifetime, #powercycle/reset/initialize events, #arm events, #disarm events, last armedTime,
+     *                #failsafe@disarm, #i2c_errs@disarm
+     * To activate set to size of eeprom for your mcu: promini 328p: 1023 ; 2560: 4095.
+     * Enable one or more options to show the log
+     */
+    //#define LOG_PERMANENT 1023
+    //#define LOG_PERMANENT_SHOW_AT_STARTUP // enable to display log at startup
+    //#define LOG_PERMANENT_SHOW_AT_L // enable to display log when receiving 'L'
 
     /* to add debugging code
        not needed and not recommended for normal operation

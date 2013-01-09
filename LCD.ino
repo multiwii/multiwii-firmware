@@ -2242,3 +2242,50 @@ void toggle_telemetry(uint8_t t) {
   if (telemetry == t) telemetry = 0; else {telemetry = t; LCDclear();}
 }
 #endif //  LCD_TELEMETRY
+
+#ifdef LOG_PERMANENT
+  void dumpPLog(uint8_t full) {
+    LCDclear(); LCDnextline();
+    if (full) {
+      #ifdef DEBUG
+        LCDprintChar("LastOff  "); LCDprintChar(plog.running ? "KO" : "ok");  LCDnextline();
+        LCDprintChar("#arm   "); lcdprint_int16(plog.arm); LCDnextline();
+        LCDprintChar("#disarm"); lcdprint_int16(plog.disarm); LCDnextline();
+        LCDprintChar("last[s]"); lcdprint_int16(plog.armed_time/1000000); LCDnextline();
+        LCDprintChar("#fail@dis"); lcdprint_int16(plog.failsafe); LCDnextline();
+        LCDprintChar("#i2c@dis "); lcdprint_int16(plog.i2c); LCDnextline();
+        //            0123456789012345
+      #endif
+    }
+    LCDprintChar("#On      "); lcdprint_int16(plog.start); LCDnextline();
+    LCDprintChar("Life[min]"); lcdprint_int16(plog.lifetime/60); LCDnextline();
+    /*strcpy_P(line2,PSTR("Fail --- i2c ---"));
+    line2[5] = digit100(plog.failsafe);
+    line2[6] = digit10(plog.failsafe);
+    line2[7] = digit1(plog.failsafe);
+    line2[13] = digit100(plog.i2c);
+    line2[14] = digit10(plog.i2c);
+    line2[15] = digit1(plog.i2c);
+    LCDprintChar(line2); LCDnextline();*/
+    delay(4000);
+    LCDclear();
+  }
+  void LCDnextline() {
+    #if ( defined(DISPLAY_MULTILINE) )
+      static uint8_t lnr = 0;
+      lnr++;
+      if (lnr > (MULTILINE_PRE+MULTILINE_POST)) {
+        lnr = 1;
+        delay(4000);
+        LCDclear();
+      }
+      LCDsetLine(lnr);
+    #else
+      #if (! (defined(LCD_TTY)  ) )
+        delay(600);
+      #endif
+      LCDprintChar("\r\n");
+    #endif
+  }
+
+#endif

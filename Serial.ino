@@ -505,6 +505,11 @@ void evaluateOtherData(uint8_t sr) {
       if (!f.ARMED) configurationLoop();
       break;
     #endif
+    #ifdef LOG_PERMANENT_SHOW_AT_L
+    case 'L':
+      if (!f.ARMED) dumpPLog(1);
+      break;
+    #endif
     #if defined(LCD_TELEMETRY) && defined(LCD_TEXTSTAR)
     case 'A': // button A press
       toggle_telemetry(1);

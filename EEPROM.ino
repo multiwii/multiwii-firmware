@@ -179,3 +179,22 @@ void LoadDefaults() {
   #endif
   writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }
+
+#ifdef LOG_PERMANENT
+void readPLog() {
+  eeprom_read_block((void*)&plog, (void*)(LOG_PERMANENT - sizeof(plog)), sizeof(plog));
+  if(calculate_sum((uint8_t*)&plog, sizeof(plog)) != plog.checksum) {
+    blinkLED(6,100,3);
+    #if defined(BUZZER)
+      alarmArray[7] = 3;
+    #endif
+    // force load defaults
+      plog.arm = plog.disarm = plog.start =plog.lifetime = plog.failsafe = plog.i2c = 0;
+      plog.running = 1;
+  }
+}
+void writePLog() {
+  plog.checksum = calculate_sum((uint8_t*)&plog, sizeof(plog));
+  eeprom_write_block((const void*)&plog, (void*)(LOG_PERMANENT - sizeof(plog)), sizeof(plog));
+}
+#endif
