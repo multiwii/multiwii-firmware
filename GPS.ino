@@ -350,12 +350,13 @@ void GPS_NewData() {
         *varptr++ = i2c_readAck();
         *varptr   = i2c_readAck();
         GPS_directionToHome = GPS_directionToHome / 100;  // 1deg =1000 in the reg, downsize
+        GPS_directionToHome += 180; // fix (see http://www.multiwii.com/forum/viewtopic.php?f=8&t=2892)
         if (GPS_directionToHome>180) GPS_directionToHome -= 360;
 
         varptr = (uint8_t *)&GPS_distanceToHome;
         *varptr++ = i2c_readAck();
         *varptr   = i2c_readNak();
-        GPS_distanceToHome = GPS_distanceToHome / 100;      //register is in CM, we need in meter
+        GPS_distanceToHome = GPS_distanceToHome / 100;      //register is in CM, we need in meter. max= 655 meters with this way
 
         i2c_rep_start(I2C_GPS_ADDRESS<<1);
         i2c_write(I2C_GPS_LOCATION);                //Start read from here 2x2 bytes distance and direction

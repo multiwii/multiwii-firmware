@@ -91,6 +91,7 @@ void computeIMU () {
 #ifndef ACC_LPF_FACTOR
   #define ACC_LPF_FACTOR 100
 #endif
+#define ACC_LPF_FOR_VELOCITY 12
 
 /* Set the Low Pass Filter factor for Magnetometer */
 /* Increasing this value would reduce Magnetometer noise (not visible in GUI), but would increase Magnetometer lag time*/
@@ -182,7 +183,6 @@ void rotateV(struct fp_vector *v,float* delta) {
   v->Y += delta[PITCH] * v_tmp.Z + delta[YAW]   * v_tmp.X; 
 }
 
-#define ACC_LPF_FOR_VELOCITY 12
 static float accLPFVel[3]={0, 0, acc_1G};
 
 static t_fp_vector EstG;
@@ -211,15 +211,15 @@ void getEstimatedAttitude(){
     deltaGyroAngle[axis] = gyroADC[axis]  * scale;
     #if defined(ACC_LPF_FACTOR)
       accLPF[axis]    = accLPF[axis]    * (1.0f - (1.0f/ACC_LPF_FACTOR))       + accADC[axis] * (1.0f/ACC_LPF_FACTOR);
-      accLPFVel[axis] = accLPFVel[axis] * (1.0f - (1.0f/ACC_LPF_FOR_VELOCITY)) + accADC[axis] * (1.0f/ACC_LPF_FOR_VELOCITY);
       accSmooth[axis] = accLPF[axis];
       #define ACC_VALUE accSmooth[axis]
     #else  
       accSmooth[axis] = accADC[axis];
       #define ACC_VALUE accADC[axis]
     #endif
+    accLPFVel[axis] = accLPFVel[axis] * (1.0f - (1.0f/ACC_LPF_FOR_VELOCITY)) + accADC[axis] * (1.0f/ACC_LPF_FOR_VELOCITY);
 //    accMag += (ACC_VALUE * 10 / (int16_t)acc_1G) * (ACC_VALUE * 10 / (int16_t)acc_1G);
-    accMag += (int32_t)ACC_VALUE*ACC_VALUE ;
+    accMag += (int32_t)accLPFVel[axis]*accLPFVel[axis] ;
     #if MAG
       #if defined(MG_LPF_FACTOR)
         mgSmooth[axis] = (mgSmooth[axis] * (MG_LPF_FACTOR - 1) + magADC[axis]) / MG_LPF_FACTOR; // LPF for Magnetometer values
@@ -234,7 +234,7 @@ void getEstimatedAttitude(){
   rotateV(&EstG.V,deltaGyroAngle);
   #if MAG
     rotateV(&EstM.V,deltaGyroAngle);
-  #endif 
+  #endif
 
   if ( abs(accSmooth[ROLL])<acc_25deg && abs(accSmooth[PITCH])<acc_25deg && accSmooth[YAW]>0) {
     f.SMALL_ANGLES_25 = 1;
@@ -270,7 +270,6 @@ void getEstimatedAttitude(){
 }
 
 #define UPDATE_INTERVAL 25000    // 40hz update rate (20hz LPF on acc)
-#define INIT_DELAY      10000000  // 10 sec initialization delay
 #define BARO_TAB_SIZE   21
 
 #define ACC_Z_DEADBAND (acc_1G/40)
@@ -286,12 +285,11 @@ void getEstimatedAttitude(){
 
 #if BARO
 uint8_t getEstimatedAltitude(){
-  static uint32_t deadLine = INIT_DELAY;
+  static uint32_t deadLine;
   static int32_t baroGroundPressure;
 
-  if (abs(currentTime - deadLine) < UPDATE_INTERVAL) return 0;
-
   uint16_t dTime = currentTime - deadLine;
+  if (dTime < UPDATE_INTERVAL) return 0;
   deadLine = currentTime;
 
   if(calibratingB > 0) {
