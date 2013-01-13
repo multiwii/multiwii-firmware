@@ -1160,7 +1160,7 @@ void mixTable() {
     heliRoll*=cRange[0]*0.01;
     heliNick*=cRange[1]*0.01;
 
-  #define HeliXPIDMIX(Z,Y,X) collRange[1]+collective*Z + heliNick*Y +  heliRoll*X
+  #define HeliXPIDMIX(Z,Y,X) rcData[COLLECTIVE_PITCH]-collective*Z + heliNick*Y + heliRoll*X
 
   // Yaw is common for Heli 90 & 120
     uint16_t yawControll =  YAW_CENTER + (axisPID[YAW]*YAW_DIRECTION) + conf.servoTrim[5];

@@ -1453,7 +1453,7 @@
   #define MULTITYPE 16      
 #elif defined(VTAIL4)
  #define MULTITYPE 17
- #elif defined(HEX6H)
+#elif defined(HEX6H)
  #define MULTITYPE 18
 #endif
 
