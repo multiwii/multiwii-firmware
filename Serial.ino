@@ -443,6 +443,7 @@ void evaluateCommand() {
         GPS_home[LON] = read32();
         read32();                       // future: to set altitude
         read8();                        // future: to set nav flag
+        f.GPS_HOME_MODE = 0;            // with this flag, GPS_set_next_wp will be called in the next RC loop
       }
      }
      headSerialReply(0);

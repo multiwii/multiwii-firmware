@@ -1090,6 +1090,9 @@ void loop () {
             }
           }
         }
+      } else {
+        f.GPS_HOME_MODE = 0;
+        f.GPS_HOLD_MODE = 0;
       }
     #endif
     

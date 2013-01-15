@@ -1294,6 +1294,24 @@
   #undef INTERNAL_I2C_PULLUPS 
 #endif
 
+#if defined(RCNet_FC) 
+  #define MPU6050 
+  #define MS561101BA 
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  = -X; accADC[PITCH]  = -Y; accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] =  Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #undef INTERNAL_I2C_PULLUPS 
+  //servo pins on RCNet FC board are at pins 38,39,40
+  #define SERVO_1_PINMODE            pinMode(40,OUTPUT);        // TILT_PITCH
+  #define SERVO_1_PIN_HIGH           PORTL |= 1<<5;
+  #define SERVO_1_PIN_LOW            PORTL &= ~(1<<5);
+  #define SERVO_2_PINMODE            pinMode(39,OUTPUT);        // TILT_ROLL 
+  #define SERVO_2_PIN_HIGH           PORTL |= 1<<4;
+  #define SERVO_2_PIN_LOW            PORTL &= ~(1<<4);
+  #define SERVO_3_PINMODE            pinMode(38,OUTPUT);        // CAM TRIG
+  #define SERVO_3_PIN_HIGH           PORTL |= 1<<3;
+  #define SERVO_3_PIN_LOW            PORTL &= ~(1<<3);
+#endif
+
 #if defined(OPENLRSv2MULTI)
   #define ITG3200
   #define ADXL345
