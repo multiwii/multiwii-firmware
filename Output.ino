@@ -1125,7 +1125,7 @@ void mixTable() {
     }
 
   // Limit Collective range up/down    
-    int16_t collect = rcData[COLLECTIVE_PITCH]-collRange[1];
+    int16_t collect = rcData[COLLECTIVE_PITCH] - (1500 + collRange[1]);
     if   (collect>0) { 
       collective = collect * (collRange[2]*0.01); 
     } else{
@@ -1156,11 +1156,9 @@ void mixTable() {
     }  
 
   // Limit Maximum Rates for Heli
-    int16_t cRange[2] = CONTROLL_RANGE;
+    int16_t cRange[2] = CONTROL_RANGE;
     heliRoll*=cRange[0]*0.01;
     heliNick*=cRange[1]*0.01;
-
-  #define HeliXPIDMIX(Z,Y,X) rcData[COLLECTIVE_PITCH]-collective*Z + heliNick*Y + heliRoll*X
 
   // Yaw is common for Heli 90 & 120
     uint16_t yawControll =  YAW_CENTER + (axisPID[YAW]*YAW_DIRECTION) + conf.servoTrim[5];
@@ -1186,15 +1184,17 @@ void mixTable() {
 
   //              ( Collective, Pitch/Nick, Roll ) Change sign to invert
   /************************************************************************************************************/
+#define HeliXPIDMIX(Z,Y,X) 1500 + (collRange[1]*Z + collective*Z + heliNick*Y +  heliRoll*X)/10
+// original #define HeliXPIDMIX(Z,Y,X) collRange[1]+collective*Z + heliNick*Y +  heliRoll*X
+
   #ifdef HELI_120_CCPM 
     static int8_t nickMix[3] =SERVO_NICK;
     static int8_t leftMix[3] =SERVO_LEFT;
     static int8_t rightMix[3]=SERVO_RIGHT;
 
-    servo[3]  =  HeliXPIDMIX( (nickMix[0]*0.1) , nickMix[1]*0.1, nickMix[2]*0.1) +conf.servoTrim[3] ;   //    NICK  servo
-    servo[4]  =  HeliXPIDMIX( (leftMix[0]*0.1) , leftMix[1]*0.1, leftMix[2]*0.1) +conf.servoTrim[4] ;   //    LEFT servo
-    servo[6]  =  HeliXPIDMIX( (rightMix[0]*0.1),rightMix[1]*0.1,rightMix[2]*0.1) +conf.servoTrim[6] ;   //    RIGHT  servo
-
+    servo[3]  =  HeliXPIDMIX( ( nickMix[0]), nickMix[1], nickMix[2]) + conf.servoTrim[3] ;   //    NICK  servo
+    servo[4]  =  HeliXPIDMIX( ( leftMix[0]), leftMix[1], leftMix[2]) + conf.servoTrim[4] ;   //    LEFT servo
+    servo[6]  =  HeliXPIDMIX( (rightMix[0]),rightMix[1],rightMix[2]) + conf.servoTrim[6] ;   //    RIGHT  servo
   #endif
 
   /************************************************************************************************************/
