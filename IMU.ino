@@ -183,7 +183,7 @@ void rotateV(struct fp_vector *v,float* delta) {
   v->Y += delta[PITCH] * v_tmp.Z + delta[YAW]   * v_tmp.X; 
 }
 
-static float accLPFVel[3]={0, 0, acc_1G};
+static float accLPFVel[3]={0, 0, 1}; // was {0, 0, acc_1G}, some bytes saved and Z acc_1G convergence is rapidly ensured via LFP
 
 static t_fp_vector EstG;
 
@@ -197,7 +197,7 @@ void getEstimatedAttitude(){
   static int16_t mgSmooth[3]; 
 #endif
 #if defined(ACC_LPF_FACTOR)
-  static float accLPF[3]={0, 0, acc_1G};
+  static float accLPF[3]={0, 0, 1}; // was {0, 0, acc_1G}, some bytes saved and Z acc_1G convergence is rapidly ensured via LFP
 #endif
   static uint16_t previousT;
   uint16_t currentT = micros();

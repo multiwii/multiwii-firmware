@@ -666,27 +666,28 @@ void i2c_MS561101BA_UT_Read() {
 }
 
 void i2c_MS561101BA_Calculate() {
-  int32_t off2=0,sens2=0,delt;
+  int32_t off2,sens2,delt;
 
-  int32_t dT   = ms561101ba_ctx.ut.val - ((uint32_t)ms561101ba_ctx.c[5] << 8);
-  int64_t off  = ((uint32_t)ms561101ba_ctx.c[2] <<16) + (((int64_t)dT * ms561101ba_ctx.c[4]) >> 7);
-  int64_t sens = ((uint32_t)ms561101ba_ctx.c[1] <<15) + (((int64_t)dT * ms561101ba_ctx.c[3]) >> 8);
-  baroTemperature  = 2000 + (((int64_t)dT * ms561101ba_ctx.c[6])>>23);
+  int64_t dT       = ms561101ba_ctx.ut.val - ((uint32_t)ms561101ba_ctx.c[5] << 8);
+  baroTemperature  = 2000 + ((dT * ms561101ba_ctx.c[6])>>23);
+  int64_t off      = ((uint32_t)ms561101ba_ctx.c[2] <<16) + ((dT * ms561101ba_ctx.c[4]) >> 7);
+  int64_t sens     = ((uint32_t)ms561101ba_ctx.c[1] <<15) + ((dT * ms561101ba_ctx.c[3]) >> 8);
 
   if (baroTemperature < 2000) { // temperature lower than 20st.C 
     delt = baroTemperature-2000;
-    delt  = delt*delt;
-    off2  = (5 * delt)>>1; 
-    sens2 = (5 * delt)>>2; 
+    delt  = 5*delt*delt;
+    off2  = delt>>1;
+    sens2 = delt>>2;
     if (baroTemperature < -1500) { // temperature lower than -15st.C
       delt  = baroTemperature+1500;
       delt  = delt*delt;
-      off2  += 7 * delt; 
-      sens2 += (11 * delt)>>1; 
+      off2  += 7 * delt;
+      sens2 += (11 * delt)>>1;
     }
-  } 
-  off  -= off2; 
-  sens -= sens2;
+    off  -= off2; 
+    sens -= sens2;
+  }
+ 
   baroPressure     = (( (ms561101ba_ctx.up.val * sens ) >> 21) - off) >> 15;
 }
 
