@@ -668,7 +668,7 @@ void i2c_MS561101BA_UT_Read() {
 void i2c_MS561101BA_Calculate() {
   int32_t off2,sens2,delt;
 
-  int64_t dT       = ms561101ba_ctx.ut.val - ((uint32_t)ms561101ba_ctx.c[5] << 8);
+  int64_t dT       = (int32_t)ms561101ba_ctx.ut.val - ((int32_t)ms561101ba_ctx.c[5] << 8);
   baroTemperature  = 2000 + ((dT * ms561101ba_ctx.c[6])>>23);
   int64_t off      = ((uint32_t)ms561101ba_ctx.c[2] <<16) + ((dT * ms561101ba_ctx.c[4]) >> 7);
   int64_t sens     = ((uint32_t)ms561101ba_ctx.c[1] <<15) + ((dT * ms561101ba_ctx.c[3]) >> 8);
