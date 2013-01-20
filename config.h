@@ -100,7 +100,7 @@
       //#define AEROQUADSHIELDv2
       //#define ATAVRSBIN1      // Atmel 9DOF (Contribution by EOSBandi). requires 3.3V power.
       //#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
-      //#define SIRIUSGPS       // Sirius Navigator IMU using external MAG on GPS board
+      //#define SIRIUSGPS       // Sirius Navigator IMU  using external MAG on GPS board            <- confirmed by Alex
       //#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
       //#define MINIWII         // Jussi's MiniWii Flight Controller                                <- confirmed by Alex
       //#define MICROWII        // MicroWii 10DOF with ATmega32u4, MPU6050, HMC5883L, MS561101BA from http://flyduino.net/
@@ -626,10 +626,9 @@
   /**************************************************************************************/
 
     /* GPS using a SERIAL port
-       only available on MEGA boards (this might be possible on 328 based boards in the future)
        if enabled, define here the Arduino Serial port number and the UART speed
-       note: only the RX PIN is used, the GPS is not configured by multiwii
-       the GPS must be configured to output GGA and RMC NMEA sentences (which is generally the default conf for most GPS devices)
+       note: only the RX PIN is used in case of NMEA mode, the GPS is not configured by multiwii
+       in NMEA mode the GPS must be configured to output GGA and RMC NMEA sentences (which is generally the default conf for most GPS devices)
        at least 5Hz update rate. uncomment the first line to select the GPS serial port of the arduino */
     //#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
     //#define GPS_BAUD   57600

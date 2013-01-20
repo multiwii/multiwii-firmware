@@ -295,7 +295,6 @@ uint8_t getEstimatedAltitude(){
   if(calibratingB > 0) {
     baroGroundPressure = baroPressureSum/(BARO_TAB_SIZE - 1);
     calibratingB--;
-    return 0;
   }
   
   // pressure relative to ground pressure with temperature compensation (fast!)
