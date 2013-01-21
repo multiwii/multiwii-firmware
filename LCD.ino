@@ -1891,7 +1891,7 @@ void lcd_telemetry() {
     case '1':
     {
       static uint8_t index = 0;
-      linenr = (index++ % 7) + 1;
+      linenr = (index++ % 8) + 1;
       LCDsetLine(linenr);
       switch (linenr + POSSIBLE_OFFSET) { // not really linenumbers
         case 1:// V
@@ -1900,22 +1900,21 @@ void lcd_telemetry() {
         case 2:// mAh
           output_mAh();
           break;
-        case 4:// errors or checkboxstatus
+        case 4:// errors or ...
           if (failsafeEvents || (i2c_errors_count>>1)) { // errors
             // ignore i2c==1 because of bma020-init
             LCDalarmAndReverse();
             output_fails();
             LCDattributesOff();
-          } else { // checkboxstatus
-            //LCDsetLine(linenr++);
-            #ifdef BUZZER
-              if (isBuzzerON()) { LCDalarmAndReverse(); } // buzzer on? then add some blink for attention
+          } else { // ... armed time
+            #ifdef ARMEDTIMEWARNING
+              uint16_t ats = armedTime / 1000000;
+              if (ats > conf.armedtimewarning) { LCDattributesReverse(); }
+              LCDbar(7, (ats < conf.armedtimewarning ? (((conf.armedtimewarning-ats+1)*100)/(conf.armedtimewarning+1)) : 0 ));
+              LCDattributesOff();
+              LCDprint(' ');
+              print_uptime(ats);
             #endif
-            strcpy_P(line1,PSTR(".   .   .   .   "));
-            LCDprintChar(line1);
-            LCDsetLine(linenr); // go to beginning of same line again
-            output_checkboxitems();
-            LCDattributesOff();
           }
           break;
         case 6:// height
@@ -1928,15 +1927,9 @@ void lcd_telemetry() {
              }
            #endif
            break;
-        case 5:// uptime, uptime_armed, eeprom set#
-          LCDprintChar("U"); print_uptime(millis() / 1000 );
-          strcpy_P(line1,PSTR(" - A")); line1[1] = digit1(global_conf.currentSet);
-          #if defined(ARMEDTIMEWARNING)
-            if (alarmArray[5] == 1) { LCDattributesReverse(); } // armedtimewarning is active
-          #endif
-          LCDprintChar(line1);
-          LCDattributesOff();
-          print_uptime(armedTime / 1000000);
+        case 8:// uptime, eeprom set#
+          strcpy_P(line1,PSTR("Up ")); LCDprintChar(line1); print_uptime(millis() / 1000 );
+          strcpy_P(line1,PSTR("  Cset -")); line1[7] = digit1(global_conf.currentSet); LCDprintChar(line1);
           break;
         case 3:// Vmin
            output_Vmin();
@@ -1946,6 +1939,16 @@ void lcd_telemetry() {
             fill_line2_AmaxA();
             LCDprintChar(line2);
           #endif
+          break;
+        case 5: // checkboxstatus
+          #ifdef BUZZER
+            if (isBuzzerON()) { LCDalarmAndReverse(); } // buzzer on? then add some blink for attention
+          #endif
+          strcpy_P(line1,PSTR(".   .   .   .   "));
+          LCDprintChar(line1);
+          LCDsetLine(linenr); // go to beginning of same line again
+          output_checkboxitems();
+          LCDattributesOff();
           break;
       }
       LCDcrlf();
