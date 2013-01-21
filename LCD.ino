@@ -2268,6 +2268,9 @@ void toggle_telemetry(uint8_t t) {
     line2[15] = digit1(plog.i2c);
     LCDprintChar(line2); LCDnextline();*/
     delay(4000);
+    #ifdef LOG_PERMANENT_SERVICE_LIFETIME
+      serviceCheckPLog();
+    #endif
     LCDclear();
   }
   void LCDnextline() {
@@ -2288,4 +2291,17 @@ void toggle_telemetry(uint8_t t) {
     #endif
   }
 
-#endif
+  #ifdef LOG_PERMANENT_SERVICE_LIFETIME
+  void serviceCheckPLog() {
+    if ( (!f.ARMED) && (plog.lifetime > LOG_PERMANENT_SERVICE_LIFETIME) ){
+      for (uint8_t i = 0; i<max(1, min(9,(plog.lifetime-LOG_PERMANENT_SERVICE_LIFETIME)>>10 )); i++) {
+        LCDprintChar("SERVICE lifetime"); LCDnextline();
+        blinkLED(5,200,5);
+        delay(5000);
+      }
+      alarmArray[7] = 3;
+    }
+  }
+  #endif // LOG_PERMANENT_SERVICE_LIFETIME
+
+#endif // LOG_PERMANENT

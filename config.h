@@ -1005,6 +1005,7 @@
     //#define LOG_PERMANENT 1023
     //#define LOG_PERMANENT_SHOW_AT_STARTUP // enable to display log at startup
     //#define LOG_PERMANENT_SHOW_AT_L // enable to display log when receiving 'L'
+    //#define LOG_PERMANENT_SERVICE_LIFETIME 36000 // in seconds; service alert at startup after 10 hours of armed time
 
     /* to add debugging code
        not needed and not recommended for normal operation
