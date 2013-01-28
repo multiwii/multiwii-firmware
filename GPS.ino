@@ -4,20 +4,17 @@
   #include "tinygps.h"
 #endif
 
-
 #if defined(INIT_MTK_GPS)
-
-#define MTK_SET_BINARY          PSTR("$PGCMD,16,0,0,0,0,0*6A\r\n")
- #define MTK_SET_NMEA            PSTR("$PGCMD,16,1,1,1,1,1*6B\r\n")
- #define MTK_SET_NMEA_SENTENCES  PSTR("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n")
- #define MTK_OUTPUT_4HZ          PSTR("$PMTK220,250*29\r\n")
- #define MTK_OUTPUT_5HZ          PSTR("$PMTK220,200*2C\r\n")
- #define MTK_OUTPUT_10HZ         PSTR("$PMTK220,100*2F\r\n")
- #define MTK_NAVTHRES_OFF        PSTR("$PMTK397,0*23\r\n") // Set Nav Threshold (the minimum speed the GPS must be moving to update the position) to 0 m/s  
- #define SBAS_ON                 PSTR("$PMTK313,1*2E\r\n")
- #define WAAS_ON                 PSTR("$PMTK301,2*2E\r\n")
- #define SBAS_TEST_MODE          PSTR("$PMTK319,0*25\r\n")  //Enable test use of sbas satelite in test mode (usually PRN124 is in test mode)
-
+  #define MTK_SET_BINARY          PSTR("$PGCMD,16,0,0,0,0,0*6A\r\n")
+  #define MTK_SET_NMEA            PSTR("$PGCMD,16,1,1,1,1,1*6B\r\n")
+  #define MTK_SET_NMEA_SENTENCES  PSTR("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n")
+  #define MTK_OUTPUT_4HZ          PSTR("$PMTK220,250*29\r\n")
+  #define MTK_OUTPUT_5HZ          PSTR("$PMTK220,200*2C\r\n")
+  #define MTK_OUTPUT_10HZ         PSTR("$PMTK220,100*2F\r\n")
+  #define MTK_NAVTHRES_OFF        PSTR("$PMTK397,0*23\r\n") // Set Nav Threshold (the minimum speed the GPS must be moving to update the position) to 0 m/s  
+  #define SBAS_ON                 PSTR("$PMTK313,1*2E\r\n")
+  #define WAAS_ON                 PSTR("$PMTK301,2*2E\r\n")
+  #define SBAS_TEST_MODE          PSTR("$PMTK319,0*25\r\n")  //Enable test use of sbas satelite in test mode (usually PRN124 is in test mode)
 #endif
 
 #if defined(GPS_SERIAL) || defined(GPS_FROM_OSD) || defined(TINY_GPS)

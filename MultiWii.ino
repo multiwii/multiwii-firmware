@@ -1079,7 +1079,6 @@ void loop () {
                 GPS_set_next_wp(&GPS_hold[LAT],&GPS_hold[LON]);
                 nav_mode = NAV_MODE_POSHOLD;
               #endif
-             
             }
           } else {
             f.GPS_HOLD_MODE = 0;
@@ -1093,6 +1092,9 @@ void loop () {
       } else {
         f.GPS_HOME_MODE = 0;
         f.GPS_HOLD_MODE = 0;
+        #if !defined(I2C_GPS)
+          nav_mode = NAV_MODE_NONE;
+        #endif
       }
     #endif
     

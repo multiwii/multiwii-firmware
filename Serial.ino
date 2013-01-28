@@ -246,7 +246,7 @@ void evaluateCommand() {
      #endif
      headSerialReply(0);
      break;
-#ifdef MULTIPLE_CONFIGURATION_PROFILES
+   #ifdef MULTIPLE_CONFIGURATION_PROFILES
    case MSP_SELECT_SETTING:
      if(!f.ARMED) {
        global_conf.currentSet = read8();
@@ -256,7 +256,7 @@ void evaluateCommand() {
      }
      headSerialReply(0);
      break;
-#endif
+   #endif
    case MSP_IDENT:
      headSerialReply(7);
      serialize8(VERSION);   // multiwii version
@@ -417,34 +417,46 @@ void evaluateCommand() {
    #if defined(USE_MSP_WP)    
    case MSP_WP:
      {
-      uint8_t wp_no = read8();           //get the wp number  
-      headSerialReply(12);
-      if (wp_no == 0) {
-        serialize8(0);                   //wp0
-        serialize32(GPS_home[LAT]);
-        serialize32(GPS_home[LON]);
-        serialize16(0);                  //altitude will come here 
-        serialize8(0);                   //nav flag will come here
-      } else if (wp_no == 16)
-      {
-        serialize8(16);                  //wp16
-        serialize32(GPS_hold[LAT]);
-        serialize32(GPS_hold[LON]);
-        serialize16(0);                  //altitude will come here 
-        serialize8(0);                   //nav flag will come here
-      } 
+       int32_t lat = 0;
+       int32_t lon = 0;
+       uint8_t wp_no = read8();        //get the wp number  
+       headSerialReply(12);
+       if (wp_no == 0) {
+         lat = GPS_home[LAT];
+         lon = GPS_home[LON];
+       } else if (wp_no == 16) {
+         lat = GPS_hold[LAT];
+         lon = GPS_hold[LON];
+       }
+       serialize8(wp_no);
+       serialize32(lat);
+       serialize32(lon);
+       serialize16(0);                 //altitude will come here 
+       serialize8(0);                  //nav flag will come here
      }
      break;
    case MSP_SET_WP:
      {
-      uint8_t wp_no = read8();          //get the wp number  
-      if (wp_no == 0) {
-        GPS_home[LAT] = read32();
-        GPS_home[LON] = read32();
-        read32();                       // future: to set altitude
-        read8();                        // future: to set nav flag
-        f.GPS_HOME_MODE = 0;            // with this flag, GPS_set_next_wp will be called in the next RC loop
-      }
+       int32_t lat = 0;
+       int32_t lon = 0;
+       uint8_t wp_no = read8();        //get the wp number
+       lat = read32();
+       lon = read32();
+       read32();                       // future: to set altitude
+       read8();                        // future: to set nav flag
+       if (wp_no == 0) {
+         GPS_home[LAT] = lat;
+         GPS_home[LON] = lon;
+         f.GPS_HOME_MODE = 0;          // with this flag, GPS_set_next_wp will be called in the next loop -- OK with SERIAL GPS / OK with I2C GPS
+         f.GPS_FIX_HOME  = 1;
+       } else if (wp_no == 16) {       // OK with SERIAL GPS  --  NOK for I2C GPS / needs more code dev in order to inject GPS coord inside I2C GPS
+         GPS_hold[LAT] = lat;
+         GPS_hold[LON] = lon;
+         #if !defined(I2C_GPS)
+           nav_mode      = NAV_MODE_WP;
+           GPS_set_next_wp(&GPS_hold[LAT],&GPS_hold[LON]);
+         #endif
+       }
      }
      headSerialReply(0);
      break;
