@@ -35,6 +35,8 @@
   #define GPS_SERIAL 2
   #define LOG_VALUES 2
   #define CYCLETIME_FIXATED 9000
+  #define LOG_PERMANENT 1023
+  #define LOG_PERMANENT_SERVICE_LIFETIME 36000
 #elif COPTERTEST == 5
   #define HELI_120_CCPM
   #define CRIUS_LITE
@@ -52,6 +54,10 @@
   #define MMGYROVECTORLENGTH 15
   #define GYRO_SMOOTHING {45, 45, 50}
   #define INFLIGHT_ACC_CALIBRATION
+  #define LOG_PERMANENT 1023
+  #define LOG_PERMANENT_SHOW_AT_STARTUP
+  #define LOG_PERMANENT_SHOW_AT_L
+  #define LOG_PERMANENT_SERVICE_LIFETIME 36000
 #elif defined(COPTERTEST)
   #error "*** this test is not yet defined"
 #endif
@@ -1728,7 +1734,11 @@
         #error "NUMBER_MOTOR is not set, most likely you have not defined any type of multicopter"
 #endif
 
-#if (defined(LCD_CONF) || defined(LCD_TELEMETRY)) && !(defined(LCD_DUMMY) || defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_TTY) || defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) )
+#if (defined(LCD_DUMMY) || defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_TTY) || defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) )
+  #define HAS_LCD
+#endif
+
+#if (defined(LCD_CONF) || defined(LCD_TELEMETRY)) && !(defined(HAS_LCD) )
   #error "LCD_CONF or LCD_TELEMETRY defined, and choice of LCD not defined.  Uncomment one of LCD_SERIAL3W, LCD_TEXTSTAR, LCD_VT100, LCD_TTY or LCD_ETPP, LCD_LCD03, OLED_I2C_128x64"
 #endif
 

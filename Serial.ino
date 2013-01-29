@@ -513,54 +513,54 @@ void evaluateOtherData(uint8_t sr) {
   //       this could lead to a crash easily.
   //       Please use if (!f.ARMED) where neccessary
     #ifdef LCD_CONF
-    case 's':
-    case 'S':
-      if (!f.ARMED) configurationLoop();
-      break;
+      case 's':
+      case 'S':
+        if (!f.ARMED) configurationLoop();
+        break;
     #endif
     #ifdef LOG_PERMANENT_SHOW_AT_L
-    case 'L':
-      if (!f.ARMED) dumpPLog(1);
-      break;
-    #endif
-    #if defined(LCD_TELEMETRY) && defined(LCD_TEXTSTAR)
-    case 'A': // button A press
-      toggle_telemetry(1);
-      break;
-    case 'B': // button B press
-      toggle_telemetry(2);
-      break;
-    case 'C': // button C press
-      toggle_telemetry(3);
-      break;
-    case 'D': // button D press
-      toggle_telemetry(4);
-      break;
-    case 'a': // button A release
-    case 'b': // button B release
-    case 'c': // button C release
-    case 'd': // button D release
-      break;
+      case 'L':
+        if (!f.ARMED) dumpPLog(1);
+        break;
+      #endif
+      #if defined(LCD_TELEMETRY) && defined(LCD_TEXTSTAR)
+      case 'A': // button A press
+        toggle_telemetry(1);
+        break;
+      case 'B': // button B press
+        toggle_telemetry(2);
+        break;
+      case 'C': // button C press
+        toggle_telemetry(3);
+        break;
+      case 'D': // button D press
+        toggle_telemetry(4);
+        break;
+      case 'a': // button A release
+      case 'b': // button B release
+      case 'c': // button C release
+      case 'd': // button D release
+        break;
     #endif
     #ifdef LCD_TELEMETRY
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
     #if defined(LOG_VALUES) || defined(DEBUG)
-    case 'R':
+      case 'R':
     #endif
     #ifdef DEBUG
-    case 'F':
+      case 'F':
     #endif
-      toggle_telemetry(sr);
-      break;
+        toggle_telemetry(sr);
+        break;
     #endif // LCD_TELEMETRY
   }
 }

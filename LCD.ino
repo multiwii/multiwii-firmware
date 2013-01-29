@@ -1,7 +1,9 @@
 // ************************************************************************************************************
 // LCD & display & monitoring
 // ************************************************************************************************************
-#if defined(LCD_CONF) || defined(LCD_TELEMETRY)
+// in any of the following cases an LCD is required and
+// the primitives for exactly one of the available types are setup
+#if defined(LCD_CONF) || defined(LCD_TELEMETRY) || defined(HAS_LCD)
 static char line1[17],line2[17];
 #ifdef DISPLAY_FONT_DSIZE
   static uint8_t line_is_valid = 0;
@@ -2248,33 +2250,37 @@ void toggle_telemetry(uint8_t t) {
 
 #ifdef LOG_PERMANENT
   void dumpPLog(uint8_t full) {
-    LCDclear(); LCDnextline();
-    if (full) {
-      #ifdef DEBUG
-        LCDprintChar("LastOff  "); LCDprintChar(plog.running ? "KO" : "ok");  LCDnextline();
-        LCDprintChar("#arm   "); lcdprint_int16(plog.arm); LCDnextline();
-        LCDprintChar("#disarm"); lcdprint_int16(plog.disarm); LCDnextline();
-        LCDprintChar("last[s]"); lcdprint_int16(plog.armed_time/1000000); LCDnextline();
-        LCDprintChar("#fail@dis"); lcdprint_int16(plog.failsafe); LCDnextline();
-        LCDprintChar("#i2c@dis "); lcdprint_int16(plog.i2c); LCDnextline();
-        //            0123456789012345
-      #endif
-    }
-    LCDprintChar("#On      "); lcdprint_int16(plog.start); LCDnextline();
-    LCDprintChar("Life[min]"); lcdprint_int16(plog.lifetime/60); LCDnextline();
-    /*strcpy_P(line2,PSTR("Fail --- i2c ---"));
-    line2[5] = digit100(plog.failsafe);
-    line2[6] = digit10(plog.failsafe);
-    line2[7] = digit1(plog.failsafe);
-    line2[13] = digit100(plog.i2c);
-    line2[14] = digit10(plog.i2c);
-    line2[15] = digit1(plog.i2c);
-    LCDprintChar(line2); LCDnextline();*/
-    delay(4000);
+    #ifdef HAS_LCD
+      LCDclear(); LCDnextline();
+      if (full) {
+        #ifdef DEBUG
+          LCDprintChar("LastOff  "); LCDprintChar(plog.running ? "KO" : "ok");  LCDnextline();
+          LCDprintChar("#arm   "); lcdprint_int16(plog.arm); LCDnextline();
+          LCDprintChar("#disarm"); lcdprint_int16(plog.disarm); LCDnextline();
+          LCDprintChar("last[s]"); lcdprint_int16(plog.armed_time/1000000); LCDnextline();
+          LCDprintChar("#fail@dis"); lcdprint_int16(plog.failsafe); LCDnextline();
+          LCDprintChar("#i2c@dis "); lcdprint_int16(plog.i2c); LCDnextline();
+          //            0123456789012345
+        #endif
+      }
+      LCDprintChar("#On      "); lcdprint_int16(plog.start); LCDnextline();
+      LCDprintChar("Life[min]"); lcdprint_int16(plog.lifetime/60); LCDnextline();
+      /*strcpy_P(line2,PSTR("Fail --- i2c ---"));
+      line2[5] = digit100(plog.failsafe);
+      line2[6] = digit10(plog.failsafe);
+      line2[7] = digit1(plog.failsafe);
+      line2[13] = digit100(plog.i2c);
+      line2[14] = digit10(plog.i2c);
+      line2[15] = digit1(plog.i2c);
+      LCDprintChar(line2); LCDnextline();*/
+      delay(4000);
+    #endif
     #ifdef LOG_PERMANENT_SERVICE_LIFETIME
       serviceCheckPLog();
     #endif
-    LCDclear();
+    #ifdef HAS_LCD
+      LCDclear();
+    #endif
   }
   void LCDnextline() {
     #if ( defined(DISPLAY_MULTILINE) )
@@ -2286,11 +2292,13 @@ void toggle_telemetry(uint8_t t) {
         LCDclear();
       }
       LCDsetLine(lnr);
-    #else
+    #elif ( defined(DISPLAY_2LINES))
       #if (! (defined(LCD_TTY)  ) )
         delay(600);
       #endif
       LCDprintChar("\r\n");
+    #else
+      // no LCD, nothing to do here
     #endif
   }
 
@@ -2298,7 +2306,9 @@ void toggle_telemetry(uint8_t t) {
   void serviceCheckPLog() {
     if ( (!f.ARMED) && (plog.lifetime > LOG_PERMANENT_SERVICE_LIFETIME) ){
       for (uint8_t i = 0; i<max(1, min(9,(plog.lifetime-LOG_PERMANENT_SERVICE_LIFETIME)>>10 )); i++) {
-        LCDprintChar("SERVICE lifetime"); LCDnextline();
+        #ifdef HAS_LCD
+          LCDprintChar("SERVICE lifetime"); LCDnextline();
+        #endif
         blinkLED(5,200,5);
         delay(5000);
       }
