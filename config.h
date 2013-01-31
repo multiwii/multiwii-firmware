@@ -999,7 +999,7 @@
     /* Remove handling of other serial commands.
      * This includes navigating via serial the lcd.configuration menu, lcd.telemetry and permanent.log .
      * Navigating via stick inputs on tx is not affected and will work the same.  */
-    //#define SUPPRESS_OTHER_SERIAL_COMMANDS // saves approx 100 bytes
+    //#define SUPPRESS_OTHER_SERIAL_COMMANDS // saves  approx 0 to 100 bytes, depending on features enabled
 
   /********************************************************************/
   /****           diagnostics                                      ****/
