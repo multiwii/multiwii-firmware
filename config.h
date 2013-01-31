@@ -913,7 +913,7 @@
 /*****************                                                                 ***************/
 /*************************************************************************************************/
 
-  /************ EXperimental: force a stable, fixated (high) cycle time       **********/
+  /************ Experimental: force a stable, fixated (high) cycle time       **********/
     /* when activated, the displayed cycle time in GUI will not be correct.
      * Tunable via LCD config menu.
      * value of 0 turns the feature off.
@@ -982,6 +982,24 @@
        Comment this out if you want to set a specific coeff (non default)*/
     //#define GYR_CMPFM_FACTOR 200.0f
 
+  /********************************************************************/
+  /****           Serial command handling - MSP and other          ****/
+  /********************************************************************/
+
+    /* to reduce memory footprint, it is possible to suppress handling of serial commands.
+     * This does _not_ affect handling of RXserial, Spektrum or GPS. Those will not be affected and still work the same.
+     * Enable either one or both of the following options  */
+
+    /* Remove handling of all commands of the New MultiWii Serial Protocol.
+     * This will disable use of the GUI, winGUI, android apps and any other program that makes use of the MSP.
+     * You must find another way (like LCD_CONF) to tune the parameters or live with the defaults.
+     * If you run a LCD/OLED via i2c or serial/Bluetooth, this is safe to use */
+    //#define SUPPRESS_ALL_SERIAL_MSP // saves approx 2700 bytes
+
+    /* Remove handling of other serial commands.
+     * This includes navigating via serial the lcd.configuration menu, lcd.telemetry and permanent.log .
+     * Navigating via stick inputs on tx is not affected and will work the same.  */
+    //#define SUPPRESS_OTHER_SERIAL_COMMANDS // saves approx 100 bytes
 
   /********************************************************************/
   /****           diagnostics                                      ****/

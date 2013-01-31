@@ -160,42 +160,47 @@ void serialCom() {
       uint8_t bytesTXBuff = ((uint8_t)(serialHeadTX[CURRENTPORT]-serialTailTX[CURRENTPORT]))%TX_BUFFER_SIZE; // indicates the number of occupied bytes in TX buffer
       if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (50 bytes margin)
       c = SerialRead(CURRENTPORT);
-  
-      if (c_state[CURRENTPORT] == IDLE) {
-        c_state[CURRENTPORT] = (c=='$') ? HEADER_START : IDLE;
-        if (c_state[CURRENTPORT] == IDLE) evaluateOtherData(c); // evaluate all other incoming serial data
-      } else if (c_state[CURRENTPORT] == HEADER_START) {
-        c_state[CURRENTPORT] = (c=='M') ? HEADER_M : IDLE;
-      } else if (c_state[CURRENTPORT] == HEADER_M) {
-        c_state[CURRENTPORT] = (c=='<') ? HEADER_ARROW : IDLE;
-      } else if (c_state[CURRENTPORT] == HEADER_ARROW) {
-        if (c > INBUF_SIZE) {  // now we are expecting the payload size
+      #ifdef SUPPRESS_ALL_SERIAL_MSP
+        // no MSP handling, so go directly
+        evaluateOtherData(c);
+      #else
+        // regular data handling to detect and handle MSP and other data
+        if (c_state[CURRENTPORT] == IDLE) {
+          c_state[CURRENTPORT] = (c=='$') ? HEADER_START : IDLE;
+          if (c_state[CURRENTPORT] == IDLE) evaluateOtherData(c); // evaluate all other incoming serial data
+        } else if (c_state[CURRENTPORT] == HEADER_START) {
+          c_state[CURRENTPORT] = (c=='M') ? HEADER_M : IDLE;
+        } else if (c_state[CURRENTPORT] == HEADER_M) {
+          c_state[CURRENTPORT] = (c=='<') ? HEADER_ARROW : IDLE;
+        } else if (c_state[CURRENTPORT] == HEADER_ARROW) {
+          if (c > INBUF_SIZE) {  // now we are expecting the payload size
+            c_state[CURRENTPORT] = IDLE;
+            continue;
+          }
+          dataSize[CURRENTPORT] = c;
+          offset[CURRENTPORT] = 0;
+          checksum[CURRENTPORT] = 0;
+          indRX[CURRENTPORT] = 0;
+          checksum[CURRENTPORT] ^= c;
+          c_state[CURRENTPORT] = HEADER_SIZE;  // the command is to follow
+        } else if (c_state[CURRENTPORT] == HEADER_SIZE) {
+          cmdMSP[CURRENTPORT] = c;
+          checksum[CURRENTPORT] ^= c;
+          c_state[CURRENTPORT] = HEADER_CMD;
+        } else if (c_state[CURRENTPORT] == HEADER_CMD && offset[CURRENTPORT] < dataSize[CURRENTPORT]) {
+          checksum[CURRENTPORT] ^= c;
+          inBuf[offset[CURRENTPORT]++][CURRENTPORT] = c;
+        } else if (c_state[CURRENTPORT] == HEADER_CMD && offset[CURRENTPORT] >= dataSize[CURRENTPORT]) {
+          if (checksum[CURRENTPORT] == c) {  // compare calculated and transferred checksum
+            evaluateCommand();  // we got a valid packet, evaluate it
+          }
           c_state[CURRENTPORT] = IDLE;
-          continue;
         }
-        dataSize[CURRENTPORT] = c;
-        offset[CURRENTPORT] = 0;
-        checksum[CURRENTPORT] = 0;
-        indRX[CURRENTPORT] = 0;
-        checksum[CURRENTPORT] ^= c;
-        c_state[CURRENTPORT] = HEADER_SIZE;  // the command is to follow
-      } else if (c_state[CURRENTPORT] == HEADER_SIZE) {
-        cmdMSP[CURRENTPORT] = c;
-        checksum[CURRENTPORT] ^= c;
-        c_state[CURRENTPORT] = HEADER_CMD;
-      } else if (c_state[CURRENTPORT] == HEADER_CMD && offset[CURRENTPORT] < dataSize[CURRENTPORT]) {
-        checksum[CURRENTPORT] ^= c;
-        inBuf[offset[CURRENTPORT]++][CURRENTPORT] = c;
-      } else if (c_state[CURRENTPORT] == HEADER_CMD && offset[CURRENTPORT] >= dataSize[CURRENTPORT]) {
-        if (checksum[CURRENTPORT] == c) {  // compare calculated and transferred checksum
-          evaluateCommand();  // we got a valid packet, evaluate it
-        }
-        c_state[CURRENTPORT] = IDLE;
-      }
+      #endif // SUPPRESS_ALL_SERIAL_MSP
     }
   }
 }
-
+#ifndef SUPPRESS_ALL_SERIAL_MSP
 void evaluateCommand() {
   switch(cmdMSP[CURRENTPORT]) {
    case MSP_SET_RAW_RC:
@@ -505,64 +510,67 @@ void evaluateCommand() {
   }
   tailSerialReply();
 }
+#endif // SUPPRESS_ALL_SERIAL_MSP
 
 // evaluate all other incoming serial data
 void evaluateOtherData(uint8_t sr) {
-  switch (sr) {
-  // Note: we may receive weird characters here which could trigger unwanted features during flight.
-  //       this could lead to a crash easily.
-  //       Please use if (!f.ARMED) where neccessary
-    #ifdef LCD_CONF
-      case 's':
-      case 'S':
-        if (!f.ARMED) configurationLoop();
-        break;
-    #endif
-    #ifdef LOG_PERMANENT_SHOW_AT_L
-      case 'L':
-        if (!f.ARMED) dumpPLog(1);
-        break;
+  #ifndef SUPPRESS_OTHER_SERIAL_COMMANDS
+    switch (sr) {
+    // Note: we may receive weird characters here which could trigger unwanted features during flight.
+    //       this could lead to a crash easily.
+    //       Please use if (!f.ARMED) where neccessary
+      #ifdef LCD_CONF
+        case 's':
+        case 'S':
+          if (!f.ARMED) configurationLoop();
+          break;
       #endif
-      #if defined(LCD_TELEMETRY) && defined(LCD_TEXTSTAR)
-      case 'A': // button A press
-        toggle_telemetry(1);
-        break;
-      case 'B': // button B press
-        toggle_telemetry(2);
-        break;
-      case 'C': // button C press
-        toggle_telemetry(3);
-        break;
-      case 'D': // button D press
-        toggle_telemetry(4);
-        break;
-      case 'a': // button A release
-      case 'b': // button B release
-      case 'c': // button C release
-      case 'd': // button D release
-        break;
-    #endif
-    #ifdef LCD_TELEMETRY
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-    #if defined(LOG_VALUES) || defined(DEBUG)
-      case 'R':
-    #endif
-    #ifdef DEBUG
-      case 'F':
-    #endif
-        toggle_telemetry(sr);
-        break;
-    #endif // LCD_TELEMETRY
-  }
+      #ifdef LOG_PERMANENT_SHOW_AT_L
+        case 'L':
+          if (!f.ARMED) dumpPLog(1);
+          break;
+        #endif
+        #if defined(LCD_TELEMETRY) && defined(LCD_TEXTSTAR)
+        case 'A': // button A press
+          toggle_telemetry(1);
+          break;
+        case 'B': // button B press
+          toggle_telemetry(2);
+          break;
+        case 'C': // button C press
+          toggle_telemetry(3);
+          break;
+        case 'D': // button D press
+          toggle_telemetry(4);
+          break;
+        case 'a': // button A release
+        case 'b': // button B release
+        case 'c': // button C release
+        case 'd': // button D release
+          break;
+      #endif
+      #ifdef LCD_TELEMETRY
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+      #if defined(LOG_VALUES) || defined(DEBUG)
+        case 'R':
+      #endif
+      #ifdef DEBUG
+        case 'F':
+      #endif
+          toggle_telemetry(sr);
+          break;
+      #endif // LCD_TELEMETRY
+    }
+  #endif // SUPPRESS_OTHER_SERIAL_COMMANDS
 }
 
 // *******************************************************

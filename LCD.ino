@@ -1335,9 +1335,9 @@ void configurationLoop() {
   uint8_t LCD=1;
   uint8_t refreshLCD = 1;
   uint8_t key = 0;
-  #ifndef OLED_I2C_128x64
+  //#ifndef OLED_I2C_128x64
    initLCD();
-  #endif
+  //#endif
   #if defined OLED_I2C_128x64LOGO_PERMANENT
     LCDclear();
   #endif
