@@ -157,194 +157,6 @@
     #define SEC_SERVO_TO     3
   #endif
 #endif
-/**********************   Sort the Servos for the moust ideal SW PWM     ************************/
-// this define block sorts the above slected servos to be in a simple order from 1 - (count of total servos)
-// its pretty fat but its the best way i found to get less compiled code and max speed in the ISR without loosing its flexibility
-#if (PRI_SERVO_FROM == 1) || (SEC_SERVO_FROM == 1)
-  #define LAST_LOW SERVO_1_PIN_LOW
-  #define SERVO_1_HIGH SERVO_1_PIN_HIGH
-  #define SERVO_1_LOW SERVO_1_PIN_LOW
-  #define SERVO_1_ARR_POS  0
-#endif
-#if (PRI_SERVO_FROM <= 2 && PRI_SERVO_TO >= 2) || (SEC_SERVO_FROM <= 2 && SEC_SERVO_TO >= 2) 
-  #undef LAST_LOW
-  #define LAST_LOW SERVO_2_PIN_LOW
-  #if !defined(SERVO_1_HIGH)
-    #define SERVO_1_HIGH SERVO_2_PIN_HIGH
-    #define SERVO_1_LOW SERVO_2_PIN_LOW  
-    #define SERVO_1_ARR_POS 1
-  #else
-    #define SERVO_2_HIGH SERVO_2_PIN_HIGH
-    #define SERVO_2_LOW SERVO_2_PIN_LOW   
-    #define SERVO_2_ARR_POS 1
-  #endif
-#endif
-#if (PRI_SERVO_FROM <= 3 && PRI_SERVO_TO >= 3) || (SEC_SERVO_FROM <= 3 && SEC_SERVO_TO >= 3) 
-  #undef LAST_LOW
-  #define LAST_LOW SERVO_3_PIN_LOW
-  #if !defined(SERVO_1_HIGH)
-    #define SERVO_1_HIGH SERVO_3_PIN_HIGH
-    #define SERVO_1_LOW SERVO_3_PIN_LOW
-    #define SERVO_1_ARR_POS 2 
-  #elif !defined(SERVO_2_HIGH)
-    #define SERVO_2_HIGH SERVO_3_PIN_HIGH
-    #define SERVO_2_LOW SERVO_3_PIN_LOW 
-    #define SERVO_2_ARR_POS 2 
-  #else
-    #define SERVO_3_HIGH SERVO_3_PIN_HIGH
-    #define SERVO_3_LOW SERVO_3_PIN_LOW  
-    #define SERVO_3_ARR_POS 2   
-  #endif
-#endif
-#if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4) || (SEC_SERVO_FROM <= 4 && SEC_SERVO_TO >= 4) 
-  #undef LAST_LOW
-  #define LAST_LOW SERVO_4_PIN_LOW
-  #if !defined(SERVO_1_HIGH)
-    #define SERVO_1_HIGH SERVO_4_PIN_HIGH
-    #define SERVO_1_LOW SERVO_4_PIN_LOW
-    #define SERVO_1_ARR_POS 3  
-  #elif !defined(SERVO_2_HIGH)
-    #define SERVO_2_HIGH SERVO_4_PIN_HIGH
-    #define SERVO_2_LOW SERVO_4_PIN_LOW
-    #define SERVO_2_ARR_POS 3
-  #elif !defined(SERVO_3_HIGH)
-    #define SERVO_3_HIGH SERVO_4_PIN_HIGH
-    #define SERVO_3_LOW SERVO_4_PIN_LOW
-    #define SERVO_3_ARR_POS 3    
-  #else
-    #define SERVO_4_HIGH SERVO_4_PIN_HIGH
-    #define SERVO_4_LOW SERVO_4_PIN_LOW 
-    #define SERVO_4_ARR_POS 3     
-  #endif
-#endif
-#if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5) || (SEC_SERVO_FROM <= 5 && SEC_SERVO_TO >= 5)
-  #undef LAST_LOW
-  #define LAST_LOW SERVO_5_PIN_LOW
-  #if !defined(SERVO_1_HIGH)
-    #define SERVO_1_HIGH SERVO_5_PIN_HIGH
-    #define SERVO_1_LOW SERVO_5_PIN_LOW
-    #define SERVO_1_ARR_POS 4   
-  #elif !defined(SERVO_2_HIGH)
-    #define SERVO_2_HIGH SERVO_5_PIN_HIGH
-    #define SERVO_2_LOW SERVO_5_PIN_LOW
-    #define SERVO_2_ARR_POS 4  
-  #elif !defined(SERVO_3_HIGH)
-    #define SERVO_3_HIGH SERVO_5_PIN_HIGH
-    #define SERVO_3_LOW SERVO_5_PIN_LOW
-    #define SERVO_3_ARR_POS 4   
-  #elif !defined(SERVO_4_HIGH)
-    #define SERVO_4_HIGH SERVO_5_PIN_HIGH
-    #define SERVO_4_LOW SERVO_5_PIN_LOW
-    #define SERVO_4_ARR_POS 4   
-  #else
-    #define SERVO_5_HIGH SERVO_5_PIN_HIGH
-    #define SERVO_5_LOW SERVO_5_PIN_LOW 
-    #define SERVO_5_ARR_POS 4     
-  #endif
-#endif
-#if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6) || (SEC_SERVO_FROM <= 6 && SEC_SERVO_TO >= 6)
-  #undef LAST_LOW
-  #define LAST_LOW SERVO_6_PIN_LOW
-  #if !defined(SERVO_1_HIGH)
-    #define SERVO_1_HIGH SERVO_6_PIN_HIGH
-    #define SERVO_1_LOW SERVO_6_PIN_LOW 
-    #define SERVO_1_ARR_POS 5 
-  #elif !defined(SERVO_2_HIGH)
-    #define SERVO_2_HIGH SERVO_6_PIN_HIGH
-    #define SERVO_2_LOW SERVO_6_PIN_LOW
-    #define SERVO_2_ARR_POS 5 
-  #elif !defined(SERVO_3_HIGH)
-    #define SERVO_3_HIGH SERVO_6_PIN_HIGH
-    #define SERVO_3_LOW SERVO_6_PIN_LOW
-    #define SERVO_3_ARR_POS 5   
-  #elif !defined(SERVO_4_HIGH)
-    #define SERVO_4_HIGH SERVO_6_PIN_HIGH
-    #define SERVO_4_LOW SERVO_6_PIN_LOW 
-    #define SERVO_4_ARR_POS 5  
-  #elif !defined(SERVO_5_HIGH)
-    #define SERVO_5_HIGH SERVO_6_PIN_HIGH
-    #define SERVO_5_LOW SERVO_6_PIN_LOW 
-    #define SERVO_5_ARR_POS 5  
-  #else
-    #define SERVO_6_HIGH SERVO_6_PIN_HIGH
-    #define SERVO_6_LOW SERVO_6_PIN_LOW  
-    #define SERVO_6_ARR_POS 5   
-  #endif
-#endif
-#if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7) || (SEC_SERVO_FROM <= 7 && SEC_SERVO_TO >= 7)
-  #undef LAST_LOW
-  #define LAST_LOW SERVO_7_PIN_LOW
-  #if !defined(SERVO_1_HIGH)
-    #define SERVO_1_HIGH SERVO_7_PIN_HIGH
-    #define SERVO_1_LOW SERVO_7_PIN_LOW 
-    #define SERVO_1_ARR_POS 6 
-  #elif !defined(SERVO_2_HIGH)
-    #define SERVO_2_HIGH SERVO_7_PIN_HIGH
-    #define SERVO_2_LOW SERVO_7_PIN_LOW
-    #define SERVO_2_ARR_POS 6 
-  #elif !defined(SERVO_3_HIGH)
-    #define SERVO_3_HIGH SERVO_7_PIN_HIGH
-    #define SERVO_3_LOW SERVO_7_PIN_LOW
-    #define SERVO_3_ARR_POS 6   
-  #elif !defined(SERVO_4_HIGH)
-    #define SERVO_4_HIGH SERVO_7_PIN_HIGH
-    #define SERVO_4_LOW SERVO_7_PIN_LOW 
-    #define SERVO_4_ARR_POS 6  
-  #elif !defined(SERVO_5_HIGH)
-    #define SERVO_5_HIGH SERVO_7_PIN_HIGH
-    #define SERVO_5_LOW SERVO_7_PIN_LOW 
-    #define SERVO_5_ARR_POS 6  
-  #elif !defined(SERVO_6_HIGH)
-    #define SERVO_6_HIGH SERVO_7_PIN_HIGH
-    #define SERVO_6_LOW SERVO_7_PIN_LOW 
-    #define SERVO_6_ARR_POS 6  
-  #else
-    #define SERVO_7_HIGH SERVO_7_PIN_HIGH
-    #define SERVO_7_LOW SERVO_7_PIN_LOW  
-    #define SERVO_7_ARR_POS 6   
-  #endif
-#endif
-#if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8) 
-  #undef LAST_LOW
-  #define LAST_LOW SERVO_8_PIN_LOW
-  #if !defined(SERVO_1_HIGH)
-    #define SERVO_1_HIGH SERVO_8_PIN_HIGH
-    #define SERVO_1_LOW SERVO_8_PIN_LOW 
-    #define SERVO_1_ARR_POS 7 
-  #elif !defined(SERVO_2_HIGH)
-    #define SERVO_2_HIGH SERVO_8_PIN_HIGH
-    #define SERVO_2_LOW SERVO_8_PIN_LOW
-    #define SERVO_2_ARR_POS 7
-  #elif !defined(SERVO_3_HIGH)
-    #define SERVO_3_HIGH SERVO_8_PIN_HIGH
-    #define SERVO_3_LOW SERVO_8_PIN_LOW
-    #define SERVO_3_ARR_POS 7  
-  #elif !defined(SERVO_4_HIGH)
-    #define SERVO_4_HIGH SERVO_8_PIN_HIGH
-    #define SERVO_4_LOW SERVO_8_PIN_LOW
-    #define SERVO_4_ARR_POS 7  
-  #elif !defined(SERVO_5_HIGH)
-    #define SERVO_5_HIGH SERVO_8_PIN_HIGH
-    #define SERVO_5_LOW SERVO_8_PIN_LOW 
-    #define SERVO_5_ARR_POS 7  
-  #elif !defined(SERVO_6_HIGH)
-    #define SERVO_6_HIGH SERVO_8_PIN_HIGH
-    #define SERVO_6_LOW SERVO_8_PIN_LOW 
-    #define SERVO_6_ARR_POS 7 
-  #elif !defined(SERVO_7_HIGH)
-    #define SERVO_7_HIGH SERVO_8_PIN_HIGH
-    #define SERVO_7_LOW SERVO_8_PIN_LOW 
-    #define SERVO_7_ARR_POS 7  
-  #else
-    #define SERVO_8_HIGH SERVO_8_PIN_HIGH
-    #define SERVO_8_LOW SERVO_8_PIN_LOW  
-    #define SERVO_8_ARR_POS 7   
-  #endif
-#endif
-
-#if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS)
-  #undef SERVO_1_HIGH                                    // No software PWM's if we use hardware MEGA PWM
-#endif
 
 
 /**************************************************************************************/
@@ -479,6 +291,9 @@
 
 /**************************  atmega32u4 (Promicro)  ***********************************/
 #if defined(PROMICRO)
+  #if defined(MICROWII)
+    #define A32U4ALLPINS 
+  #endif
   #if !defined(TEENSY20)
     #define LEDPIN_PINMODE             //
     #define LEDPIN_TOGGLE              PIND |= 1<<5;     //switch LEDPIN state (Port D5)
@@ -759,6 +574,194 @@
 #endif
 
 
+/**********************   Sort the Servos for the most ideal SW PWM     ************************/
+// this define block sorts the above slected servos to be in a simple order from 1 - (count of total servos)
+// its pretty fat but its the best way i found to get less compiled code and max speed in the ISR without loosing its flexibility
+#if (PRI_SERVO_FROM == 1) || (SEC_SERVO_FROM == 1)
+  #define LAST_LOW SERVO_1_PIN_LOW
+  #define SERVO_1_HIGH SERVO_1_PIN_HIGH
+  #define SERVO_1_LOW SERVO_1_PIN_LOW
+  #define SERVO_1_ARR_POS  0
+#endif
+#if (PRI_SERVO_FROM <= 2 && PRI_SERVO_TO >= 2) || (SEC_SERVO_FROM <= 2 && SEC_SERVO_TO >= 2) 
+  #undef LAST_LOW
+  #define LAST_LOW SERVO_2_PIN_LOW
+  #if !defined(SERVO_1_HIGH)
+    #define SERVO_1_HIGH SERVO_2_PIN_HIGH
+    #define SERVO_1_LOW SERVO_2_PIN_LOW  
+    #define SERVO_1_ARR_POS 1
+  #else
+    #define SERVO_2_HIGH SERVO_2_PIN_HIGH
+    #define SERVO_2_LOW SERVO_2_PIN_LOW   
+    #define SERVO_2_ARR_POS 1
+  #endif
+#endif
+#if (PRI_SERVO_FROM <= 3 && PRI_SERVO_TO >= 3) || (SEC_SERVO_FROM <= 3 && SEC_SERVO_TO >= 3) 
+  #undef LAST_LOW
+  #define LAST_LOW SERVO_3_PIN_LOW
+  #if !defined(SERVO_1_HIGH)
+    #define SERVO_1_HIGH SERVO_3_PIN_HIGH
+    #define SERVO_1_LOW SERVO_3_PIN_LOW
+    #define SERVO_1_ARR_POS 2 
+  #elif !defined(SERVO_2_HIGH)
+    #define SERVO_2_HIGH SERVO_3_PIN_HIGH
+    #define SERVO_2_LOW SERVO_3_PIN_LOW 
+    #define SERVO_2_ARR_POS 2 
+  #else
+    #define SERVO_3_HIGH SERVO_3_PIN_HIGH
+    #define SERVO_3_LOW SERVO_3_PIN_LOW  
+    #define SERVO_3_ARR_POS 2   
+  #endif
+#endif
+#if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4) || (SEC_SERVO_FROM <= 4 && SEC_SERVO_TO >= 4) 
+  #undef LAST_LOW
+  #define LAST_LOW SERVO_4_PIN_LOW
+  #if !defined(SERVO_1_HIGH)
+    #define SERVO_1_HIGH SERVO_4_PIN_HIGH
+    #define SERVO_1_LOW SERVO_4_PIN_LOW
+    #define SERVO_1_ARR_POS 3  
+  #elif !defined(SERVO_2_HIGH)
+    #define SERVO_2_HIGH SERVO_4_PIN_HIGH
+    #define SERVO_2_LOW SERVO_4_PIN_LOW
+    #define SERVO_2_ARR_POS 3
+  #elif !defined(SERVO_3_HIGH)
+    #define SERVO_3_HIGH SERVO_4_PIN_HIGH
+    #define SERVO_3_LOW SERVO_4_PIN_LOW
+    #define SERVO_3_ARR_POS 3    
+  #else
+    #define SERVO_4_HIGH SERVO_4_PIN_HIGH
+    #define SERVO_4_LOW SERVO_4_PIN_LOW 
+    #define SERVO_4_ARR_POS 3     
+  #endif
+#endif
+#if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5) || (SEC_SERVO_FROM <= 5 && SEC_SERVO_TO >= 5)
+  #undef LAST_LOW
+  #define LAST_LOW SERVO_5_PIN_LOW
+  #if !defined(SERVO_1_HIGH)
+    #define SERVO_1_HIGH SERVO_5_PIN_HIGH
+    #define SERVO_1_LOW SERVO_5_PIN_LOW
+    #define SERVO_1_ARR_POS 4   
+  #elif !defined(SERVO_2_HIGH)
+    #define SERVO_2_HIGH SERVO_5_PIN_HIGH
+    #define SERVO_2_LOW SERVO_5_PIN_LOW
+    #define SERVO_2_ARR_POS 4  
+  #elif !defined(SERVO_3_HIGH)
+    #define SERVO_3_HIGH SERVO_5_PIN_HIGH
+    #define SERVO_3_LOW SERVO_5_PIN_LOW
+    #define SERVO_3_ARR_POS 4   
+  #elif !defined(SERVO_4_HIGH)
+    #define SERVO_4_HIGH SERVO_5_PIN_HIGH
+    #define SERVO_4_LOW SERVO_5_PIN_LOW
+    #define SERVO_4_ARR_POS 4   
+  #else
+    #define SERVO_5_HIGH SERVO_5_PIN_HIGH
+    #define SERVO_5_LOW SERVO_5_PIN_LOW 
+    #define SERVO_5_ARR_POS 4     
+  #endif
+#endif
+#if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6) || (SEC_SERVO_FROM <= 6 && SEC_SERVO_TO >= 6)
+  #undef LAST_LOW
+  #define LAST_LOW SERVO_6_PIN_LOW
+  #if !defined(SERVO_1_HIGH)
+    #define SERVO_1_HIGH SERVO_6_PIN_HIGH
+    #define SERVO_1_LOW SERVO_6_PIN_LOW 
+    #define SERVO_1_ARR_POS 5 
+  #elif !defined(SERVO_2_HIGH)
+    #define SERVO_2_HIGH SERVO_6_PIN_HIGH
+    #define SERVO_2_LOW SERVO_6_PIN_LOW
+    #define SERVO_2_ARR_POS 5 
+  #elif !defined(SERVO_3_HIGH)
+    #define SERVO_3_HIGH SERVO_6_PIN_HIGH
+    #define SERVO_3_LOW SERVO_6_PIN_LOW
+    #define SERVO_3_ARR_POS 5   
+  #elif !defined(SERVO_4_HIGH)
+    #define SERVO_4_HIGH SERVO_6_PIN_HIGH
+    #define SERVO_4_LOW SERVO_6_PIN_LOW 
+    #define SERVO_4_ARR_POS 5  
+  #elif !defined(SERVO_5_HIGH)
+    #define SERVO_5_HIGH SERVO_6_PIN_HIGH
+    #define SERVO_5_LOW SERVO_6_PIN_LOW 
+    #define SERVO_5_ARR_POS 5  
+  #else
+    #define SERVO_6_HIGH SERVO_6_PIN_HIGH
+    #define SERVO_6_LOW SERVO_6_PIN_LOW  
+    #define SERVO_6_ARR_POS 5   
+  #endif
+#endif
+#if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7) || (SEC_SERVO_FROM <= 7 && SEC_SERVO_TO >= 7)
+  #undef LAST_LOW
+  #define LAST_LOW SERVO_7_PIN_LOW
+  #if !defined(SERVO_1_HIGH)
+    #define SERVO_1_HIGH SERVO_7_PIN_HIGH
+    #define SERVO_1_LOW SERVO_7_PIN_LOW 
+    #define SERVO_1_ARR_POS 6 
+  #elif !defined(SERVO_2_HIGH)
+    #define SERVO_2_HIGH SERVO_7_PIN_HIGH
+    #define SERVO_2_LOW SERVO_7_PIN_LOW
+    #define SERVO_2_ARR_POS 6 
+  #elif !defined(SERVO_3_HIGH)
+    #define SERVO_3_HIGH SERVO_7_PIN_HIGH
+    #define SERVO_3_LOW SERVO_7_PIN_LOW
+    #define SERVO_3_ARR_POS 6   
+  #elif !defined(SERVO_4_HIGH)
+    #define SERVO_4_HIGH SERVO_7_PIN_HIGH
+    #define SERVO_4_LOW SERVO_7_PIN_LOW 
+    #define SERVO_4_ARR_POS 6  
+  #elif !defined(SERVO_5_HIGH)
+    #define SERVO_5_HIGH SERVO_7_PIN_HIGH
+    #define SERVO_5_LOW SERVO_7_PIN_LOW 
+    #define SERVO_5_ARR_POS 6  
+  #elif !defined(SERVO_6_HIGH)
+    #define SERVO_6_HIGH SERVO_7_PIN_HIGH
+    #define SERVO_6_LOW SERVO_7_PIN_LOW 
+    #define SERVO_6_ARR_POS 6  
+  #else
+    #define SERVO_7_HIGH SERVO_7_PIN_HIGH
+    #define SERVO_7_LOW SERVO_7_PIN_LOW  
+    #define SERVO_7_ARR_POS 6   
+  #endif
+#endif
+#if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8) 
+  #undef LAST_LOW
+  #define LAST_LOW SERVO_8_PIN_LOW
+  #if !defined(SERVO_1_HIGH)
+    #define SERVO_1_HIGH SERVO_8_PIN_HIGH
+    #define SERVO_1_LOW SERVO_8_PIN_LOW 
+    #define SERVO_1_ARR_POS 7 
+  #elif !defined(SERVO_2_HIGH)
+    #define SERVO_2_HIGH SERVO_8_PIN_HIGH
+    #define SERVO_2_LOW SERVO_8_PIN_LOW
+    #define SERVO_2_ARR_POS 7
+  #elif !defined(SERVO_3_HIGH)
+    #define SERVO_3_HIGH SERVO_8_PIN_HIGH
+    #define SERVO_3_LOW SERVO_8_PIN_LOW
+    #define SERVO_3_ARR_POS 7  
+  #elif !defined(SERVO_4_HIGH)
+    #define SERVO_4_HIGH SERVO_8_PIN_HIGH
+    #define SERVO_4_LOW SERVO_8_PIN_LOW
+    #define SERVO_4_ARR_POS 7  
+  #elif !defined(SERVO_5_HIGH)
+    #define SERVO_5_HIGH SERVO_8_PIN_HIGH
+    #define SERVO_5_LOW SERVO_8_PIN_LOW 
+    #define SERVO_5_ARR_POS 7  
+  #elif !defined(SERVO_6_HIGH)
+    #define SERVO_6_HIGH SERVO_8_PIN_HIGH
+    #define SERVO_6_LOW SERVO_8_PIN_LOW 
+    #define SERVO_6_ARR_POS 7 
+  #elif !defined(SERVO_7_HIGH)
+    #define SERVO_7_HIGH SERVO_8_PIN_HIGH
+    #define SERVO_7_LOW SERVO_8_PIN_LOW 
+    #define SERVO_7_ARR_POS 7  
+  #else
+    #define SERVO_8_HIGH SERVO_8_PIN_HIGH
+    #define SERVO_8_LOW SERVO_8_PIN_LOW  
+    #define SERVO_8_ARR_POS 7   
+  #endif
+#endif
+
+#if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS)
+  #undef SERVO_1_HIGH                                    // No software PWM's if we use hardware MEGA PWM
+#endif
 
 
 /**************************************************************************************/
@@ -841,10 +844,6 @@
   #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  X; magADC[PITCH]  =  Y; magADC[YAW]  = -Z;}
   #define MPU6050_I2C_AUX_MASTER // MAG connected to the AUX I2C bus of MPU6050
   #undef INTERNAL_I2C_PULLUPS
-#endif
-
-#if defined(MICROWII)
-  #define A32U4ALLPINS 
 #endif
 
 #if defined(NANOWII)
