@@ -37,6 +37,7 @@ const uint32_t PROGMEM capability = 0+BIND_CAPABLE;
 // Multiwii Serial Protocol 0 
 #define MSP_VERSION              0
 
+//to multiwii developpers/committers : do not add new MSP messages without a proper argumentation/agreement on the forum
 #define MSP_IDENT                100   //out message         multitype + multiwii version + protocol version + capability variable
 #define MSP_STATUS               101   //out message         cycletime & errors_count & sensor present & box activation & current setting number
 #define MSP_RAW_IMU              102   //out message         9 DOF
@@ -68,6 +69,7 @@ const uint32_t PROGMEM capability = 0+BIND_CAPABLE;
 #define MSP_RESET_CONF           208   //in message          no param
 #define MSP_SET_WP               209   //in message          sets a given WP (WP#,lat, lon, alt, flags)
 #define MSP_SELECT_SETTING       210   //in message          Select Setting Number (0-2)
+#define MSP_SET_HEAD             211   //in message          define a new heading hold direction
 
 #define MSP_BIND                 240   //in message          no param
 
@@ -262,6 +264,10 @@ void evaluateCommand() {
      headSerialReply(0);
      break;
    #endif
+   case MSP_SET_HEAD:
+     magHold = read16();
+     headSerialReply(0);
+     break;
    case MSP_IDENT:
      headSerialReply(7);
      serialize8(VERSION);   // multiwii version

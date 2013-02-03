@@ -168,17 +168,14 @@ static uint16_t calibratingA = 0;  // the calibration is done in the main loop. 
 static uint16_t calibratingB = 0;  // baro calibration = get new ground pressure value
 static uint16_t calibratingG;
 static uint16_t acc_1G;            // this is the 1G measured acceleration
-static int16_t  acc_25deg;
-static int16_t  headFreeModeHold;
+static uint16_t acc_25deg;
 static int16_t  gyroADC[3],accADC[3],accSmooth[3],magADC[3];
-static int16_t  heading,magHold;
+static int16_t  heading,magHold,headFreeModeHold; // [-180;+180]
 static uint8_t  vbat;                   // battery voltage in 0.1V steps
 static uint8_t  vbatMin = VBATNOMINAL;  // lowest battery voltage in 0.1V steps
 static uint8_t  rcOptions[CHECKBOXITEMS];
-static int32_t  BaroAlt;
-static int32_t  EstAlt;             // in cm
+static int32_t  BaroAlt,EstAlt,AltHold; // in cm
 static int16_t  BaroPID = 0;
-static int32_t  AltHold;
 static int16_t  errorAltitudeI = 0;
 static int16_t  vario = 0;              // variometer in cm/s
 
