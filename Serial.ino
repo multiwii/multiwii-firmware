@@ -57,6 +57,8 @@ const uint32_t PROGMEM capability = 0+BIND_CAPABLE;
 #define MSP_BOXNAMES             116   //out message         the aux switch names
 #define MSP_PIDNAMES             117   //out message         the PID names
 #define MSP_WP                   118   //out message         get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
+#define MSP_BOXIDS               119   //out message         get the permanent IDs associated to BOXes
+
 
 #define MSP_SET_RAW_RC           200   //in message          8 rc chan
 #define MSP_SET_RAW_GPS          201   //in message          fix, numsat, lat, lon, alt, speed
@@ -401,6 +403,10 @@ void evaluateCommand() {
        serialize8(conf.D8[i]);
      }
      break;
+   case MSP_PIDNAMES:
+     headSerialReply(strlen_P(pidnames));
+     serializeNames(pidnames);
+     break;
    case MSP_BOX:
      headSerialReply(2*CHECKBOXITEMS);
      for(uint8_t i=0;i<CHECKBOXITEMS;i++) {
@@ -411,9 +417,11 @@ void evaluateCommand() {
      headSerialReply(strlen_P(boxnames));
      serializeNames(boxnames);
      break;
-   case MSP_PIDNAMES:
-     headSerialReply(strlen_P(pidnames));
-     serializeNames(pidnames);
+   case MSP_BOXIDS:
+     headSerialReply(CHECKBOXITEMS);
+     for(uint8_t i=0;i<CHECKBOXITEMS;i++) {
+       serialize8(pgm_read_byte(&(boxids[i])));
+     }
      break;
    case MSP_MISC:
      headSerialReply(2);
