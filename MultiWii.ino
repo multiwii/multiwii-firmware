@@ -319,10 +319,11 @@ static uint16_t intPowerMeterSum, intPowerTrigger1;
 static int16_t failsafeEvents = 0;
 volatile int16_t failsafeCnt = 0;
 
-static int16_t rcData[RC_CHANS];   // interval [1000;2000]
-static int16_t rcCommand[4];       // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW 
+static int16_t rcData[RC_CHANS];    // interval [1000;2000]
+static int16_t rcCommand[4];        // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW 
 static int16_t lookupPitchRollRC[6];// lookup table for expo & RC rate PITCH+ROLL
 static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
+static uint16_t rssi;               // range: [0;1023]
 
 #if defined(SPEKTRUM)
   volatile uint8_t  spekFrameFlags;
@@ -573,7 +574,16 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     #endif
     alarmHandler(); // external buzzer routine that handles buzzer events globally now
   #endif  
-  
+
+  #if defined(RX_RSSI)
+    static uint8_t sig = 0;
+    uint16_t rssiRaw = 0;
+    static uint16_t rssiRawArray[8];
+    rssiRawArray[(sig++)%8] = analogRead(RX_RSSI_PIN);
+    for (uint8_t i=0;i<8;i++) rssiRaw += rssiRawArray[i];
+    rssi = rssiRaw / 8;       
+  #endif
+
   if ( (calibratingA>0 && ACC ) || (calibratingG>0) ) { // Calibration phasis
     LEDPIN_TOGGLE;
   } else {

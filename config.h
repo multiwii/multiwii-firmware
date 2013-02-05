@@ -807,6 +807,9 @@
     //#define SUPPRESS_TELEMETRY_PAGE_8
     //#define SUPPRESS_TELEMETRY_PAGE_9
 
+    //#define RX_RSSI
+    //#define RX_RSSI_PIN A3
+
   /********************************************************************/
   /****                             Buzzer                         ****/
   /********************************************************************/
