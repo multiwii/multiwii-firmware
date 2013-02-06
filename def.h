@@ -1317,6 +1317,22 @@
   #define SERVO_3_PIN_LOW            PORTL &= ~(1<<3);
 #endif
 
+#if defined(FLYDU_ULTRA)
+  #define ITG3200	
+  #define MMA8451Q
+  #define MS561101BA
+  #define MAG3110
+  
+  #define ACC_ORIENTATION(X, Y, Z)  {accADC[ROLL]  =  X; accADC[PITCH] = Y; accADC[YAW]  = Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {gyroADC[ROLL] = Y; gyroADC[PITCH] = -X; gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  = -Y; magADC[PITCH] = X; magADC[YAW]  = Z;}
+  
+  #define GPS_SERIAL 2
+  #define GPS_BAUD   57600
+  #define MTK_BINARY19
+  #define INIT_MTK_GPS
+#endif
+
 #if defined(OPENLRSv2MULTI)
   #define ITG3200
   #define ADXL345
@@ -1396,7 +1412,7 @@
 /***************              Sensor Type definitions              ********************/
 /**************************************************************************************/
 
-#if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LIS3LV02) || defined(LSM303DLx_ACC) || defined(MPU6050) || defined(NUNCHUCK)
+#if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LIS3LV02) || defined(LSM303DLx_ACC) || defined(MPU6050) || defined(MMA8451Q) || defined(NUNCHUCK)
   #define ACC 1
 #else
   #define ACC 0

@@ -139,6 +139,7 @@
       //#define HK_MultiWii_SE_V2  // Hobbyking board with MPU6050 + HMC5883L + BMP085
       //#define HK_MultiWii_328P   // Also labeled "Hobbybro" on the back.  ITG3205 + BMA180 + BMP085 + NMC5583L + DSM2 Connector (Spektrum Satellite)  
       //#define RCNet_FC           // RCNet FC with MPU6050 and MS561101BA  http://www.rcnet.com
+      //#define FLYDU_ULTRA   // MEGA+10DOF+MT3339 FC
 
       
     /***************************    independent sensors    ********************************/
@@ -158,6 +159,7 @@
       //#define NUNCHACK  // if you want to use the nunckuk as a standalone I2C ACC without WMP
       //#define LIS3LV02
       //#define LSM303DLx_ACC
+      //#define MMA8451Q
 
       /* I2C barometer */
       //#define BMP085

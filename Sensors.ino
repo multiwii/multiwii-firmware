@@ -749,6 +749,35 @@ void ACC_getADC () {
 #endif
 
 // ************************************************************************************************************
+// I2C Accelerometer MMA8451Q 
+// ************************************************************************************************************
+#if defined(MMA8451Q)
+
+#if !defined(MMA8451Q_ADDRESS)
+	#define MMA8451Q_ADDRESS 0x1C
+	//#define MMA8451Q_ADDRESS 0x1D
+#endif
+
+void ACC_init () {
+  delay(10);
+  i2c_writeReg(MMA8451Q_ADDRESS,0x2A,0x05); // wake up & low noise
+  delay(10);
+  i2c_writeReg(MMA8451Q_ADDRESS,0x0E,0x02); // full scale range
+  acc_1G = 512; // should be 1024 but 512 is knowen
+}
+
+void ACC_getADC () {
+  TWBR = ((F_CPU / 400000L) - 16) / 2;
+  i2c_getSixRawADC(MMA8451Q_ADDRESS,0x00);
+
+  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/32 ,
+                   ((rawADC[3]<<8) | rawADC[2])/32 ,
+                   ((rawADC[5]<<8) | rawADC[4])/32);
+  ACC_Common();
+}
+#endif
+
+// ************************************************************************************************************
 // I2C Accelerometer ADXL345 
 // ************************************************************************************************************
 // I2C adress: 0x3A (8bit)    0x1D (7bit)
