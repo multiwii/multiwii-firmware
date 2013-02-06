@@ -184,13 +184,15 @@ void LoadDefaults() {
 void readPLog() {
   eeprom_read_block((void*)&plog, (void*)(LOG_PERMANENT - sizeof(plog)), sizeof(plog));
   if(calculate_sum((uint8_t*)&plog, sizeof(plog)) != plog.checksum) {
-    blinkLED(6,100,3);
+    blinkLED(9,100,3);
     #if defined(BUZZER)
       alarmArray[7] = 3;
     #endif
     // force load defaults
-      plog.arm = plog.disarm = plog.start =plog.lifetime = plog.failsafe = plog.i2c = 0;
-      plog.running = 1;
+    plog.arm = plog.disarm = plog.start = plog.failsafe = plog.i2c = 0;
+    plog.running = 1;
+    plog.lifetime = plog.armed_time = 0;
+    writePLog();
   }
 }
 void writePLog() {

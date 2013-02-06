@@ -1724,9 +1724,9 @@
   #define ALT_HOLD_THROTTLE_NEUTRAL_ZONE 40
 #endif 
 
-  /**************************************************************************************/
-  /***************               override default pin assignments ?  ********************/
-  /**************************************************************************************/
+/**************************************************************************************/
+/***************               override default pin assignments ?  ********************/
+/**************************************************************************************/
 #ifdef OVERRIDE_V_BATPIN
   #define V_BATPIN OVERRIDE_V_BATPIN
 #endif
@@ -1741,6 +1741,20 @@
   #define BUZZERPIN_ON      OVERRIDE_BUZZERPIN_ON
   #define BUZZERPIN_OFF     OVERRIDE_BUZZERPIN_OFF
 #endif
+
+/**************************************************************************************/
+/********* enforce your sensors orientation - possibly overriding board defaults  *****/
+/**************************************************************************************/
+#ifdef FORCE_GYRO_ORIENTATION
+  #define GYRO_ORIENTATION FORCE_GYRO_ORIENTATION
+#endif
+#ifdef FORCE_ACC_ORIENTATION
+  #define ACC_ORIENTATION FORCE_ACC_ORIENTATION
+#endif
+#ifdef FORCE_MAG_ORIENTATION
+  #define MAG_ORIENTATION FORCE_MAG_ORIENTATION
+#endif
+
 /**************************************************************************************/
 /***************               Error Checking Section              ********************/
 /**************************************************************************************/

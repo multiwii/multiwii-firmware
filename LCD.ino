@@ -1046,11 +1046,13 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
       &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX4,
     #endif
   #endif
-  &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX1,
-  &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX2,
-  #ifndef SUPPRESS_LCD_CONF_AUX34
-    &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX3,
-    &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX4,
+  #if defined(BUZZER)
+    &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX1,
+    &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX34
+      &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX3,
+      &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX4,
+    #endif
   #endif
   #ifdef VARIOMETER
     &lcd_param_text53, &conf.activate[BOXVARIO],&__AUX1,
@@ -1414,6 +1416,9 @@ void configurationLoop() {
     LCDclear();
   #endif
 #endif  
+#ifdef LOG_PERMANENT_SHOW_AFTER_CONFIG
+  if (!f.ARMED) dumpPLog(0);
+#endif
 }
 #endif // LCD_CONF
 // -------------------- telemetry output to LCD over serial/i2c ----------------------------------
@@ -1903,20 +1908,20 @@ void lcd_telemetry() {
           output_mAh();
           break;
         case 4:// errors or ...
-          if (failsafeEvents || (i2c_errors_count>>1)) { // errors
+          if (failsafeEvents || (i2c_errors_count>>10)) { // errors
             // ignore i2c==1 because of bma020-init
             LCDalarmAndReverse();
             output_fails();
             LCDattributesOff();
           } else { // ... armed time
+            uint16_t ats = armedTime / 1000000;
             #ifdef ARMEDTIMEWARNING
-              uint16_t ats = armedTime / 1000000;
               if (ats > conf.armedtimewarning) { LCDattributesReverse(); }
               LCDbar(7, (ats < conf.armedtimewarning ? (((conf.armedtimewarning-ats+1)*100)/(conf.armedtimewarning+1)) : 0 ));
               LCDattributesOff();
-              LCDprint(' ');
-              print_uptime(ats);
             #endif
+            LCDprint(' ');
+            print_uptime(ats);
           }
           break;
         case 6:// height
@@ -2244,7 +2249,14 @@ void lcd_telemetry() {
 #endif // DISPLAY_MULTILINE
 
 void toggle_telemetry(uint8_t t) {
-  if (telemetry == t) telemetry = 0; else {telemetry = t; LCDclear();}
+  if (telemetry == t) telemetry = 0; 
+  else {
+     telemetry = t; 
+     #ifdef OLED_I2C_128x64
+       if (telemetry != 0) i2c_OLED_init();
+     #endif
+     LCDclear();
+  }
 }
 #endif //  LCD_TELEMETRY
 

@@ -429,7 +429,7 @@ static struct {
   uint16_t disarm;        // #disarm events
   uint16_t start;         // #powercycle/reset/initialize events
   uint32_t armed_time ;   // copy of armedTime @ disarm
-  uint32_t lifetime;      // accumulated lifetime in seconds
+  uint32_t lifetime;      // sum (armed) lifetime in seconds
   uint16_t failsafe;      // #failsafe state @ disarm
   uint16_t i2c;           // #i2c errs state @ disarm
   uint8_t  running;       // toggle on arm & disarm to monitor for clean shutdown vs. powercut
@@ -666,7 +666,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
   #endif
   if (f.ARMED)  {
-    #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)
+    #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
       armedTime += (uint32_t)cycleTime;
     #endif
     #if defined(VBAT)
@@ -981,7 +981,10 @@ void loop () {
         #ifdef LCD_TELEMETRY_STEP
           else if (rcSticks == THR_LO + YAW_CE + PIT_HI + ROL_HI) {              // Telemetry next step
             telemetry = telemetryStepSequence[++telemetryStepIndex % strlen(telemetryStepSequence)];
-            LCDclear(); // make sure to clear away remnants
+            #ifdef OLED_I2C_128x64
+              if (telemetry != 0) i2c_OLED_init();
+            #endif
+            LCDclear();
           }
         #endif
         else if (rcSticks == THR_HI + YAW_LO + PIT_LO + ROL_CE) calibratingA=400;     // throttle=max, yaw=left, pitch=min
