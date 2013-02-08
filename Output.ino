@@ -1239,7 +1239,10 @@ void mixTable() {
     }
     if (rcOptions[BOXCAMTRIG]) camCycle=1;
   #endif
-  
+  /****************     neutralize Servos during calibration of gyro&acc   ******************/
+  #ifdef SERVO
+    if ( (!f.ARMED) && ((calibratingG > 0) || (calibratingA > 0)) ) servos2Neutral();
+  #endif
   /****************                Filter the Motors values                ******************/
 #ifdef GOVERNOR_P
     if (rcOptions[BOXGOV] ) {

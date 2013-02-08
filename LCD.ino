@@ -1587,14 +1587,20 @@ void output_annex() {
   LCDprintChar(line2);
 }
 static char checkboxitemNames[][4] = {
+    "Arm",
     #if ACC
       "Ang","Hor",
     #endif
     #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
       "Bar",
     #endif
+    #ifdef VARIOMETER
+      "Var",
+    #endif
     #if MAG
       "Mag",
+      "HFr",
+      "HAd",
     #endif
     #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
       "CSt",
@@ -1602,16 +1608,12 @@ static char checkboxitemNames[][4] = {
     #if defined(CAMTRIG)
       "CTr",
     #endif
-      "Arm",
     #if GPS
       "GHm",
       "GHd",
     #endif
     #if defined(FIXEDWING) || defined(HELICOPTER)
       "Pas",
-    #endif
-    #if MAG
-      "HFr",
     #endif
     #if defined(BUZZER)
       "Buz",
@@ -1622,12 +1624,6 @@ static char checkboxitemNames[][4] = {
     #endif
     #if defined(LANDING_LIGHTS_DDR)
       "LLs",
-    #endif
-    #if MAG
-      "HAd",
-    #endif
-    #ifdef VARIOMETER
-      "Var",
     #endif
     #ifdef INFLIGHT_ACC_CALIBRATION
       "Cal",
@@ -2310,6 +2306,7 @@ void toggle_telemetry(uint8_t t) {
         LCDclear();
       }
       LCDsetLine(lnr);
+      LCD_FLUSH;
     #elif ( defined(DISPLAY_2LINES))
       #if (! (defined(LCD_TTY)  ) )
         delay(600);
