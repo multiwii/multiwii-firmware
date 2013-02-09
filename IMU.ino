@@ -127,21 +127,25 @@ void computeIMU () {
   #define GYRO_SCALE (1.0f/200e6f)
   // empirical, depends on WMP on IDG datasheet, tied of deg/ms sensibility
   // !!!!should be adjusted to the rad/sec
-#endif 
-// Small angle approximation
-#define ssin(val) (val)
-#define scos(val) 1.0f
+#endif
 
 typedef struct fp_vector {
-  float X;
-  float Y;
-  float Z;
+  float X,Y,Z;
 } t_fp_vector_def;
 
+typedef struct int32_t_vector {
+  int32_t X,Y,Z;
+} t_int32_t_vector_def;
+
 typedef union {
-  float   A[3];
+  float A[3];
   t_fp_vector_def V;
 } t_fp_vector;
+
+typedef union {
+  int32_t A[3];
+  t_int32_t_vector_def V;
+} t_int32_t_vector;
 
 int16_t _atan2(float y, float x){
   #define fp_is_neg(val) ((((uint8_t*)&val)[3] & 0x80) != 0)
@@ -159,8 +163,7 @@ int16_t _atan2(float y, float x){
    z = (PI / 2.0f) - z / (z * z + 0.28f);
    if (y_neg) z -= PI;
   }
-  z *= (180.0f / PI * 10); 
-  return z;
+  return z* (1800.0f / PI);
 }
 
 float InvSqrt (float x){ 
@@ -184,15 +187,19 @@ void rotateV(struct fp_vector *v,float* delta) {
 }
 
 static float accLPFVel[3]={0, 0, 1}; // was {0, 0, acc_1G}, some bytes saved and Z acc_1G convergence is rapidly ensured via LFP
+static float invG; // 1/|G|
 
 static t_fp_vector EstG;
+#if MAG
+  static t_fp_vector EstM;
+#endif
 
 void getEstimatedAttitude(){
   uint8_t axis;
   int32_t accMag = 0;
-#if MAG
-  static t_fp_vector EstM;
-#endif
+  t_int32_t_vector EstG32;
+  t_int32_t_vector EstM32;
+
 #if defined(MG_LPF_FACTOR)
   static int16_t mgSmooth[3]; 
 #endif
@@ -255,13 +262,27 @@ void getEstimatedAttitude(){
       EstM.A[axis] = (EstM.A[axis] * GYR_CMPFM_FACTOR  + MAG_VALUE) * INV_GYR_CMPFM_FACTOR;
   #endif
   
+  for (axis = 0; axis < 3; axis++) {
+    EstG32.A[axis] = EstG.A[axis];
+    #if MAG
+      EstM32.A[axis] = EstM.A[axis];   //int32_t cross calculation is a little bit faster than float
+    #endif
+  }
+
   // Attitude of the estimated vector
-  angle[ROLL]  =  _atan2(EstG.V.X , EstG.V.Z) ;
-  angle[PITCH] =  _atan2(EstG.V.Y , EstG.V.Z) ;
+  int32_t sqGZ = sq(EstG32.V.Z);
+  int32_t sqGX = sq(EstG32.V.X);
+  int32_t sqGY = sq(EstG32.V.Y);
+  int32_t sqGX_sqGZ = sqGX + sqGZ;
+  float invmagXZ  = InvSqrt(sqGX_sqGZ);
+  invG = InvSqrt(sqGX_sqGZ + sqGY);
+  angle[ROLL]  = _atan2(EstG.V.X , EstG.V.Z);
+  angle[PITCH] = _atan2(EstG.V.Y*invmagXZ,1.0);
 
   #if MAG
-    // Attitude of the cross product vector GxM
-    heading = _atan2( EstG.V.X * EstM.V.Z - EstG.V.Z * EstM.V.X , EstG.V.Z * EstM.V.Y - EstG.V.Y * EstM.V.Z  );
+    heading = _atan2(
+      EstM32.V.Z * EstG32.V.X - EstM32.V.X * EstG32.V.Z,
+      (EstM32.V.Y * sqGX_sqGZ - (EstM32.V.X * EstG32.V.X + EstM32.V.Z * EstG32.V.Z) * EstG32.V.Y ) * invG); 
     heading += MAG_DECLINIATION * 10; //add declination
     heading = heading /10;
     if ( heading > 180)      heading = heading - 360;
@@ -319,7 +340,6 @@ uint8_t getEstimatedAltitude(){
     
     // projection of ACC vector to global Z, with 1G subtructed
     // Math: accZ = A * G / |G| - 1G
-    float invG = InvSqrt(isq(EstG.V.X) + isq(EstG.V.Y) + isq(EstG.V.Z));
     int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG;
     
     static int16_t accZoffset = 0; // = acc_1G*6; //58 bytes saved and convergence is fast enough to omit init
