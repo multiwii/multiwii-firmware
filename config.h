@@ -969,13 +969,9 @@
 
     /* Set the Low Pass Filter factor for ACC
        Increasing this value would reduce ACC noise (visible in GUI), but would increase ACC lag time
-       Comment this out if you want to set a specific coeff (non default)*/
-    //#define ACC_LPF_FACTOR 100
-
-    /* Set the Low Pass Filter factor for Magnetometer
-       Increasing this value would reduce Magnetometer noise (not visible in GUI), but would increase Magnetometer lag time
-       Comment this out if you want to set a specific coeff (non default)*/
-    //#define MG_LPF_FACTOR 4
+       Comment this out if you want to set a specific coeff (non default)
+       unit = n power of 2 */
+    //#define ACC_LPF_FACTOR 7
 
     /* Set the Gyro Weight for Gyro/Acc complementary filter
        Increasing this value would reduce and delay Acc influence on the output of the filter

@@ -85,20 +85,19 @@ void computeIMU () {
 // **************************************************
 
 //******  advanced users settings *******************
-/* Set the Low Pass Filter factor for ACC */
-/* Increasing this value would reduce ACC noise (visible in GUI), but would increase ACC lag time*/
-/* Comment this if  you do not want filter at all.*/
+/* Set the Low Pass Filter factor for ACC
+   Increasing this value would reduce ACC noise (visible in GUI), but would increase ACC lag time
+   Comment this if  you do not want filter at all.
+   unit = n power of 2 */
 #ifndef ACC_LPF_FACTOR
-  #define ACC_LPF_FACTOR 100
+  #define ACC_LPF_FACTOR 7 // that means a LPF of 128
 #endif
-#define ACC_LPF_FOR_VELOCITY 12
 
-/* Set the Low Pass Filter factor for Magnetometer */
-/* Increasing this value would reduce Magnetometer noise (not visible in GUI), but would increase Magnetometer lag time*/
-/* Comment this if  you do not want filter at all.*/
-#ifndef MG_LPF_FACTOR
-  //#define MG_LPF_FACTOR 4
-#endif
+/* Set the Low Pass Filter factor for ACC
+   This one should be smaller than the previous one
+   It is used to estimate the ACC variation in ALT HOLD code
+   unit = n power of 2 */
+#define ACC_LPF_FOR_VELOCITY 4 // that means a LPF of 16
 
 /* Set the Gyro Weight for Gyro/Acc complementary filter */
 /* Increasing this value would reduce and delay Acc influence on the output of the filter*/
@@ -116,18 +115,15 @@ void computeIMU () {
 
 #define INV_GYR_CMPF_FACTOR   (1.0f / (GYR_CMPF_FACTOR  + 1.0f))
 #define INV_GYR_CMPFM_FACTOR  (1.0f / (GYR_CMPFM_FACTOR + 1.0f))
-#if GYRO
-  #define GYRO_SCALE ((2380 * PI)/((32767.0f / 4.0f ) * 180.0f * 1000000.0f)) //should be 2279.44 but 2380 gives better result
-  // +-2000/sec deg scale
-  //#define GYRO_SCALE ((200.0f * PI)/((32768.0f / 5.0f / 4.0f ) * 180.0f * 1000000.0f) * 1.5f)     
-  // +- 200/sec deg scale
-  // 1.5 is emperical, not sure what it means
-  // should be in rad/sec
-#else
-  #define GYRO_SCALE (1.0f/200e6f)
-  // empirical, depends on WMP on IDG datasheet, tied of deg/ms sensibility
-  // !!!!should be adjusted to the rad/sec
-#endif
+
+#define GYRO_SCALE ((2380 * PI)/((32767.0f / 4.0f ) * 180.0f * 1000000.0f)) //should be 2279.44 but 2380 gives better result  (ITG3200 and MPU6050)
+// +-2000/sec deg scale
+//#define GYRO_SCALE ((200.0f * PI)/((32768.0f / 5.0f / 4.0f ) * 180.0f * 1000000.0f) * 1.5f)     
+// +- 200/sec deg scale
+// 1.5 is emperical, not sure what it means
+// should be in rad/sec
+// for WMP, empirical value should be #define GYRO_SCALE (1.0f/200e6f)
+// !!!!should be adjusted to the rad/sec and be part defined in each gyro sensor
 
 typedef struct fp_vector {
   float X,Y,Z;
@@ -186,7 +182,9 @@ void rotateV(struct fp_vector *v,float* delta) {
   v->Y += delta[PITCH] * v_tmp.Z + delta[YAW]   * v_tmp.X; 
 }
 
-static float accLPFVel[3]={0, 0, 1}; // was {0, 0, acc_1G}, some bytes saved and Z acc_1G convergence is rapidly ensured via LFP
+static int32_t accLPF32[3]    = {0, 0, 1};
+static int32_t accLPFVel32[3] = {0, 0, 1};
+static int16_t accSmoothVel[3];
 static float invG; // 1/|G|
 
 static t_fp_vector EstG;
@@ -199,16 +197,9 @@ void getEstimatedAttitude(){
   int32_t accMag = 0;
   t_int32_t_vector EstG32;
   t_int32_t_vector EstM32;
-
-#if defined(MG_LPF_FACTOR)
-  static int16_t mgSmooth[3]; 
-#endif
-#if defined(ACC_LPF_FACTOR)
-  static float accLPF[3]={0, 0, 1}; // was {0, 0, acc_1G}, some bytes saved and Z acc_1G convergence is rapidly ensured via LFP
-#endif
+  float scale, deltaGyroAngle[3];
   static uint16_t previousT;
   uint16_t currentT = micros();
-  float scale, deltaGyroAngle[3];
 
   scale = (currentT - previousT) * GYRO_SCALE;
   previousT = currentT;
@@ -216,25 +207,16 @@ void getEstimatedAttitude(){
   // Initialization
   for (axis = 0; axis < 3; axis++) {
     deltaGyroAngle[axis] = gyroADC[axis]  * scale;
-    #if defined(ACC_LPF_FACTOR)
-      accLPF[axis]    = accLPF[axis]    * (1.0f - (1.0f/ACC_LPF_FACTOR))       + accADC[axis] * (1.0f/ACC_LPF_FACTOR);
-      accSmooth[axis] = accLPF[axis];
-      #define ACC_VALUE accSmooth[axis]
-    #else  
-      accSmooth[axis] = accADC[axis];
-      #define ACC_VALUE accADC[axis]
-    #endif
-    accLPFVel[axis] = accLPFVel[axis] * (1.0f - (1.0f/ACC_LPF_FOR_VELOCITY)) + accADC[axis] * (1.0f/ACC_LPF_FOR_VELOCITY);
-//    accMag += (ACC_VALUE * 10 / (int16_t)acc_1G) * (ACC_VALUE * 10 / (int16_t)acc_1G);
-    accMag += (int32_t)accLPFVel[axis]*accLPFVel[axis] ;
-    #if MAG
-      #if defined(MG_LPF_FACTOR)
-        mgSmooth[axis] = (mgSmooth[axis] * (MG_LPF_FACTOR - 1) + magADC[axis]) / MG_LPF_FACTOR; // LPF for Magnetometer values
-        #define MAG_VALUE mgSmooth[axis]
-      #else  
-        #define MAG_VALUE magADC[axis]
-      #endif
-    #endif
+
+    accLPF32[axis]    -= accLPF32[axis]>>ACC_LPF_FACTOR;
+    accLPF32[axis]    += accADC[axis];
+    accSmooth[axis]    = accLPF32[axis]>>ACC_LPF_FACTOR;
+
+    accLPFVel32[axis] -= accLPFVel32[axis]>>ACC_LPF_FOR_VELOCITY;
+    accLPFVel32[axis] += accADC[axis];
+    accSmoothVel[axis] = accLPFVel32[axis]>>ACC_LPF_FOR_VELOCITY;
+
+    accMag += (int32_t)accSmoothVel[axis]*accSmoothVel[axis] ;
   }
   accMag = accMag*100/((int32_t)acc_1G*acc_1G);
 
@@ -249,17 +231,17 @@ void getEstimatedAttitude(){
     f.SMALL_ANGLES_25 = 0;
   }
 
+
   // Apply complimentary filter (Gyro drift correction)
   // If accel magnitude >1.4G or <0.6G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
   // To do that, we just skip filter, as EstV already rotated by Gyro
   if ( ( 36 < accMag && accMag < 196 ) || f.SMALL_ANGLES_25 )
     for (axis = 0; axis < 3; axis++) {
-      int16_t acc = ACC_VALUE;
-      EstG.A[axis] = (EstG.A[axis] * GYR_CMPF_FACTOR + acc) * INV_GYR_CMPF_FACTOR;
+      EstG.A[axis] = (EstG.A[axis] * GYR_CMPF_FACTOR + accSmooth[axis]) * INV_GYR_CMPF_FACTOR;
     }
   #if MAG
     for (axis = 0; axis < 3; axis++)
-      EstM.A[axis] = (EstM.A[axis] * GYR_CMPFM_FACTOR  + MAG_VALUE) * INV_GYR_CMPFM_FACTOR;
+      EstM.A[axis] = (EstM.A[axis] * GYR_CMPFM_FACTOR  + magADC[axis]) * INV_GYR_CMPFM_FACTOR;
   #endif
   
   for (axis = 0; axis < 3; axis++) {
@@ -285,8 +267,6 @@ void getEstimatedAttitude(){
       (EstM32.V.Y * sqGX_sqGZ - (EstM32.V.X * EstG32.V.X + EstM32.V.Z * EstG32.V.Z) * EstG32.V.Y ) * invG); 
     heading += MAG_DECLINIATION * 10; //add declination
     heading = heading /10;
-    if ( heading > 180)      heading = heading - 360;
-    else if (heading < -180) heading = heading + 360;
   #endif
 }
 
@@ -340,8 +320,8 @@ uint8_t getEstimatedAltitude(){
     
     // projection of ACC vector to global Z, with 1G subtructed
     // Math: accZ = A * G / |G| - 1G
-    int16_t accZ = (accLPFVel[ROLL] * EstG.V.X + accLPFVel[PITCH] * EstG.V.Y + accLPFVel[YAW] * EstG.V.Z) * invG;
-    
+    int16_t accZ = (accSmoothVel[ROLL] * EstG.V.X + accSmoothVel[PITCH] * EstG.V.Y + accSmoothVel[YAW] * EstG.V.Z) * invG;
+
     static int16_t accZoffset = 0; // = acc_1G*6; //58 bytes saved and convergence is fast enough to omit init
     if (!f.ARMED) {
       accZoffset -= accZoffset/6;
