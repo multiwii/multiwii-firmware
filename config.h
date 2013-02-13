@@ -964,22 +964,6 @@
     //#define MEGA_HW_PWM_SERVOS
 
   /********************************************************************/
-  /****           IMU complimentary filter tuning                  ****/
-  /********************************************************************/
-
-    /* Set the Gyro Weight for Gyro/Acc complementary filter
-       Increasing this value would reduce and delay Acc influence on the output of the filter
-       Comment this out if you want to set a specific coeff (non default)
-       unit = n power of 2 */
-    //#define GYR_CMPF_FACTOR 9
-
-    /* Set the Gyro Weight for Gyro/Magnetometer complementary filter
-       Increasing this value would reduce and delay Magnetometer influence on the output of the filter
-       Comment this out if you want to set a specific coeff (non default)
-       unit = n power of 2 */
-    //#define GYR_CMPFM_FACTOR 8
-
-  /********************************************************************/
   /****           Serial command handling - MSP and other          ****/
   /********************************************************************/
 
