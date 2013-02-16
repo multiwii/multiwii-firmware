@@ -154,7 +154,7 @@ void i2c_init(void) {
     I2C_PULLUPS_DISABLE
   #endif
   TWSR = 0;                                    // no prescaler => prescaler = 1
-  TWBR = ((F_CPU / I2C_SPEED) - 16) / 2;   // change the I2C clock rate
+  TWBR = ((F_CPU / I2C_SPEED) - 16) / 2;       // change the I2C clock rate
   TWCR = 1<<TWEN;                              // enable twi module, no interrupt
 }
 
@@ -279,7 +279,7 @@ void GYRO_Common() {
   if (calibratingG>0) {
     for (axis = 0; axis < 3; axis++) {
       // Reset g[axis] at start of calibration
-      if (calibratingG == 400) {
+      if (calibratingG == 512) {
         g[axis]=0;
         
         #if defined(GYROCALIBRATIONFAILSAFE)
@@ -290,13 +290,13 @@ void GYRO_Common() {
             previousGyroADC[axis] = gyroADC[axis];
        #endif
       }
-      // Sum up 400 readings
+      // Sum up 512 readings
       g[axis] +=gyroADC[axis];
       // Clear global variables for next reading
       gyroADC[axis]=0;
       gyroZero[axis]=0;
       if (calibratingG == 1) {
-        gyroZero[axis]=g[axis]/400;
+        gyroZero[axis]=g[axis]>>9;
       #if defined(BUZZER)
         alarmArray[7] = 4;
       #else
@@ -358,8 +358,8 @@ void ACC_Common() {
   if (calibratingA>0) {
     for (uint8_t axis = 0; axis < 3; axis++) {
       // Reset a[axis] at start of calibration
-      if (calibratingA == 400) a[axis]=0;
-      // Sum up 400 readings
+      if (calibratingA == 512) a[axis]=0;
+      // Sum up 512 readings
       a[axis] +=accADC[axis];
       // Clear global variables for next reading
       accADC[axis]=0;
@@ -367,9 +367,9 @@ void ACC_Common() {
     }
     // Calculate average, shift Z down by acc_1G and store values in EEPROM at end of calibration
     if (calibratingA == 1) {
-      global_conf.accZero[ROLL]  = a[ROLL]/400;
-      global_conf.accZero[PITCH] = a[PITCH]/400;
-      global_conf.accZero[YAW]   = a[YAW]/400-acc_1G; // for nunchuk 200=1G
+      global_conf.accZero[ROLL]  = a[ROLL]>>9;
+      global_conf.accZero[PITCH] = a[PITCH]>>9;
+      global_conf.accZero[YAW]   = (a[YAW]>>9)-acc_1G; // for nunchuk 200=1G
       conf.angleTrim[ROLL]   = 0;
       conf.angleTrim[PITCH]  = 0;
       writeGlobalSet(1); // write accZero in EEPROM
@@ -687,7 +687,7 @@ void i2c_MS561101BA_Calculate() {
     off  -= off2; 
     sens -= sens2;
   }
- 
+
   baroPressure     = (( (ms561101ba_ctx.up.val * sens ) >> 21) - off) >> 15;
 }
 
@@ -853,9 +853,9 @@ void ACC_getADC () {
   TWBR = ((F_CPU / 400000L) - 16) / 2;  // Optional line.  Sensor is good for it in the spec.
   i2c_getSixRawADC(BMA180_ADDRESS,0x02);
   //usefull info is on the 14 bits  [2-15] bits  /4 => [0-13] bits  /4 => 12 bit resolution
-  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/16 ,
-                   ((rawADC[3]<<8) | rawADC[2])/16 ,
-                   ((rawADC[5]<<8) | rawADC[4])/16 );
+  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>4 ,
+                   ((rawADC[3]<<8) | rawADC[2])>>4 ,
+                   ((rawADC[5]<<8) | rawADC[4])>>4 );
   ACC_Common();
 }
 #endif
@@ -890,9 +890,9 @@ void ACC_init(){
 void ACC_getADC(){
   TWBR = ((F_CPU / 400000L) - 16) / 2;
   i2c_getSixRawADC(0x38,0x02);
-  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/64 ,
-                   ((rawADC[3]<<8) | rawADC[2])/64 ,
-                   ((rawADC[5]<<8) | rawADC[4])/64 );
+  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>6 ,
+                   ((rawADC[3]<<8) | rawADC[2])>>6 ,
+                   ((rawADC[5]<<8) | rawADC[4])>>6 );
   ACC_Common();
 }
 #endif
@@ -936,9 +936,9 @@ void ACC_init(){
 void ACC_getADC(){
   TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   i2c_getSixRawADC(LIS3A,0x28+0x80);
-  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/4 ,
-                   ((rawADC[3]<<8) | rawADC[2])/4 ,
-                   ((rawADC[5]<<8) | rawADC[4])/4);
+  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>2 ,
+                   ((rawADC[3]<<8) | rawADC[2])>>2 ,
+                   ((rawADC[5]<<8) | rawADC[4])>>2);
   ACC_Common();
 }
 #endif
@@ -960,9 +960,9 @@ void ACC_init () {
   TWBR = ((F_CPU / 400000L) - 16) / 2;
   i2c_getSixRawADC(0x18,0xA8);
 
-  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/16 ,
-                   ((rawADC[3]<<8) | rawADC[2])/16 ,
-                   ((rawADC[5]<<8) | rawADC[4])/16 );
+  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>4 ,
+                   ((rawADC[3]<<8) | rawADC[2])>>4 ,
+                   ((rawADC[5]<<8) | rawADC[4])>>4 );
   ACC_Common();
 }
 #endif
@@ -1036,9 +1036,9 @@ void Gyro_init() {
 void Gyro_getADC () {
   TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
   i2c_getSixRawADC(ITG3200_ADDRESS,0X1D);
-  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/4 , // range: +/- 8192; +/- 2000 deg/sec
-                    ((rawADC[2]<<8) | rawADC[3])/4 ,
-                    ((rawADC[4]<<8) | rawADC[5])/4 );
+  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])>>2 , // range: +/- 8192; +/- 2000 deg/sec
+                    ((rawADC[2]<<8) | rawADC[3])>>2 ,
+                    ((rawADC[4]<<8) | rawADC[5])>>2 );
   GYRO_Common();
 }
 #endif
@@ -1088,7 +1088,7 @@ uint8_t Mag_getADC() { // return 1 when news values are available, 0 otherwise
     } else {
       tCal = 0;
       for(axis=0;axis<3;axis++)
-        global_conf.magZero[axis] = (magZeroTempMin[axis] + magZeroTempMax[axis])/2;
+        global_conf.magZero[axis] = (magZeroTempMin[axis] + magZeroTempMax[axis])>>1;
       writeGlobalSet(1);
     }
   } else {
@@ -1192,7 +1192,7 @@ void Mag_init() {
 
   // Apply the negative bias. (Same gain)
   i2c_writeReg(MAG_ADDRESS,HMC58X3_R_CONFA, 0x010 + HMC_NEG_BIAS); // Reg A DOR=0x010 + MS1,MS0 set to negative bias.
-  for (unsigned int i=0; i<10; i++) { 
+  for (uint8_t i=0; i<10; i++) { 
     i2c_writeReg(MAG_ADDRESS,HMC58X3_R_MODE, 1);
     delay(100);
     getADC();  // Get the raw values in case the scales have already been changed.
@@ -1209,14 +1209,14 @@ void Mag_init() {
     }
   }
 
-  magGain[0]=fabs((820.0*(HMC58X3_X_SELF_TEST_GAUSS*2.0))/(xyz_total[0]/10));
-  magGain[1]=fabs((820.0*(HMC58X3_Y_SELF_TEST_GAUSS*2.0))/(xyz_total[1]/10));
-  magGain[2]=fabs((820.0*(HMC58X3_Z_SELF_TEST_GAUSS*2.0))/(xyz_total[2]/10));
+  magGain[0]=fabs(820.0*HMC58X3_X_SELF_TEST_GAUSS*2.0*10.0/xyz_total[0]);
+  magGain[1]=fabs(820.0*HMC58X3_Y_SELF_TEST_GAUSS*2.0*10.0/xyz_total[1]);
+  magGain[2]=fabs(820.0*HMC58X3_Z_SELF_TEST_GAUSS*2.0*10.0/xyz_total[2]);
 
   // leave test mode
   i2c_writeReg(MAG_ADDRESS ,HMC58X3_R_CONFA ,0x70 ); //Configuration Register A  -- 0 11 100 00  num samples: 8 ; output rate: 15Hz ; normal measurement mode
   i2c_writeReg(MAG_ADDRESS ,HMC58X3_R_CONFB ,0x20 ); //Configuration Register B  -- 001 00000    configuration gain 1.3Ga
-  i2c_writeReg(MAG_ADDRESS ,HMC58X3_R_MODE ,0x00 ); //Mode register             -- 000000 00    continuous Conversion Mode
+  i2c_writeReg(MAG_ADDRESS ,HMC58X3_R_MODE  ,0x00 ); //Mode register             -- 000000 00    continuous Conversion Mode
   delay(100);
   magInit = 1;
 
@@ -1335,9 +1335,9 @@ void Gyro_init() {
 
 void Gyro_getADC () {
   i2c_getSixRawADC(MPU6050_ADDRESS, 0x43);
-  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/4 , // range: +/- 8192; +/- 2000 deg/sec
-                    ((rawADC[2]<<8) | rawADC[3])/4 ,
-                    ((rawADC[4]<<8) | rawADC[5])/4 );
+  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])>>2 , // range: +/- 8192; +/- 2000 deg/sec
+                    ((rawADC[2]<<8) | rawADC[3])>>2 ,
+                    ((rawADC[4]<<8) | rawADC[5])>>2 );
   GYRO_Common();
 }
 
@@ -1365,9 +1365,9 @@ void ACC_init () {
 
 void ACC_getADC () {
   i2c_getSixRawADC(MPU6050_ADDRESS, 0x3B);
-  ACC_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/8 ,
-                   ((rawADC[2]<<8) | rawADC[3])/8 ,
-                   ((rawADC[4]<<8) | rawADC[5])/8 );
+  ACC_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])>>3 ,
+                   ((rawADC[2]<<8) | rawADC[3])>>3 ,
+                   ((rawADC[4]<<8) | rawADC[5])>>3 );
   ACC_Common();
 }
 
@@ -1409,9 +1409,9 @@ void Gyro_init() {
 
 void Gyro_getADC () {
   i2c_getSixRawADC(MPU3050_ADDRESS, 0x1D);
-  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/4 , // range: +/- 8192; +/- 2000 deg/sec
-                    ((rawADC[2]<<8) | rawADC[3])/4 ,
-                    ((rawADC[4]<<8) | rawADC[5])/4 );
+  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])>>2 , // range: +/- 8192; +/- 2000 deg/sec
+                    ((rawADC[2]<<8) | rawADC[3])>>2 ,
+                    ((rawADC[4]<<8) | rawADC[5])>>2 );
   GYRO_Common();
 }
 

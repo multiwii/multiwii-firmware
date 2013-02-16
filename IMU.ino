@@ -23,7 +23,7 @@ void computeIMU () {
     for (axis = 0; axis < 3; axis++) {
       // empirical, we take a weighted value of the current and the previous values
       // /4 is to average 4 values, note: overflow is not possible for WMP gyro here
-      gyroData[axis] = (gyroADC[axis]*3+gyroADCprevious[axis])/4;
+      gyroData[axis] = (gyroADC[axis]*3+gyroADCprevious[axis])>>2;
       gyroADCprevious[axis] = gyroADC[axis];
     }
   #else
@@ -50,7 +50,7 @@ void computeIMU () {
       gyroADCinter[axis] =  gyroADC[axis]+gyroADCp[axis];
       // empirical, we take a weighted value of the current and the previous values
       gyroData[axis] = (gyroADCinter[axis]+gyroADCprevious[axis])/3;
-      gyroADCprevious[axis] = gyroADCinter[axis]/2;
+      gyroADCprevious[axis] = gyroADCinter[axis]>>1;
       if (!ACC) accADC[axis]=0;
     }
   #endif
@@ -244,7 +244,8 @@ void getEstimatedAttitude(){
 #define UPDATE_INTERVAL 25000    // 40hz update rate (20hz LPF on acc)
 #define BARO_TAB_SIZE   21
 
-#define ACC_Z_DEADBAND (acc_1G/40)
+#define ACC_Z_DEADBAND (acc_1G>>5) // was 40 instead of 32 now
+
 
 #define applyDeadband(value, deadband)  \
   if(abs(value) < deadband) {           \
@@ -259,21 +260,23 @@ void getEstimatedAttitude(){
 uint8_t getEstimatedAltitude(){
   static uint32_t deadLine;
   static int32_t baroGroundPressure;
+  static uint16_t previousT;
+  uint16_t currentT = micros();
+  uint16_t dTime;
 
-  uint16_t dTime = currentTime - deadLine;
+  dTime = currentT - previousT;
   if (dTime < UPDATE_INTERVAL) return 0;
-  deadLine = currentTime;
+  previousT = currentT;
 
   if(calibratingB > 0) {
     baroGroundPressure = baroPressureSum/(BARO_TAB_SIZE - 1);
     calibratingB--;
   }
-  
+
   // pressure relative to ground pressure with temperature compensation (fast!)
   // baroGroundPressure is not supposed to be 0 here
   // see: https://code.google.com/p/ardupilot-mega/source/browse/libraries/AP_Baro/AP_Baro.cpp
-  BaroAlt = log( baroGroundPressure / (baroPressureSum/(float)(BARO_TAB_SIZE - 1)) ) * (baroTemperature+27315) * 29.271267f; // in cemtimeter 
-
+  BaroAlt = log( baroGroundPressure * (BARO_TAB_SIZE - 1)/ (float)baroPressureSum ) * (baroTemperature+27315) * 29.271267f; // in cemtimeter 
 
   EstAlt = (EstAlt * 6 + BaroAlt * 2) >> 3; // additional LPF to reduce baro noise (faster by 30 µs)
 
@@ -281,48 +284,47 @@ uint8_t getEstimatedAltitude(){
     //P
     int16_t error16 = constrain(AltHold - EstAlt, -300, 300);
     applyDeadband(error16, 10); //remove small P parametr to reduce noise near zero position
-    BaroPID = constrain((conf.P8[PIDALT] * error16 / 100), -150, +150);
-    
+    BaroPID = constrain((conf.P8[PIDALT] * error16 >>7), -150, +150);
+
     //I
-    errorAltitudeI += error16 * conf.I8[PIDALT]/50;
+    errorAltitudeI += conf.I8[PIDALT] * error16 >>6;
     errorAltitudeI = constrain(errorAltitudeI,-30000,30000);
-    BaroPID += (errorAltitudeI / 500); //I in range +/-60
-    
-    
+    BaroPID += errorAltitudeI>>9; //I in range +/-60
+ 
     // projection of ACC vector to global Z, with 1G subtructed
     // Math: accZ = A * G / |G| - 1G
     int16_t accZ = (accSmooth[ROLL] * EstG32.V.X + accSmooth[PITCH] * EstG32.V.Y + accSmooth[YAW] * EstG32.V.Z) * invG;
 
     static int16_t accZoffset = 0; // = acc_1G*6; //58 bytes saved and convergence is fast enough to omit init
     if (!f.ARMED) {
-      accZoffset -= accZoffset/6;
+      accZoffset -= accZoffset>>3;
       accZoffset += accZ;
     }  
-    accZ -= accZoffset/6;
+    accZ -= accZoffset>>3;
     applyDeadband(accZ, ACC_Z_DEADBAND);
-    
+
     static float vel = 0.0f;
     static float accVelScale = 9.80665f / 10000.0f / acc_1G ;
-    
+
     // Integrator - velocity, cm/sec
     vel += accZ * accVelScale * dTime;
-    
+
     static int32_t lastBaroAlt;
     int16_t baroVel = (EstAlt - lastBaroAlt) * 1000000.0f / dTime;
     lastBaroAlt = EstAlt;
-  
+
     baroVel = constrain(baroVel, -300, 300); // constrain baro velocity +/- 300cm/s
     applyDeadband(baroVel, 10); // to reduce noise near zero
-    
+
     // apply Complimentary Filter to keep the calculated velocity based on baro velocity (i.e. near real velocity). 
     // By using CF it's possible to correct the drift of integrated accZ (velocity) without loosing the phase, i.e without delay
     vel = vel * 0.985f + baroVel * 0.015f;
-    
+
     //D
     int16_t vel_tmp = vel;
     applyDeadband(vel_tmp, 5);
     vario = vel_tmp;
-    BaroPID -= constrain(conf.D8[PIDALT] * vel_tmp / 20, -150, 150);
+    BaroPID -= constrain(conf.D8[PIDALT] * vel_tmp >>4, -150, 150);
   #endif
   return 1;
 }

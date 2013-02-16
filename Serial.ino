@@ -485,7 +485,7 @@ void evaluateCommand() {
      headSerialReply(0);
      break;
    case MSP_ACC_CALIBRATION:
-     if(!f.ARMED) calibratingA=400;
+     if(!f.ARMED) calibratingA=512;
      headSerialReply(0);
      break;
    case MSP_MAG_CALIBRATION:

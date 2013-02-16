@@ -400,18 +400,19 @@ void computeRC() {
       readSBus();
     #endif
     rc4ValuesIndex++;
+    if (rc4ValuesIndex == 4) rc4ValuesIndex = 0;
     for (chan = 0; chan < RC_CHANS; chan++) {
       #if defined(FAILSAFE)
         uint16_t rcval = readRawRC(chan);
         if(rcval>FAILSAFE_DETECT_TRESHOLD || chan > 3) {        // update controls channel only if pulse is above FAILSAFE_DETECT_TRESHOLD
-          rcData4Values[chan][rc4ValuesIndex%4] = rcval;
+          rcData4Values[chan][rc4ValuesIndex] = rcval;
         }
       #else
-        rcData4Values[chan][rc4ValuesIndex%4] = readRawRC(chan);
+        rcData4Values[chan][rc4ValuesIndex] = readRawRC(chan);
       #endif
       rcDataMean[chan] = 0;
       for (a=0;a<4;a++) rcDataMean[chan] += rcData4Values[chan][a];
-      rcDataMean[chan]= (rcDataMean[chan]+2)/4;
+      rcDataMean[chan]= (rcDataMean[chan]+2)>>2;
       if ( rcDataMean[chan] < (uint16_t)rcData[chan] -3)  rcData[chan] = rcDataMean[chan]+2;
       if ( rcDataMean[chan] > (uint16_t)rcData[chan] +3)  rcData[chan] = rcDataMean[chan]-2;
     }
