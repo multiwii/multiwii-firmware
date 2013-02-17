@@ -773,9 +773,9 @@ static lcd_type_desc_t LAUX4 = {&__uAuxFmt4, &__u16Inc};
 // ************************************************************************************************************
 // Descriptors
 static lcd_param_def_t __P = {&LTU8, 1, 1, 1};
-static lcd_param_def_t __I = {&LTU8, 3, 1, 2};
+static lcd_param_def_t __I = {&LTU8, 3, 1, 1};
 static lcd_param_def_t __D = {&LTU8, 0, 1, 1};
-static lcd_param_def_t __RC = {&LTU8, 2, 1, 2};
+static lcd_param_def_t __RC = {&LTU8, 2, 1, 1};
 static lcd_param_def_t __PM = {&LPMM, 1, 1, 0};
 static lcd_param_def_t __PS = {&LPMS, 1, 1, 0};
 static lcd_param_def_t __PT = {&LTU8, 0, 1, 1};
@@ -2268,7 +2268,6 @@ void toggle_telemetry(uint8_t t) {
       /*LCDclear();*/ LCDnextline();
       if (full) {
         #ifdef DEBUG
-          LCDprintChar("LastOff  "); LCDprintChar(plog.running ? "KO" : "ok");  LCDnextline();
           LCDprintChar("#arm   "); lcdprint_int16(plog.arm); LCDnextline();
           LCDprintChar("#disarm"); lcdprint_int16(plog.disarm); LCDnextline();
           LCDprintChar("last[s]"); lcdprint_int16(plog.armed_time/1000000); LCDnextline();
@@ -2277,6 +2276,7 @@ void toggle_telemetry(uint8_t t) {
           //            0123456789012345
         #endif
       }
+      LCDprintChar("LastOff   "); LCDprintChar(plog.running ? "KO" : "ok");  LCDnextline();
       LCDprintChar("#On      "); lcdprint_int16(plog.start); LCDnextline();
       LCDprintChar("Life[min]"); lcdprint_int16(plog.lifetime/60); LCDnextline();
       /*strcpy_P(line2,PSTR("Fail --- i2c ---"));

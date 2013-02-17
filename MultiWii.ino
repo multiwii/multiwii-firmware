@@ -255,7 +255,7 @@ struct flags_struct {
   static uint16_t powerMax = 0;           // highest ever current;
   static int32_t  BAROaltMax;         // maximum value
 #endif
-#if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)
+#if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)  || defined(LOG_PERMANENT)
   static uint32_t armedTime = 0;
 #endif
 
@@ -783,7 +783,7 @@ void setup() {
       dumpPLog(0);
     #endif
     plog.armed_time = 0;   // lifetime in seconds
-    plog.running = 0;       // toggle on arm & disarm to monitor for clean shutdown vs. powercut
+    //plog.running = 0;       // toggle on arm & disarm to monitor for clean shutdown vs. powercut
   #endif
 
   debugmsg_append_str("initialization completed\n");
