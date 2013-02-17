@@ -323,8 +323,17 @@
      #define DUALCOPTER_SERVO {1,1} //Pitch,Roll
     /* Use  SERVO_OFFSET and SERVO_RATES in Heli and Airplane section for centering and endpoints */
 
-
-
+  /***********************      your individual mixing     ***********************/
+    /* if you want to override an existing entry in the mixing table, you may want to avoid esditing the
+     * mixTable() function for every version again and again. Then you must
+     * 1) enable the correct copter type which resembles correct number of motors&servos
+     * 2) create a file with your choice of name which contains all the mixing code for motors and servos.
+     *    To get an idea, look at mixTable() function
+     * 3) enable your mixing code with this define; replace filename with your chosen name
+     *    (if you needed this info then probably this is not for you; start with an existing copter type and
+     *    predefined mixing table entry)
+     */
+    //#define MY_PRIVATE_MIXING "filename.h"
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/
