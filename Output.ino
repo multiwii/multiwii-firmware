@@ -134,8 +134,7 @@ void writeServos() {
 /************  Writes the Motors values to the PWM compare register  ******************/
 /**************************************************************************************/
 void writeMotors() { // [1000;2000] => [125;250]
-
-/****************  Specific PWM Timers & Registers for the MEGA's   *******************/
+  /****************  Specific PWM Timers & Registers for the MEGA's   *******************/
   #if defined(MEGA)// [1000:2000] => [8000:16000] for timer 3 & 4 for mega
     #if (NUMBER_MOTOR > 0) 
       #ifndef EXT_MOTOR_RANGE 
@@ -185,7 +184,7 @@ void writeMotors() { // [1000;2000] => [125;250]
     #endif
   #endif
   
-/******** Specific PWM Timers & Registers for the atmega32u4 (Promicro)   ************/
+  /******** Specific PWM Timers & Registers for the atmega32u4 (Promicro)   ************/
   #if defined(PROMICRO)
     #if (NUMBER_MOTOR > 0) // Timer 1 A & B [1000:2000] => [8000:16000]
       #ifndef EXT_MOTOR_RANGE 
@@ -262,7 +261,7 @@ void writeMotors() { // [1000;2000] => [125;250]
     #endif
   #endif
   
-/********  Specific PWM Timers & Registers for the atmega328P (Promini)   ************/
+  /********  Specific PWM Timers & Registers for the atmega328P (Promini)   ************/
   #if defined(PROMINI)
     #if (NUMBER_MOTOR > 0)
       #ifndef EXT_MOTOR_RANGE 
@@ -333,13 +332,12 @@ void writeAllMotors(int16_t mc) {   // Sends commands to all motors
 /************        Initialize the PWM Timers and Registers         ******************/
 /**************************************************************************************/
 void initOutput() {
-  
-/****************            mark all PWM pins as Output             ******************/
+  /****************            mark all PWM pins as Output             ******************/
   for(uint8_t i=0;i<NUMBER_MOTOR;i++) {
     pinMode(PWM_PIN[i],OUTPUT);
   }
     
-/****************  Specific PWM Timers & Registers for the MEGA's    ******************/
+  /****************  Specific PWM Timers & Registers for the MEGA's    ******************/
   #if defined(MEGA)
     #if (NUMBER_MOTOR > 0)
       // init 16bit timer 3
@@ -378,7 +376,7 @@ void initOutput() {
     #endif
   #endif
   
-/******** Specific PWM Timers & Registers for the atmega32u4 (Promicro)   ************/
+  /******** Specific PWM Timers & Registers for the atmega32u4 (Promicro)   ************/
   #if defined(PROMICRO)
     #if (NUMBER_MOTOR > 0)
       TCCR1A |= (1<<WGM11); // phase correct mode & no prescaler
@@ -429,7 +427,7 @@ void initOutput() {
     #endif
   #endif
   
- /********  Specific PWM Timers & Registers for the atmega328P (Promini)   ************/
+  /********  Specific PWM Timers & Registers for the atmega328P (Promini)   ************/
   #if defined(PROMINI)
     #if (NUMBER_MOTOR > 0)
       TCCR1A |= _BV(COM1A1); // connect pin 9 to timer 1 channel A
@@ -452,7 +450,7 @@ void initOutput() {
     #endif
   #endif
 
- /********  special version of MultiWii to calibrate all attached ESCs ************/
+  /********  special version of MultiWii to calibrate all attached ESCs ************/
   #if defined(ESC_CALIB_CANNOT_FLY)
     writeAllMotors(ESC_CALIB_HIGH);
     delay(3000);
@@ -668,7 +666,7 @@ void initializeServo() {
 
 #if (NUMBER_MOTOR > 4) && (defined(PROMINI) || defined(PROMICRO))
 
-/****************    Pre define the used ISR's and Timerchannels     ******************/
+  /****************    Pre define the used ISR's and Timerchannels     ******************/
   #if !defined(PROMICRO)
     #define SOFT_PWM_ISR1 TIMER0_COMPB_vect
     #define SOFT_PWM_ISR2 TIMER0_COMPA_vect
@@ -684,7 +682,7 @@ void initializeServo() {
     #define SOFT_PWM_CHANNEL2 OCR0B 
   #endif
   
-/****************         Initialize Timers and PWM Channels         ******************/
+  /****************         Initialize Timers and PWM Channels         ******************/
   void initializeSoftPWM() {
     #if !defined(PROMICRO)
       TCCR0A = 0; // normal counting mode
@@ -692,7 +690,6 @@ void initializeServo() {
         TIMSK0 |= (1<<OCIE0B); // Enable CTC interrupt  
       #endif
       #if (NUMBER_MOTOR > 6) || ((NUMBER_MOTOR == 6) && !defined(SERVO))
-
         TIMSK0 |= (1<<OCIE0A);
       #endif
     #else
@@ -711,7 +708,7 @@ void initializeServo() {
     #endif
   }
   
-/****************               Motor SW PWM ISR's                 ******************/
+  /****************               Motor SW PWM ISR's                 ******************/
   // hexa with old but sometimes better SW PWM method
   // for setups without servos
   #if (NUMBER_MOTOR == 6) && (!defined(SERVO) && !defined(HWPWM6))
@@ -820,362 +817,361 @@ void mixTable() {
     #include MY_PRIVATE_MIXING
   #else
     #ifdef BI
-        motor[0] = PIDMIX(+1, 0, 0); //LEFT
-        motor[1] = PIDMIX(-1, 0, 0); //RIGHT
-        servo[4]  = constrain(1500 + (YAW_DIRECTION * axisPID[YAW]) + (BI_PITCH_DIRECTION * axisPID[PITCH]), 1020, 2000); //LEFT
-        servo[5]  = constrain(1500 + (YAW_DIRECTION * axisPID[YAW]) - (BI_PITCH_DIRECTION * axisPID[PITCH]), 1020, 2000); //RIGHT
+      motor[0] = PIDMIX(+1, 0, 0); //LEFT
+      motor[1] = PIDMIX(-1, 0, 0); //RIGHT
+      servo[4]  = constrain(1500 + (YAW_DIRECTION * axisPID[YAW]) + (BI_PITCH_DIRECTION * axisPID[PITCH]), 1020, 2000); //LEFT
+      servo[5]  = constrain(1500 + (YAW_DIRECTION * axisPID[YAW]) - (BI_PITCH_DIRECTION * axisPID[PITCH]), 1020, 2000); //RIGHT
+    #endif
+    #ifdef TRI
+      motor[0] = PIDMIX( 0,+4/3, 0); //REAR
+      motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
+      motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
+      servo[5] = constrain(conf.tri_yaw_middle + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
+    #endif
+    #ifdef QUADP
+      motor[0] = PIDMIX( 0,+1,-1); //REAR
+      motor[1] = PIDMIX(-1, 0,+1); //RIGHT
+      motor[2] = PIDMIX(+1, 0,+1); //LEFT
+      motor[3] = PIDMIX( 0,-1,-1); //FRONT
+    #endif
+    #ifdef QUADX
+      motor[0] = PIDMIX(-1,+1,-1); //REAR_R
+      motor[1] = PIDMIX(-1,-1,+1); //FRONT_R
+      motor[2] = PIDMIX(+1,+1,+1); //REAR_L
+      motor[3] = PIDMIX(+1,-1,-1); //FRONT_L
+    #endif
+    #ifdef Y4
+      motor[0] = PIDMIX(+0,+1,-1);   //REAR_1 CW
+      motor[1] = PIDMIX(-1,-1, 0); //FRONT_R CCW
+      motor[2] = PIDMIX(+0,+1,+1);   //REAR_2 CCW
+      motor[3] = PIDMIX(+1,-1, 0); //FRONT_L CW
+    #endif
+    #ifdef Y6
+      motor[0] = PIDMIX(+0,+4/3,+1); //REAR
+      motor[1] = PIDMIX(-1,-2/3,-1); //RIGHT
+      motor[2] = PIDMIX(+1,-2/3,-1); //LEFT
+      motor[3] = PIDMIX(+0,+4/3,-1); //UNDER_REAR
+      motor[4] = PIDMIX(-1,-2/3,+1); //UNDER_RIGHT
+      motor[5] = PIDMIX(+1,-2/3,+1); //UNDER_LEFT
+    #endif
+    #ifdef HEX6
+      motor[0] = PIDMIX(-7/8,+1/2,+1); //REAR_R
+      motor[1] = PIDMIX(-7/8,-1/2,-1); //FRONT_R
+      motor[2] = PIDMIX(+7/8,+1/2,+1); //REAR_L
+      motor[3] = PIDMIX(+7/8,-1/2,-1); //FRONT_L
+      motor[4] = PIDMIX(+0  ,-1  ,+1); //FRONT
+      motor[5] = PIDMIX(+0  ,+1  ,-1); //REAR
+    #endif
+    #ifdef HEX6X
+      motor[0] = PIDMIX(-1/2,+7/8,+1); //REAR_R
+      motor[1] = PIDMIX(-1/2,-7/8,+1); //FRONT_R
+      motor[2] = PIDMIX(+1/2,+7/8,-1); //REAR_L
+      motor[3] = PIDMIX(+1/2,-7/8,-1); //FRONT_L
+      motor[4] = PIDMIX(-1  ,+0  ,-1); //RIGHT
+      motor[5] = PIDMIX(+1  ,+0  ,+1); //LEFT
+    #endif
+    #ifdef HEX6H
+      motor[0] = PIDMIX(-1,+1,-1); //REAR_R
+      motor[1] = PIDMIX(-1,-1,+1); //FRONT_R
+      motor[2] = PIDMIX(+ 1,+1,+1); //REAR_L
+      motor[3] = PIDMIX(+ 1,-1,-1); //FRONT_L
+      motor[4] = PIDMIX(0 ,0 ,0); //RIGHT
+      motor[5] = PIDMIX(0 ,0 ,0); //LEFT
+    #endif
+    #ifdef OCTOX8
+      motor[0] = PIDMIX(-1,+1,-1); //REAR_R
+      motor[1] = PIDMIX(-1,-1,+1); //FRONT_R
+      motor[2] = PIDMIX(+1,+1,+1); //REAR_L
+      motor[3] = PIDMIX(+1,-1,-1); //FRONT_L
+      motor[4] = PIDMIX(-1,+1,+1); //UNDER_REAR_R
+      motor[5] = PIDMIX(-1,-1,-1); //UNDER_FRONT_R
+      motor[6] = PIDMIX(+1,+1,-1); //UNDER_REAR_L
+      motor[7] = PIDMIX(+1,-1,+1); //UNDER_FRONT_L
+    #endif
+    #ifdef OCTOFLATP
+      motor[0] = PIDMIX(+7/10,-7/10,+1); //FRONT_L
+      motor[1] = PIDMIX(-7/10,-7/10,+1); //FRONT_R
+      motor[2] = PIDMIX(-7/10,+7/10,+1); //REAR_R
+      motor[3] = PIDMIX(+7/10,+7/10,+1); //REAR_L
+      motor[4] = PIDMIX(+0   ,-1   ,-1); //FRONT
+      motor[5] = PIDMIX(-1   ,+0   ,-1); //RIGHT
+      motor[6] = PIDMIX(+0   ,+1   ,-1); //REAR
+      motor[7] = PIDMIX(+1   ,+0   ,-1); //LEFT
+    #endif
+    #ifdef OCTOFLATX
+      motor[0] = PIDMIX(+1  ,-1/2,+1); //MIDFRONT_L
+      motor[1] = PIDMIX(-1/2,-1  ,+1); //FRONT_R
+      motor[2] = PIDMIX(-1  ,+1/2,+1); //MIDREAR_R
+      motor[3] = PIDMIX(+1/2,+1  ,+1); //REAR_L
+      motor[4] = PIDMIX(+1/2,-1  ,-1); //FRONT_L
+      motor[5] = PIDMIX(-1  ,-1/2,-1); //MIDFRONT_R
+      motor[6] = PIDMIX(-1/2,+1  ,-1); //REAR_R
+      motor[7] = PIDMIX(+1  ,+1/2,-1); //MIDREAR_L
+    #endif
+    #ifdef VTAIL4
+      motor[0] = PIDMIX(+0,+1, +1); //REAR_R
+      motor[1] = PIDMIX(-1, -1, +0); //FRONT_R
+      motor[2] = PIDMIX(+0,+1, -1); //REAR_L
+      motor[3] = PIDMIX(+1, -1, -0); //FRONT_L
+    #endif
 
+    /****************                Cam stabilize Servos             ******************/
+    #if defined(SERVO_TILT)
+      #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
+        #define S_PITCH servo[2]
+        #define S_ROLL  servo[3]
+      #else
+        #define S_PITCH servo[0]
+        #define S_ROLL  servo[1]
       #endif
-      #ifdef TRI
-        motor[0] = PIDMIX( 0,+4/3, 0); //REAR
-        motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
-        motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
-        servo[5] = constrain(conf.tri_yaw_middle + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
+      #ifdef TILT_PITCH_AUX_CH
+        S_PITCH = TILT_PITCH_MIDDLE + rcData[TILT_PITCH_AUX_CH]-1500;
+      #else
+        S_PITCH = TILT_PITCH_MIDDLE;
       #endif
-      #ifdef QUADP
-        motor[0] = PIDMIX( 0,+1,-1); //REAR
-        motor[1] = PIDMIX(-1, 0,+1); //RIGHT
-        motor[2] = PIDMIX(+1, 0,+1); //LEFT
-        motor[3] = PIDMIX( 0,-1,-1); //FRONT
+      #ifdef TILT_ROLL_AUX_CH
+        S_ROLL  = TILT_ROLL_MIDDLE  + rcData[TILT_ROLL_AUX_CH]-1500;
+      #else
+        S_ROLL  = TILT_ROLL_MIDDLE;
       #endif
-      #ifdef QUADX
-        motor[0] = PIDMIX(-1,+1,-1); //REAR_R
-        motor[1] = PIDMIX(-1,-1,+1); //FRONT_R
-        motor[2] = PIDMIX(+1,+1,+1); //REAR_L
-        motor[3] = PIDMIX(+1,-1,-1); //FRONT_L
-      #endif
-      #ifdef Y4
-        motor[0] = PIDMIX(+0,+1,-1);   //REAR_1 CW
-        motor[1] = PIDMIX(-1,-1, 0); //FRONT_R CCW
-        motor[2] = PIDMIX(+0,+1,+1);   //REAR_2 CCW
-        motor[3] = PIDMIX(+1,-1, 0); //FRONT_L CW
-      #endif
-      #ifdef Y6
-        motor[0] = PIDMIX(+0,+4/3,+1); //REAR
-        motor[1] = PIDMIX(-1,-2/3,-1); //RIGHT
-        motor[2] = PIDMIX(+1,-2/3,-1); //LEFT
-        motor[3] = PIDMIX(+0,+4/3,-1); //UNDER_REAR
-        motor[4] = PIDMIX(-1,-2/3,+1); //UNDER_RIGHT
-        motor[5] = PIDMIX(+1,-2/3,+1); //UNDER_LEFT
-      #endif
-      #ifdef HEX6
-        motor[0] = PIDMIX(-7/8,+1/2,+1); //REAR_R
-        motor[1] = PIDMIX(-7/8,-1/2,-1); //FRONT_R
-        motor[2] = PIDMIX(+7/8,+1/2,+1); //REAR_L
-        motor[3] = PIDMIX(+7/8,-1/2,-1); //FRONT_L
-        motor[4] = PIDMIX(+0  ,-1  ,+1); //FRONT
-        motor[5] = PIDMIX(+0  ,+1  ,-1); //REAR
-      #endif
-      #ifdef HEX6X
-        motor[0] = PIDMIX(-1/2,+7/8,+1); //REAR_R
-        motor[1] = PIDMIX(-1/2,-7/8,+1); //FRONT_R
-        motor[2] = PIDMIX(+1/2,+7/8,-1); //REAR_L
-        motor[3] = PIDMIX(+1/2,-7/8,-1); //FRONT_L
-        motor[4] = PIDMIX(-1  ,+0  ,-1); //RIGHT
-        motor[5] = PIDMIX(+1  ,+0  ,+1); //LEFT
-      #endif
-      #ifdef HEX6H
-        motor[0] = PIDMIX(-1,+1,-1); //REAR_R
-        motor[1] = PIDMIX(-1,-1,+1); //FRONT_R
-        motor[2] = PIDMIX(+ 1,+1,+1); //REAR_L
-        motor[3] = PIDMIX(+ 1,-1,-1); //FRONT_L
-        motor[4] = PIDMIX(0 ,0 ,0); //RIGHT
-        motor[5] = PIDMIX(0 ,0 ,0); //LEFT
-      #endif
-      #ifdef OCTOX8
-        motor[0] = PIDMIX(-1,+1,-1); //REAR_R
-        motor[1] = PIDMIX(-1,-1,+1); //FRONT_R
-        motor[2] = PIDMIX(+1,+1,+1); //REAR_L
-        motor[3] = PIDMIX(+1,-1,-1); //FRONT_L
-        motor[4] = PIDMIX(-1,+1,+1); //UNDER_REAR_R
-        motor[5] = PIDMIX(-1,-1,-1); //UNDER_FRONT_R
-        motor[6] = PIDMIX(+1,+1,-1); //UNDER_REAR_L
-        motor[7] = PIDMIX(+1,-1,+1); //UNDER_FRONT_L
-      #endif
-      #ifdef OCTOFLATP
-        motor[0] = PIDMIX(+7/10,-7/10,+1); //FRONT_L
-        motor[1] = PIDMIX(-7/10,-7/10,+1); //FRONT_R
-        motor[2] = PIDMIX(-7/10,+7/10,+1); //REAR_R
-        motor[3] = PIDMIX(+7/10,+7/10,+1); //REAR_L
-        motor[4] = PIDMIX(+0   ,-1   ,-1); //FRONT
-        motor[5] = PIDMIX(-1   ,+0   ,-1); //RIGHT
-        motor[6] = PIDMIX(+0   ,+1   ,-1); //REAR
-        motor[7] = PIDMIX(+1   ,+0   ,-1); //LEFT
-      #endif
-      #ifdef OCTOFLATX
-        motor[0] = PIDMIX(+1  ,-1/2,+1); //MIDFRONT_L
-        motor[1] = PIDMIX(-1/2,-1  ,+1); //FRONT_R
-        motor[2] = PIDMIX(-1  ,+1/2,+1); //MIDREAR_R
-        motor[3] = PIDMIX(+1/2,+1  ,+1); //REAR_L
-        motor[4] = PIDMIX(+1/2,-1  ,-1); //FRONT_L
-        motor[5] = PIDMIX(-1  ,-1/2,-1); //MIDFRONT_R
-        motor[6] = PIDMIX(-1/2,+1  ,-1); //REAR_R
-        motor[7] = PIDMIX(+1  ,+1/2,-1); //MIDREAR_L
-      #endif
-      #ifdef VTAIL4
-        motor[0] = PIDMIX(+0,+1, +1); //REAR_R
-        motor[1] = PIDMIX(-1, -1, +0); //FRONT_R
-        motor[2] = PIDMIX(+0,+1, -1); //REAR_L
-        motor[3] = PIDMIX(+1, -1, -0); //FRONT_L
-      #endif
+      if (rcOptions[BOXCAMSTAB]) {
+        S_PITCH += TILT_PITCH_PROP * angle[PITCH] /16 ;
+        S_ROLL  += TILT_ROLL_PROP  * angle[ROLL]  /16 ;
+      }
+      S_PITCH = constrain(S_PITCH, TILT_PITCH_MIN, TILT_PITCH_MAX);
+      S_ROLL  = constrain(S_ROLL , TILT_ROLL_MIN, TILT_ROLL_MAX  );
+    #endif
 
-      /****************                Cam stabilize Servos             ******************/
-      #if defined(SERVO_TILT)
+    //#if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS) && !defined(FIXEDWING) && !defined(HELICOPTER) && (RC_CHANS>8) //<- this part is not clean
+    //  servo[3] = rcData[8];
+    //  servo[4] = rcData[9];
+    //#endif
+
+    #ifdef SERVO_MIX_TILT
+      // Simple CameraGimbal By Bledy http://youtu.be/zKGr6iR54vM
+      if (rcOptions[BOXCAMSTAB]) {
+        servo[0] = constrain(TILT_PITCH_MIDDLE - (-TILT_ROLL_PROP) * angle[PITCH] /16 - TILT_ROLL_PROP * angle[ROLL] /16 , TILT_PITCH_MIN, TILT_PITCH_MAX);
+        servo[1] = constrain(TILT_ROLL_MIDDLE + (-TILT_ROLL_PROP) * angle[PITCH] /16 - TILT_ROLL_PROP * angle[ROLL] /16 , TILT_ROLL_MIN, TILT_ROLL_MAX);
+      } else {
+        // to use it with A0_A1_PIN_HEX
         #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
-          #define S_PITCH servo[2]
-          #define S_ROLL  servo[3]
+          servo[2] = constrain(TILT_PITCH_MIDDLE  + rcData[TILT_PITCH_AUX_CH]-1500 , TILT_PITCH_MIN, TILT_PITCH_MAX); //<- this part does not work as it should
+          servo[3] = constrain(TILT_ROLL_MIDDLE   + rcData[TILT_ROLL_AUX_CH]-1500,  TILT_ROLL_MIN, TILT_ROLL_MAX); //<- this part does not work as it should
         #else
-          #define S_PITCH servo[0]
-          #define S_ROLL  servo[1]
+          servo[0] = constrain(TILT_PITCH_MIDDLE  + rcData[TILT_PITCH_AUX_CH]-1500 , TILT_PITCH_MIN, TILT_PITCH_MAX); //<- this part does not work as it should
+          servo[1] = constrain(TILT_ROLL_MIDDLE   + rcData[TILT_ROLL_AUX_CH]-1500,  TILT_ROLL_MIN, TILT_ROLL_MAX); //<- this part does not work as it should
         #endif
-        #ifdef TILT_PITCH_AUX_CH
-          S_PITCH = TILT_PITCH_MIDDLE + rcData[TILT_PITCH_AUX_CH]-1500;
+      }
+    #endif
+
+    #ifdef GIMBAL
+      servo[0] = constrain(TILT_PITCH_MIDDLE + TILT_PITCH_PROP * angle[PITCH] /16 + rcCommand[PITCH], TILT_PITCH_MIN, TILT_PITCH_MAX);
+      servo[1] = constrain(TILT_ROLL_MIDDLE + TILT_ROLL_PROP   * angle[ROLL]  /16 + rcCommand[ROLL], TILT_ROLL_MIN, TILT_ROLL_MAX);
+    #endif
+
+    #if defined(FLYING_WING)
+      motor[0] = rcCommand[THROTTLE];
+      if (f.PASSTHRU_MODE) {// do not use sensors for correction, simple 2 channel mixing
+        servo[0]  = PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC);
+        servo[1]  = PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC);
+      } else { // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration
+        servo[0]  = PITCH_DIRECTION_L * axisPID[PITCH]        + ROLL_DIRECTION_L * axisPID[ROLL];
+        servo[1]  = PITCH_DIRECTION_R * axisPID[PITCH]        + ROLL_DIRECTION_R * axisPID[ROLL];
+      }
+      servo[0]  = constrain(servo[0] + conf.wing_left_mid , WING_LEFT_MIN,  WING_LEFT_MAX );
+      servo[1]  = constrain(servo[1] + conf.wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX);
+    #endif
+
+    /************************************************************************************************************/
+    #if defined(AIRPLANE) || defined(SINGLECOPTER) || defined(DUALCOPTER)
+      // Common parts for Plane and Heli
+      static int16_t   servoMid[8];                        // Midpoint on servo
+      static uint8_t   servoTravel[8] = SERVO_RATES;       // Rates in 0-100%
+      static int8_t    servoReverse[8] = SERVO_DIRECTION ; // Inverted servos
+      static int16_t   servoLimit[8][2]; // Holds servoLimit data
+
+      /***************************
+       * servo endpoints Airplane.
+       ***************************/
+      #define SERVO_MIN 1020           // limit servo travel range must be inside [1020;2000]
+      #define SERVO_MAX 2000           // limit servo travel range must be inside [1020;2000]
+      for(i=0; i<8; i++){  //  Set rates with 0 - 100%.
+        servoMid[i]     =MIDRC + conf.servoTrim[i];
+        servoLimit[i][0]=servoMid[i]-((servoMid[i]-SERVO_MIN)   *(servoTravel[i]*0.01));
+        servoLimit[i][1]=servoMid[i]+((SERVO_MAX - servoMid[i]) *(servoTravel[i]*0.01));
+      }
+
+      // servo[7] is programmed with safty features to avoid motorstarts when ardu reset..
+      // All other servos go to center at reset..  Half throttle can be dangerus
+      // Only use servo[7] as motorcontrol if motor is used in the setup            */
+      if (!f.ARMED){
+        servo[7] =  MINCOMMAND; // Kill throttle when disarmed
+      } else {
+        servo[7] =  rcData[THROTTLE];
+      }
+
+      // Flapperon Controll
+      int16_t flapperons[2]={0,0};
+      #if  defined(FLAPPERONS) && defined(FLAPPERON_EP)
+        int8_t flapinv[2] = FLAPPERON_INVERT;
+        static int16_t F_Endpoint[2] = FLAPPERON_EP;
+        int16_t flap =MIDRC-constrain(rcData[FLAPPERONS],F_Endpoint[0],F_Endpoint[1]);
+        static int16_t slowFlaps= flap;
+        #if defined(FLAPSPEED)
+          if (slowFlaps < flap ){slowFlaps+=FLAPSPEED;}else if(slowFlaps > flap){slowFlaps-=FLAPSPEED;}
         #else
-          S_PITCH = TILT_PITCH_MIDDLE;
+          slowFlaps = flap;
         #endif
-        #ifdef TILT_ROLL_AUX_CH
-          S_ROLL  = TILT_ROLL_MIDDLE  + rcData[TILT_ROLL_AUX_CH]-1500;
+        flap = MIDRC-(constrain(MIDRC-slowFlaps,F_Endpoint[0],F_Endpoint[1]));
+      for(i=0; i<2; i++){flapperons[i] = flap * flapinv[i] ;}
+      #endif
+
+      // Traditional Flaps on A2
+      #if defined(FLAPS)  && defined(FLAP_EP)
+        static int16_t lF_Endpoint[2] = FLAP_EP;
+        int16_t lFlap = MIDRC-constrain(rcData[FLAPS],lF_Endpoint[0],lF_Endpoint[1]);
+        static int16_t slow_LFlaps= lFlap;
+        #if defined(FLAPSPEED)
+          if (slow_LFlaps < lFlap ){slow_LFlaps+=FLAPSPEED;}else if(slow_LFlaps > lFlap){slow_LFlaps-=FLAPSPEED;}
         #else
-          S_ROLL  = TILT_ROLL_MIDDLE;
+          slow_LFlaps = lFlap;
         #endif
-        if (rcOptions[BOXCAMSTAB]) {
-          S_PITCH += TILT_PITCH_PROP * angle[PITCH] /16 ;
-          S_ROLL  += TILT_ROLL_PROP  * angle[ROLL]  /16 ;
-        }
-        S_PITCH = constrain(S_PITCH, TILT_PITCH_MIN, TILT_PITCH_MAX);
-        S_ROLL  = constrain(S_ROLL , TILT_ROLL_MIN, TILT_ROLL_MAX  );
+        servo[2]    =  servoMid[2]+(slow_LFlaps *servoReverse[2]);
       #endif
 
-      #if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS) && !defined(FIXEDWING) && !defined(HELICOPTER) && (RC_CHANS>8)
-        servo[3] = rcData[8];
-        servo[4] = rcData[9];
-      #endif
-
-       #ifdef SERVO_MIX_TILT
-       // Simple CameraGimbal By Bledy http://youtu.be/zKGr6iR54vM
-        if (rcOptions[BOXCAMSTAB]) {
-          servo[0] = constrain(TILT_PITCH_MIDDLE - (-TILT_ROLL_PROP) * angle[PITCH] /16 - TILT_ROLL_PROP * angle[ROLL] /16 , TILT_PITCH_MIN, TILT_PITCH_MAX);
-          servo[1] = constrain(TILT_ROLL_MIDDLE + (-TILT_ROLL_PROP) * angle[PITCH] /16 - TILT_ROLL_PROP * angle[ROLL] /16 , TILT_ROLL_MIN, TILT_ROLL_MAX);
-        } else {
-            // to use it with A0_A1_PIN_HEX
-          #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
-            servo[2] = constrain(TILT_PITCH_MIDDLE  + rcData[TILT_PITCH_AUX_CH]-1500 , TILT_PITCH_MIN, TILT_PITCH_MAX);
-            servo[3] = constrain(TILT_ROLL_MIDDLE   + rcData[TILT_ROLL_AUX_CH]-1500,  TILT_ROLL_MIN, TILT_ROLL_MAX);
-          #else
-            servo[0] = constrain(TILT_PITCH_MIDDLE  + rcData[TILT_PITCH_AUX_CH]-1500 , TILT_PITCH_MIN, TILT_PITCH_MAX);
-            servo[1] = constrain(TILT_ROLL_MIDDLE   + rcData[TILT_ROLL_AUX_CH]-1500,  TILT_ROLL_MIN, TILT_ROLL_MAX);
-          #endif
-        }
-      #endif
-
-      #ifdef GIMBAL
-        servo[0] = constrain(TILT_PITCH_MIDDLE + TILT_PITCH_PROP * angle[PITCH] /16 + rcCommand[PITCH], TILT_PITCH_MIN, TILT_PITCH_MAX);
-        servo[1] = constrain(TILT_ROLL_MIDDLE + TILT_ROLL_PROP   * angle[ROLL]  /16 + rcCommand[ROLL], TILT_ROLL_MIN, TILT_ROLL_MAX);
-      #endif
-
-      #if defined(FLYING_WING)
-        motor[0] = rcCommand[THROTTLE];
-        if (f.PASSTHRU_MODE) {// do not use sensors for correction, simple 2 channel mixing
-           servo[0]  = PITCH_DIRECTION_L * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_L * (rcData[ROLL]-MIDRC);
-           servo[1]  = PITCH_DIRECTION_R * (rcData[PITCH]-MIDRC) + ROLL_DIRECTION_R * (rcData[ROLL]-MIDRC);
-        } else { // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration
-           servo[0]  = PITCH_DIRECTION_L * axisPID[PITCH]        + ROLL_DIRECTION_L * axisPID[ROLL];
-           servo[1]  = PITCH_DIRECTION_R * axisPID[PITCH]        + ROLL_DIRECTION_R * axisPID[ROLL];
-        }
-        servo[0]  = constrain(servo[0] + conf.wing_left_mid , WING_LEFT_MIN,  WING_LEFT_MAX );
-        servo[1]  = constrain(servo[1] + conf.wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX);
-      #endif
-
-      /************************************************************************************************************/
-      #if defined(AIRPLANE) || defined(SINGLECOPTER) || defined(DUALCOPTER)
-        // Common parts for Plane and Heli
-        static int16_t   servoMid[8];                        // Midpoint on servo
-        static uint8_t   servoTravel[8] = SERVO_RATES;       // Rates in 0-100%
-        static int8_t    servoReverse[8] = SERVO_DIRECTION ; // Inverted servos
-        static int16_t   servoLimit[8][2]; // Holds servoLimit data
-
-        /***************************
-         * servo endpoints Airplane.
-         ***************************/
-        #define SERVO_MIN 1020           // limit servo travel range must be inside [1020;2000]
-        #define SERVO_MAX 2000           // limit servo travel range must be inside [1020;2000]
-        for(i=0; i<8; i++){  //  Set rates with 0 - 100%.
-          servoMid[i]     =MIDRC + conf.servoTrim[i];
-          servoLimit[i][0]=servoMid[i]-((servoMid[i]-SERVO_MIN)   *(servoTravel[i]*0.01));
-          servoLimit[i][1]=servoMid[i]+((SERVO_MAX - servoMid[i]) *(servoTravel[i]*0.01));
-        }
-
-        // servo[7] is programmed with safty features to avoid motorstarts when ardu reset..
-        // All other servos go to center at reset..  Half throttle can be dangerus
-        // Only use servo[7] as motorcontrol if motor is used in the setup            */
-        if (!f.ARMED){
-          servo[7] =  MINCOMMAND; // Kill throttle when disarmed
-        } else {
-          servo[7] =  rcData[THROTTLE];
-        }
-
-        // Flapperon Controll
-        int16_t flapperons[2]={0,0};
-        #if  defined(FLAPPERONS) && defined(FLAPPERON_EP)
-          int8_t flapinv[2] = FLAPPERON_INVERT;
-          static int16_t F_Endpoint[2] = FLAPPERON_EP;
-          int16_t flap =MIDRC-constrain(rcData[FLAPPERONS],F_Endpoint[0],F_Endpoint[1]);
-          static int16_t slowFlaps= flap;
-          #if defined(FLAPSPEED)
-            if (slowFlaps < flap ){slowFlaps+=FLAPSPEED;}else if(slowFlaps > flap){slowFlaps-=FLAPSPEED;}
-          #else
-            slowFlaps = flap;
-          #endif
-          flap = MIDRC-(constrain(MIDRC-slowFlaps,F_Endpoint[0],F_Endpoint[1]));
-        for(i=0; i<2; i++){flapperons[i] = flap * flapinv[i] ;}
-        #endif
-
-        // Traditional Flaps on A2
-        #if defined(FLAPS)  && defined(FLAP_EP)
-          static int16_t lF_Endpoint[2] = FLAP_EP;
-          int16_t lFlap = MIDRC-constrain(rcData[FLAPS],lF_Endpoint[0],lF_Endpoint[1]);
-          static int16_t slow_LFlaps= lFlap;
-          #if defined(FLAPSPEED)
-            if (slow_LFlaps < lFlap ){slow_LFlaps+=FLAPSPEED;}else if(slow_LFlaps > lFlap){slow_LFlaps-=FLAPSPEED;}
-          #else
-            slow_LFlaps = lFlap;
-          #endif
-          servo[2]    =  servoMid[2]+(slow_LFlaps *servoReverse[2]);
-        #endif
-
-        #if defined(AIRPLANE)
-        if(f.PASSTHRU_MODE){   // Direct passthru from RX
-          servo[3]  = servoMid[3]+((rcCommand[ROLL] + flapperons[0]) *servoReverse[3]);     //   Wing 1
-          servo[4]  = servoMid[4]+((rcCommand[ROLL] + flapperons[1]) *servoReverse[4]);     //   Wing 2
-          servo[5]  = servoMid[5]+(rcCommand[YAW]                    *servoReverse[5]);     //   Rudder
-          servo[6]  = servoMid[6]+(rcCommand[PITCH]                  *servoReverse[6]);     //   Elevator
-        }else{
-          // Assisted modes (gyro only or gyro+acc according to AUX configuration in Gui
-          servo[3]  =(servoMid[3] + ((axisPID[ROLL] + flapperons[0]) *servoReverse[3]));   //   Wing 1
-          servo[4]  =(servoMid[4] + ((axisPID[ROLL] + flapperons[1]) *servoReverse[4]));   //   Wing 2
-          servo[5]  =(servoMid[5] + (axisPID[YAW]                    *servoReverse[5]));   //   Rudder
-          servo[6]  =(servoMid[6] + (axisPID[PITCH]                  *servoReverse[6]));   //   Elevator
-        }
-        #endif
-    /******************                   single & DualCopter                            **********************/
-        #if  defined(SINGLECOPTER)
-        int8_t yawServo[4] =SINGLECOPTRER_YAW;
-        int8_t scServo[4]  =SINGLECOPTRER_SERVO;
-        // Singlecopter
-        // This is a beta requested by  xuant9
+      #if defined(AIRPLANE)
+      if(f.PASSTHRU_MODE){   // Direct passthru from RX
+        servo[3]  = servoMid[3]+((rcCommand[ROLL] + flapperons[0]) *servoReverse[3]);     //   Wing 1
+        servo[4]  = servoMid[4]+((rcCommand[ROLL] + flapperons[1]) *servoReverse[4]);     //   Wing 2
+        servo[5]  = servoMid[5]+(rcCommand[YAW]                    *servoReverse[5]);     //   Rudder
+        servo[6]  = servoMid[6]+(rcCommand[PITCH]                  *servoReverse[6]);     //   Elevator
+      }else{
         // Assisted modes (gyro only or gyro+acc according to AUX configuration in Gui
-        // http://www.kkmulticopter.kr/multicopter/images/blue_single.jpg
-          servo[3]  = servoMid[3] + (axisPID[YAW]*yawServo[0]) + (axisPID[PITCH]*scServo[0])  ;   //   SideServo  5  D12
-          servo[4]  = servoMid[4] + (axisPID[YAW]*yawServo[1]) + (axisPID[PITCH]*scServo[1])  ;   //   SideServo  3  D11
-          servo[5]  = servoMid[5] + (axisPID[YAW]*yawServo[2]) + (axisPID[ROLL] *scServo[2])  ;   //   FrontServo 2  D3
-          servo[6]  = servoMid[6] + (axisPID[YAW]*yawServo[3]) + (axisPID[ROLL] *scServo[3])  ;   //   RearServo  4  D10
-          motor[1]  = rcData[THROTTLE] ;                                                          //  Pin D10
-        #endif
-        #if  defined(DUALCOPTER)
-         int8_t dcServo[2]  =DUALCOPTER_SERVO;
+        servo[3]  =(servoMid[3] + ((axisPID[ROLL] + flapperons[0]) *servoReverse[3]));   //   Wing 1
+        servo[4]  =(servoMid[4] + ((axisPID[ROLL] + flapperons[1]) *servoReverse[4]));   //   Wing 2
+        servo[5]  =(servoMid[5] + (axisPID[YAW]                    *servoReverse[5]));   //   Rudder
+        servo[6]  =(servoMid[6] + (axisPID[PITCH]                  *servoReverse[6]));   //   Elevator
+      }
+      #endif
+      /******************                   single & DualCopter                            **********************/
+      #if  defined(SINGLECOPTER)
+      int8_t yawServo[4] =SINGLECOPTRER_YAW;
+      int8_t scServo[4]  =SINGLECOPTRER_SERVO;
+      // Singlecopter
+      // This is a beta requested by  xuant9
+      // Assisted modes (gyro only or gyro+acc according to AUX configuration in Gui
+      // http://www.kkmulticopter.kr/multicopter/images/blue_single.jpg
+        servo[3]  = servoMid[3] + (axisPID[YAW]*yawServo[0]) + (axisPID[PITCH]*scServo[0])  ;   //   SideServo  5  D12
+        servo[4]  = servoMid[4] + (axisPID[YAW]*yawServo[1]) + (axisPID[PITCH]*scServo[1])  ;   //   SideServo  3  D11
+        servo[5]  = servoMid[5] + (axisPID[YAW]*yawServo[2]) + (axisPID[ROLL] *scServo[2])  ;   //   FrontServo 2  D3
+        servo[6]  = servoMid[6] + (axisPID[YAW]*yawServo[3]) + (axisPID[ROLL] *scServo[3])  ;   //   RearServo  4  D10
+        motor[1]  = rcData[THROTTLE] ;                                                          //  Pin D10
+      #endif
+      #if  defined(DUALCOPTER)
+        int8_t dcServo[2]  =DUALCOPTER_SERVO;
         // Dualcopter
         // This is a beta requested by  xuant9
         // Assisted modes (gyro only or gyro+acc according to AUX configuration in Gui
         //http://www.kkmulticopter.kr/products_pic/index.html?sn=multicopter_v02_du&name=KKMultiCopter%20Flight%20Controller%20Blackboard%3Cbr%3E
-          servo[5]  = servoMid[5] + (axisPID[PITCH] * dcServo[0]) ;  //  PITCHServo 3  D12
-          servo[6]  = servoMid[6] + (axisPID[ROLL]  * dcServo[1]) ;  //  ROLLServo  4  D11
-          motor[0] = PIDMIX(0,0,-1);                                 //  Pin D9
-          motor[1] = PIDMIX(0,0,+1);                                 //  Pin D10
-        #endif
+        servo[5]  = servoMid[5] + (axisPID[PITCH] * dcServo[0]) ;  //  PITCHServo 3  D12
+        servo[6]  = servoMid[6] + (axisPID[ROLL]  * dcServo[1]) ;  //  ROLLServo  4  D11
+        motor[0] = PIDMIX(0,0,-1);                                 //  Pin D9
+        motor[1] = PIDMIX(0,0,+1);                                 //  Pin D10
+      #endif
 
-        // ServoRates
-        #if !defined(USE_THROTTLESERVO)
-          motor[0]= rcData[THROTTLE];
-        #endif
-        for(i=3;i<8;i++){
-          servo[i]  = map(servo[i], SERVO_MIN, SERVO_MAX,servoLimit[i][0],servoLimit[i][1]);
-          servo[i]  = constrain( servo[i], SERVO_MIN, SERVO_MAX);
-        }
+      // ServoRates
+      #if !defined(USE_THROTTLESERVO)
+        motor[0]= rcData[THROTTLE];
+      #endif
+      for(i=3;i<8;i++){
+        servo[i]  = map(servo[i], SERVO_MIN, SERVO_MAX,servoLimit[i][0],servoLimit[i][1]);
+        servo[i]  = constrain( servo[i], SERVO_MIN, SERVO_MAX);
+      }
 
-      #endif // AIRPLANE || SINGLECOPTER || DUALCOPTER
-    
-      /************************************************************************************************************/
-      #ifdef HELICOPTER
+    #endif // AIRPLANE || SINGLECOPTER || DUALCOPTER
+
+    /************************************************************************************************************/
+    #ifdef HELICOPTER
       // Common controlls for Helicopters
-        int16_t heliRoll,heliNick;
-        int16_t collRange[3] = COLLECTIVE_RANGE;
-        static int16_t   collective;
-        static int16_t   servoEndpiont[8][2];
-        static int16_t   servoHigh[8] = SERVO_ENDPOINT_HIGH; // HIGHpoint on servo
-        static int16_t   servoLow[8]  = SERVO_ENDPOINT_LOW ; // LOWpoint on servo
-        #ifdef GOVERNOR_P
-          static int16_t last_collective = 0, delta_collective = 0, governorThrottle = 0;
-        #endif
+      int16_t heliRoll,heliNick;
+      int16_t collRange[3] = COLLECTIVE_RANGE;
+      static int16_t   collective;
+      static int16_t   servoEndpiont[8][2];
+      static int16_t   servoHigh[8] = SERVO_ENDPOINT_HIGH; // HIGHpoint on servo
+      static int16_t   servoLow[8]  = SERVO_ENDPOINT_LOW ; // LOWpoint on servo
+      #ifdef GOVERNOR_P
+        static int16_t last_collective = 0, delta_collective = 0, governorThrottle = 0;
+      #endif
       /***************************
        * servo settings Heli.
        ***************************/
-        for(i=0; i<8; i++){  //  Set rates using endpoints.
-          servoEndpiont[i][0] = servoLow[i];  //Min
-          servoEndpiont[i][1] = servoHigh[i]; //Max
-        }
+      for(i=0; i<8; i++){  //  Set rates using endpoints.
+        servoEndpiont[i][0] = servoLow[i];  //Min
+        servoEndpiont[i][1] = servoHigh[i]; //Max
+      }
 
       // Limit Collective range up/down
-        int16_t collect = rcData[COLLECTIVE_PITCH] - (1500 + collRange[1]);
-        if   (collect>0) {
-          collective = collect * (collRange[2]*0.01);
-        } else{
-          collective = collect * (collRange[0]*0.01);
+      int16_t collect = rcData[COLLECTIVE_PITCH] - (1500 + collRange[1]);
+      if   (collect>0) {
+        collective = collect * (collRange[2]*0.01);
+      } else{
+        collective = collect * (collRange[0]*0.01);
+      }
+      #ifdef GOVERNOR_P
+        delta_collective = collective - last_collective;
+        last_collective = collective;
+        if (! f.ARMED || ! rcOptions[BOXGOV] || (rcData[THROTTLE] < conf.minthrottle) )
+          governorThrottle = 0; // clear subito
+        else if (delta_collective > 0) {
+          governorThrottle += delta_collective * conf.governorP; // attack
+          // avoid overshooting governor (would result in overly long decay phase)
+          if (rcData[THROTTLE] + governorThrottle > MAXTHROTTLE) governorThrottle = MAXTHROTTLE - rcData[THROTTLE];
+        } else {
+          static uint8_t d = 0;
+          if (! (++d % conf.governorD)) governorThrottle -= 10; // decay; signal stepsize 10 should  be smooth on most ESCs
         }
-        #ifdef GOVERNOR_P
-          delta_collective = collective - last_collective;
-          last_collective = collective;
-          if (! f.ARMED || ! rcOptions[BOXGOV] || (rcData[THROTTLE] < conf.minthrottle) )
-            governorThrottle = 0; // clear subito
-          else if (delta_collective > 0) {
-            governorThrottle += delta_collective * conf.governorP; // attack
-            // avoid overshooting governor (would result in overly long decay phase)
-            if (rcData[THROTTLE] + governorThrottle > MAXTHROTTLE) governorThrottle = MAXTHROTTLE - rcData[THROTTLE];
-          } else {
-            static uint8_t d = 0;
-            if (! (++d % conf.governorD)) governorThrottle -= 10; // decay; signal stepsize 10 should  be smooth on most ESCs
-          }
-          if (governorThrottle < 0) governorThrottle = 0; // always beware of negative impact of governor on throttle
-        #endif
+        if (governorThrottle < 0) governorThrottle = 0; // always beware of negative impact of governor on throttle
+      #endif
 
-        if(f.PASSTHRU_MODE){ // Use Rcdata Without sensors
-          heliRoll=  rcCommand[ROLL] ;
-          heliNick=  rcCommand[PITCH];
-        } else{ // Assisted modes
-          heliRoll= axisPID[ROLL];
-          heliNick= axisPID[PITCH];
-        }
+      if(f.PASSTHRU_MODE){ // Use Rcdata Without sensors
+        heliRoll=  rcCommand[ROLL] ;
+        heliNick=  rcCommand[PITCH];
+      } else{ // Assisted modes
+        heliRoll= axisPID[ROLL];
+        heliNick= axisPID[PITCH];
+      }
 
       // Limit Maximum Rates for Heli
-        int16_t cRange[2] = CONTROL_RANGE;
-        heliRoll*=cRange[0]*0.01;
-        heliNick*=cRange[1]*0.01;
+      int16_t cRange[2] = CONTROL_RANGE;
+      heliRoll*=cRange[0]*0.01;
+      heliNick*=cRange[1]*0.01;
 
       // Yaw is common for Heli 90 & 120
-        uint16_t yawControll =  YAW_CENTER + (axisPID[YAW]*YAW_DIRECTION) + conf.servoTrim[5];
+      uint16_t yawControll =  YAW_CENTER + (axisPID[YAW]*YAW_DIRECTION) + conf.servoTrim[5];
 
       /* Throttle & YAW
       ********************
       Handeled in common functions for Heli */
-        if (!f.ARMED){
-          servo[7] = 900; // Kill throttle when disarmed
-          if (YAWMOTOR){servo[5] =  MINCOMMAND;} else {servo[5] =  yawControll; } // Kill YAWMOTOR when disarmed
-        }else {
-          servo[7]  = rcData[THROTTLE]; //   50hz ESC or servo
-          #ifdef GOVERNOR_P
-            servo[7]  += governorThrottle;
-         #endif
-          if (YAWMOTOR && rcData[THROTTLE] < conf.minthrottle){servo[5] =  MINCOMMAND;}
-          else{ servo[5] =  yawControll; }     // YawSero
-        }
-        #ifndef HELI_USE_SERVO_FOR_THROTTLE
-          motor[0] = servo[7]; // use real motor output - ESC capable
+      if (!f.ARMED){
+        servo[7] = 900; // Kill throttle when disarmed
+        if (YAWMOTOR){servo[5] =  MINCOMMAND;} else {servo[5] =  yawControll; } // Kill YAWMOTOR when disarmed
+      }else {
+        servo[7]  = rcData[THROTTLE]; //   50hz ESC or servo
+        #ifdef GOVERNOR_P
+          servo[7]  += governorThrottle;
         #endif
+        if (YAWMOTOR && rcData[THROTTLE] < conf.minthrottle){servo[5] =  MINCOMMAND;}
+        else{ servo[5] =  yawControll; }     // YawSero
+      }
+      #ifndef HELI_USE_SERVO_FOR_THROTTLE
+        motor[0] = servo[7]; // use real motor output - ESC capable
+      #endif
 
 
       //              ( Collective, Pitch/Nick, Roll ) Change sign to invert
       /************************************************************************************************************/
-    #define HeliXPIDMIX(Z,Y,X) 1500 + (collRange[1]*Z + collective*Z + heliNick*Y +  heliRoll*X)/10
-    // original #define HeliXPIDMIX(Z,Y,X) collRange[1]+collective*Z + heliNick*Y +  heliRoll*X
+      #define HeliXPIDMIX(Z,Y,X) 1500 + (collRange[1]*Z + collective*Z + heliNick*Y +  heliRoll*X)/10
+      // original #define HeliXPIDMIX(Z,Y,X) collRange[1]+collective*Z + heliNick*Y +  heliRoll*X
 
       #ifdef HELI_120_CCPM
         static int8_t nickMix[3] =SERVO_NICK;
@@ -1186,7 +1182,7 @@ void mixTable() {
         servo[4]  =  HeliXPIDMIX( ( leftMix[0]), leftMix[1], leftMix[2]) + conf.servoTrim[4] ;   //    LEFT servo
         servo[6]  =  HeliXPIDMIX( (rightMix[0]),rightMix[1],rightMix[2]) + conf.servoTrim[6] ;   //    RIGHT  servo
       #endif
-    
+  
       /************************************************************************************************************/
       #ifdef HELI_90_DEG
         static int8_t servoDir[3]=SERVO_DIRECTIONS;
@@ -1195,11 +1191,11 @@ void mixTable() {
         servo[6]  = HeliXPIDMIX( servoDir[0], +0, +0)+conf.servoTrim[6] ;      //     COLLECTIVE  servo
       #endif
 
-        for(i=3;i<8;i++){
-          servo[i]  = constrain( servo[i], servoEndpiont[i][0], servoEndpiont[i][1] );
-        }
+      for(i=3;i<8;i++){
+        servo[i]  = constrain( servo[i], servoEndpiont[i][0], servoEndpiont[i][1] );
+      }
 
-      #endif // HELICOPTER
+    #endif // HELICOPTER
 
   #endif //MY_PRIVATE_MIXING
   /****************                    Cam trigger Sevo                ******************/
@@ -1232,7 +1228,7 @@ void mixTable() {
     if ( (!f.ARMED) && ((calibratingG > 0) || (calibratingA > 0)) ) servos2Neutral();
   #endif
   /****************                Filter the Motors values                ******************/
-#ifdef GOVERNOR_P
+  #ifdef GOVERNOR_P
     if (rcOptions[BOXGOV] ) {
       static int8_t g[37] = { 0,3,5,8,11,14,17,19,22,25,28,31,34,38,41,44,47,51,54,58,61,65,68,72,76,79,83,87,91,95,99,104,108,112,117,121,126 };
       uint8_t v = constrain( VBATNOMINAL - constrain(vbat, conf.vbatlevel_crit, VBATNOMINAL), 0, 36);
@@ -1240,7 +1236,7 @@ void mixTable() {
         motor[i] += ( ( (int32_t)(motor[i]-1000) * (int32_t)g[v] ) * (int32_t)conf.governorR )/ 5000;
       }
     }
-#endif
+  #endif
   maxMotor=motor[0];
   for(i=1;i< NUMBER_MOTOR;i++)
     if (motor[i]>maxMotor) maxMotor=motor[i];
