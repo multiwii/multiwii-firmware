@@ -436,8 +436,7 @@ void evaluateCommand() {
    #if defined(USE_MSP_WP)    
    case MSP_WP:
      {
-       int32_t lat = 0;
-       int32_t lon = 0;
+       int32_t lat = 0,lon = 0;
        uint8_t wp_no = read8();        //get the wp number  
        headSerialReply(12);
        if (wp_no == 0) {
@@ -450,27 +449,32 @@ void evaluateCommand() {
        serialize8(wp_no);
        serialize32(lat);
        serialize32(lon);
-       serialize16(0);                 //altitude will come here 
+       serialize32(AltHold);           //altitude (cm) will come here -- temporary implementation to test feature with apps
+       serialize16(0);                 //heading  will come here (deg)
+       serialize16(0);                 //time to stay (ms) will come here 
        serialize8(0);                  //nav flag will come here
      }
      break;
    case MSP_SET_WP:
      {
-       int32_t lat = 0;
-       int32_t lon = 0;
+       int32_t lat = 0,lon = 0,alt = 0;
        uint8_t wp_no = read8();        //get the wp number
        lat = read32();
        lon = read32();
-       read32();                       // future: to set altitude
+       alt = read32();                 // to set altitude (cm)
+       read16();                       // future: to set heading (deg)
+       read16();                       // future: to set time to stay (ms)
        read8();                        // future: to set nav flag
        if (wp_no == 0) {
          GPS_home[LAT] = lat;
          GPS_home[LON] = lon;
          f.GPS_HOME_MODE = 0;          // with this flag, GPS_set_next_wp will be called in the next loop -- OK with SERIAL GPS / OK with I2C GPS
          f.GPS_FIX_HOME  = 1;
+         if (alt != 0) AltHold = alt;  // temporary implementation to test feature with apps
        } else if (wp_no == 16) {       // OK with SERIAL GPS  --  NOK for I2C GPS / needs more code dev in order to inject GPS coord inside I2C GPS
          GPS_hold[LAT] = lat;
          GPS_hold[LON] = lon;
+         if (alt != 0) AltHold = alt;  // temporary implementation to test feature with apps
          #if !defined(I2C_GPS)
            nav_mode      = NAV_MODE_WP;
            GPS_set_next_wp(&GPS_hold[LAT],&GPS_hold[LON]);

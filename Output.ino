@@ -947,22 +947,32 @@ void mixTable() {
     //  servo[4] = rcData[9];
     //#endif
 
-    #ifdef SERVO_MIX_TILT
-      // Simple CameraGimbal By Bledy http://youtu.be/zKGr6iR54vM
+    #ifdef SERVO_MIX_TILT 
+      #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
+        #define S_PITCH servo[2]
+        #define S_ROLL  servo[3]
+      #else
+        #define S_PITCH servo[0]
+        #define S_ROLL  servo[1]
+      #endif
+      int16_t angleP,angleR;
+      #ifdef TILT_PITCH_AUX_CH
+        angleP = TILT_PITCH_MIDDLE + rcData[TILT_PITCH_AUX_CH]-1500;
+      #else
+        angleP = TILT_PITCH_MIDDLE;
+      #endif
+      #ifdef TILT_ROLL_AUX_CH
+        angleR  = TILT_ROLL_MIDDLE  + rcData[TILT_ROLL_AUX_CH]-1500;
+      #else
+        angleR  = TILT_ROLL_MIDDLE;
+      #endif
       if (rcOptions[BOXCAMSTAB]) {
-        servo[0] = constrain(TILT_PITCH_MIDDLE - (-TILT_ROLL_PROP) * angle[PITCH] /16 - TILT_ROLL_PROP * angle[ROLL] /16 , TILT_PITCH_MIN, TILT_PITCH_MAX);
-        servo[1] = constrain(TILT_ROLL_MIDDLE + (-TILT_ROLL_PROP) * angle[PITCH] /16 - TILT_ROLL_PROP * angle[ROLL] /16 , TILT_ROLL_MIN, TILT_ROLL_MAX);
-      } else {
-        // to use it with A0_A1_PIN_HEX
-        #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
-          servo[2] = constrain(TILT_PITCH_MIDDLE  + rcData[TILT_PITCH_AUX_CH]-1500 , TILT_PITCH_MIN, TILT_PITCH_MAX); //<- this part does not work as it should
-          servo[3] = constrain(TILT_ROLL_MIDDLE   + rcData[TILT_ROLL_AUX_CH]-1500,  TILT_ROLL_MIN, TILT_ROLL_MAX); //<- this part does not work as it should
-        #else
-          servo[0] = constrain(TILT_PITCH_MIDDLE  + rcData[TILT_PITCH_AUX_CH]-1500 , TILT_PITCH_MIN, TILT_PITCH_MAX); //<- this part does not work as it should
-          servo[1] = constrain(TILT_ROLL_MIDDLE   + rcData[TILT_ROLL_AUX_CH]-1500,  TILT_ROLL_MIN, TILT_ROLL_MAX); //<- this part does not work as it should
-        #endif
+        angleP += TILT_PITCH_PROP * angle[PITCH] /16 ;
+        angleR += TILT_ROLL_PROP  * angle[ROLL]  /16 ;
       }
-    #endif
+      S_PITCH = constrain(angleP+angleR, TILT_PITCH_MIN, TILT_PITCH_MAX);
+      S_ROLL  = constrain(angleP-angleR, TILT_ROLL_MIN, TILT_ROLL_MAX);   
+    #endif 
 
     #ifdef GIMBAL
       servo[0] = constrain(TILT_PITCH_MIDDLE + TILT_PITCH_PROP * angle[PITCH] /16 + rcCommand[PITCH], TILT_PITCH_MIN, TILT_PITCH_MAX);
