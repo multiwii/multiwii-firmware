@@ -863,6 +863,7 @@ const char PROGMEM lcd_param_text52 [] = "AUX buzzer";
 const char PROGMEM lcd_param_text53 [] = "AUX vario ";
 const char PROGMEM lcd_param_text54 [] = "AUX calib ";
 const char PROGMEM lcd_param_text55 [] = "AUX govern";
+const char PROGMEM lcd_param_text56 [] = "AUX osd   ";
 // 53 to 61 reserved
 #endif
 #ifdef HELI_120_CCPM //                  0123456789
@@ -1082,6 +1083,14 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   #ifndef SUPPRESS_LCD_CONF_AUX34
     &lcd_param_text55, &conf.activate[BOXGOV],&__AUX3,
     &lcd_param_text55, &conf.activate[BOXGOV],&__AUX4,
+  #endif
+#endif
+#ifdef OSD_SWITCH
+  &lcd_param_text56, &conf.activate[BOXOSD],&__AUX1,
+  &lcd_param_text56, &conf.activate[BOXOSD],&__AUX2,
+  #ifndef SUPPRESS_LCD_CONF_AUX34
+    &lcd_param_text56, &conf.activate[BOXOSD],&__AUX3,
+    &lcd_param_text56, &conf.activate[BOXOSD],&__AUX4,
   #endif
 #endif
 #endif //lcd.conf.aux
@@ -1630,6 +1639,9 @@ static char checkboxitemNames[][4] = {
     #endif
     #ifdef GOVERNOR_P
       "Gov",
+    #endif
+    #ifdef OSD_SWITCH
+      "OSD",
     #endif
   ""};
 void output_checkboxitems() {

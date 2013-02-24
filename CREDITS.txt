@@ -289,3 +289,15 @@ D: audio output to indicate rising/falling copter. Output over (wireless) serial
 N: Hamburger
 E:
 W: http://www.multiwii.com/forum/viewtopic.php?f=7&t=2754&start=0#p26774
+
+S: RSSI
+D: code for RSSI PIN
+N: kataventos
+E:
+W: http://www.kvteamosd.com/
+
+S: OSD SWITCH
+D: adding OSD BOX
+N: Itai
+E:
+W:

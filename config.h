@@ -102,6 +102,8 @@
       //#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
       //#define SIRIUSGPS       // Sirius Navigator IMU  using external MAG on GPS board            <- confirmed by Alex
       //#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
+      //#define SIRIUS_AIR      // Sirius Navigator IMU 6050 32U4 from MultiWiiCopter.com
+      //#define SIRIUS_AIR_GPS  // Sirius Navigator IMU 6050 32U4 from MultiWiiCopter.com with GPS/MAG remote located
       //#define MINIWII         // Jussi's MiniWii Flight Controller                                <- confirmed by Alex
       //#define MICROWII        // MicroWii 10DOF with ATmega32u4, MPU6050, HMC5883L, MS561101BA from http://flyduino.net/
       //#define CITRUSv2_1      // CITRUS from qcrc.ca
@@ -618,6 +620,9 @@
        (allready done if the option RCAUXPIN12 is selected) */
     //#define DISABLE_POWER_PIN
 
+  /*******************************    OSD Switch    *************************************/
+    // This adds a box that can be interpreted by OSD in activation status (to switch on/off the overlay for instance)
+  //#define OSD_SWITCH
 
   /**************************************************************************************/
   /***********************                  TX-related         **************************/

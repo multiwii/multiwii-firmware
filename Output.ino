@@ -957,21 +957,21 @@ void mixTable() {
       #endif
       int16_t angleP,angleR;
       #ifdef TILT_PITCH_AUX_CH
-        angleP = TILT_PITCH_MIDDLE + rcData[TILT_PITCH_AUX_CH]-1500;
+        angleP = TILT_PITCH_MIDDLE - 1500 + rcData[TILT_PITCH_AUX_CH]-1500;
       #else
-        angleP = TILT_PITCH_MIDDLE;
+        angleP = TILT_PITCH_MIDDLE - 1500;
       #endif
       #ifdef TILT_ROLL_AUX_CH
-        angleR  = TILT_ROLL_MIDDLE  + rcData[TILT_ROLL_AUX_CH]-1500;
+        angleR  = TILT_ROLL_MIDDLE - 1500 + rcData[TILT_ROLL_AUX_CH]-1500;
       #else
-        angleR  = TILT_ROLL_MIDDLE;
+        angleR  = TILT_ROLL_MIDDLE - 1500;
       #endif
       if (rcOptions[BOXCAMSTAB]) {
         angleP += TILT_PITCH_PROP * angle[PITCH] /16 ;
         angleR += TILT_ROLL_PROP  * angle[ROLL]  /16 ;
       }
-      S_PITCH = constrain(angleP+angleR, TILT_PITCH_MIN, TILT_PITCH_MAX);
-      S_ROLL  = constrain(angleP-angleR, TILT_ROLL_MIN, TILT_ROLL_MAX);   
+      S_PITCH = constrain(1500+angleP-angleR, TILT_PITCH_MIN, TILT_PITCH_MAX);
+      S_ROLL  = constrain(1500-angleP-angleR, TILT_ROLL_MIN, TILT_ROLL_MAX);   
     #endif 
 
     #ifdef GIMBAL

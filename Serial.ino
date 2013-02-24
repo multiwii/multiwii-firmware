@@ -322,6 +322,9 @@ void evaluateCommand() {
                  #if defined(GOVERNOR_P)
                    rcOptions[BOXGOV]<<BOXGOV |
                  #endif
+                 #if defined(OSD_SWITCH)
+                   rcOptions[BOXOSD]<<BOXOSD |
+                 #endif
                  f.ARMED<<BOXARM);
        serialize8(global_conf.currentSet);   // current setting
      break;

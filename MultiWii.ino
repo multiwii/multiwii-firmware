@@ -102,6 +102,9 @@ enum box {
   #ifdef GOVERNOR_P
     BOXGOV,
   #endif
+  #ifdef OSD_SWITCH
+    BOXOSD,
+  #endif
   CHECKBOXITEMS
 };
 
@@ -151,6 +154,9 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
   #ifdef GOVERNOR_P
     "GOVERNOR;"
   #endif
+  #ifdef OSD_SWITCH
+    "OSD SW;"
+  #endif
 ;
 
 const uint8_t boxids[] PROGMEM = {// permanent IDs associated to boxes. This way, you can rely on an ID number to identify a BOX function.
@@ -198,6 +204,9 @@ const uint8_t boxids[] PROGMEM = {// permanent IDs associated to boxes. This way
   #endif
   #ifdef GOVERNOR_P
     18, //"GOVERNOR;"
+  #endif
+  #ifdef OSD_SWITCH
+    19, //"OSD_SWITCH;"
   #endif
 };
 
