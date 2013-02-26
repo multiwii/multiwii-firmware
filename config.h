@@ -334,8 +334,10 @@
      * 3) enable your mixing code with this define; replace filename with your chosen name
      *    (if you needed this info then probably this is not for you; start with an existing copter type and
      *    predefined mixing table entry)
+     * 4) optionally limit the 'leave headroom for gyro correction' to the first N motors - useful for unequal motors combinations
      */
     //#define MY_PRIVATE_MIXING "filename.h"
+    //#define LEAVE_HEADROOM_FOR_MOTORS 4 // leave room for gyro corrrections only for first 4 motors
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/
