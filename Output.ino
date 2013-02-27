@@ -1247,30 +1247,53 @@ void mixTable() {
       }
     }
   #endif
-  #ifndef LEAVE_HEADROOM_FOR_MOTORS
-    #define LEAVE_HEADROOM_FOR_MOTORS NUMBER_MOTOR
-  #endif
-  maxMotor=motor[0];
-  for(i=1;i< LEAVE_HEADROOM_FOR_MOTORS;i++)
-    if (motor[i]>maxMotor) maxMotor=motor[i];
-  for(i=1;i< LEAVE_HEADROOM_FOR_MOTORS;i++)
-    if (maxMotor > MAXTHROTTLE) // this is a way to still have good gyro corrections if at least one motor reaches its max.
-      motor[i] -= maxMotor - MAXTHROTTLE;
-  for (i = 0; i < NUMBER_MOTOR; i++) {
-    motor[i] = constrain(motor[i], conf.minthrottle, MAXTHROTTLE);
-    #if defined(ALTHOLD_FAST_THROTTLE_CHANGE)
-      if (rcData[THROTTLE] < MINCHECK)
-    #else
-      if ((rcData[THROTTLE] < MINCHECK) && !f.BARO_MODE)
-    #endif 
-      #ifndef MOTOR_STOP
-        motor[i] = conf.minthrottle;
+  /****************                normalize the Motors values                ******************/
+  #ifdef LEAVE_HEADROOM_FOR_MOTORS
+    // limit this leaving room for corrections to the first #n of all motors
+    maxMotor=motor[0];
+    for(i=1; i < LEAVE_HEADROOM_FOR_MOTORS; i++)
+      if (motor[i]>maxMotor) maxMotor=motor[i];
+    if (maxMotor > MAXTHROTTLE) { // this is a way to still have good gyro corrections if at least one motor reaches its max.
+      for(i=0; i < LEAVE_HEADROOM_FOR_MOTORS; i++)
+        motor[i] -= maxMotor - MAXTHROTTLE;
+    }
+    for (i = 0; i < NUMBER_MOTOR; i++) {
+      motor[i] = constrain(motor[i], conf.minthrottle, MAXTHROTTLE);
+      #if defined(ALTHOLD_FAST_THROTTLE_CHANGE)
+        if (rcData[THROTTLE] < MINCHECK)
       #else
-        motor[i] = MINCOMMAND;
+        if ((rcData[THROTTLE] < MINCHECK) && !f.BARO_MODE)
       #endif
-    if (!f.ARMED)
-      motor[i] = MINCOMMAND;
-  }
+        #ifndef MOTOR_STOP
+          motor[i] = conf.minthrottle;
+        #else
+          motor[i] = MINCOMMAND;
+        #endif
+      if (!f.ARMED)
+        motor[i] = MINCOMMAND;
+    }
+  #else // LEAVE_HEADROOM_FOR_MOTORS
+    maxMotor=motor[0];
+    for(i=1; i< NUMBER_MOTOR; i++)
+      if (motor[i]>maxMotor) maxMotor=motor[i];
+    for(i=0; i< NUMBER_MOTOR; i++) {
+      if (maxMotor > MAXTHROTTLE) // this is a way to still have good gyro corrections if at least one motor reaches its max.
+        motor[i] -= maxMotor - MAXTHROTTLE;
+      motor[i] = constrain(motor[i], conf.minthrottle, MAXTHROTTLE);
+      #if defined(ALTHOLD_FAST_THROTTLE_CHANGE)
+        if (rcData[THROTTLE] < MINCHECK)
+      #else
+        if ((rcData[THROTTLE] < MINCHECK) && !f.BARO_MODE)
+      #endif
+        #ifndef MOTOR_STOP
+          motor[i] = conf.minthrottle;
+        #else
+          motor[i] = MINCOMMAND;
+        #endif
+      if (!f.ARMED)
+        motor[i] = MINCOMMAND;
+    }
+  #endif // LEAVE_HEADROOM_FOR_MOTORS
   /****************                      Powermeter Log                    ******************/
   #if (LOG_VALUES >= 3) || defined(POWERMETER_SOFT)
     uint16_t amp, ampsum;
