@@ -1681,8 +1681,8 @@ void fill_line1_gps_lat(uint8_t sat) {
     line1[13] = '#';
     line1[14] = digit10(GPS_numSat);
     line1[15] = digit1(GPS_numSat);
-  }
-  line1[1]  = '0' + aGPS_latitude  / 1000000000- (aGPS_latitude/10000000000)* 10;
+  } //                                987654321
+  line1[1]  = '0' + aGPS_latitude  / 1000000000;
   line1[2]  = '0' + aGPS_latitude  / 100000000 - (aGPS_latitude/1000000000) * 10;
   line1[3]  = '0' + aGPS_latitude  / 10000000  - (aGPS_latitude/100000000)  * 10;
   line1[5]  = '0' + aGPS_latitude  / 1000000   - (aGPS_latitude/10000000)   * 10;
@@ -1702,7 +1702,7 @@ void fill_line2_gps_lon(uint8_t status) {
     line2[13] = (GPS_update ? 'U' : '.');
     line2[15] = (GPS_Present ? 'P' : '.');
   }
-  line2[1]  = '0' + aGPS_longitude / 1000000000- (aGPS_longitude/10000000000)* 10;
+  line2[1]  = '0' + aGPS_longitude / 1000000000;
   line2[2]  = '0' + aGPS_longitude / 100000000 - (aGPS_longitude/1000000000) * 10;
   line2[3]  = '0' + aGPS_longitude / 10000000  - (aGPS_longitude/100000000)  * 10;
   line2[5]  = '0' + aGPS_longitude / 1000000   - (aGPS_longitude/10000000)   * 10;
