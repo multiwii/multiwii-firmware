@@ -1,7 +1,7 @@
 /*
 MultiWiiCopter by Alexandre Dubus
 www.multiwii.com
-July  2012     V2.1
+March  2013     V2.2
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -15,7 +15,7 @@ July  2012     V2.1
 
 
 #include <avr/pgmspace.h>
-#define  VERSION  213
+#define  VERSION  220
 
 /*********** RC alias *****************/
 enum rc {
@@ -852,7 +852,7 @@ void servos2Neutral() {
     writeServos();
   #endif
   #ifdef AIRPLANE
-    for(i = 4; i<7 ;i++) servo[i] = 1500;
+    for(uint8_t i = 4; i<7 ;i++) servo[i] = 1500;
     writeServos();
   #endif
   #ifdef HELICOPTER
