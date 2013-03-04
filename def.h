@@ -173,6 +173,9 @@
   #endif
 #endif
 
+#if defined(SIRIUS_AIR) || defined(SIRIUS_AIR_GPS)
+  #define RCAUX2PIND17
+#endif
 
 /**************************   atmega328P (Promini)  ************************************/
 #if defined(PROMINI)

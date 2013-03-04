@@ -441,7 +441,7 @@ void evaluateCommand() {
      {
        int32_t lat = 0,lon = 0;
        uint8_t wp_no = read8();        //get the wp number  
-       headSerialReply(12);
+       headSerialReply(18);
        if (wp_no == 0) {
          lat = GPS_home[LAT];
          lon = GPS_home[LON];

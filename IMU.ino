@@ -210,7 +210,7 @@ void getEstimatedAttitude(){
   }
 
   // Apply complimentary filter (Gyro drift correction)
-  // If accel magnitude >1.15G or <0.8G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
+  // If accel magnitude >1.15G or <0.85G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
   // To do that, we just skip filter, as EstV already rotated by Gyro
   if (  72 < accMag && accMag < 133 )
     for (axis = 0; axis < 3; axis++) {
