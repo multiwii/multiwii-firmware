@@ -712,9 +712,7 @@
   /***********************        LCD/OLED - display settings       *********************/
   /**************************************************************************************/
 
-    /* uncomment this line if you plan to use a LCD or OLED 
-     * http://www.multiwii.com/wiki/index.php?title=Extra_features#LCD_.2F_OLED */
-      //#define LCD_CONF
+    /* http://www.multiwii.com/wiki/index.php?title=Extra_features#LCD_.2F_OLED */
 
     /*****************************   The type of LCD     **********************************/
       /* choice of LCD attached for configuration and telemetry, see notes below */
@@ -755,10 +753,13 @@
       #define LCD_MENU_ABORT 'x'
 
   /**************************************************************************************/
-  /***********************          configuration menu         **************************/
+  /***********************      LCD configuration menu         **************************/
   /**************************************************************************************/
 
-    /* http://www.multiwii.com/wiki/index.php?title=Extra_features#Configuration_Menu */
+    /* uncomment this line if you plan to use a LCD or OLED for tweaking parameters
+     * http://www.multiwii.com/wiki/index.php?title=Extra_features#Configuration_Menu */
+      //#define LCD_CONF
+
     /* to include setting the aux switches for AUX1 -> AUX4 via LCD */
       //#define LCD_CONF_AUX
 
@@ -766,7 +767,7 @@
       //#define SUPPRESS_LCD_CONF_AUX34
 
   /**************************************************************************************/
-  /***********************                telemetry            **************************/
+  /***********************      LCD       telemetry            **************************/
   /**************************************************************************************/
 
     /* to monitor system values (battery level, loop time etc. with LCD 
