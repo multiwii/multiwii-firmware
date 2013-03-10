@@ -1332,6 +1332,17 @@
   #undef INTERNAL_I2C_PULLUPS 
 #endif
 
+#if defined(RCNet_FC_GPS)
+  #define RCNet_FC
+  #define HMC5883
+  #define MAG_ORIENTATION(X, Y, Z)  {magADC[ROLL]  =  -X; magADC[PITCH]  =  Y; magADC[YAW]  = Z;} 
+  #define MPU6050_I2C_AUX_MASTER // MAG connected to the AUX I2C bus of MPU6050
+  #undef INTERNAL_I2C_PULLUPS 
+  #define GPS_SERIAL 2
+  #define GPS_BAUD   115200
+  #define UBLOX 
+#endif
+
 #if defined(RCNet_FC) 
   #define MPU6050 
   #define MS561101BA 
