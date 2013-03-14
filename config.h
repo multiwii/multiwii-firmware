@@ -953,23 +953,31 @@
     //#define MEGA_HW_PWM_SERVOS
 
   /********************************************************************/
-  /****           Serial command handling - MSP and other          ****/
+  /****           Memory savings                                   ****/
   /********************************************************************/
 
-    /* to reduce memory footprint, it is possible to suppress handling of serial commands.
+    /* options to counter the general shortage of memory, like with leonardo m32u4 and others */
+
+    /**** suppress handling of serial commands.***
      * This does _not_ affect handling of RXserial, Spektrum or GPS. Those will not be affected and still work the same.
      * Enable either one or both of the following options  */
 
-    /* Remove handling of all commands of the New MultiWii Serial Protocol.
-     * This will disable use of the GUI, winGUI, android apps and any other program that makes use of the MSP.
-     * You must find another way (like LCD_CONF) to tune the parameters or live with the defaults.
-     * If you run a LCD/OLED via i2c or serial/Bluetooth, this is safe to use */
-    //#define SUPPRESS_ALL_SERIAL_MSP // saves approx 2700 bytes
+      /* Remove handling of all commands of the New MultiWii Serial Protocol.
+       * This will disable use of the GUI, winGUI, android apps and any other program that makes use of the MSP.
+       * You must find another way (like LCD_CONF) to tune the parameters or live with the defaults.
+       * If you run a LCD/OLED via i2c or serial/Bluetooth, this is safe to use */
+      //#define SUPPRESS_ALL_SERIAL_MSP // saves approx 2700 bytes
 
-    /* Remove handling of other serial commands.
-     * This includes navigating via serial the lcd.configuration menu, lcd.telemetry and permanent.log .
-     * Navigating via stick inputs on tx is not affected and will work the same.  */
-    //#define SUPPRESS_OTHER_SERIAL_COMMANDS // saves  approx 0 to 100 bytes, depending on features enabled
+      /* Remove handling of other serial commands.
+       * This includes navigating via serial the lcd.configuration menu, lcd.telemetry and permanent.log .
+       * Navigating via stick inputs on tx is not affected and will work the same.  */
+      //#define SUPPRESS_OTHER_SERIAL_COMMANDS // saves  approx 0 to 100 bytes, depending on features enabled
+
+    /**** suppress keeping the defaults for initial setup and reset in the code.
+     * This requires a manual initial setup of the PIDs etc. or load and write from defaults.mwi;
+     * reset in GUI will not work on PIDs
+     */
+    //#define SUPPRESS_DEFAULTS_FROM_GUI
 
   /********************************************************************/
   /****           diagnostics                                      ****/

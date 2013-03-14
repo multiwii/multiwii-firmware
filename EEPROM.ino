@@ -101,28 +101,30 @@ void writeParams(uint8_t b) {
 }
 
 void LoadDefaults() {
-  conf.P8[ROLL]     = 33;  conf.I8[ROLL]    = 30; conf.D8[ROLL]     = 23;
-  conf.P8[PITCH]    = 33; conf.I8[PITCH]    = 30; conf.D8[PITCH]    = 23;
-  conf.P8[YAW]      = 68;  conf.I8[YAW]     = 45;  conf.D8[YAW]     = 0;
-  conf.P8[PIDALT]   = 64; conf.I8[PIDALT]   = 25; conf.D8[PIDALT]   = 24;
-  
-  conf.P8[PIDPOS]  = POSHOLD_P * 100;     conf.I8[PIDPOS]    = POSHOLD_I * 100;       conf.D8[PIDPOS]    = 0;
-  conf.P8[PIDPOSR] = POSHOLD_RATE_P * 10; conf.I8[PIDPOSR]   = POSHOLD_RATE_I * 100;  conf.D8[PIDPOSR]   = POSHOLD_RATE_D * 1000;
-  conf.P8[PIDNAVR] = NAV_P * 10;          conf.I8[PIDNAVR]   = NAV_I * 100;           conf.D8[PIDNAVR]   = NAV_D * 1000;
+  #ifndef SUPPRESS_DEFAULTS_FROM_GUI
+    conf.P8[ROLL]     = 33;  conf.I8[ROLL]    = 30; conf.D8[ROLL]     = 23;
+    conf.P8[PITCH]    = 33; conf.I8[PITCH]    = 30; conf.D8[PITCH]    = 23;
+    conf.P8[YAW]      = 68;  conf.I8[YAW]     = 45;  conf.D8[YAW]     = 0;
+    conf.P8[PIDALT]   = 64; conf.I8[PIDALT]   = 25; conf.D8[PIDALT]   = 24;
 
-  conf.P8[PIDLEVEL] = 90; conf.I8[PIDLEVEL] = 10; conf.D8[PIDLEVEL] = 100;
-  conf.P8[PIDMAG]   = 40;
+    conf.P8[PIDPOS]  = POSHOLD_P * 100;     conf.I8[PIDPOS]    = POSHOLD_I * 100;       conf.D8[PIDPOS]    = 0;
+    conf.P8[PIDPOSR] = POSHOLD_RATE_P * 10; conf.I8[PIDPOSR]   = POSHOLD_RATE_I * 100;  conf.D8[PIDPOSR]   = POSHOLD_RATE_D * 1000;
+    conf.P8[PIDNAVR] = NAV_P * 10;          conf.I8[PIDNAVR]   = NAV_I * 100;           conf.D8[PIDNAVR]   = NAV_D * 1000;
   
-  conf.P8[PIDVEL] = 0;      conf.I8[PIDVEL] = 0;    conf.D8[PIDVEL] = 0;
-  
-  conf.rcRate8 = 90; conf.rcExpo8 = 65;
-  conf.rollPitchRate = 0;
-  conf.yawRate = 0;
-  conf.dynThrPID = 0;
-  conf.thrMid8 = 50; conf.thrExpo8 = 0;
-  for(uint8_t i=0;i<CHECKBOXITEMS;i++) {conf.activate[i] = 0;}
-  conf.angleTrim[0] = 0; conf.angleTrim[1] = 0;
-  conf.powerTrigger1 = 0;
+    conf.P8[PIDLEVEL] = 90; conf.I8[PIDLEVEL] = 10; conf.D8[PIDLEVEL] = 100;
+    conf.P8[PIDMAG]   = 40;
+
+    conf.P8[PIDVEL] = 0;      conf.I8[PIDVEL] = 0;    conf.D8[PIDVEL] = 0;
+
+    conf.rcRate8 = 90; conf.rcExpo8 = 65;
+    conf.rollPitchRate = 0;
+    conf.yawRate = 0;
+    conf.dynThrPID = 0;
+    conf.thrMid8 = 50; conf.thrExpo8 = 0;
+    for(uint8_t i=0;i<CHECKBOXITEMS;i++) {conf.activate[i] = 0;}
+    conf.angleTrim[0] = 0; conf.angleTrim[1] = 0;
+    conf.powerTrigger1 = 0;
+  #endif
   #ifdef FLYING_WING
     conf.wing_left_mid  = WING_LEFT_MID; 
     conf.wing_right_mid = WING_RIGHT_MID; 

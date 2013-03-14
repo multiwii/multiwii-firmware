@@ -332,7 +332,11 @@ void evaluateCommand() {
      headSerialReply(18);
      for(uint8_t i=0;i<3;i++) serialize16(accSmooth[i]);
      for(uint8_t i=0;i<3;i++) serialize16(gyroData[i]);
-     for(uint8_t i=0;i<3;i++) serialize16(magADC[i]);
+     #if MAG
+       for(uint8_t i=0;i<3;i++) serialize16(magADC[i]);
+     #else
+       for(uint8_t i=0;i<3;i++) serialize16(0);
+     #endif
      break;
    case MSP_SERVO:
      headSerialReply(16);

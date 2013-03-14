@@ -449,6 +449,7 @@ static struct {
 // **********************
 // GPS common variables
 // **********************
+  static int16_t  GPS_angle[2] = { 0, 0};                      // the angles that must be applied for GPS correction
   static int32_t  GPS_coord[2];
   static int32_t  GPS_home[2];
   static int32_t  GPS_hold[2];
@@ -458,7 +459,6 @@ static struct {
   static uint16_t GPS_altitude;                                // GPS altitude      - unit: meter
   static uint16_t GPS_speed;                                   // GPS speed         - unit: cm/s
   static uint8_t  GPS_update = 0;                              // a binary toogle to distinct a GPS position update
-  static int16_t  GPS_angle[2] = { 0, 0};                      // the angles that must be applied for GPS correction
   static uint16_t GPS_ground_course = 0;                       //                   - unit: degree*10
   static uint8_t  GPS_Present = 0;                             // Checksum from Gps serial
   static uint8_t  GPS_Enable  = 0;
@@ -493,7 +493,7 @@ static struct {
   #define NAV_MODE_POSHOLD       1
   #define NAV_MODE_WP            2
   static uint8_t nav_mode = NAV_MODE_NONE; // Navigation mode
- 
+
   static uint8_t alarmArray[16];           // array
  
 #if BARO
@@ -558,6 +558,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     if (! (++psensorTimer % PSENSORFREQ)) {
       pMeterRaw =  analogRead(PSENSORPIN);
       //lcdprint_int16(pMeterRaw); LCDcrlf();
+      //debug[0] = pMeterRaw;
       powerValue = ( conf.psensornull > pMeterRaw ? conf.psensornull - pMeterRaw : pMeterRaw - conf.psensornull); // do not use abs(), it would induce implicit cast to uint and overrun
       if ( powerValue < 333) {  // only accept reasonable values. 333 is empirical
       #ifdef LCD_TELEMETRY
