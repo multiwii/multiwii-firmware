@@ -15,7 +15,7 @@ March  2013     V2.2
 
 
 #include <avr/pgmspace.h>
-#define  VERSION  220
+#define  VERSION  221
 
 /*********** RC alias *****************/
 enum rc {

@@ -1510,7 +1510,7 @@ void output_V() {
     line1[1] = digit100(analog.vbat);
     line1[2] = digit10(analog.vbat);
     line1[4] = digit1(analog.vbat);
-    if (vbat < conf.vbatlevel_warn1) { LCDattributesReverse(); }
+    if (analog.vbat < conf.vbatlevel_warn1) { LCDattributesReverse(); }
     LCDbar(7, (((analog.vbat - conf.vbatlevel_warn1)*100)/(VBATNOMINAL-conf.vbatlevel_warn1)) );
     LCDattributesOff(); // turn Reverse off for rest of display
     LCDprintChar(line1);
@@ -1995,28 +1995,28 @@ void lcd_telemetry() {
     LCDprint(' ');
     switch (i) {
       case 0:
-        lcdprint_int16(gyroData[0]); LCDprint(' ');
-        outputSensor(10, gyroData[0], GYROLIMIT);
+        lcdprint_int16(imu.gyroData[0]); LCDprint(' ');
+        outputSensor(10, imu.gyroData[0], GYROLIMIT);
       break;
       case 1:
-        lcdprint_int16(gyroData[1]); LCDprint(' ');
-        outputSensor(10, gyroData[1], GYROLIMIT);
+        lcdprint_int16(imu.gyroData[1]); LCDprint(' ');
+        outputSensor(10, imu.gyroData[1], GYROLIMIT);
       break;
       case 2:
-        lcdprint_int16(gyroData[2]); LCDprint(' ');
-        outputSensor(10, gyroData[2], GYROLIMIT);
+        lcdprint_int16(imu.gyroData[2]); LCDprint(' ');
+        outputSensor(10, imu.gyroData[2], GYROLIMIT);
       break;
       case 3:
-        lcdprint_int16(accSmooth[0]); LCDprint(' ');
-        outputSensor(10, accSmooth[0], ACCLIMIT);
+        lcdprint_int16(imu.accSmooth[0]); LCDprint(' ');
+        outputSensor(10, imu.accSmooth[0], ACCLIMIT);
       break;
       case 4:
-        lcdprint_int16(accSmooth[1]); LCDprint(' ');
-        outputSensor(10, accSmooth[1], ACCLIMIT);
+        lcdprint_int16(imu.accSmooth[1]); LCDprint(' ');
+        outputSensor(10, imu.accSmooth[1], ACCLIMIT);
       break;
       case 5:
-        lcdprint_int16(accSmooth[2]); LCDprint(' ');
-        outputSensor(10, accSmooth[2] - acc_1G, ACCLIMIT);
+        lcdprint_int16(imu.accSmooth[2]); LCDprint(' ');
+        outputSensor(10, imu.accSmooth[2] - acc_1G, ACCLIMIT);
       break;
     }
     LCDcrlf();
