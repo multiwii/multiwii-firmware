@@ -125,6 +125,7 @@ void tailSerialReply() {
 }
 
 void serializeNames(PGM_P s) {
+  headSerialReply(strlen_P(s));
   for (PGM_P c = s; pgm_read_byte(c); c++) {
     serialize8(pgm_read_byte(c));
   }
@@ -203,14 +204,22 @@ void serialCom() {
     }
   }
 }
+
+void  s_struct(uint8_t *cb,uint8_t siz) {
+  headSerialReply(siz);
+  while(siz--) serialize8(*cb++);
+}
+
+void s_struct_w(uint8_t *cb,uint8_t siz) {
+ headSerialReply(0);
+  while(siz--) *cb++ = read8();
+}
+
 #ifndef SUPPRESS_ALL_SERIAL_MSP
 void evaluateCommand() {
   switch(cmdMSP[CURRENTPORT]) {
    case MSP_SET_RAW_RC:
-     for(uint8_t i=0;i<8;i++) {
-       rcData[i] = read16();
-     }
-     headSerialReply(0);
+     s_struct_w((uint8_t*)&rcData,16);
      break;
    #if GPS
    case MSP_SET_RAW_GPS:
@@ -225,28 +234,13 @@ void evaluateCommand() {
      break;
    #endif
    case MSP_SET_PID:
-     for(uint8_t i=0;i<PIDITEMS;i++) {
-       conf.P8[i]=read8();
-       conf.I8[i]=read8();
-       conf.D8[i]=read8();
-     }
-     headSerialReply(0);
+     s_struct_w((uint8_t*)&conf.pid[0].P8,3*PIDITEMS);
      break;
    case MSP_SET_BOX:
-     for(uint8_t i=0;i<CHECKBOXITEMS;i++) {
-       conf.activate[i]=read16();
-     }
-     headSerialReply(0);
+     s_struct_w((uint8_t*)&conf.activate[0],CHECKBOXITEMS*2);
      break;
    case MSP_SET_RC_TUNING:
-     conf.rcRate8 = read8();
-     conf.rcExpo8 = read8();
-     conf.rollPitchRate = read8();
-     conf.yawRate = read8();
-     conf.dynThrPID = read8();
-     conf.thrMid8 = read8();
-     conf.thrExpo8 = read8();
-     headSerialReply(0);
+     s_struct_w((uint8_t*)&conf.rcRate8,7);
      break;
    case MSP_SET_MISC:
      #if defined(POWERMETER)
@@ -266,8 +260,7 @@ void evaluateCommand() {
      break;
    #endif
    case MSP_SET_HEAD:
-     magHold = read16();
-     headSerialReply(0);
+     s_struct_w((uint8_t*)&magHold,2);
      break;
    case MSP_IDENT:
      headSerialReply(7);
@@ -329,33 +322,16 @@ void evaluateCommand() {
        serialize8(global_conf.currentSet);   // current setting
      break;
    case MSP_RAW_IMU:
-     headSerialReply(18);
-     for(uint8_t i=0;i<3;i++) serialize16(accSmooth[i]);
-     for(uint8_t i=0;i<3;i++) serialize16(gyroData[i]);
-     #if MAG
-       for(uint8_t i=0;i<3;i++) serialize16(magADC[i]);
-     #else
-       for(uint8_t i=0;i<3;i++) serialize16(0);
-     #endif
+     s_struct((uint8_t*)&imu,18);
      break;
    case MSP_SERVO:
-     headSerialReply(16);
-     for(uint8_t i=0;i<8;i++)
-       #if defined(SERVO)
-       serialize16(servo[i]);
-       #else
-       serialize16(0);
-       #endif
+     s_struct((uint8_t*)&servo,16);
      break;
    case MSP_MOTOR:
-     headSerialReply(16);
-     for(uint8_t i=0;i<8;i++) {
-       serialize16( (i < NUMBER_MOTOR) ? motor[i] : 0 );
-     }
+     s_struct((uint8_t*)&motor,16);
      break;
    case MSP_RC:
-     headSerialReply(RC_CHANS * 2);
-     for(uint8_t i=0;i<RC_CHANS;i++) serialize16(rcData[i]);
+     s_struct((uint8_t*)&rcData,RC_CHANS*2);
      break;
    #if GPS
    case MSP_RAW_GPS:
@@ -376,52 +352,27 @@ void evaluateCommand() {
      break;
    #endif
    case MSP_ATTITUDE:
-     headSerialReply(8);
-     for(uint8_t i=0;i<2;i++) serialize16(angle[i]);
-     serialize16(heading);
-     serialize16(headFreeModeHold);
+     s_struct((uint8_t*)&att,6);
      break;
    case MSP_ALTITUDE:
-     headSerialReply(6);
-     serialize32(EstAlt);
-     serialize16(vario);                  // added since r1172
+     s_struct((uint8_t*)&alt,6);
      break;
    case MSP_ANALOG:
-     headSerialReply(5);
-     serialize8(vbat);
-     serialize16(intPowerMeterSum);
-     serialize16(rssi);
+     s_struct((uint8_t*)&analog,5);
      break;
    case MSP_RC_TUNING:
-     headSerialReply(7);
-     serialize8(conf.rcRate8);
-     serialize8(conf.rcExpo8);
-     serialize8(conf.rollPitchRate);
-     serialize8(conf.yawRate);
-     serialize8(conf.dynThrPID);
-     serialize8(conf.thrMid8);
-     serialize8(conf.thrExpo8);
+     s_struct((uint8_t*)&conf.rcRate8,7);
      break;
    case MSP_PID:
-     headSerialReply(3*PIDITEMS);
-     for(uint8_t i=0;i<PIDITEMS;i++) {
-       serialize8(conf.P8[i]);
-       serialize8(conf.I8[i]);
-       serialize8(conf.D8[i]);
-     }
+     s_struct((uint8_t*)&conf.pid[0].P8,3*PIDITEMS);
      break;
    case MSP_PIDNAMES:
-     headSerialReply(strlen_P(pidnames));
      serializeNames(pidnames);
      break;
    case MSP_BOX:
-     headSerialReply(2*CHECKBOXITEMS);
-     for(uint8_t i=0;i<CHECKBOXITEMS;i++) {
-       serialize16(conf.activate[i]);
-     }
+     s_struct((uint8_t*)&conf.activate[0],2*CHECKBOXITEMS);
      break;
    case MSP_BOXNAMES:
-     headSerialReply(strlen_P(boxnames));
      serializeNames(boxnames);
      break;
    case MSP_BOXIDS:
@@ -431,14 +382,10 @@ void evaluateCommand() {
      }
      break;
    case MSP_MISC:
-     headSerialReply(2);
-     serialize16(intPowerTrigger1);
+     s_struct((uint8_t*)&intPowerTrigger1,2);
      break;
    case MSP_MOTOR_PINS:
-     headSerialReply(8);
-     for(uint8_t i=0;i<8;i++) {
-       serialize8(PWM_PIN[i]);
-     }
+     s_struct((uint8_t*)&PWM_PIN,8);
      break;
    #if defined(USE_MSP_WP)    
    case MSP_WP:
@@ -514,10 +461,7 @@ void evaluateCommand() {
      headSerialReply(0);
      break;
    case MSP_DEBUG:
-     headSerialReply(8);
-     for(uint8_t i=0;i<4;i++) {
-       serialize16(debug[i]); // 4 variables are here for general monitoring purpose
-     }
+     s_struct((uint8_t*)&debug,8);
      break;
    #ifdef DEBUGMSG
    case MSP_DEBUGMSG:

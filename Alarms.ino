@@ -83,8 +83,8 @@ void alarmHandler(){
   
   #if defined(VBAT)
     if (vbatMin < conf.vbatlevel_crit) alarmArray[6] = 4;
-    else if ( (vbat>conf.vbatlevel_warn1)  || (conf.no_vbat > vbat)) alarmArray[6] = 0;
-    else if (vbat > conf.vbatlevel_warn2) alarmArray[6] = 2;
+    else if ( (analog.vbat>conf.vbatlevel_warn1)  || (conf.no_vbat > analog.vbat)) alarmArray[6] = 0;
+    else if (analog.vbat > conf.vbatlevel_warn2) alarmArray[6] = 2;
     else alarmArray[6] = 4;
   #endif
   
@@ -421,7 +421,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
   #else
       b[4]=0;
   #endif
-      b[5]=(180-heading)/2; // 1 unit = 2 degrees;
+      b[5]=(180-att.heading)/2; // 1 unit = 2 degrees;
       b[6]=GPS_numSat;                                      
       i2c_rep_start(LED_RING_ADDRESS);
       for(uint8_t i=0;i<7;i++){
@@ -430,7 +430,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
       i2c_stop();
     }
   #if defined (VBAT)
-    if (vbat < conf.vbatlevel_warn1){ // Uh oh - battery low
+    if (analog.vbat < conf.vbatlevel_warn1){ // Uh oh - battery low
       i2c_rep_start(LED_RING_ADDRESS);
       i2c_write('r');
       i2c_stop();   
@@ -603,9 +603,9 @@ void vario_signaling() {
   /* method 1: use vario to follow short term up/down movement : */
   #if (VARIOMETER == 1) || (VARIOMETER == 12)
   {
-    uint8_t up = (vario > 0 ? 1 : 0 ); //, down = (vario < 0 ? 1 : 0 );
+    uint8_t up = (alt.vario > 0 ? 1 : 0 ); //, down = (vario < 0 ? 1 : 0 );
     //int16_t v = abs(vario) - up * TRESHOLD_UP - down * TRESHOLD_DOWN;
-    v = abs(vario) - up * (TRESHOLD_UP_MINUS_DOWN) - TRESHOLD_DOWN;
+    v = abs(alt.vario) - up * (TRESHOLD_UP_MINUS_DOWN) - TRESHOLD_DOWN;
     if (silence>0) silence--; else silence = 0;
     if (v > 0) {
       // going up or down
