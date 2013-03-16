@@ -25,7 +25,7 @@ static uint8_t inBuf[INBUF_SIZE][UART_NUMBER];
 #endif
 // Capability is bit flags; next defines should be 2, 4, 8...
 
-const uint32_t PROGMEM capability = 0+BIND_CAPABLE;
+const uint32_t capability = 0+BIND_CAPABLE;
 
 #ifdef DEBUGMSG
   #define DEBUG_MSG_BUFFER_SIZE 128
@@ -263,63 +263,72 @@ void evaluateCommand() {
      s_struct_w((uint8_t*)&magHold,2);
      break;
    case MSP_IDENT:
-     headSerialReply(7);
-     serialize8(VERSION);   // multiwii version
-     serialize8(MULTITYPE); // type of multicopter
-     serialize8(MSP_VERSION);         // MultiWii Serial Protocol Version
-     serialize32(pgm_read_dword(&(capability)));        // "capability"
+     struct {
+       uint8_t v,t,msp_v;
+       uint32_t cap;
+     } id;
+     id.v     = VERSION;
+     id.t     = MULTITYPE;
+     id.msp_v = MSP_VERSION;
+     id.cap   = capability;
+     s_struct((uint8_t*)&id,7);
      break;
    case MSP_STATUS:
-     headSerialReply(11);
-     serialize16(cycleTime);
-     serialize16(i2c_errors_count);
-     serialize16(ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4);
-     serialize32(
-                 #if ACC
-                   f.ANGLE_MODE<<BOXANGLE|
-                   f.HORIZON_MODE<<BOXHORIZON|
-                 #endif
-                 #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
-                   f.BARO_MODE<<BOXBARO|
-                 #endif
-                 #if MAG
-                   f.MAG_MODE<<BOXMAG|f.HEADFREE_MODE<<BOXHEADFREE|rcOptions[BOXHEADADJ]<<BOXHEADADJ|
-                 #endif
-                 #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
-                   rcOptions[BOXCAMSTAB]<<BOXCAMSTAB|
-                 #endif
-                 #if defined(CAMTRIG)
-                   rcOptions[BOXCAMTRIG]<<BOXCAMTRIG|
-                 #endif
-                 #if GPS
-                   f.GPS_HOME_MODE<<BOXGPSHOME|f.GPS_HOLD_MODE<<BOXGPSHOLD|
-                 #endif
-                 #if defined(FIXEDWING) || defined(HELICOPTER)
-                   f.PASSTHRU_MODE<<BOXPASSTHRU|
-                 #endif
-                 #if defined(BUZZER)
-                   rcOptions[BOXBEEPERON]<<BOXBEEPERON|
-                 #endif
-                 #if defined(LED_FLASHER)
-                   rcOptions[BOXLEDMAX]<<BOXLEDMAX|
-                 #endif
-                 #if defined(LANDING_LIGHTS_DDR)
-                   rcOptions[BOXLLIGHTS]<<BOXLLIGHTS |
-                 #endif
-                 #if defined(VARIOMETER)
-                   rcOptions[BOXVARIO]<<BOXVARIO |
-                 #endif
-                 #if defined(INFLIGHT_ACC_CALIBRATION)
-                   rcOptions[BOXCALIB]<<BOXCALIB |
-                 #endif
-                 #if defined(GOVERNOR_P)
-                   rcOptions[BOXGOV]<<BOXGOV |
-                 #endif
-                 #if defined(OSD_SWITCH)
-                   rcOptions[BOXOSD]<<BOXOSD |
-                 #endif
-                 f.ARMED<<BOXARM);
-       serialize8(global_conf.currentSet);   // current setting
+     struct {
+       uint16_t cycleTime,i2c_errors_count,sensor;
+       uint32_t flag;
+       uint8_t set;
+     } st;
+     st.cycleTime        = cycleTime;
+     st.i2c_errors_count = i2c_errors_count;
+     st.sensor           = ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4;
+     st.flag = 
+                         #if ACC
+                           f.ANGLE_MODE<<BOXANGLE|
+                           f.HORIZON_MODE<<BOXHORIZON|
+                         #endif
+                         #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
+                           f.BARO_MODE<<BOXBARO|
+                         #endif
+                         #if MAG
+                           f.MAG_MODE<<BOXMAG|f.HEADFREE_MODE<<BOXHEADFREE|rcOptions[BOXHEADADJ]<<BOXHEADADJ|
+                         #endif
+                         #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
+                           rcOptions[BOXCAMSTAB]<<BOXCAMSTAB|
+                         #endif
+                         #if defined(CAMTRIG)
+                           rcOptions[BOXCAMTRIG]<<BOXCAMTRIG|
+                         #endif
+                         #if GPS
+                           f.GPS_HOME_MODE<<BOXGPSHOME|f.GPS_HOLD_MODE<<BOXGPSHOLD|
+                         #endif
+                         #if defined(FIXEDWING) || defined(HELICOPTER)
+                           f.PASSTHRU_MODE<<BOXPASSTHRU|
+                         #endif
+                         #if defined(BUZZER)
+                           rcOptions[BOXBEEPERON]<<BOXBEEPERON|
+                         #endif
+                         #if defined(LED_FLASHER)
+                           rcOptions[BOXLEDMAX]<<BOXLEDMAX|
+                         #endif
+                         #if defined(LANDING_LIGHTS_DDR)
+                           rcOptions[BOXLLIGHTS]<<BOXLLIGHTS |
+                         #endif
+                         #if defined(VARIOMETER)
+                           rcOptions[BOXVARIO]<<BOXVARIO |
+                         #endif
+                         #if defined(INFLIGHT_ACC_CALIBRATION)
+                           rcOptions[BOXCALIB]<<BOXCALIB |
+                         #endif
+                         #if defined(GOVERNOR_P)
+                           rcOptions[BOXGOV]<<BOXGOV |
+                         #endif
+                         #if defined(OSD_SWITCH)
+                           rcOptions[BOXOSD]<<BOXOSD |
+                         #endif
+                         f.ARMED<<BOXARM;
+     st.set              = global_conf.currentSet;
+     s_struct((uint8_t*)&st,11);
      break;
    case MSP_RAW_IMU:
      s_struct((uint8_t*)&imu,18);
@@ -450,12 +459,12 @@ void evaluateCommand() {
      if(!f.ARMED) f.CALIBRATE_MAG = 1;
      headSerialReply(0);
      break;
-#if defined(SPEK_BIND)
+   #if defined(SPEK_BIND)
    case MSP_BIND:
      spekBind();  
      headSerialReply(0);
      break;
-#endif
+   #endif
    case MSP_EEPROM_WRITE:
      writeParams(0);
      headSerialReply(0);
