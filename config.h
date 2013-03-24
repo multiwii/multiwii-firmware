@@ -549,6 +549,24 @@
 /*****************                                                                 ***************/
 /*************************************************************************************************/
 
+  /************************        Angele throttle correction         ********************/
+  /* Automatically increase throttle based on the angle of the copter
+     Original idea by Kraut Rob, first implementation HAdrian							*/
+
+  //#define THROTTLE_ANGLE_CORRECTION 40
+  
+ /*************************        Advanced Headfree Mode             ********************/
+ /* In Advanced Headfree mode when the copter is farther than ADV_HEADFREE_RANGE meters then 
+    the  bearing between home and copter position will become the control direction 
+	IF copter come closer than ADV_HEADFREE_RANGE meters, then the control direction freezed to the 
+	bearing between home and copter at the point where it crosses the ADV_HEADFREE_RANGE meter distance
+	first implementation by HAdrian, mods by EOSBandi
+ */
+
+   //#define ADVANCED_HEADFREE									//Advanced headfree mode is enabled when this is uncommented
+   //#define ADV_HEADFREE_RANGE 15								//Range where advanced headfree mode activated
+
+
   /************************        continuous gyro calibration        ********************/
   /* Gyrocalibration will be repeated if copter is moving during calibration. */
     //#define GYROCALIBRATIONFAILSAFE

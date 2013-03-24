@@ -298,6 +298,15 @@ struct flags_struct {
 static int16_t  i2c_errors_count = 0;
 static int16_t  annex650_overrun_count = 0;
 
+
+
+#if defined(THROTTLE_ANGLE_CORRECTION)
+  static int16_t throttleAngleCorrection = 0;	// correction of throttle in lateral wind,
+  static int8_t  cosZ = 100;					// cos(angleZ)*100
+#endif
+
+
+
 // **********************
 //Automatic ACC Offset Calibration
 // **********************
@@ -1134,6 +1143,11 @@ void loop () {
         if (!f.HEADFREE_MODE) {
           f.HEADFREE_MODE = 1;
         }
+	  #if defined(ADVANCED_HEADFREE)
+		if ((f.GPS_FIX && GPS_numSat >= 5) && (GPS_distanceToHome > ADV_HEADFREE_RANGE) ) {
+            if (GPS_directionToHome < 180)  {headFreeModeHold = GPS_directionToHome + 180;} else {headFreeModeHold = GPS_directionToHome - 180;}
+         }
+      #endif
       } else {
         f.HEADFREE_MODE = 0;
       }
@@ -1311,6 +1325,13 @@ void loop () {
       #endif
     }
   #endif
+
+  #if defined(THROTTLE_ANGLE_CORRECTION)
+    if(f.ANGLE_MODE || f.HORIZON_MODE) {
+       rcCommand[THROTTLE]+= throttleAngleCorrection;
+    }
+  #endif
+  
   #if GPS
     if ( (f.GPS_HOME_MODE || f.GPS_HOLD_MODE) && f.GPS_FIX_HOME ) {
       float sin_yaw_y = sin(att.heading*0.0174532925f);

@@ -243,6 +243,12 @@ void getEstimatedAttitude(){
     att.heading += MAG_DECLINIATION * 10; //add declination
     att.heading /= 10;
   #endif
+
+  #if defined(THROTTLE_ANGLE_CORRECTION)
+    cosZ = EstG.V.Z / acc_1G * 100.0f;															 // cos(angleZ) * 100 
+    throttleAngleCorrection = THROTTLE_ANGLE_CORRECTION * constrain(100 - cosZ, 0, 100) >>3;	 // 16 bit ok: 200*150 = 30000  
+  #endif
+
 }
 
 #define UPDATE_INTERVAL 25000    // 40hz update rate (20hz LPF on acc)
