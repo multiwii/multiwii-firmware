@@ -160,7 +160,8 @@ void serialCom() {
     #if defined(SPEKTRUM) && (UART_NUMBER > 1)
       #define SPEK_COND  && (SPEK_SERIAL_PORT != CURRENTPORT)
     #endif
-    while (SerialAvailable(CURRENTPORT) GPS_COND SPEK_COND) {
+    uint8_t cc = SerialAvailable(CURRENTPORT);
+    while (cc-- GPS_COND SPEK_COND) {
       uint8_t bytesTXBuff = ((uint8_t)(serialHeadTX[CURRENTPORT]-serialTailTX[CURRENTPORT]))%TX_BUFFER_SIZE; // indicates the number of occupied bytes in TX buffer
       if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (50 bytes margin)
       c = SerialRead(CURRENTPORT);
@@ -782,7 +783,7 @@ uint8_t SerialAvailable(uint8_t port) {
       if(port == 0) return T_USB_Available();
     #endif
   #endif
-  return (serialHeadRX[port] - serialTailRX[port])%RX_BUFFER_SIZE;
+  return ((uint8_t)(serialHeadRX[port] - serialTailRX[port]))%RX_BUFFER_SIZE;
 }
 
 void SerialWrite(uint8_t port,uint8_t c){

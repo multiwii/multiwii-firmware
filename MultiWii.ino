@@ -366,7 +366,7 @@ volatile int16_t failsafeCnt = 0;
 
 static int16_t rcData[RC_CHANS];    // interval [1000;2000]
 static int16_t rcCommand[4];        // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW 
-static int16_t lookupPitchRollRC[6];// lookup table for expo & RC rate PITCH+ROLL
+static int16_t lookupPitchRollRC[5];// lookup table for expo & RC rate PITCH+ROLL
 static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 
 #if defined(SPEKTRUM)
@@ -539,15 +539,13 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   uint16_t tmp,tmp2;
   uint8_t axis,prop1,prop2;
 
-  #define BREAKPOINT 1500
   // PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
-  if (rcData[THROTTLE]<BREAKPOINT) {
-    prop2 = 100;
-  } else {
+  prop2 = 128; // prop2 was 100, is 128 now
+  if (rcData[THROTTLE]>1500) { // breakpoint is fix: 1500
     if (rcData[THROTTLE]<2000) {
-      prop2 = 100 - (uint16_t)conf.dynThrPID*(rcData[THROTTLE]-BREAKPOINT)/(2000-BREAKPOINT);
+      prop2 -=  ((uint16_t)conf.dynThrPID*(rcData[THROTTLE]-1500)>>9); //  /512 instead of /500
     } else {
-      prop2 = 100 - conf.dynThrPID;
+      prop2 -=  conf.dynThrPID;
     }
   }
 
@@ -558,16 +556,16 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       else { tmp=0; }
     #endif
     if(axis!=2) { //ROLL & PITCH
-      tmp2 = tmp/100;
-      rcCommand[axis] = lookupPitchRollRC[tmp2] + (tmp-tmp2*100) * (lookupPitchRollRC[tmp2+1]-lookupPitchRollRC[tmp2]) / 100;
-      prop1 = 100-(uint16_t)conf.rollPitchRate*tmp/500;
-      prop1 = (uint16_t)prop1*prop2/100;
+      tmp2 = tmp>>7; // 500/128 = 3.9  => range [0;3]
+      rcCommand[axis] = lookupPitchRollRC[tmp2] + ((tmp-(tmp2<<7)) * (lookupPitchRollRC[tmp2+1]-lookupPitchRollRC[tmp2])>>7);
+      prop1 = 128-((uint16_t)conf.rollPitchRate*tmp>>9); // prop1 was 100, is 128 now -- and /512 instead of /500
+      prop1 = (uint16_t)prop1*prop2>>7; // prop1: max is 128   prop2: max is 128   result prop1: max is 128
     } else {      // YAW
       rcCommand[axis] = tmp;
-      prop1 = 100-(uint16_t)conf.yawRate*tmp/500;
+      prop1 = 128-((uint16_t)conf.yawRate*tmp>>9); // prop1 was 100, is 128 now -- and /512 instead of /500
     }
-    dynP8[axis] = (uint16_t)conf.pid[axis].P8*prop1/100;
-    dynD8[axis] = (uint16_t)conf.pid[axis].D8*prop1/100;
+    dynP8[axis] = (uint16_t)conf.pid[axis].P8*prop1>>7; // was /100, is /128 now
+    dynD8[axis] = (uint16_t)conf.pid[axis].D8*prop1>>7; // was /100, is /128 now
     if (rcData[axis]<MIDRC) rcCommand[axis] = -rcCommand[axis];
   }
   tmp = constrain(rcData[THROTTLE],MINCHECK,2000);
