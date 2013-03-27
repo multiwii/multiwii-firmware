@@ -465,6 +465,8 @@
   /* you may need to change PINx and PORTx plus #shift according to the desired pin! */
   //#define OVERRIDE_V_BATPIN                   A0 // instead of A3    // Analog PIN 3
 
+  //#define OVERRIDE_PSENSORPIN                 A1 // instead of A2    // Analog PIN 2
+
   //#define OVERRIDE_LEDPIN_PINMODE             pinMode (A1, OUTPUT); // use A1 instead of d13
   //#define OVERRIDE_LEDPIN_TOGGLE              PINC |= 1<<1; // PINB |= 1<<5;     //switch LEDPIN state (digital PIN 13)
   //#define OVERRIDE_LEDPIN_OFF                 PORTC &= ~(1<<1); // PORTB &= ~(1<<5);
@@ -540,8 +542,9 @@
       //#define MMSERVOGIMBAL                  // Active Output Moving Average Function for Servos Gimbal
       //#define MMSERVOGIMBALVECTORLENGHT 32   // Lenght of Moving Average Vector
 
-
-
+  /************************    Analog Reads              **********************************/
+    /* if you want faster analog Reads, enable this. It may result in less accurate results, especially for more than one analog channel */
+    //#define FASTER_ANALOG_READS
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/
@@ -860,9 +863,11 @@
     #define PLEVELSCALE 50 // if you change this value for other granularity, you must search for comments in code to change accordingly
     /* larger PLEVELDIV will get you smaller value for power (mAh equivalent) */
     #define PLEVELDIV 5000 // (*) default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
-    #define PLEVELDIVSOFT PLEVELDIV // for soft always equal to PLEVELDIV; for hard set to 5000
+    //#define PLEVELDIV 36000 // fixed value for hard - do not tune
+    #define PLEVELDIVSOFT PLEVELDIV // for soft always equal to PLEVELDIV
+    //#define PLEVELDIVSOFT 5000 // for hard fixed to 5000
     #define PSENSORNULL 510 // (*) set to analogRead() value for zero current; for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt;
-    #define PINT2mA 13 // (*) for telemtry display: one integer step on arduino analog translates to mA (example 4.9 / 37 * 100
+    #define PINT2mA 132 // (*) one integer step on arduino analog translates to mA (example 4.9 / 37 * 1000
 
   /********************************************************************/
   /****           altitude hold                                    ****/
@@ -1057,8 +1062,9 @@
        value must be [1; 65535] */
     #define LCD_TELEMETRY_FREQ 23       // to send telemetry data over serial 23 <=> 60ms <=> 16Hz (only sending interlaced, so 8Hz update rate)
     #define LCD_TELEMETRY_AUTO_FREQ 967 // to step to next telemetry page 967 <=> 3s
-    #define PSENSORFREQ 6               // to read hardware powermeter sensor 6 <=> 18ms
-    #define VBATFREQ PSENSORFREQ        // to read battery voltage - keep equal to PSENSORFREQ unless you know what you are doing
+    #define PSENSOR_SMOOTH 16           // len of averaging vector for smoothing the PSENSOR readings; should be power of 2; set to 1 to disable
+    #define VBAT_SMOOTH 16              // len of averaging vector for smoothing the VBAT readings; should be power of 2; set to 1 to disable
+
 
   /********************************************************************/
   /****           Regression testing                               ****/

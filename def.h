@@ -1577,7 +1577,7 @@
   #define    PL_IDLE      125    // 100us
 #endif
 
-#if defined(PILOTLAMP) || defined(VBAT)
+#if defined(PILOTLAMP)
   #define BUZZER
 #endif
 
@@ -1774,6 +1774,9 @@
 #ifdef OVERRIDE_V_BATPIN
   #define V_BATPIN OVERRIDE_V_BATPIN
 #endif
+#ifdef OVERRIDE_PSENSORPIN
+  #define PSENSORPIN OVERRIDE_PSENSORPIN
+#endif
 #ifdef OVERRIDE_LEDPIN_PINMODE
   #define LEDPIN_PINMODE OVERRIDE_LEDPIN_PINMODE
   #define LEDPIN_TOGGLE  OVERRIDE_LEDPIN_TOGGLE
@@ -1815,7 +1818,7 @@
   #error "LCD_CONF or LCD_TELEMETRY defined, and choice of LCD not defined.  Uncomment one of LCD_SERIAL3W, LCD_TEXTSTAR, LCD_VT100, LCD_TTY or LCD_ETPP, LCD_LCD03, OLED_I2C_128x64"
 #endif
 
-#if defined(POWERMETER) && !(defined(VBAT))
+#if defined(POWERMETER_SOFT) && !(defined(VBAT))
         #error "to use powermeter, you must also define and configure VBAT"
 #endif
 

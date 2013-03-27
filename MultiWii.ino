@@ -321,7 +321,7 @@ static int16_t  annex650_overrun_count = 0;
 // **********************
 // power meter
 // **********************
-#if defined(POWERMETER)
+#if defined(POWERMETER) || ( defined(LOG_VALUES) && (LOG_VALUES >= 3) )
 #define PMOTOR_SUM 8                     // index into pMeter[] for sum
   static uint32_t pMeter[PMOTOR_SUM + 1];  // we use [0:7] for eight motors,one extra for sum
   static uint8_t pMeterV;                  // dummy to satisfy the paramStruct logic in ConfigurationLoop()
@@ -398,7 +398,7 @@ static struct {
   uint8_t checksum;      // MUST BE ON LAST POSITION OF STRUCTURE ! 
 } global_conf;
 
-typedef struct pid_ {
+struct pid_ {
   uint8_t P8;
   uint8_t I8;
   uint8_t D8;
@@ -584,47 +584,82 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     rcCommand[PITCH] = rcCommand_PITCH;
   }
 
+  // query at most one multiplexed analog channel per MWii cycle
+  static uint8_t analogreader =0;
+  switch (analogreader++%3) {
   #if defined(POWERMETER_HARD)
-    uint16_t pMeterRaw;               // used for current reading
-    static uint16_t psensorTimer = 0;
-    if (! (++psensorTimer % PSENSORFREQ)) {
-      pMeterRaw =  analogRead(PSENSORPIN);
-      //lcdprint_int16(pMeterRaw); LCDcrlf();
-      //debug[0] = pMeterRaw;
-      powerValue = ( conf.psensornull > pMeterRaw ? conf.psensornull - pMeterRaw : pMeterRaw - conf.psensornull); // do not use abs(), it would induce implicit cast to uint and overrun
-      if ( powerValue < 333) {  // only accept reasonable values. 333 is empirical
-      #ifdef LCD_TELEMETRY
-        if (powerValue > powerMax) powerMax = powerValue;
-      #endif
-      } else {
-        powerValue = 333;
-      }        
-      pMeter[PMOTOR_SUM] += (uint32_t) powerValue;
-    }
-  #endif
-  #if defined(BUZZER)
-    #if defined(VBAT)
-      static uint8_t vbatTimer = 0;
-      static uint8_t ind = 0;
-      uint16_t vbatRaw = 0;
-      static uint16_t vbatRawArray[8];
-      if (! (++vbatTimer % VBATFREQ)) {
-        vbatRawArray[(ind++)%8] = analogRead(V_BATPIN);
-        for (uint8_t i=0;i<8;i++) vbatRaw += vbatRawArray[i];
-        analog.vbat = (vbatRaw*2) / conf.vbatscale; // result is Vbatt in 0.1V steps
-      }
+  case 0:
+  {
+    uint16_t pMeterRaw; // used for current reading
+    static uint32_t lastRead = currentTime;
+    static uint8_t ind = 0;
+    static uint16_t pvec[PSENSOR_SMOOTH], psum;
+    uint16_t p =  analogRead(PSENSORPIN);
+    //lcdprint_int16(p); LCDcrlf();
+    //debug[0] = p;
+    #if PSENSOR_SMOOTH != 1
+      psum += p;
+      psum -= pvec[ind];
+      pvec[ind++] = p;
+      ind %= PSENSOR_SMOOTH;
+      p = psum / PSENSOR_SMOOTH;
     #endif
-    alarmHandler(); // external buzzer routine that handles buzzer events globally now
-  #endif  
+    powerValue = ( conf.psensornull > p ? conf.psensornull - p : p - conf.psensornull); // do not use abs(), it would induce implicit cast to uint and overrun
+    if ( powerValue < 307) {  // only accept reasonable values. 307 is empirical
+    #ifdef LCD_TELEMETRY
+      if (powerValue > powerMax) powerMax = powerValue;
+    #endif
+    } else {
+      powerValue = 307;
+    }
+    pMeter[PMOTOR_SUM] += ((currentTime-lastRead) * (uint32_t)(powerValue*conf.pint2ma))/100000; // [10 mA * msec]
+    lastRead = currentTime;
+    break;
+  }
+  #endif // POWERMETER_HARD
 
+  #if defined(VBAT)
+  case 1:
+  {
+      static uint8_t ind = 0;
+      static uint16_t vvec[VBAT_SMOOTH], vsum;
+      uint16_t v = analogRead(V_BATPIN);
+      //debug[2] = v;
+      #if VBAT_SMOOTH == 1
+        analog.vbat = (v<<4) / conf.vbatscale; // result is Vbatt in 0.1V steps
+      #else
+        vsum += v;
+        vsum -= vvec[ind];
+        vvec[ind++] = v;
+        ind %= VBAT_SMOOTH;
+        #if VBAT_SMOOTH == 16
+          analog.vbat = vsum / conf.vbatscale; // result is Vbatt in 0.1V steps
+        #elif VBAT_SMOOTH < 16
+          analog.vbat = (vsum * (16/VBAT_SMOOTH)) / conf.vbatscale; // result is Vbatt in 0.1V steps
+        #else
+          analog.vbat = ((vsum /VBAT_SMOOTH) * 16) / conf.vbatscale; // result is Vbatt in 0.1V steps
+        #endif
+      #endif
+      break;
+    }
+  #endif // VBAT
   #if defined(RX_RSSI)
+  case 2:
+  {
     static uint8_t sig = 0;
     uint16_t rssiRaw = 0;
     static uint16_t rssiRawArray[8];
     rssiRawArray[(sig++)%8] = analogRead(RX_RSSI_PIN);
     for (uint8_t i=0;i<8;i++) rssiRaw += rssiRawArray[i];
     analog.rssi = rssiRaw / 8;       
+  }
   #endif
+  } // end of switch()
+
+  #if defined(BUZZER)
+    alarmHandler(); // external buzzer routine that handles buzzer events globally now
+  #endif
+
 
   if ( (calibratingA>0 && ACC ) || (calibratingG>0) ) { // Calibration phasis
     LEDPIN_TOGGLE;
@@ -809,7 +844,9 @@ void setup() {
   #ifdef LANDING_LIGHTS_DDR
     init_landing_lights();
   #endif
-  ADCSRA |= _BV(ADPS2) ; ADCSRA &= ~_BV(ADPS1); ADCSRA &= ~_BV(ADPS0); // this speeds up analogRead without loosing too much resolution: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1208715493/11
+  #ifdef FASTER_ANALOG_READS
+    ADCSRA |= _BV(ADPS2) ; ADCSRA &= ~_BV(ADPS1); ADCSRA &= ~_BV(ADPS0); // this speeds up analogRead without loosing too much resolution: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1208715493/11
+  #endif
   #if defined(LED_FLASHER)
     init_led_flasher();
     led_flasher_set_sequence(LED_FLASHER_SEQUENCE);
@@ -1237,7 +1274,7 @@ void loop () {
       case 4:
         taskOrder++;
         #if SONAR
-          Sonar_update();debug[2] = sonarAlt;
+          Sonar_update(); //debug[2] = sonarAlt;
         #endif
         #ifdef LANDING_LIGHTS_DDR
           auto_switch_landing_lights();

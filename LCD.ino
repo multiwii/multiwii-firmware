@@ -623,6 +623,21 @@ void lcdprint_int16(int16_t v) {
   line[5] = digit1(unit);
   LCDprintChar(line);
 }
+void lcdprint_uint32(uint32_t v) {
+  char line[14] = "-.---.---.---";
+  //               0 2 4 6 8   12
+  line[0]  = '0' + v  / 1000000000;
+  line[2]  = '0' + v  / 100000000 - (v/1000000000) * 10;
+  line[3]  = '0' + v  / 10000000  - (v/100000000)  * 10;
+  line[4]  = '0' + v  / 1000000   - (v/10000000)   * 10;
+  line[6]  = '0' + v  / 100000    - (v/1000000)    * 10;
+  line[7]  = '0' + v  / 10000     - (v/100000)     * 10;
+  line[8]  = '0' + v  / 1000      - (v/10000)      * 10;
+  line[10]  = '0' + v  / 100       - (v/1000)       * 10;
+  line[11] = '0' + v  / 10        - (v/100)        * 10;
+  line[12] = '0' + v              - (v/10)         * 10;
+  LCDprintChar(line);
+}
 
 void initLCD() {
   blinkLED(20,30,1);
@@ -913,7 +928,9 @@ const char PROGMEM lcd_param_text34 [] = "pAlarm /50"; // change text to represe
   const char PROGMEM lcd_param_text114 [] = "PM INT2MA ";
 #endif
 //const char PROGMEM lcd_param_text112 [] = "PM DIVSOFT";
-const char PROGMEM lcd_param_text113 [] = "PM DIV    ";
+#ifdef POWERMETER_SOFT
+  const char PROGMEM lcd_param_text113 [] = "PM DIV    ";
+#endif
 #endif
 #ifdef CYCLETIME_FIXATED
 const char PROGMEM lcd_param_text120 [] = "CYCLE TIME";
@@ -1131,7 +1148,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
     &lcd_param_text114, &conf.pint2ma, &__PT,
   #endif
   //&lcd_param_text112, &conf.pleveldivsoft, &__SE, // gets computed automatically
-  &lcd_param_text113, &conf.pleveldiv, &__SE,
+  #ifdef POWERMETER_SOFT
+    &lcd_param_text113, &conf.pleveldiv, &__SE,
+  #endif
 #endif
 #if defined(ARMEDTIMEWARNING)
   &lcd_param_text132, &conf.armedtimewarning, &__SE,
@@ -1490,16 +1509,16 @@ void fill_line1_deg() {
 void fill_line2_AmaxA() {
   uint16_t unit;
   strcpy_P(line2,PSTR("---,-A max---,-A"));
-  unit = powerValue * conf.pint2ma;
-  line2[0] = digit10000(unit);
-  line2[1] = digit1000(unit);
-  line2[2] = digit100(unit);
-  line2[4] = digit10(unit);
-  unit = powerMax * conf.pint2ma;
-  line2[10] = digit10000(unit);
-  line2[11] = digit1000(unit);
-  line2[12] = digit100(unit);
-  line2[14] = digit10(unit);
+  unit = ((uint32_t)powerValue * conf.pint2ma) / 100;
+  line2[0] = digit1000(unit);
+  line2[1] = digit100(unit);
+  line2[2] = digit10(unit);
+  line2[4] = digit1(unit);
+  unit = (powerMax * conf.pint2ma) / 100;
+  line2[10] = digit1000(unit);
+  line2[11] = digit100(unit);
+  line2[12] = digit10(unit);
+  line2[14] = digit1(unit);
 }
 #endif
 
@@ -1770,14 +1789,14 @@ void lcd_telemetry() {
     case '4':
     if (linenr++ % 2) {
       LCDsetLine(1);LCDprintChar("G "); //refresh line 1 of LCD
-      outputSensor(4, gyroData[0], GYROLIMIT); LCDprint(' ');
-      outputSensor(4, gyroData[1], GYROLIMIT); LCDprint(' ');
-      outputSensor(4, gyroData[2], GYROLIMIT);
+      outputSensor(4, imu.gyroData[0], GYROLIMIT); LCDprint(' ');
+      outputSensor(4, imu.gyroData[1], GYROLIMIT); LCDprint(' ');
+      outputSensor(4, imu.gyroData[2], GYROLIMIT);
     } else {
       LCDsetLine(2);LCDprintChar("A "); //refresh line 2 of LCD
-      outputSensor(4, accSmooth[0], ACCLIMIT); LCDprint(' ');
-      outputSensor(4, accSmooth[1], ACCLIMIT); LCDprint(' ');
-      outputSensor(4, accSmooth[2] - acc_1G, ACCLIMIT);
+      outputSensor(4, imu.accSmooth[0], ACCLIMIT); LCDprint(' ');
+      outputSensor(4, imu.accSmooth[1], ACCLIMIT); LCDprint(' ');
+      outputSensor(4, imu.accSmooth[2] - acc_1G, ACCLIMIT);
     }
     break;
 #endif
@@ -1833,6 +1852,16 @@ void lcd_telemetry() {
         LCDsetLine(2);LCDprintChar(line2);
       }
       #endif // case 7 : GPS
+      break;
+#endif
+#ifndef SUPPRESS_TELEMETRY_PAGE_9
+    case 9:
+    case '9':
+      LCDsetLine(1);
+      lcdprint_int16(debug[0]); LCDprint(' ');
+      lcdprint_int16(debug[1]); LCDprint(' ');
+      lcdprint_int16(debug[2]); LCDprint(' ');
+      lcdprint_int16(debug[3]); LCDprint(' ');
       break;
 #endif
 
