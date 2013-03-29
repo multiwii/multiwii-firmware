@@ -639,17 +639,25 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
         #endif
       #endif
       break;
-    }
+  }
   #endif // VBAT
   #if defined(RX_RSSI)
   case 2:
   {
-    static uint8_t sig = 0;
-    uint16_t rssiRaw = 0;
-    static uint16_t rssiRawArray[8];
-    rssiRawArray[(sig++)%8] = analogRead(RX_RSSI_PIN);
-    for (uint8_t i=0;i<8;i++) rssiRaw += rssiRawArray[i];
-    analog.rssi = rssiRaw / 8;       
+    static uint8_t ind = 0;
+    static uint16_t rvec[RSSI_SMOOTH], rsum;
+    uint16_t r = analogRead(RX_RSSI_PIN);
+    #if RSSI_SMOOTH == 1
+      analog.rssi = r;
+    #else
+      rsum += r;
+      rsum -= rvec[ind];
+      rvec[ind++] = r;
+      ind %= RSSI_SMOOTH;
+      r = rsum / RSSI_SMOOTH;
+      analog.rssi = r;
+    #endif
+    break;
   }
   #endif
   } // end of switch()
