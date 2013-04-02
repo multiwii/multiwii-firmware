@@ -180,6 +180,7 @@ void getEstimatedAttitude(){
   uint8_t axis;
   int32_t accMag = 0;
   float scale, deltaGyroAngle[3];
+  uint8_t validAcc;
   static uint16_t previousT;
   uint16_t currentT = micros();
 
@@ -196,7 +197,6 @@ void getEstimatedAttitude(){
 
     accMag += (int32_t)imu.accSmooth[axis]*imu.accSmooth[axis] ;
   }
-  accMag = accMag*100/((int32_t)acc_1G*acc_1G);
 
   rotateV(&EstG.V,deltaGyroAngle);
   #if MAG
@@ -209,32 +209,26 @@ void getEstimatedAttitude(){
     f.SMALL_ANGLES_25 = 0;
   }
 
+  accMag = accMag*100/((int32_t)acc_1G*acc_1G);
+  validAcc = 72 < accMag && accMag < 133;
   // Apply complimentary filter (Gyro drift correction)
   // If accel magnitude >1.15G or <0.85G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
   // To do that, we just skip filter, as EstV already rotated by Gyro
-  if (  72 < accMag && accMag < 133 )
-    for (axis = 0; axis < 3; axis++) {
+  for (axis = 0; axis < 3; axis++) {
+    if ( validAcc )
       EstG.A[axis] = (EstG.A[axis] * GYR_CMPF_FACTOR + imu.accSmooth[axis]) * INV_GYR_CMPF_FACTOR;
-    }
-  #if MAG
-    for (axis = 0; axis < 3; axis++) {
+    EstG32.A[axis] = EstG.A[axis]; //int32_t cross calculation is a little bit faster than float	
+    #if MAG
       EstM.A[axis] = (EstM.A[axis] * GYR_CMPFM_FACTOR  + imu.magADC[axis]) * INV_GYR_CMPFM_FACTOR;
       EstM32.A[axis] = EstM.A[axis];
-    }
-  #endif
-
-  for (axis = 0; axis < 3; axis++)
-    EstG32.A[axis] = EstG.A[axis]; //int32_t cross calculation is a little bit faster than float	
+    #endif
+  }
 
   // Attitude of the estimated vector
-  int32_t sqGZ = sq(EstG32.V.Z);
-  int32_t sqGX = sq(EstG32.V.X);
-  int32_t sqGY = sq(EstG32.V.Y);
-  int32_t sqGX_sqGZ = sqGX + sqGZ;
-  float invmagXZ  = InvSqrt(sqGX_sqGZ);
-  invG = InvSqrt(sqGX_sqGZ + sqGY);
+  int32_t sqGX_sqGZ = sq(EstG32.V.X) + sq(EstG32.V.Z);
+  invG = InvSqrt(sqGX_sqGZ + sq(EstG32.V.Y));
   att.angle[ROLL]  = _atan2(EstG32.V.X , EstG32.V.Z);
-  att.angle[PITCH] = _atan2(EstG32.V.Y , invmagXZ*sqGX_sqGZ);
+  att.angle[PITCH] = _atan2(EstG32.V.Y , InvSqrt(sqGX_sqGZ)*sqGX_sqGZ);
 
   #if MAG
     att.heading = _atan2(
@@ -245,10 +239,9 @@ void getEstimatedAttitude(){
   #endif
 
   #if defined(THROTTLE_ANGLE_CORRECTION)
-    cosZ = EstG.V.Z / acc_1G * 100.0f;															 // cos(angleZ) * 100 
-    throttleAngleCorrection = THROTTLE_ANGLE_CORRECTION * constrain(100 - cosZ, 0, 100) >>3;	 // 16 bit ok: 200*150 = 30000  
+    cosZ = EstG.V.Z / acc_1G * 100.0f;                                                        // cos(angleZ) * 100 
+    throttleAngleCorrection = THROTTLE_ANGLE_CORRECTION * constrain(100 - cosZ, 0, 100) >>3;  // 16 bit ok: 200*150 = 30000  
   #endif
-
 }
 
 #define UPDATE_INTERVAL 25000    // 40hz update rate (20hz LPF on acc)
@@ -314,7 +307,6 @@ uint8_t getEstimatedAltitude(){
     applyDeadband(accZ, ACC_Z_DEADBAND);
 
     static float vel = 0.0f;
-    static float accVelScale = 9.80665f / 10000.0f / acc_1G ;
 
     // Integrator - velocity, cm/sec
     vel += accZ * accVelScale * dTime;

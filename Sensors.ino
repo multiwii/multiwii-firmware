@@ -1715,7 +1715,11 @@ void initSensors() {
   if (GYRO) Gyro_init();
   if (BARO) Baro_init();
   if (MAG) Mag_init();
-  if (ACC) {ACC_init();acc_25deg = acc_1G * 0.423;}
+  if (ACC) {
+    ACC_init();
+    acc_25deg = acc_1G * 0.423;
+    accVelScale = 9.80665f / 10000.0f / acc_1G ;
+  }
   if (SONAR) Sonar_init();
   f.I2C_INIT_DONE = 1;
 }

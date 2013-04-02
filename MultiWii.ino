@@ -223,6 +223,7 @@ static int16_t  magHold,headFreeModeHold; // [-180;+180]
 static uint8_t  vbatMin = VBATNOMINAL;  // lowest battery voltage in 0.1V steps
 static uint8_t  rcOptions[CHECKBOXITEMS];
 static int32_t  BaroAlt,AltHold; // in cm
+static float    accVelScale;
 static int16_t  BaroPID = 0;
 static int16_t  errorAltitudeI = 0;
 
@@ -403,6 +404,8 @@ struct pid_ {
   uint8_t I8;
   uint8_t D8;
 };
+
+
 
 static struct {
   uint8_t checkNewConf;
