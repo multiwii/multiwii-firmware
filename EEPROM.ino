@@ -102,6 +102,7 @@ void writeParams(uint8_t b) {
 }
 
 void LoadDefaults() {
+  uint8_t i;
   #ifndef SUPPRESS_DEFAULTS_FROM_GUI
     conf.pid[ROLL].P8     = 33;  conf.pid[ROLL].I8    = 30; conf.pid[ROLL].D8     = 23;
     conf.pid[PITCH].P8    = 33; conf.pid[PITCH].I8    = 30; conf.pid[PITCH].D8    = 23;
@@ -126,6 +127,12 @@ void LoadDefaults() {
     conf.angleTrim[0] = 0; conf.angleTrim[1] = 0;
     conf.powerTrigger1 = 0;
   #endif
+  for(i=0;i<8;i++) {
+      conf.servoConf[i].min = 1020;
+      conf.servoConf[i].max = 2000;
+      conf.servoConf[i].middle = 1500;
+      conf.servoConf[i].rate = 100;
+  }
   #ifdef FLYING_WING
     conf.wing_left_mid  = WING_LEFT_MID; 
     conf.wing_right_mid = WING_RIGHT_MID; 

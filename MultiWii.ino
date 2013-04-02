@@ -405,7 +405,12 @@ struct pid_ {
   uint8_t D8;
 };
 
-
+struct servo_conf_ {  // this is a generic way to configure a servo, every multi type with a servo should use it
+  int16_t min;        // minimum value, must be more than 1020 with the current implementation
+  int16_t max;        // maximum value, must be less than 2000 with the current implementation
+  int16_t middle;     // default should be 1500
+  int8_t  rate;       // range [-100;+100] ; can be used to ajust a rate 0-100% and a direction
+};
 
 static struct {
   uint8_t checkNewConf;
@@ -420,6 +425,7 @@ static struct {
   int16_t angleTrim[2];
   uint16_t activate[CHECKBOXITEMS];
   uint8_t powerTrigger1;
+  servo_conf_ servoConf[8];
   #ifdef FLYING_WING
     uint16_t wing_left_mid;
     uint16_t wing_right_mid;
