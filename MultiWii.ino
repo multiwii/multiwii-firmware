@@ -592,8 +592,8 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   }
 
   // query at most one multiplexed analog channel per MWii cycle
-  static uint8_t analogreader =0;
-  switch (analogreader++%3) {
+  static uint8_t analogReader =0;
+  switch (analogReader++%3) {
   #if defined(POWERMETER_HARD)
   case 0:
   {
@@ -724,8 +724,8 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     static uint8_t telemetryAutoIndex = 0;
     static uint16_t telemetryAutoTimer = 0;
     if ( (telemetry_auto) && (! (++telemetryAutoTimer % LCD_TELEMETRY_AUTO_FREQ) )  ){
-      telemetry = telemetryAutoSequence[++telemetryAutoIndex % strlen(telemetryAutoSequence)];
-      LCDclear(); // make sure to clear away remnants
+      toggle_telemetry( telemetryAutoSequence[++telemetryAutoIndex % strlen(telemetryAutoSequence)] );
+      //LCDclear(); // make sure to clear away remnants
     }
   #endif  
   #ifdef LCD_TELEMETRY

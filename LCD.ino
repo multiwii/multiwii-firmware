@@ -218,7 +218,13 @@ const uint8_t PROGMEM myFont[][5] = { // Refer to "Times New Roman" Font Databas
   { 0x22,0x14,0x2A,0x14,0x08}, //   (118) >> - 0x00BB Right-Pointing Double Angle Quotation Mark
   { 0x17,0x08,0x34,0x2A,0x7D}, //   (119) /4 - 0x00BC Vulgar Fraction One Quarter
   { 0x17,0x08,0x04,0x6A,0x59}, //   (120) /2 - 0x00BD Vulgar Fraction One Half
-  { 0x30,0x48,0x45,0x40,0x20}, //   (121)  ? - 0x00BF Inverted Question Mark
+  { 0x30,0x48,0x45,0x40,0x20}, //   (121)  ? - 0x00BE Inverted Question Mark
+  { 0x08,0x08,0x08,0x08,0x08}, //   (122)    - 0x00BF Bargraph - 0
+  { 0x7E,0x08,0x08,0x08,0x08}, //   (123)    - 0x00BF Bargraph - 1
+  { 0x7E,0x7E,0x08,0x08,0x08}, //   (124)    - 0x00BF Bargraph - 2
+  { 0x7E,0x7E,0x7E,0x08,0x08}, //   (125)    - 0x00BF Bargraph - 3
+  { 0x7E,0x7E,0x7E,0x7E,0x08}, //   (126)    - 0x00BF Bargraph - 4
+  { 0x7E,0x7E,0x7E,0x7E,0x7E}, //   (127)    - 0x00BF Bargraph - 5
 };
 
 
@@ -1477,8 +1483,9 @@ void LCDbar(uint8_t n,uint8_t v) {
   for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
 #elif defined(OLED_I2C_128x64)
   uint8_t i, j = (n*v)/100;
-  for (i=0; i< j; i++) LCDprint( '=' );
-  for (i=j; i< n; i++) LCDprint( '.' );
+  for (i=0; i< j; i++) LCDprint( 159 );       // full
+  if (j<n) LCDprint(154 + (v*n*5/100 - 5*j)); // partial fill
+  for (i=j+1; i< n; i++) LCDprint( 154 );    // empty
 #endif
 }
 
@@ -2265,6 +2272,9 @@ void lcd_telemetry() {
       #endif
       failsafeEvents = 0; // reset failsafe counter
       i2c_errors_count = 0;
+      #ifdef LCD_TELEMETRY
+        powerMax = 0;
+      #endif
       f.OK_TO_ARM = 1; // allow arming again
       telemetry = 0; // no use to repeat this forever
       break;
