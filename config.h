@@ -225,7 +225,13 @@
     /* The following lines apply only for a pitch/roll tilt stabilization system. Uncomment the first or second line to activate it */
     //#define SERVO_MIX_TILT
     //#define SERVO_TILT
-    #define TILT_PITCH_MIN    1020    //servo travel min, don't set it below 1020
+
+    /* The following lines enable pitch and roll servo streetching to values defined as TILT_MIN and TILT_MAX 
+       This work only with haedware PWM's for gimbal servos (MEGA board with uncommented MEGA_HW_PWM_SERVOS option) 
+       Tipical TILT_MIN should be about 500 and TILT_MAX abiut 2500 for 180 degres servo range */
+    //#define SERVO_STRETH
+
+    #define TILT_PITCH_MIN    1020    //servo travel min, don't set it below 1020 except mega HW pwm's is used
     #define TILT_PITCH_MAX    2000    //servo travel max, max value=2000
     #define TILT_PITCH_MIDDLE 1500    //servo neutral value
     #define TILT_PITCH_PROP   10      //servo proportional (tied to angle) ; can be negative to invert movement
@@ -969,10 +975,12 @@
       Pitch   = pin 44
       Roll    = pin 45
       CamTrig = pin 46
-      SERVO4  = pin 11 (assigned to PPM or SPECTRUM CH9 on copter configuration)
-      SERVO5  = pin 12 (assigned to PPM or SPECTRUM CH10 on copter configuration)
-      this option disable other software PWM's for servos - only five hardware controlled servos avaliable
-      */ 
+      SERVO4  = pin 11 (aileron left for fixed wing)
+      SERVO5  = pin 12 (aileron right for fixed wing)
+      SERVO6  = pin 6   (rudder for fixed wing)
+      SERVO7  = pin 7   (elevator for fixed wing)
+      SERVO8  = pin 8   (motor for fixed wing)       */ 
+
     //#define MEGA_HW_PWM_SERVOS
 
   /********************************************************************/

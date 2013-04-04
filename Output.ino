@@ -119,13 +119,32 @@ void writeServos() {
         }
       #endif
     #endif
-    // write HW PWM gimbal servos for the mega (needs to be also implemented to the MMSERVOGIMBAL)
+    // write HW PWM servos for the mega
     #if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS)
-      OCR5C = servo[0];
-      OCR5B = servo[1];
-      OCR5A = servo[2];
-      OCR1A = servo[3];
-      OCR1B = servo[4];
+      #if (PRI_SERVO_FROM == 1 || SEC_SERVO_FROM == 1) 
+        OCR5C = servo[0];
+      #endif 
+      #if (PRI_SERVO_FROM <= 2 && PRI_SERVO_TO >= 2) || (SEC_SERVO_FROM <= 2 && SEC_SERVO_TO >= 2) 
+        OCR5B = servo[1];
+      #endif 
+      #if (PRI_SERVO_FROM <= 3 && PRI_SERVO_TO >= 3) || (SEC_SERVO_FROM <= 3 && SEC_SERVO_TO >= 3) 
+        OCR5A = servo[2];
+      #endif 
+      #if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4) || (SEC_SERVO_FROM <= 4 && SEC_SERVO_TO >= 4) 
+        OCR1A = servo[3];
+      #endif 
+      #if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5) || (SEC_SERVO_FROM <= 5 && SEC_SERVO_TO >= 5) 
+        OCR1B = servo[4];
+      #endif 
+      #if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6) || (SEC_SERVO_FROM <= 6 && SEC_SERVO_TO >= 6) 
+        OCR4A = servo[5];
+      #endif 
+      #if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7) || (SEC_SERVO_FROM <= 7 && SEC_SERVO_TO >= 7) 
+        OCR4B = servo[6];
+      #endif 
+      #if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8) 
+        OCR4C = servo[7];
+      #endif
     #endif
   #endif
 }
@@ -531,38 +550,83 @@ void initializeServo() {
       #define SERVO_1K_US 16000 
     #endif
   #endif
-  // init Timer 1 and 5 of the mega for hw PWM gimbal servos
+
   #if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS)
+  // init Timer 5, 1 and 4 of the mega for hw PWM
     TIMSK5 &= ~(1<<OCIE5A); // Disable software PWM  
-    TCCR5A |= (1<<WGM51); // phase correct mode & prescaler to 8
-    TCCR5A &= ~(1<<WGM50);
-    TCCR5B &= ~(1<<WGM52) &  ~(1<<CS50) & ~(1<<CS52);
-    TCCR5B |= (1<<WGM53) | (1<<CS51);
-    pinMode(44,OUTPUT);
-    TCCR5A |= (1<<COM5C1); // pin 44
-    pinMode(45,OUTPUT);
-    TCCR5A |= (1<<COM5B1); // pin 45
-    pinMode(46,OUTPUT);
-    TCCR5A |= (1<<COM5A1); // pin 46
-    TCCR1A |= (1<<WGM11); // phase correct mode & prescaler to 8
-    TCCR1A &= ~(1<<WGM10);
-    TCCR1B &= ~(1<<WGM12) &  ~(1<<CS10) & ~(1<<CS12);
-    TCCR1B |= (1<<WGM13) | (1<<CS11);
-    pinMode(11,OUTPUT);
-    TCCR1A |= (1<<COM1A1); // pin 11
-    pinMode(12,OUTPUT);
-    TCCR1A |= (1<<COM1B1); // pin 12
+    #if (PRI_SERVO_TO >= 1) || (SEC_SERVO_TO >= 1) 
+      TCCR5A |= (1<<WGM51);   // phase correct mode & prescaler to 8
+      TCCR5A &= ~(1<<WGM50);
+      TCCR5B &= ~(1<<WGM52) &  ~(1<<CS50) & ~(1<<CS52);
+      TCCR5B |= (1<<WGM53) | (1<<CS51);
+      #if (PRI_SERVO_FROM == 1 || SEC_SERVO_FROM == 1) 
+        TCCR5A |= (1<<COM5C1); // pin 44
+      #endif
+      #if (PRI_SERVO_FROM <= 2 && PRI_SERVO_TO >= 2) || (SEC_SERVO_FROM <= 2 && SEC_SERVO_TO >= 2) 
+        TCCR5A |= (1<<COM5B1); // pin 45
+      #endif
+      #if (PRI_SERVO_FROM <= 3 && PRI_SERVO_TO >= 3) || (SEC_SERVO_FROM <= 3 && SEC_SERVO_TO >= 3) 
+        TCCR5A |= (1<<COM5A1); // pin 46
+      #endif
+    #endif
+    #if (PRI_SERVO_TO >= 4) || (SEC_SERVO_TO >= 4) 
+      TCCR1A |= (1<<WGM11); // phase correct mode & prescaler to 8
+      TCCR1A &= ~(1<<WGM10);
+      TCCR1B &= ~(1<<WGM12) &  ~(1<<CS10) & ~(1<<CS12);
+      TCCR1B |= (1<<WGM13) | (1<<CS11);
+      #if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4) || (SEC_SERVO_FROM <= 4 && SEC_SERVO_TO >= 4) 
+        TCCR1A |= (1<<COM1A1); // pin 11
+      #endif
+      #if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5) || (SEC_SERVO_FROM <= 5 && SEC_SERVO_TO >= 5) 
+        TCCR1A |= (1<<COM1B1); // pin 12
+      #endif
+    #endif
+    #if (PRI_SERVO_TO >= 6) || (SEC_SERVO_TO >= 6) 
+      // init 16bit timer 4
+      TCCR4A |= (1<<WGM41); // phase correct mode
+      TCCR4A &= ~(1<<WGM40);
+      TCCR4B &= ~(1<<WGM42) &  ~(1<<CS40) & ~(1<<CS42);
+      TCCR4B |= (1<<WGM43) | (1<<CS41);
+      #if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6) || (SEC_SERVO_FROM <= 6 && SEC_SERVO_TO >= 6) 
+        TCCR4A |= _BV(COM4A1); // connect pin 6 to timer 4 channel A
+      #endif
+      #if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7) || (SEC_SERVO_FROM <= 7 && SEC_SERVO_TO >= 7) 
+        TCCR4A |= _BV(COM4B1); // connect pin 7 to timer 4 channel B
+      #endif
+      #if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8) 
+        #if defined(AIRPLANE) || defined(HELICOPTER)
+          servo[7] =  MINCOMMAND;
+          OCR4C = MINCOMMAND;
+        #endif  
+        TCCR4A |= _BV(COM4C1); // connect pin 8 to timer 4 channel C
+      #endif
+    #endif 
     #if defined(SERVO_RFR_50HZ) 
-      ICR1   = 16700; // TOP to 16700; 
-      ICR5   = 16700; // TOP to 16700; 
+      ICR1 = 18000; // TOP to 16700; 
+      #if (PRI_SERVO_TO >= 4) || (SEC_SERVO_TO >= 4) 
+        ICR5 = 18000; // TOP to 16700; 
+      #endif 
+      #if (PRI_SERVO_TO >= 6) || (SEC_SERVO_TO >= 6)  
+        ICR4 = 18000;
+      #endif 
     #endif
     #if defined(SERVO_RFR_160HZ) 
-      ICR1   = 6200; // TOP to 6200; 
-      ICR5   = 6200; // TOP to 6200; 
+      ICR1 = 6200; // TOP to 6200; 
+      #if (PRI_SERVO_TO >= 4) || (SEC_SERVO_TO >= 4) 
+        ICR5 = 6200; // TOP to 6200; 
+      #endif 
+      #if (PRI_SERVO_TO >= 6) || (SEC_SERVO_TO >= 6)  
+        ICR4 = 6200;
+      #endif 
     #endif
     #if defined(SERVO_RFR_300HZ) 
-      ICR1   = 3330; // TOP to 3330;  
-      ICR5   = 3330; // TOP to 3330;  
+      ICR1 = 3330; // TOP to 3330;  
+      #if (PRI_SERVO_TO >= 4) || (SEC_SERVO_TO >= 4) 
+        ICR5 = 3330; // TOP to 3330;  
+      #endif 
+      #if (PRI_SERVO_TO >= 6) || (SEC_SERVO_TO >= 6)  
+        ICR4 = 3330;
+      #endif 
     #endif
   #endif
 }
@@ -938,6 +1002,10 @@ void mixTable() {
         S_PITCH += TILT_PITCH_PROP * att.angle[PITCH] /16 ;
         S_ROLL  += TILT_ROLL_PROP  * att.angle[ROLL]  /16 ;
       }
+      #if defined(SERVO_STRETH)
+        S_PITCH = map(S_PITCH, 1000,2000, TILT_PITCH_MIN,TILT_PITCH_MAX);
+        S_ROLL  = map(S_ROLL,  1000,2000, TILT_ROLL_MIN ,TILT_ROLL_MAX);
+      #endif
       S_PITCH = constrain(S_PITCH, TILT_PITCH_MIN, TILT_PITCH_MAX);
       S_ROLL  = constrain(S_ROLL , TILT_ROLL_MIN, TILT_ROLL_MAX  );
     #endif
@@ -970,13 +1038,23 @@ void mixTable() {
         angleP += TILT_PITCH_PROP * att.angle[PITCH] /16 ;
         angleR += TILT_ROLL_PROP  * att.angle[ROLL]  /16 ;
       }
-      S_PITCH = constrain(1500+angleP-angleR, TILT_PITCH_MIN, TILT_PITCH_MAX);
-      S_ROLL  = constrain(1500-angleP-angleR, TILT_ROLL_MIN, TILT_ROLL_MAX);   
+      S_PITCH = 1500+angleP-angleR;
+      S_ROLL  = 1500-angleP-angleR;
+      #if defined(SERVO_STRETH)
+        S_PITCH = map(S_PITCH, 1000,2000, TILT_PITCH_MIN,TILT_PITCH_MAX);
+        S_ROLL  = map(S_ROLL,  1000,2000, TILT_ROLL_MIN ,TILT_ROLL_MAX);
+      #endif
+      S_PITCH = constrain(S_PITCH, TILT_PITCH_MIN, TILT_PITCH_MAX);
+      S_ROLL  = constrain(S_ROLL, TILT_ROLL_MIN, TILT_ROLL_MAX);   
     #endif 
 
     #ifdef GIMBAL
       servo[0] = constrain(TILT_PITCH_MIDDLE + TILT_PITCH_PROP * att.angle[PITCH] /16 + rcCommand[PITCH], TILT_PITCH_MIN, TILT_PITCH_MAX);
       servo[1] = constrain(TILT_ROLL_MIDDLE + TILT_ROLL_PROP   * att.angle[ROLL]  /16 + rcCommand[ROLL], TILT_ROLL_MIN, TILT_ROLL_MAX);
+      #if defined(SERVO_STRETH)
+        servo[0] = map(servo[0], 1000,2000, TILT_PITCH_MIN,TILT_PITCH_MAX);
+        servo[1] = map(servo[1], 1000,2000, TILT_ROLL_MIN ,TILT_ROLL_MAX);
+      #endif
     #endif
 
     #if defined(FLYING_WING)
