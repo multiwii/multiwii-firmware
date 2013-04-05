@@ -472,8 +472,7 @@ void initOutput() {
   /********  special version of MultiWii to calibrate all attached ESCs ************/
   #if defined(ESC_CALIB_CANNOT_FLY)
     writeAllMotors(ESC_CALIB_HIGH);
-    blinkLED(2,50,1);
-    delay(4000);
+    delay(3000);
     writeAllMotors(ESC_CALIB_LOW);
     delay(500);
     while (1) {
@@ -570,7 +569,6 @@ void initializeServo() {
       #endif
     #endif  
     #define SERVO_TOP_VAL (uint16_t)(1000000L / SERVO_RFR_RATE)
-
     // init Timer 5, 1 and 4 of the mega for hw PWM
     TIMSK5 &= ~(1<<OCIE5A); // Disable software PWM  
     #if (PRI_SERVO_TO >= 1) || (SEC_SERVO_TO >= 1) 
@@ -979,15 +977,20 @@ void mixTable() {
       #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
         #define S_PITCH servo[2]
         #define S_ROLL  servo[3]
-      #elif defined(MEGA) && defined(MEGA_HW_PWM_SERVOS) && defined(FLYING_WING)
-        #define S_PITCH servo[3]
-        #define S_ROLL  servo[4]
       #else
         #define S_PITCH servo[0]
         #define S_ROLL  servo[1]
       #endif
-      S_PITCH = (TILT_PITCH_MIDDLE>=AUX1 && TILT_PITCH_MIDDLE<=AUX8) ? rcData[TILT_PITCH_MIDDLE] : TILT_PITCH_MIDDLE;
-      S_ROLL  = (TILT_ROLL_MIDDLE >=AUX1 && TILT_ROLL_MIDDLE <=AUX8) ? rcData[TILT_ROLL_MIDDLE]  : TILT_ROLL_MIDDLE;
+      #ifdef TILT_PITCH_AUX_CH
+        S_PITCH = TILT_PITCH_MIDDLE + rcData[TILT_PITCH_AUX_CH]-1500;
+      #else
+        S_PITCH = TILT_PITCH_MIDDLE;
+      #endif
+      #ifdef TILT_ROLL_AUX_CH
+        S_ROLL  = TILT_ROLL_MIDDLE  + rcData[TILT_ROLL_AUX_CH]-1500;
+      #else
+        S_ROLL  = TILT_ROLL_MIDDLE;
+      #endif
       if (rcOptions[BOXCAMSTAB]) {
         S_PITCH += TILT_PITCH_PROP * att.angle[PITCH] /16 ;
         S_ROLL  += TILT_ROLL_PROP  * att.angle[ROLL]  /16 ;
@@ -1009,15 +1012,21 @@ void mixTable() {
       #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
         #define S_PITCH servo[2]
         #define S_ROLL  servo[3]
-      #elif defined(MEGA) && defined(MEGA_HW_PWM_SERVOS) && defined(FLYING_WING)
-        #define S_PITCH servo[3]
-        #define S_ROLL  servo[4]
       #else
         #define S_PITCH servo[0]
         #define S_ROLL  servo[1]
       #endif
-      int16_t angleP = (TILT_PITCH_MIDDLE>=AUX1 && TILT_PITCH_MIDDLE<=AUX8) ? rcData[TILT_PITCH_MIDDLE] : TILT_PITCH_MIDDLE;
-      int16_t angleR = (TILT_ROLL_MIDDLE >=AUX1 && TILT_ROLL_MIDDLE <=AUX8) ? rcData[TILT_ROLL_MIDDLE]  : TILT_ROLL_MIDDLE;
+      int16_t angleP,angleR;
+      #ifdef TILT_PITCH_AUX_CH
+        angleP = TILT_PITCH_MIDDLE - 1500 + rcData[TILT_PITCH_AUX_CH]-1500;
+      #else
+        angleP = TILT_PITCH_MIDDLE - 1500;
+      #endif
+      #ifdef TILT_ROLL_AUX_CH
+        angleR  = TILT_ROLL_MIDDLE - 1500 + rcData[TILT_ROLL_AUX_CH]-1500;
+      #else
+        angleR  = TILT_ROLL_MIDDLE - 1500;
+      #endif
       if (rcOptions[BOXCAMSTAB]) {
         angleP += TILT_PITCH_PROP * att.angle[PITCH] /16 ;
         angleR += TILT_ROLL_PROP  * att.angle[ROLL]  /16 ;
@@ -1057,9 +1066,10 @@ void mixTable() {
     /************************************************************************************************************/
     #if defined(AIRPLANE) || defined(SINGLECOPTER) || defined(DUALCOPTER)
       // Common parts for Plane and Heli
-      static int16_t   servoMid[8];                 // Midpoint on servo
-      static int8_t    servoReverse[8];             // Inverted servos
-      static int16_t   servoLimit[8][2];            // Holds servoLimit data
+      static int16_t   servoMid[8];                        // Midpoint on servo
+      static uint8_t   servoTravel[8] = SERVO_RATES;       // Rates in 0-100%
+      static int8_t    servoReverse[8] = SERVO_DIRECTION ; // Inverted servos
+      static int16_t   servoLimit[8][2]; // Holds servoLimit data
 
       /***************************
        * servo endpoints Airplane.
@@ -1068,9 +1078,8 @@ void mixTable() {
       #define SERVO_MAX 2000           // limit servo travel range must be inside [1020;2000]
       for(i=0; i<8; i++){  //  Set rates with 0 - 100%.
         servoMid[i]     =MIDRC + conf.servoTrim[i];
-        servoLimit[i][0]=servoMid[i]-((servoMid[i]-SERVO_MIN)   *(abs(conf.servoRates[i])*0.01));
-        servoLimit[i][1]=servoMid[i]+((SERVO_MAX - servoMid[i]) *(abs(conf.servoRates[i])*0.01));
-        if(conf.servoRates[i]<0) servoReverse[i]= -1; else servoReverse[i]=1;
+        servoLimit[i][0]=servoMid[i]-((servoMid[i]-SERVO_MIN)   *(servoTravel[i]*0.01));
+        servoLimit[i][1]=servoMid[i]+((SERVO_MAX - servoMid[i]) *(servoTravel[i]*0.01));
       }
 
       // servo[7] is programmed with safty features to avoid motorstarts when ardu reset..
@@ -1079,7 +1088,7 @@ void mixTable() {
       if (!f.ARMED){
         servo[7] =  MINCOMMAND; // Kill throttle when disarmed
       } else {
-        servo[7] = rcCommand[THROTTLE];// rcData[THROTTLE];
+        servo[7] =  rcData[THROTTLE];
       }
 
       // Flapperon Controll
@@ -1275,7 +1284,6 @@ void mixTable() {
     static uint8_t camCycle = 0;
     static uint8_t camState = 0;
     static uint32_t camTime = 0;
-    static uint32_t ctLow;
     if (camCycle==1) {
       if (camState == 0) {
         servo[2] = CAM_SERVO_HIGH;
@@ -1286,13 +1294,9 @@ void mixTable() {
          servo[2] = CAM_SERVO_LOW;
          camState = 2;
          camTime = millis();
-         if(CAM_TIME_LOW>=AUX1 && CAM_TIME_LOW<=AUX8) {
-           ctLow = constrain((rcData[CAM_TIME_LOW]-1000)/4, 30, 250);
-           ctLow *= ctLow;
-         } else ctLow = CAM_TIME_LOW;
        }
       } else { //camState ==2
-       if (((millis() - camTime) > ctLow) || !rcOptions[BOXCAMTRIG]) {
+       if ( (millis() - camTime) > CAM_TIME_LOW ) {
          camState = 0;
          camCycle = 0;
        }
