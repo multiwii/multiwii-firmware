@@ -982,7 +982,8 @@
       SERVO8  = pin 8   (motor for fixed wing)       */ 
 
     //#define MEGA_HW_PWM_SERVOS
-
+    #define SERVO_RFR_RATE  50    // In Hz, you can set it from 20 to 400Hz, used only in HW PWM mode
+ 
   /********************************************************************/
   /****           Memory savings                                   ****/
   /********************************************************************/
