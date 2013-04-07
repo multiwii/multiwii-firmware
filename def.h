@@ -523,23 +523,6 @@
   #define SERVO_3_PINMODE            pinMode(33,OUTPUT); pinMode(46,OUTPUT); // CAM TRIG  - alt TILT_PITCH
   #define SERVO_3_PIN_HIGH           PORTC |= 1<<4;PORTL |= 1<<3;
   #define SERVO_3_PIN_LOW            PORTC &= ~(1<<4);PORTL &= ~(1<<3);
- #if defined(MEGA_HW_PWM_SERVOS)
-  #define SERVO_4_PINMODE            pinMode(11, OUTPUT);                    // SERVO4 = RC CH9, or aileron left
-  #define SERVO_4_PIN_HIGH           PORTB |= 1<<5;
-  #define SERVO_4_PIN_LOW            PORTB &= ~(1<<5);
-  #define SERVO_5_PINMODE            pinMode(12,OUTPUT);                     // SERVO5 = RC CH10, or aileron right
-  #define SERVO_5_PIN_HIGH           PORTB |= 1<<6;
-  #define SERVO_5_PIN_LOW            PORTB &= ~(1<<6);
-  #define SERVO_6_PINMODE            pinMode(6,OUTPUT);                      // Rudder for Airplane
-  #define SERVO_6_PIN_HIGH           PORTH |= 1<<3;
-  #define SERVO_6_PIN_LOW            PORTH &= ~(1<<3);
-  #define SERVO_7_PINMODE            pinMode(7,OUTPUT);                      // Elevator for Airplane
-  #define SERVO_7_PIN_HIGH           PORTH |= 1<<4;
-  #define SERVO_7_PIN_LOW            PORTH &= ~(1<<4);
-  #define SERVO_8_PINMODE            pinMode(8,OUTPUT);                      // Motor for Airplane
-  #define SERVO_8_PIN_HIGH           PORTH |= 1<<5;
-  #define SERVO_8_PIN_LOW            PORTH &= ~(1<<5);
- #else
   #define SERVO_4_PINMODE            pinMode (37, OUTPUT);                   // new       - alt TILT_ROLL
   #define SERVO_4_PIN_HIGH           PORTC |= 1<<0;
   #define SERVO_4_PIN_LOW            PORTC &= ~(1<<0);
@@ -555,7 +538,6 @@
   #define SERVO_8_PINMODE            pinMode(3,OUTPUT);                      // new
   #define SERVO_8_PIN_HIGH           PORTE |= 1<<5;
   #define SERVO_8_PIN_LOW            PORTE &= ~(1<<5);
- #endif 
 #endif
 
 
@@ -1306,8 +1288,6 @@
   #define SERVO_3_PINMODE            pinMode(46,OUTPUT);        // CAM TRIG
   #define SERVO_3_PIN_HIGH           PORTL |= 1<<3;
   #define SERVO_3_PIN_LOW            PORTL &= ~(1<<3);
-  #define SERVO_4_PINMODE            pinMode(11,OUTPUT);        // SERVO4 , use hardware PWM
-  #define SERVO_5_PINMODE            pinMode(12,OUTPUT);        // SERVO5 , use hardware PWM
 #endif
 
 #if defined(LADYBIRD)

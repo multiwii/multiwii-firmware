@@ -287,32 +287,36 @@ void evaluateCommand() {
      st.sensor           = ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4;
      st.flag = 
                          #if ACC
-                           f.ANGLE_MODE<<BOXANGLE|
-                           f.HORIZON_MODE<<BOXHORIZON|
+                           f.ANGLE_MODE<<BOXANGLE |
+                           f.HORIZON_MODE<<BOXHORIZON |
                          #endif
                          #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
-                           f.BARO_MODE<<BOXBARO|
+                           f.BARO_MODE<<BOXBARO |
                          #endif
                          #if MAG
-                           f.MAG_MODE<<BOXMAG|f.HEADFREE_MODE<<BOXHEADFREE|rcOptions[BOXHEADADJ]<<BOXHEADADJ|
+                           f.MAG_MODE<<BOXMAG |
+                           #if !defined(FIXEDWING)
+                             f.HEADFREE_MODE<<BOXHEADFREE | rcOptions[BOXHEADADJ]<<BOXHEADADJ |
+                           #endif
                          #endif
                          #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
-                           rcOptions[BOXCAMSTAB]<<BOXCAMSTAB|
+                           rcOptions[BOXCAMSTAB]<<BOXCAMSTAB |
                          #endif
                          #if defined(CAMTRIG)
-                           rcOptions[BOXCAMTRIG]<<BOXCAMTRIG|
+                           rcOptions[BOXCAMTRIG]<<BOXCAMTRIG |
                          #endif
                          #if GPS
-                           f.GPS_HOME_MODE<<BOXGPSHOME|f.GPS_HOLD_MODE<<BOXGPSHOLD|
+                           f.GPS_HOME_MODE<<BOXGPSHOME | f.GPS_HOLD_MODE<<BOXGPSHOLD |
                          #endif
                          #if defined(FIXEDWING) || defined(HELICOPTER)
-                           f.PASSTHRU_MODE<<BOXPASSTHRU|
+                           f.PASSTHRU_MODE<<BOXPASSTHRU |
                          #endif
                          #if defined(BUZZER)
-                           rcOptions[BOXBEEPERON]<<BOXBEEPERON|
+                           rcOptions[BOXBEEPERON]<<BOXBEEPERON |
                          #endif
                          #if defined(LED_FLASHER)
-                           rcOptions[BOXLEDMAX]<<BOXLEDMAX|
+                           rcOptions[BOXLEDMAX]<<BOXLEDMAX |
+                           rcOptions[BOXLEDLOW]<<BOXLEDLOW |
                          #endif
                          #if defined(LANDING_LIGHTS_DDR)
                            rcOptions[BOXLLIGHTS]<<BOXLLIGHTS |

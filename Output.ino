@@ -498,29 +498,31 @@ void initOutput() {
 /************                Initialize the PWM Servos               ******************/
 /**************************************************************************************/
 void initializeServo() {
-  #if (PRI_SERVO_FROM == 1) || (SEC_SERVO_FROM == 1)
-    SERVO_1_PINMODE;
-  #endif
-  #if (PRI_SERVO_FROM <= 2 && PRI_SERVO_TO >= 2) || (SEC_SERVO_FROM <= 2 && SEC_SERVO_TO >= 2) 
-    SERVO_2_PINMODE;
-  #endif
-  #if (PRI_SERVO_FROM <= 3 && PRI_SERVO_TO >= 3) || (SEC_SERVO_FROM <= 3 && SEC_SERVO_TO >= 3) 
-    SERVO_3_PINMODE;
-  #endif 
-  #if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4) || (SEC_SERVO_FROM <= 4 && SEC_SERVO_TO >= 4) 
-    SERVO_4_PINMODE;
-  #endif 
-  #if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5) || (SEC_SERVO_FROM <= 5 && SEC_SERVO_TO >= 5) 
-    SERVO_5_PINMODE;
-  #endif 
-  #if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6) || (SEC_SERVO_FROM <= 6 && SEC_SERVO_TO >= 6) 
-    SERVO_6_PINMODE;
-  #endif 
-  #if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7) || (SEC_SERVO_FROM <= 7 && SEC_SERVO_TO >= 7) 
-    SERVO_7_PINMODE;
-  #endif 
-  #if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8) 
-    SERVO_8_PINMODE;
+  #if !defined(MEGA) || !defined(MEGA_HW_PWM_SERVOS)    // no pins init with mega and HW PWM's there
+    #if (PRI_SERVO_FROM == 1) || (SEC_SERVO_FROM == 1)
+      SERVO_1_PINMODE;
+    #endif
+    #if (PRI_SERVO_FROM <= 2 && PRI_SERVO_TO >= 2) || (SEC_SERVO_FROM <= 2 && SEC_SERVO_TO >= 2) 
+      SERVO_2_PINMODE;
+    #endif
+    #if (PRI_SERVO_FROM <= 3 && PRI_SERVO_TO >= 3) || (SEC_SERVO_FROM <= 3 && SEC_SERVO_TO >= 3) 
+      SERVO_3_PINMODE;
+    #endif 
+    #if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4) || (SEC_SERVO_FROM <= 4 && SEC_SERVO_TO >= 4) 
+      SERVO_4_PINMODE;
+    #endif 
+    #if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5) || (SEC_SERVO_FROM <= 5 && SEC_SERVO_TO >= 5) 
+      SERVO_5_PINMODE;
+    #endif 
+    #if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6) || (SEC_SERVO_FROM <= 6 && SEC_SERVO_TO >= 6) 
+      SERVO_6_PINMODE;
+    #endif 
+    #if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7) || (SEC_SERVO_FROM <= 7 && SEC_SERVO_TO >= 7) 
+      SERVO_7_PINMODE;
+    #endif 
+    #if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8) 
+      SERVO_8_PINMODE;
+    #endif
   #endif
 
   #if defined(SERVO_1_HIGH)  
@@ -571,19 +573,22 @@ void initializeServo() {
     #define SERVO_TOP_VAL (uint16_t)(1000000L / SERVO_RFR_RATE)
     // init Timer 5, 1 and 4 of the mega for hw PWM
     TIMSK5 &= ~(1<<OCIE5A); // Disable software PWM  
-    #if (PRI_SERVO_TO >= 1) || (SEC_SERVO_TO >= 1) 
+    #if (PRI_SERVO_TO >= 1) || (SEC_SERVO_TO >= 1)
       TCCR5A |= (1<<WGM51);   // phase correct mode & prescaler to 8 = 1us resolution
       TCCR5A &= ~(1<<WGM50);
       TCCR5B &= ~(1<<WGM52) &  ~(1<<CS50) & ~(1<<CS52);
       TCCR5B |= (1<<WGM53) | (1<<CS51);
       ICR5 = SERVO_TOP_VAL;
       #if (PRI_SERVO_FROM == 1 || SEC_SERVO_FROM == 1) 
+        pinMode(44,OUTPUT);
         TCCR5A |= (1<<COM5C1); // pin 44
       #endif
       #if (PRI_SERVO_FROM <= 2 && PRI_SERVO_TO >= 2) || (SEC_SERVO_FROM <= 2 && SEC_SERVO_TO >= 2) 
+        pinMode(45,OUTPUT);
         TCCR5A |= (1<<COM5B1); // pin 45
       #endif
       #if (PRI_SERVO_FROM <= 3 && PRI_SERVO_TO >= 3) || (SEC_SERVO_FROM <= 3 && SEC_SERVO_TO >= 3) 
+        pinMode(46,OUTPUT);
         TCCR5A |= (1<<COM5A1); // pin 46
       #endif
     #endif
@@ -594,9 +599,11 @@ void initializeServo() {
       TCCR1B |= (1<<WGM13) | (1<<CS11);
       ICR1 = SERVO_TOP_VAL;
       #if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4) || (SEC_SERVO_FROM <= 4 && SEC_SERVO_TO >= 4) 
+        pinMode(11, OUTPUT);
         TCCR1A |= (1<<COM1A1); // pin 11
       #endif
       #if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5) || (SEC_SERVO_FROM <= 5 && SEC_SERVO_TO >= 5) 
+        pinMode(12,OUTPUT);
         TCCR1A |= (1<<COM1B1); // pin 12
       #endif
     #endif
@@ -608,9 +615,11 @@ void initializeServo() {
       TCCR4B |= (1<<WGM43) | (1<<CS41);
       ICR4 = SERVO_TOP_VAL;
       #if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6) || (SEC_SERVO_FROM <= 6 && SEC_SERVO_TO >= 6) 
+        pinMode(6,OUTPUT);
         TCCR4A |= _BV(COM4A1); // connect pin 6 to timer 4 channel A
       #endif
       #if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7) || (SEC_SERVO_FROM <= 7 && SEC_SERVO_TO >= 7) 
+        pinMode(7,OUTPUT);
         TCCR4A |= _BV(COM4B1); // connect pin 7 to timer 4 channel B
       #endif
       #if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8) 
@@ -618,6 +627,7 @@ void initializeServo() {
           servo[7] =  MINCOMMAND;    // Trhottle at minimum for airplane and heli
           OCR4C = MINCOMMAND;
         #endif  
+        pinMode(8,OUTPUT);
         TCCR4A |= _BV(COM4C1); // connect pin 8 to timer 4 channel C
       #endif
     #endif 

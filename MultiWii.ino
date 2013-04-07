@@ -396,6 +396,7 @@ static struct {
   uint8_t currentSet;
   int16_t accZero[3];
   int16_t magZero[3];
+  uint16_t flashsum; 
   uint8_t checksum;      // MUST BE ON LAST POSITION OF STRUCTURE ! 
 } global_conf;
 
@@ -413,7 +414,7 @@ struct servo_conf_ {  // this is a generic way to configure a servo, every multi
 };
 
 static struct {
-  uint8_t checkNewConf;
+//  uint8_t checkNewConf;   not used anymore, should be removed
   pid_    pid[PIDITEMS];
   uint8_t rcRate8;
   uint8_t rcExpo8;
@@ -447,7 +448,6 @@ static struct {
     uint8_t vbatlevel_warn1;
     uint8_t vbatlevel_warn2;
     uint8_t vbatlevel_crit;
-    uint8_t no_vbat;
   #endif
   #ifdef POWERMETER
     uint16_t psensornull;
@@ -762,7 +762,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       armedTime += (uint32_t)cycleTime;
     #endif
     #if defined(VBAT)
-      if ( (analog.vbat > conf.no_vbat) && (analog.vbat < vbatMin) ) vbatMin = analog.vbat;
+      if ( (analog.vbat > NO_VBAT) && (analog.vbat < vbatMin) ) vbatMin = analog.vbat;
     #endif
     #ifdef LCD_TELEMETRY
       #if BARO
@@ -790,16 +790,37 @@ void setup() {
   STABLEPIN_PINMODE;
   POWERPIN_OFF;
   initOutput();
+  readGlobalSet();
+  #if defined(MEGA)
+    uint16_t i = 65000;                             // only first ~64K for mega board due to pgm_read_byte limitation
+  #else
+    uint16_t i = 32000;
+  #endif
+  uint16_t flashsum = 0;
+  uint8_t pbyt;
+  while(i--) {
+    pbyt =  pgm_read_byte(i);        // calculate flash checksum
+    flashsum += pbyt;
+    flashsum ^= (pbyt<<8);
+  }
   #ifdef MULTIPLE_CONFIGURATION_PROFILES
-    for(global_conf.currentSet=0; global_conf.currentSet<3; global_conf.currentSet++) {  // check all settings integrity
-      readEEPROM();
-    }
+    global_conf.currentSet=2;
   #else
     global_conf.currentSet=0;
-    readEEPROM();
   #endif
-  readGlobalSet();
-  readEEPROM();                                    // load current setting data
+  while(1) {                                                    // check settings integrity
+    if(readEEPROM()) {                                          // check current setting integrity
+      if(flashsum != global_conf.flashsum) update_constants();  // update constants if firmware is changed and integrity is OK
+    }
+    if(global_conf.currentSet == 0) break;                      // all checks is done
+    global_conf.currentSet--;                                   // next setting for check
+  }
+  readGlobalSet();                            // reload global settings for get last profile number
+  if(flashsum != global_conf.flashsum) {
+    global_conf.flashsum = flashsum;          // new flash sum
+    writeGlobalSet(1);                        // update flash sum in global config
+  }
+  readEEPROM();                               // load setting data from last used profile
   blinkLED(2,40,global_conf.currentSet+1);          
   configureReceiver();
   #if defined (PILOTLAMP) 
@@ -893,7 +914,7 @@ void go_arm() {
       f.ARMED = 1;
       headFreeModeHold = att.heading;
       #if defined(VBAT)
-        if (analog.vbat > conf.no_vbat) vbatMin = analog.vbat;
+        if (analog.vbat > NO_VBAT) vbatMin = analog.vbat;
       #endif
       #ifdef LCD_TELEMETRY // reset some values when arming
         #if BARO

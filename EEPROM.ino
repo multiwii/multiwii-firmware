@@ -15,7 +15,7 @@ void readGlobalSet() {
   }
 }
  
-void readEEPROM() {
+bool readEEPROM() {
   uint8_t i;
   #ifdef MULTIPLE_CONFIGURATION_PROFILES
     if(global_conf.currentSet>2) global_conf.currentSet=0;
@@ -29,6 +29,7 @@ void readEEPROM() {
       alarmArray[7] = 3;
     #endif
     LoadDefaults();                 // force load defaults 
+    return false;                   // defaults loaded, don't reload constants (EEPROM life saving)
   }
   // 500/128 = 3.90625    3.9062 * 3.9062 = 15.259   1526*100/128 = 1192
   for(i=0;i<5;i++) {
@@ -47,26 +48,14 @@ void readEEPROM() {
     pAlarm = (uint32_t) conf.powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) conf.pleveldiv; // need to cast before multiplying
   #endif
   #ifdef FLYING_WING
-    #ifdef LCD_CONF
-      conf.wing_left_mid  = constrain(conf.wing_left_mid, WING_LEFT_MIN,  WING_LEFT_MAX); //LEFT
-      conf.wing_right_mid = constrain(conf.wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
-    #else // w.o LCD support user may not find this value stored in eeprom, so always use the define value
-      conf.wing_left_mid  = WING_LEFT_MID;
-      conf.wing_right_mid = WING_RIGHT_MID;
-    #endif
+    conf.wing_left_mid  = constrain(conf.wing_left_mid, WING_LEFT_MIN,  WING_LEFT_MAX);   //LEFT
+    conf.wing_right_mid = constrain(conf.wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
   #endif
   #ifdef TRI
-    #ifdef LCD_CONF
-      conf.tri_yaw_middle = constrain(conf.tri_yaw_middle, TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
-    #else // w.o LCD support user may not find this value stored in eeprom, so always use the define value
-      conf.tri_yaw_middle = TRI_YAW_MIDDLE;
-    #endif
+    conf.tri_yaw_middle = constrain(conf.tri_yaw_middle, TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
   #endif
   #if GPS
-    if (f.I2C_INIT_DONE) GPS_set_pids();
-  #endif
-  #ifdef POWERMETER_HARD
-    conf.pleveldivsoft = PLEVELDIVSOFT;
+    GPS_set_pids();    // at this time we don't have info about GPS init done
   #endif
   #ifdef POWERMETER_SOFT
      conf.pleveldivsoft = conf.pleveldiv;
@@ -74,6 +63,7 @@ void readEEPROM() {
   #if defined(ARMEDTIMEWARNING)
     ArmedTimeWarningMicroSeconds = (conf.armedtimewarning *1000000);
   #endif
+  return true;    // setting is OK
 }
 
 void writeGlobalSet(uint8_t b) {
@@ -99,6 +89,62 @@ void writeParams(uint8_t b) {
   #if defined(BUZZER)
     alarmArray[7] = 1; //beep if loaded from gui or android
   #endif
+}
+
+void update_constants() { 
+  #ifdef FLYING_WING
+    conf.wing_left_mid  = WING_LEFT_MID; 
+    conf.wing_right_mid = WING_RIGHT_MID; 
+  #endif
+  #ifdef TRI
+    conf.tri_yaw_middle = TRI_YAW_MIDDLE;
+  #endif
+  #if defined HELICOPTER || defined(AIRPLANE)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)
+    {
+      int16_t s[8] = SERVO_OFFSET;
+      for(uint8_t i=0;i<8;i++) conf.servoTrim[i] = s[i];
+    }
+  #endif
+  #if defined(GYRO_SMOOTHING)
+    {
+      uint8_t s[3] = GYRO_SMOOTHING;
+      for(uint8_t i=0;i<3;i++) conf.Smoothing[i] = s[i];
+    }
+  #endif
+  #if defined (FAILSAFE)
+    conf.failsafe_throttle = FAILSAFE_THROTTLE;
+  #endif
+  #ifdef VBAT
+    conf.vbatscale = VBATSCALE;
+    conf.vbatlevel_warn1 = VBATLEVEL_WARN1;
+    conf.vbatlevel_warn2 = VBATLEVEL_WARN2;
+    conf.vbatlevel_crit = VBATLEVEL_CRIT;
+  #endif
+  #ifdef POWERMETER
+    conf.psensornull = PSENSORNULL;
+    //conf.pleveldivsoft = PLEVELDIVSOFT; // not neccessary; this gets set in the eeprom read function
+    conf.pleveldiv = PLEVELDIV;
+    conf.pint2ma = PINT2mA;
+  #endif
+  #ifdef CYCLETIME_FIXATED
+    conf.cycletime_fixated = CYCLETIME_FIXATED;
+  #endif
+  #ifdef MMGYRO
+    conf.mmgyro = MMGYRO;
+  #endif
+  #if defined(ARMEDTIMEWARNING)
+    conf.armedtimewarning = ARMEDTIMEWARNING;
+  #endif
+  conf.minthrottle = MINTHROTTLE;
+  #ifdef GOVERNOR_P
+    conf.governorP = GOVERNOR_P;
+    conf.governorD = GOVERNOR_D;
+    conf.governorR = GOVERNOR_R;
+  #endif
+  #ifdef POWERMETER_HARD
+    conf.pleveldivsoft = PLEVELDIVSOFT;
+  #endif
+  writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }
 
 void LoadDefaults() {
@@ -133,61 +179,11 @@ void LoadDefaults() {
       conf.servoConf[i].middle = 1500;
       conf.servoConf[i].rate = 100;
   }
-  #ifdef FLYING_WING
-    conf.wing_left_mid  = WING_LEFT_MID; 
-    conf.wing_right_mid = WING_RIGHT_MID; 
-  #endif
   #ifdef FIXEDWING
     conf.dynThrPID = 50;
     conf.rcExpo8   =  0;
   #endif
-  #ifdef TRI
-    conf.tri_yaw_middle = TRI_YAW_MIDDLE;
-  #endif
-  #if defined HELICOPTER || defined(AIRPLANE)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)
-    {
-      int16_t s[8] = SERVO_OFFSET;
-      for(uint8_t i=0;i<8;i++) conf.servoTrim[i] = s[i];
-    }
-  #endif
-  #if defined(GYRO_SMOOTHING)
-    {
-      uint8_t s[3] = GYRO_SMOOTHING;
-      for(uint8_t i=0;i<3;i++) conf.Smoothing[i] = s[i];
-    }
-  #endif
-  #if defined (FAILSAFE)
-    conf.failsafe_throttle = FAILSAFE_THROTTLE;
-  #endif
-  #ifdef VBAT
-    conf.vbatscale = VBATSCALE;
-    conf.vbatlevel_warn1 = VBATLEVEL_WARN1;
-    conf.vbatlevel_warn2 = VBATLEVEL_WARN2;
-    conf.vbatlevel_crit = VBATLEVEL_CRIT;
-    conf.no_vbat = NO_VBAT;
-  #endif
-  #ifdef POWERMETER
-    conf.psensornull = PSENSORNULL;
-    //conf.pleveldivsoft = PLEVELDIVSOFT; // not neccessary; this gets set in the eeprom read function
-    conf.pleveldiv = PLEVELDIV;
-    conf.pint2ma = PINT2mA;
-  #endif
-  #ifdef CYCLETIME_FIXATED
-    conf.cycletime_fixated = CYCLETIME_FIXATED;
-  #endif
-  #ifdef MMGYRO
-    conf.mmgyro = MMGYRO;
-  #endif
-  #if defined(ARMEDTIMEWARNING)
-    conf.armedtimewarning = ARMEDTIMEWARNING;
-  #endif
-  conf.minthrottle = MINTHROTTLE;
-  #ifdef GOVERNOR_P
-    conf.governorP = GOVERNOR_P;
-    conf.governorD = GOVERNOR_D;
-    conf.governorR = GOVERNOR_R;
-  #endif
-  writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
+  update_constants();
 }
 
 #ifdef LOG_PERMANENT

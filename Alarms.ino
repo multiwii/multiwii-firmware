@@ -83,7 +83,7 @@ void alarmHandler(){
   
   #if defined(VBAT)
     if (vbatMin < conf.vbatlevel_crit) alarmArray[6] = 4;
-    else if ( (analog.vbat > conf.vbatlevel_warn1)  || (conf.no_vbat > analog.vbat)) alarmArray[6] = 0;
+    else if ( (analog.vbat > conf.vbatlevel_warn1)  || (NO_VBAT > analog.vbat)) alarmArray[6] = 0;
     else if (analog.vbat > conf.vbatlevel_warn2) alarmArray[6] = 1;
     else if (analog.vbat > conf.vbatlevel_crit) alarmArray[6] = 2;
     //else alarmArray[6] = 4;

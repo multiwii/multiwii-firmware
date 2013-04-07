@@ -1171,7 +1171,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text103, &conf.vbatlevel_warn1, &__P,
   &lcd_param_text104, &conf.vbatlevel_warn2, &__P,
   &lcd_param_text106, &conf.vbatlevel_crit, &__P,
-  &lcd_param_text107, &conf.no_vbat, &__P,
+//  &lcd_param_text107, &conf.no_vbat, &__P,
 #endif
 #ifdef FLYING_WING
   &lcd_param_text36, &conf.wing_left_mid, &__SE,
