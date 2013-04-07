@@ -1531,11 +1531,11 @@
 #if defined(NUNCHUCK)
   #define ACC_1G 200
 #endif
-
-#if (ACC)
-  #define ACC_25deg    (uint16_t)(ACC_1G * 0.423)
-  #define ACC_VelScale (9.80665f / 10000.0f / ACC_1G)
+#if !defined(ACC_1G)
+  #define ACC_1G 256
 #endif
+#define ACC_25deg    (uint16_t)(ACC_1G * 0.423)
+#define ACC_VelScale (9.80665f / 10000.0f / ACC_1G)
 
 /**************************************************************************************/
 /***************      Multitype decleration for the GUI's          ********************/
