@@ -203,13 +203,13 @@ void getEstimatedAttitude(){
     rotateV(&EstM.V,deltaGyroAngle);
   #endif
 
-  if ( abs(imu.accSmooth[ROLL])<acc_25deg && abs(imu.accSmooth[PITCH])<acc_25deg && imu.accSmooth[YAW]>0) {
+  if ( abs(imu.accSmooth[ROLL])<ACC_25deg && abs(imu.accSmooth[PITCH])<ACC_25deg && imu.accSmooth[YAW]>0) {
     f.SMALL_ANGLES_25 = 1;
   } else {
     f.SMALL_ANGLES_25 = 0;
   }
 
-  accMag = accMag*100/((int32_t)acc_1G*acc_1G);
+  accMag = accMag*100/((int32_t)ACC_1G*ACC_1G);
   validAcc = 72 < accMag && accMag < 133;
   // Apply complimentary filter (Gyro drift correction)
   // If accel magnitude >1.15G or <0.85G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
@@ -239,7 +239,7 @@ void getEstimatedAttitude(){
   #endif
 
   #if defined(THROTTLE_ANGLE_CORRECTION)
-    cosZ = EstG.V.Z / acc_1G * 100.0f;                                                        // cos(angleZ) * 100 
+    cosZ = EstG.V.Z / ACC_1G * 100.0f;                                                        // cos(angleZ) * 100 
     throttleAngleCorrection = THROTTLE_ANGLE_CORRECTION * constrain(100 - cosZ, 0, 100) >>3;  // 16 bit ok: 200*150 = 30000  
   #endif
 }
@@ -247,7 +247,7 @@ void getEstimatedAttitude(){
 #define UPDATE_INTERVAL 25000    // 40hz update rate (20hz LPF on acc)
 #define BARO_TAB_SIZE   21
 
-#define ACC_Z_DEADBAND (acc_1G>>5) // was 40 instead of 32 now
+#define ACC_Z_DEADBAND (ACC_1G>>5) // was 40 instead of 32 now
 
 
 #define applyDeadband(value, deadband)  \
@@ -298,7 +298,7 @@ uint8_t getEstimatedAltitude(){
     // Math: accZ = A * G / |G| - 1G
     int16_t accZ = (imu.accSmooth[ROLL] * EstG32.V.X + imu.accSmooth[PITCH] * EstG32.V.Y + imu.accSmooth[YAW] * EstG32.V.Z) * invG;
 
-    static int16_t accZoffset = 0; // = acc_1G*6; //58 bytes saved and convergence is fast enough to omit init
+    static int16_t accZoffset = 0;
     if (!f.ARMED) {
       accZoffset -= accZoffset>>3;
       accZoffset += accZ;
@@ -309,7 +309,7 @@ uint8_t getEstimatedAltitude(){
     static float vel = 0.0f;
 
     // Integrator - velocity, cm/sec
-    vel += accZ * accVelScale * dTime;
+    vel += accZ * ACC_VelScale * dTime;
 
     static int32_t lastBaroAlt;
     int16_t baroVel = (alt.EstAlt - lastBaroAlt) * 1000000.0f / dTime;

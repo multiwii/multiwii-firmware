@@ -1803,7 +1803,7 @@ void lcd_telemetry() {
       LCDsetLine(2);LCDprintChar("A "); //refresh line 2 of LCD
       outputSensor(4, imu.accSmooth[0], ACCLIMIT); LCDprint(' ');
       outputSensor(4, imu.accSmooth[1], ACCLIMIT); LCDprint(' ');
-      outputSensor(4, imu.accSmooth[2] - acc_1G, ACCLIMIT);
+      outputSensor(4, imu.accSmooth[2] - ACC_1G, ACCLIMIT);
     }
     break;
 #endif
@@ -2052,7 +2052,7 @@ void lcd_telemetry() {
       break;
       case 5:
         lcdprint_int16(imu.accSmooth[2]); LCDprint(' ');
-        outputSensor(10, imu.accSmooth[2] - acc_1G, ACCLIMIT);
+        outputSensor(10, imu.accSmooth[2] - ACC_1G, ACCLIMIT);
       break;
     }
     LCDcrlf();

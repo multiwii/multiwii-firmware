@@ -365,11 +365,11 @@ void ACC_Common() {
       imu.accADC[axis]=0;
       global_conf.accZero[axis]=0;
     }
-    // Calculate average, shift Z down by acc_1G and store values in EEPROM at end of calibration
+    // Calculate average, shift Z down by ACC_1G and store values in EEPROM at end of calibration
     if (calibratingA == 1) {
       global_conf.accZero[ROLL]  = a[ROLL]>>9;
       global_conf.accZero[PITCH] = a[PITCH]>>9;
-      global_conf.accZero[YAW]   = (a[YAW]>>9)-acc_1G; // for nunchuk 200=1G
+      global_conf.accZero[YAW]   = (a[YAW]>>9)-ACC_1G; // for nunchuk 200=1G
       conf.angleTrim[ROLL]   = 0;
       conf.angleTrim[PITCH]  = 0;
       writeGlobalSet(1); // write accZero in EEPROM
@@ -414,12 +414,12 @@ void ACC_Common() {
         }
         InflightcalibratingA--;
       }
-      // Calculate average, shift Z down by acc_1G and store values in EEPROM at end of calibration
+      // Calculate average, shift Z down by ACC_1G and store values in EEPROM at end of calibration
       if (AccInflightCalibrationSavetoEEProm == 1){  //the copter is landed, disarmed and the combo has been done again
         AccInflightCalibrationSavetoEEProm = 0;
         global_conf.accZero[ROLL]  = b[ROLL]/50;
         global_conf.accZero[PITCH] = b[PITCH]/50;
-        global_conf.accZero[YAW]   = b[YAW]/50-acc_1G; // for nunchuk 200=1G
+        global_conf.accZero[YAW]   = b[YAW]/50-ACC_1G; // for nunchuk 200=1G
         conf.angleTrim[ROLL]   = 0;
         conf.angleTrim[PITCH]  = 0;
         writeGlobalSet(1); // write accZero in EEPROM
@@ -734,7 +734,6 @@ uint8_t Baro_update() {                            // first UT conversion is sta
 void ACC_init () {
   delay(10);
   i2c_writeReg(MMA7455_ADDRESS,0x16,0x21);
-  acc_1G = 64;
 }
 
 void ACC_getADC () {
@@ -763,7 +762,6 @@ void ACC_init () {
   i2c_writeReg(MMA8451Q_ADDRESS,0x2A,0x05); // wake up & low noise
   delay(10);
   i2c_writeReg(MMA8451Q_ADDRESS,0x0E,0x02); // full scale range
-  acc_1G = 512; // should be 1024 but 512 is knowen
 }
 
 void ACC_getADC () {
@@ -794,7 +792,6 @@ void ACC_init () {
   i2c_writeReg(ADXL345_ADDRESS,0x2D,1<<3); //  register: Power CTRL  -- value: Set measure bit 3 on
   i2c_writeReg(ADXL345_ADDRESS,0x31,0x0B); //  register: DATA_FORMAT -- value: Set bits 3(full range) and 1 0 on (+/- 16g-range)
   i2c_writeReg(ADXL345_ADDRESS,0x2C,0x09); //  register: BW_RATE     -- value: rate=50hz, bw=20hz
-  acc_1G = 265;
 }
 
 void ACC_getADC () {
@@ -846,7 +843,6 @@ void ACC_init () {
   control = control | (0x05 << 1); // set range to 8G
   i2c_writeReg(BMA180_ADDRESS, 0x35, control);
   delay(5); 
-  acc_1G = 255;
 }
 
 void ACC_getADC () {
@@ -884,7 +880,6 @@ void ACC_init(){
   control = control | (0x02 << 3); // Range 8G (10)
   control = control | 0x00;        // Bandwidth 25 Hz 000
   i2c_writeReg(0x38,0x14,control); 
-  acc_1G = 63;
 }
 
 void ACC_getADC(){
@@ -907,7 +902,6 @@ void ACC_init() {
   i2c_writeReg(NUNCHACK_ADDRESS ,0xF0 ,0x55 );
   i2c_writeReg(NUNCHACK_ADDRESS ,0xFB ,0x00 );
   delay(250);
-  acc_1G = 200;
 }
 
 void ACC_getADC() {
@@ -930,7 +924,6 @@ void ACC_getADC() {
 void ACC_init(){
   i2c_writeReg(LIS3A ,0x20 ,0xD7 ); // CTRL_REG1   1101 0111 Pwr on, 160Hz 
   i2c_writeReg(LIS3A ,0x21 ,0x50 ); // CTRL_REG2   0100 0000 Littl endian, 12 Bit, Boot
-  acc_1G = 256;
 }
 
 void ACC_getADC(){
@@ -952,8 +945,6 @@ void ACC_init () {
   i2c_writeReg(0x18,0x20,0x27);
   i2c_writeReg(0x18,0x23,0x30);
   i2c_writeReg(0x18,0x21,0x00);
-
-  acc_1G = 256;
 }
 
   void ACC_getADC () {
@@ -975,7 +966,6 @@ void ACC_init(){
   pinMode(A1,INPUT);
   pinMode(A2,INPUT);
   pinMode(A3,INPUT);
-  acc_1G = 75;
 }
 
 void ACC_getADC() {
@@ -1345,11 +1335,6 @@ void ACC_init () {
   i2c_writeReg(MPU6050_ADDRESS, 0x1C, 0x10);             //ACCEL_CONFIG  -- AFS_SEL=2 (Full Scale = +/-8G)  ; ACCELL_HPF=0   //note something is wrong in the spec.
   //note: something seems to be wrong in the spec here. With AFS=2 1G = 4096 but according to my measurement: 1G=2048 (and 2048/8 = 256)
   //confirmed here: http://www.multiwii.com/forum/viewtopic.php?f=8&t=1080&start=10#p7480
-  #if defined(FREEIMUv04)
-    acc_1G = 255;
-  #else
-    acc_1G = 512;
-  #endif
 
   #if defined(MPU6050_I2C_AUX_MASTER)
     //at this stage, the MAG is configured via the original MAG init function in I2C bypass mode
@@ -1443,7 +1428,7 @@ void Gyro_getADC() {
 
   if (micros() < (neutralizeTime + NEUTRALIZE_DELAY)) {//we neutralize data in case of blocking+hard reset state
     for (axis = 0; axis < 3; axis++) {imu.gyroADC[axis]=0;imu.accADC[axis]=0;}
-    imu.accADC[YAW] = acc_1G;
+    imu.accADC[YAW] = ACC_1G;
     f.NUNCHUKDATA = 0;
   } 
 
@@ -1472,9 +1457,8 @@ void Gyro_getADC() {
 
 #if defined(NUNCHUCK)
   void ACC_init () {
-    // We need to set acc_1G for the Nunchuk beforehand
+    // We need to set ACC_1G for the Nunchuk beforehand -> moved in def.h
     // If a different accelerometer is used, it will be overwritten by its ACC_init() later.
-    acc_1G = 200;
   }
   void ACC_getADC () { // it's done ine the WMP gyro part
     Gyro_getADC();
@@ -1715,11 +1699,7 @@ void initSensors() {
   if (GYRO) Gyro_init();
   if (BARO) Baro_init();
   if (MAG) Mag_init();
-  if (ACC) {
-    ACC_init();
-    acc_25deg = acc_1G * 0.423;
-    accVelScale = 9.80665f / 10000.0f / acc_1G ;
-  }
+  if (ACC) ACC_init();
   if (SONAR) Sonar_init();
   f.I2C_INIT_DONE = 1;
 }

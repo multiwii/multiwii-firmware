@@ -220,6 +220,8 @@ void s_struct_w(uint8_t *cb,uint8_t siz) {
 
 #ifndef SUPPRESS_ALL_SERIAL_MSP
 void evaluateCommand() {
+  uint32_t tmp=0; 
+
   switch(cmdMSP[CURRENTPORT]) {
    case MSP_SET_RAW_RC:
      s_struct_w((uint8_t*)&rcData,16);
@@ -285,55 +287,57 @@ void evaluateCommand() {
      st.cycleTime        = cycleTime;
      st.i2c_errors_count = i2c_errors_count;
      st.sensor           = ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4;
-     st.flag = 
-                         #if ACC
-                           f.ANGLE_MODE<<BOXANGLE |
-                           f.HORIZON_MODE<<BOXHORIZON |
-                         #endif
-                         #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
-                           f.BARO_MODE<<BOXBARO |
-                         #endif
-                         #if MAG
-                           f.MAG_MODE<<BOXMAG |
-                           #if !defined(FIXEDWING)
-                             f.HEADFREE_MODE<<BOXHEADFREE | rcOptions[BOXHEADADJ]<<BOXHEADADJ |
-                           #endif
-                         #endif
-                         #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
-                           rcOptions[BOXCAMSTAB]<<BOXCAMSTAB |
-                         #endif
-                         #if defined(CAMTRIG)
-                           rcOptions[BOXCAMTRIG]<<BOXCAMTRIG |
-                         #endif
-                         #if GPS
-                           f.GPS_HOME_MODE<<BOXGPSHOME | f.GPS_HOLD_MODE<<BOXGPSHOLD |
-                         #endif
-                         #if defined(FIXEDWING) || defined(HELICOPTER)
-                           f.PASSTHRU_MODE<<BOXPASSTHRU |
-                         #endif
-                         #if defined(BUZZER)
-                           rcOptions[BOXBEEPERON]<<BOXBEEPERON |
-                         #endif
-                         #if defined(LED_FLASHER)
-                           rcOptions[BOXLEDMAX]<<BOXLEDMAX |
-                           rcOptions[BOXLEDLOW]<<BOXLEDLOW |
-                         #endif
-                         #if defined(LANDING_LIGHTS_DDR)
-                           rcOptions[BOXLLIGHTS]<<BOXLLIGHTS |
-                         #endif
-                         #if defined(VARIOMETER)
-                           rcOptions[BOXVARIO]<<BOXVARIO |
-                         #endif
-                         #if defined(INFLIGHT_ACC_CALIBRATION)
-                           rcOptions[BOXCALIB]<<BOXCALIB |
-                         #endif
-                         #if defined(GOVERNOR_P)
-                           rcOptions[BOXGOV]<<BOXGOV |
-                         #endif
-                         #if defined(OSD_SWITCH)
-                           rcOptions[BOXOSD]<<BOXOSD |
-                         #endif
-                         f.ARMED<<BOXARM;
+     #if ACC
+       if(f.ANGLE_MODE)   tmp |= 1<<BOXANGLE;
+       if(f.HORIZON_MODE) tmp |= 1<<BOXHORIZON;
+     #endif
+     #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
+       if(f.BARO_MODE) tmp |= 1<<BOXBARO;
+     #endif
+     #if MAG
+       if(f.MAG_MODE) tmp |= 1<<BOXMAG;
+       #if !defined(FIXEDWING)
+         if(f.HEADFREE_MODE)       tmp |= 1<<BOXHEADFREE;
+         if(rcOptions[BOXHEADADJ]) tmp |= 1<<BOXHEADADJ;
+       #endif
+     #endif
+     #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
+       if(rcOptions[BOXCAMSTAB]) tmp |= 1<<BOXCAMSTAB;
+     #endif
+     #if defined(CAMTRIG)
+       if(rcOptions[BOXCAMTRIG]) tmp |= 1<<BOXCAMTRIG;
+     #endif
+     #if GPS
+       if(f.GPS_HOME_MODE) tmp |= 1<<BOXGPSHOME; 
+       if(f.GPS_HOLD_MODE) tmp |= 1<<BOXGPSHOLD;
+     #endif
+     #if defined(FIXEDWING) || defined(HELICOPTER)
+       if(f.PASSTHRU_MODE) tmp |= 1<<BOXPASSTHRU;
+     #endif
+     #if defined(BUZZER)
+       if(rcOptions[BOXBEEPERON]) tmp |= 1<<BOXBEEPERON;
+     #endif
+     #if defined(LED_FLASHER)
+       if(rcOptions[BOXLEDMAX]) tmp |= 1<<BOXLEDMAX;
+       if(rcOptions[BOXLEDLOW]) tmp |= 1<<BOXLEDLOW;
+     #endif
+     #if defined(LANDING_LIGHTS_DDR)
+       if(rcOptions[BOXLLIGHTS]) tmp |= 1<<BOXLLIGHTS;
+     #endif
+     #if defined(VARIOMETER)
+       if(rcOptions[BOXVARIO]) tmp |= 1<<BOXVARIO;
+     #endif
+     #if defined(INFLIGHT_ACC_CALIBRATION)
+       if(rcOptions[BOXCALIB]) tmp |= 1<<BOXCALIB;
+     #endif
+     #if defined(GOVERNOR_P)
+       if(rcOptions[BOXGOV]) tmp |= 1<<BOXGOV;
+     #endif
+     #if defined(OSD_SWITCH)
+       if(rcOptions[BOXOSD]) tmp |= 1<<BOXOSD;
+     #endif
+     if(f.ARMED) tmp |= 1<<BOXARM;
+     st.flag=tmp;
      st.set              = global_conf.currentSet;
      s_struct((uint8_t*)&st,11);
      break;

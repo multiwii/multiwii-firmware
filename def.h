@@ -1494,6 +1494,49 @@
 #endif
 
 
+#if defined(MMA7455)
+  #define ACC_1G 64
+#endif
+#if defined(MMA8451Q)
+  #define ACC_1G 512
+#endif
+#if defined(ADXL345)
+  #define ACC_1G 265
+#endif
+#if defined(BMA180)
+  #define ACC_1G 255
+#endif
+#if defined(BMA020)
+  #define ACC_1G 63
+#endif
+#if defined(NUNCHACK)
+  #define ACC_1G 200
+#endif
+#if defined(LIS3LV02)
+  #define ACC_1G 256
+#endif
+#if defined(LSM303DLx_ACC)
+  #define ACC_1G 256
+#endif
+#if defined(ADCACC)
+  #define ACC_1G 75
+#endif
+#if defined(MPU6050)
+  #if defined(FREEIMUv04)
+    #define ACC_1G 255
+  #else
+    #define ACC_1G 512
+  #endif
+#endif
+#if defined(NUNCHUCK)
+  #define ACC_1G 200
+#endif
+
+#if (ACC)
+  #define ACC_25deg    (uint16_t)(ACC_1G * 0.423)
+  #define ACC_VelScale (9.80665f / 10000.0f / ACC_1G)
+#endif
+
 /**************************************************************************************/
 /***************      Multitype decleration for the GUI's          ********************/
 /**************************************************************************************/
