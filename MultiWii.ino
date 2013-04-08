@@ -946,7 +946,7 @@ void go_disarm() {
 }
 void servos2Neutral() {
   #ifdef TRI
-    servo[5] = 1500; // we center the yaw servo in conf mode
+    servo[TRI_SERVO-1] = 1500; // we center the yaw servo in conf mode
     writeServos();
   #endif
   #ifdef FLYING_WING

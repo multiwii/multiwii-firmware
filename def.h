@@ -93,6 +93,12 @@
   #define SERVO
 #endif
 
+#if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS)
+  #define TRI_SERVO  4
+#else
+  #define TRI_SERVO  6
+#endif
+
 #if defined(GIMBAL)
   #define NUMBER_MOTOR     0
   #define PRI_SERVO_FROM   1 // use servo from 1 to 2
@@ -130,8 +136,8 @@
   #define PRI_SERVO_TO     6
 #elif defined(TRI)
   #define NUMBER_MOTOR     3
-  #define PRI_SERVO_FROM   6 // use only servo 6
-  #define PRI_SERVO_TO     6
+  #define PRI_SERVO_FROM   TRI_SERVO // use only servo 6 (or 4 with Mega HW PWM)
+  #define PRI_SERVO_TO     TRI_SERVO
 #elif defined(QUADP) || defined(QUADX) || defined(Y4)|| defined(VTAIL4)
   #define NUMBER_MOTOR     4
 #elif defined(Y6) || defined(HEX6) || defined(HEX6X) || defined(HEX6H)

@@ -970,7 +970,7 @@
       Pitch   = pin 44
       Roll    = pin 45
       CamTrig = pin 46
-      SERVO4  = pin 11 (aileron left for fixed wing)
+      SERVO4  = pin 11 (aileron left for fixed wing or TRI YAW SERVO)
       SERVO5  = pin 12 (aileron right for fixed wing)
       SERVO6  = pin 6   (rudder for fixed wing)
       SERVO7  = pin 7   (elevator for fixed wing)

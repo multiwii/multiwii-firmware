@@ -893,7 +893,7 @@ void mixTable() {
       motor[0] = PIDMIX( 0,+4/3, 0); //REAR
       motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
       motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
-      servo[5] = constrain(conf.tri_yaw_middle + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
+      servo[TRI_SERVO-1] = constrain(conf.tri_yaw_middle + YAW_DIRECTION * axisPID[YAW], TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
     #endif
     #ifdef QUADP
       motor[0] = PIDMIX( 0,+1,-1); //REAR
@@ -1392,7 +1392,7 @@ void mixTable() {
                                      28274,30041,31879,33792,35779,37843,39984,42205,
                                      44507,46890,49358,51910,54549,57276,60093,63000};
   
-    if (analog.vbat > conf.no_vbat) { // by all means - must avoid division by zero
+    if (analog.vbat > NO_VBAT) { // by all means - must avoid division by zero
       ampsum = 0;
       for (i =0;i<NUMBER_MOTOR;i++) {
         amp = amperes[ ((motor[i] - 1000)>>4) ] / analog.vbat; // range mapped from [1000:2000] => [0:1000]; then break that up into 64 ranges; lookup amp
