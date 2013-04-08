@@ -14,6 +14,11 @@
  * 7 - TUNING & DEVELOPER - if you know what you are doing; you have been warned
  */
 
+/* Notes:
+ * 1. parameters marked with (*) in the comment are stored in eeprom and cannot currently be changed via the GUI but
+ *    can be changed via serial monitor or LCD.
+ */
+
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/
@@ -50,7 +55,7 @@
     //#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
     //#define MINTHROTTLE 1064 // special ESC (simonk)
     //#define MINTHROTTLE 1050 // for brushed ESCs like ladybird
-    #define MINTHROTTLE 1150 // 
+    #define MINTHROTTLE 1150 // (*)
 
   /****************************    Motor maxthrottle    *******************************/
     /* this is the maximum value for the ESCs at full power, this value can be increased up to 2000 */
@@ -203,7 +208,7 @@
     /* you can change the tricopter servo travel here */
       #define TRI_YAW_CONSTRAINT_MIN 1020
       #define TRI_YAW_CONSTRAINT_MAX 2000
-      #define TRI_YAW_MIDDLE 1500 //  tail servo center pos. - use this for initial trim; later trim midpoint via LCD
+      #define TRI_YAW_MIDDLE 1500 // (*) tail servo center pos. - use this for initial trim; later trim midpoint via LCD
 
   /********************************    BI    *********************************/
     /* you can change the bicopter servo travel direction here */     
@@ -250,10 +255,10 @@
        need to setup servo directions here; no need to swap servos amongst channels at rx */
     #define PITCH_DIRECTION_L 1 // left servo - pitch orientation
     #define PITCH_DIRECTION_R -1  // right servo - pitch orientation (opposite sign to PITCH_DIRECTION_L, if servos are mounted in mirrored orientation)
-    #define ROLL_DIRECTION_L 1  // left servo - roll orientation
+    #define ROLL_DIRECTION_L 1 // left servo - roll orientation
     #define ROLL_DIRECTION_R 1  // right servo - roll orientation  (same sign as ROLL_DIRECTION_L, if servos are mounted in mirrored orientation)
-    #define WING_LEFT_MID  1500 // left servo center pos. - use this for initial trim; later trim midpoint via LCD
-    #define WING_RIGHT_MID 1500 // right servo center pos. - use this for initial trim; later trim midpoint via LCD
+    #define WING_LEFT_MID  1500 // (*) left servo center pos. - use this for initial trim; later trim midpoint via LCD
+    #define WING_RIGHT_MID 1500 // (*) right servo center pos. - use this for initial trim; later trim midpoint via LCD
     #define WING_LEFT_MIN  1020 // limit servo travel range must be inside [1020;2000]
     #define WING_LEFT_MAX  2000 // limit servo travel range must be inside [1020;2000]
     #define WING_RIGHT_MIN 1020 // limit servo travel range must be inside [1020;2000]
@@ -276,7 +281,7 @@
 
   /***********************      Common for Heli & Airplane         ***********************/
     //#define D12_POWER      // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12
-    #define SERVO_OFFSET     {  0,   0,   0,  0,   0,   0,  0,   0 } //  Adjust Servo MID Offset & Swash angles
+    #define SERVO_OFFSET     {  0,   0,   0,  0,   0,   0,  0,   0 } // (*) Adjust Servo MID Offset & Swash angles
     // Selectable channels:=    ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4
 
     /* Governor: attempts to maintain rpm through pitch and voltage changes
@@ -284,9 +289,9 @@
      * (the throttle curve must leave room for the governor, so 0-50-75-80-80 is ok, 0-50-95-100-100 is _not_ ok.
      * Can be toggled via aux switch.
      */
-    //#define GOVERNOR_P 7     //  proportional factor. Higher value -> higher throttle increase. Must be >=1; 0 = turn off
-    //#define GOVERNOR_D 4     //  decay timing. Higher value -> takes longer to return throttle to normal. Must be >=1;
-    //#define GOVERNOR_R 10    //  voltage impact correction scale in 0.1 units. Higher value -> more compensation for voltage drops. normal is value 10 <=> 1.0; 0 is off
+    //#define GOVERNOR_P 7     // (*) proportional factor. Higher value -> higher throttle increase. Must be >=1; 0 = turn off
+    //#define GOVERNOR_D 4     // (*) decay timing. Higher value -> takes longer to return throttle to normal. Must be >=1;
+    //#define GOVERNOR_R 10    // (*) voltage impact correction scale in 0.1 units. Higher value -> more compensation for voltage drops. normal is value 10 <=> 1.0; 0 is off
 
   /***********************          Heli                           ***********************/
     /* Channel to control CollectivePitch */
@@ -296,7 +301,7 @@
     #define SERVO_ENDPOINT_LOW  {1020,1020,1020,1020,1020,1020,1020,1020};
 
     /* Limit the range of Collective Pitch. 100% is Full Range each way and position for Zero Pitch */
-    #define COLLECTIVE_RANGE { 80, 0, 80 }   // {Min%, ZeroPitch offset from 1500, Max%}.
+    #define COLLECTIVE_RANGE { 80, 0, 80 }// {Min%, ZeroPitch offset from 1500, Max%}.
     #define YAW_CENTER             1500      // Use servo[5] SERVO_ENDPOINT_HIGH/LOW for the endpoits.
     #define YAWMOTOR                 0       // If a motor is used as YAW Set to 1 else set to 0.
 
@@ -534,10 +539,10 @@
       /* GYRO_SMOOTHING. In case you cannot reduce vibrations _and_ _after_ you have tried the low pass filter options, you
          may try this gyro smoothing via averaging. Not suitable for multicopters!
          Good results for helicopter, airplanes and flying wings (foamies) with lots of vibrations.*/
-      //#define GYRO_SMOOTHING {20, 20, 3}    // separate averaging ranges for roll, pitch, yaw
+      //#define GYRO_SMOOTHING {20, 20, 3}    // (*) separate averaging ranges for roll, pitch, yaw
 
     /************************    Moving Average Gyros    **********************************/
-      //#define MMGYRO 10                      // Active Moving Average Function for Gyros
+      //#define MMGYRO 10                      // (*) Active Moving Average Function for Gyros
       //#define MMGYROVECTORLENGTH 15          // Length of Moving Average Vector (maximum value for tunable MMGYRO
       /* Moving Average ServoGimbal Signal Output */
       //#define MMSERVOGIMBAL                  // Active Output Moving Average Function for Servos Gimbal
@@ -595,7 +600,7 @@
     //#define FAILSAFE                                // uncomment  to activate the failsafe function
     #define FAILSAFE_DELAY     10                     // Guard time for failsafe activation after signal lost. 1 step = 0.1sec - 1sec in example
     #define FAILSAFE_OFF_DELAY 200                    // Time for Landing before motors stop in 0.1sec. 1 step = 0.1sec - 20sec in example
-    #define FAILSAFE_THROTTLE  (MINTHROTTLE + 200)    // Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
+    #define FAILSAFE_THROTTLE  (MINTHROTTLE + 200)    // (*) Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
 
 
   /*****************                DFRobot LED RING    *********************************/
@@ -828,8 +833,8 @@
   /********************************************************************/
     //#define BUZZER
     //#define RCOPTIONSBEEP         // uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
-    //#define ARMEDTIMEWARNING 330  // Trigger an alarm after a certain time of being armed [s] to save you lipo (if your TX does not have a countdown)
-    //#define PILOTLAMP             // Uncomment if you are using a X-Arcraft Pilot Lamp
+    //#define ARMEDTIMEWARNING 330  // (*) Trigger an alarm after a certain time of being armed [s] to save you lipo (if your TX does not have a countdown)
+    //#define PILOTLAMP             //Uncomment if you are using a X-Arcraft Pilot Lamp
 
   /********************************************************************/
   /****           battery voltage monitoring                       ****/
@@ -840,11 +845,11 @@
        vbat = [0;1023]*16/VBATSCALE
        must be associated with #define BUZZER ! */
     //#define VBAT              // uncomment this line to activate the vbat code
-    #define VBATSCALE       131 // change this value if readed Battery voltage is different than real voltage
+    #define VBATSCALE       131 // (*) change this value if readed Battery voltage is different than real voltage
     #define VBATNOMINAL     126 // 12,6V full battery nominal voltage - only used for lcd.telemetry
-    #define VBATLEVEL_WARN1 107 // 10,7V
-    #define VBATLEVEL_WARN2  99 // 9.9V
-    #define VBATLEVEL_CRIT   93 // 9.3V - critical condition: if vbat ever goes below this value, permanent alarm is triggered
+    #define VBATLEVEL_WARN1 107 // (*) 10,7V
+    #define VBATLEVEL_WARN2  99 // (*) 9.9V
+    #define VBATLEVEL_CRIT   93 // (*) 9.3V - critical condition: if vbat ever goes below this value, permanent alarm is triggered
     #define NO_VBAT          16 // Avoid beeping without any battery
 
 
@@ -863,12 +868,12 @@
     /* PLEVELSCALE is the step size you can use to set alarm */
     #define PLEVELSCALE 50 // if you change this value for other granularity, you must search for comments in code to change accordingly
     /* larger PLEVELDIV will get you smaller value for power (mAh equivalent) */
-    #define PLEVELDIV 5000 // default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
+    #define PLEVELDIV 5000 // (*) default for soft - if you lower PLEVELDIV, beware of overrun in uint32 pMeter
     //#define PLEVELDIV 36000 // fixed value for hard - do not tune
     #define PLEVELDIVSOFT PLEVELDIV // for soft always equal to PLEVELDIV
     //#define PLEVELDIVSOFT 5000 // for hard fixed to 5000
-    #define PSENSORNULL 510 // set to analogRead() value for zero current; for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt;
-    #define PINT2mA 132 // one integer step on arduino analog translates to mA (example 4.9 / 37 * 1000
+    #define PSENSORNULL 510 // (*) set to analogRead() value for zero current; for I=0A my sensor gives 1/2 Vss; that is approx 2.49Volt;
+    #define PINT2mA 132 // (*) one integer step on arduino analog translates to mA (example 4.9 / 37 * 1000
 
   /********************************************************************/
   /****           altitude hold                                    ****/
@@ -936,12 +941,12 @@
      * Tunable via LCD config menu.
      * value of 0 turns the feature off.
      */
-    //#define CYCLETIME_FIXATED 9000
+    //#define CYCLETIME_FIXATED 9000 // (*)
 
   /**************************************************************************************/
   /********   special ESC with extended range [0-2000] microseconds  ********************/
   /**************************************************************************************/
-    //#define EXT_MOTOR_RANGE
+    //#define EXT_MOTOR_RANGE // using this with wii-esc requires to change MINCOMMAND to 1008 for promini and mega
 
   /**************************************************************************************/
   /***********************     motor, servo and other presets     ***********************/

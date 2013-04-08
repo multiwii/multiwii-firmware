@@ -169,7 +169,7 @@ void LoadDefaults() {
     conf.yawRate = 0;
     conf.dynThrPID = 0;
     conf.thrMid8 = 50; conf.thrExpo8 = 0;
-    for(uint8_t i=0;i<CHECKBOXITEMS;i++) {conf.activate[i] = 0;}
+    for(i=0;i<CHECKBOXITEMS;i++) {conf.activate[i] = 0;}
     conf.angleTrim[0] = 0; conf.angleTrim[1] = 0;
     conf.powerTrigger1 = 0;
   #endif

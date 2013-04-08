@@ -159,28 +159,28 @@ void writeMotors() { // [1000;2000] => [125;250]
       #ifndef EXT_MOTOR_RANGE 
         OCR3C = motor[0]<<3; //  pin 3
       #else
-        OCR3C = ((motor[0]<<4) - 16000) + 128;
+        OCR3C = ((motor[0]<<4) - 16000);
       #endif
     #endif
     #if (NUMBER_MOTOR > 1)
       #ifndef EXT_MOTOR_RANGE 
         OCR3A = motor[1]<<3; //  pin 5
       #else
-        OCR3A = ((motor[1]<<4) - 16000) + 128;
+        OCR3A = ((motor[1]<<4) - 16000);
       #endif
     #endif
     #if (NUMBER_MOTOR > 2)
       #ifndef EXT_MOTOR_RANGE 
         OCR4A = motor[2]<<3; //  pin 6
       #else
-        OCR4A = ((motor[2]<<4) - 16000) + 128;
+        OCR4A = ((motor[2]<<4) - 16000);
       #endif
     #endif
     #if (NUMBER_MOTOR > 3)
       #ifndef EXT_MOTOR_RANGE 
         OCR3B = motor[3]<<3; //  pin 2
       #else
-        OCR3B = ((motor[3]<<4) - 16000) + 128;
+        OCR3B = ((motor[3]<<4) - 16000);
       #endif
     #endif
     #if (NUMBER_MOTOR > 4)
@@ -188,8 +188,8 @@ void writeMotors() { // [1000;2000] => [125;250]
         OCR4B = motor[4]<<3; //  pin 7
         OCR4C = motor[5]<<3; //  pin 8
       #else
-        OCR4B = ((motor[4]<<4) - 16000) + 128;
-        OCR4C = ((motor[5]<<4) - 16000) + 128;
+        OCR4B = ((motor[4]<<4) - 16000);
+        OCR4C = ((motor[5]<<4) - 16000);
       #endif
     #endif
     #if (NUMBER_MOTOR > 6)

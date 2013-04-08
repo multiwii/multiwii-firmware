@@ -721,8 +721,8 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     static uint8_t telemetryAutoIndex = 0;
     static uint16_t telemetryAutoTimer = 0;
     if ( (telemetry_auto) && (! (++telemetryAutoTimer % LCD_TELEMETRY_AUTO_FREQ) )  ){
-      toggle_telemetry( telemetryAutoSequence[++telemetryAutoIndex % strlen(telemetryAutoSequence)] );
-      //LCDclear(); // make sure to clear away remnants
+      telemetry = telemetryAutoSequence[++telemetryAutoIndex % strlen(telemetryAutoSequence)];
+      LCDclear(); // make sure to clear away remnants
     }
   #endif  
   #ifdef LCD_TELEMETRY
