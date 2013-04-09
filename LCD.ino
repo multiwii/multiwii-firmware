@@ -938,9 +938,6 @@ const char PROGMEM lcd_param_text34 [] = "pAlarm /50"; // change text to represe
   const char PROGMEM lcd_param_text113 [] = "PM DIV    ";
 #endif
 #endif
-#ifdef CYCLETIME_FIXATED
-const char PROGMEM lcd_param_text120 [] = "CYCLE TIME";
-#endif
 #ifdef MMGYRO
 const char PROGMEM lcd_param_text121 [] = "MMGYRO    ";
 #endif
@@ -1202,9 +1199,6 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text84, &conf.servoTrim[4], &__ST,
   &lcd_param_text85, &conf.servoTrim[5], &__ST,
   &lcd_param_text86, &conf.servoTrim[6], &__ST,
-#endif
-#ifdef CYCLETIME_FIXATED
-  &lcd_param_text120, &conf.cycletime_fixated, &__SE,
 #endif
 #ifdef MMGYRO
   &lcd_param_text121, &conf.mmgyro, &__D,

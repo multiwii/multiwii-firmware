@@ -452,9 +452,6 @@ static struct {
     uint16_t pleveldiv;
     uint8_t pint2ma;
   #endif
-  #ifdef CYCLETIME_FIXATED
-    uint16_t cycletime_fixated;
-  #endif
   #ifdef MMGYRO
     uint8_t mmgyro;
   #endif
@@ -837,8 +834,9 @@ void setup() {
   calibratingG = 512;
   calibratingB = 200;  // 10 seconds init_delay + 200 * 25 ms = 15 seconds before ground pressure settles
   #if defined(POWERMETER)
-    for(uint8_t i=0;i<=PMOTOR_SUM;i++)
-      pMeter[i]=0;
+  {
+    for(uint8_t i=0; i<=PMOTOR_SUM; i++) pMeter[i]=0;
+  }
   #endif
   /************************************/
   #if defined(GPS_SERIAL)
@@ -1325,15 +1323,6 @@ void loop () {
   cycleTime = currentTime - previousTime;
   previousTime = currentTime;
 
-  #ifdef CYCLETIME_FIXATED
-    if (conf.cycletime_fixated) {
-      if ((micros()-timestamp_fixated)>conf.cycletime_fixated) {
-      } else {
-         while((micros()-timestamp_fixated)<conf.cycletime_fixated) ; // waste away
-      }
-      timestamp_fixated=micros();
-    }
-  #endif
   //***********************************
   //**** Experimental FlightModes *****
   //***********************************

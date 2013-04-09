@@ -338,7 +338,6 @@
      * howto: http://www.multiwii.com/wiki/index.php?title=Config.h#Individual_Mixing
      */
     //#define MY_PRIVATE_MIXING "filename.h"
-    //#define LEAVE_HEADROOM_FOR_MOTORS 4 // leave room for gyro corrrections only for first 4 motors
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/
@@ -935,13 +934,6 @@
 /****************  SECTION  7 - TUNING & DEVELOPER                                  **************/
 /*****************                                                                 ***************/
 /*************************************************************************************************/
-
-  /************ Experimental: force a stable, fixated (high) cycle time       **********/
-    /* when activated, the displayed cycle time in GUI will not be correct.
-     * Tunable via LCD config menu.
-     * value of 0 turns the feature off.
-     */
-    //#define CYCLETIME_FIXATED 9000 // (*)
 
   /**************************************************************************************/
   /********   special ESC with extended range [0-2000] microseconds  ********************/

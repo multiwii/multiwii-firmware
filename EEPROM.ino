@@ -126,9 +126,6 @@ void update_constants() {
     conf.pleveldiv = PLEVELDIV;
     conf.pint2ma = PINT2mA;
   #endif
-  #ifdef CYCLETIME_FIXATED
-    conf.cycletime_fixated = CYCLETIME_FIXATED;
-  #endif
   #ifdef MMGYRO
     conf.mmgyro = MMGYRO;
   #endif
