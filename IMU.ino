@@ -234,7 +234,8 @@ void getEstimatedAttitude(){
     att.heading = _atan2(
       EstM32.V.Z * EstG32.V.X - EstM32.V.X * EstG32.V.Z,
       EstM32.V.Y * invG * sqGX_sqGZ  - (EstM32.V.X * EstG32.V.X + EstM32.V.Z * EstG32.V.Z) * invG * EstG32.V.Y ); 
-    att.heading += MAG_DECLINIATION * 10; //add declination
+    //att.heading += MAG_DECLINIATION * 10; //add declination
+    att.heading += conf.mag_decliniation; // Set from GUI
     att.heading /= 10;
   #endif
 

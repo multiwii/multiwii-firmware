@@ -93,6 +93,9 @@ void configureReceiver() {
   #if defined(SBUS)
     SerialOpen(1,100000);
   #endif
+  #if defined (RCSERIAL)
+    for (int chan = 0; chan < RC_CHANS; chan++) rcData[chan]=1502;
+  #endif
 }
 
 /**************************************************************************************/

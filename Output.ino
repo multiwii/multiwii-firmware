@@ -148,11 +148,29 @@ void writeServos() {
     #endif
   #endif
 }
+/**************************************************************************************/
+/************          Writes mincommand to selected Motors          ******************/
+/**************************************************************************************/
+#if defined(DYNBALANCE)
+  void ToggleMotorsForBalanceing(){
+    if (!(motorTogglesByte&1))   motor[0] = MINCOMMAND;
+    if (!(motorTogglesByte&2))   motor[1] = MINCOMMAND;
+    if (!(motorTogglesByte&4))   motor[2] = MINCOMMAND;
+    if (!(motorTogglesByte&8))   motor[3] = MINCOMMAND;
+    if (!(motorTogglesByte&16))  motor[4] = MINCOMMAND;
+    if (!(motorTogglesByte&32))  motor[5] = MINCOMMAND;
+    if (!(motorTogglesByte&64))  motor[6] = MINCOMMAND;
+    if (!(motorTogglesByte&128)) motor[7] = MINCOMMAND;
+  }
+#endif
 
 /**************************************************************************************/
 /************  Writes the Motors values to the PWM compare register  ******************/
 /**************************************************************************************/
 void writeMotors() { // [1000;2000] => [125;250]
+  #if defined(DYNBALANCE)
+    ToggleMotorsForBalanceing();
+  #endif
   /****************  Specific PWM Timers & Registers for the MEGA's   *******************/
   #if defined(MEGA)// [1000:2000] => [8000:16000] for timer 3 & 4 for mega
     #if (NUMBER_MOTOR > 0) 
@@ -872,7 +890,9 @@ void initializeServo() {
 void mixTable() {
   int16_t maxMotor;
   uint8_t i;
-
+  #if defined(DYNBALANCE)
+    for(uint8_t axis=0;axis<3;axis++) {axisPID[axis] = 0;} // Zero PID's for DYNBALANCE
+  #endif
   #define PIDMIX(X,Y,Z) rcCommand[THROTTLE] + axisPID[ROLL]*X + axisPID[PITCH]*Y + YAW_DIRECTION * axisPID[YAW]*Z
 
   #if NUMBER_MOTOR > 3

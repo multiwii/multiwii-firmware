@@ -133,6 +133,9 @@ void update_constants() {
     conf.armedtimewarning = ARMEDTIMEWARNING;
   #endif
   conf.minthrottle = MINTHROTTLE;
+  #if defined(MAG)
+    conf.mag_decliniation = MAG_DECLINIATION;
+  #endif
   #ifdef GOVERNOR_P
     conf.governorP = GOVERNOR_P;
     conf.governorD = GOVERNOR_D;

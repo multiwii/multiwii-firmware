@@ -12,11 +12,13 @@
  * 5 - ALTERNATE SETUP - select alternate RX (SBUS, PPM, etc.), alternate ESC-range, etc. here
  * 6 - OPTIONAL FEATURES - enable nice to have features here (FlightModes, LCD, telemetry, battery monitor etc.)
  * 7 - TUNING & DEVELOPER - if you know what you are doing; you have been warned
+ *     - (ESCs calibration, Dynamic Motor/Prop Balancing, Diagnostics,Memory savings.....)
  */
 
 /* Notes:
  * 1. parameters marked with (*) in the comment are stored in eeprom and cannot currently be changed via the GUI but
  *    can be changed via serial monitor or LCD.
+ * 2. parameters marked with (**) in the comment are stored in eeprom and can be changed via the GUI
  */
 
 
@@ -55,7 +57,7 @@
     //#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
     //#define MINTHROTTLE 1064 // special ESC (simonk)
     //#define MINTHROTTLE 1050 // for brushed ESCs like ladybird
-    #define MINTHROTTLE 1150 // (*)
+    #define MINTHROTTLE 1150 // (*) (**)
 
   /****************************    Motor maxthrottle    *******************************/
     /* this is the maximum value for the ESCs at full power, this value can be increased up to 2000 */
@@ -669,7 +671,10 @@
        note: only the RX PIN is used in case of NMEA mode, the GPS is not configured by multiwii
        in NMEA mode the GPS must be configured to output GGA and RMC NMEA sentences (which is generally the default conf for most GPS devices)
        at least 5Hz update rate. uncomment the first line to select the GPS serial port of the arduino */
-    //#define GPS_SERIAL 2 // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
+       
+    //#define GPS_SERIAL 2         // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
+    //#define GPS_PROMINI_SERIAL   // Will Autosense if GPS is connected when ardu boots.
+    
     //#define GPS_BAUD   57600
     #define GPS_BAUD   115200
 
@@ -687,8 +692,7 @@
     //#define MTK_BINARY19
     //#define INIT_MTK_GPS        // initialize MTK GPS for using selected speed, 5Hz update rate and GGA & RMC sentence or binary settings
 
-    //#define GPS_PROMINI_SERIAL    57600 // Will Autosense if GPS is connected when ardu boots
-   
+    
     /* I2C GPS device made with an independant arduino + GPS device
        including some navigation functions
        contribution from EOSBandi   http://code.google.com/p/i2c-gps-nav/ 
@@ -726,7 +730,7 @@
        Convert the degree+minutes into decimal degree by ==> degree+minutes*(1/60)
        Note the sign on declination it could be negative or positive (WEST or EAST) */
     //#define MAG_DECLINIATION  3.96f              //For Budapest Hungary.
-    #define MAG_DECLINIATION  0.0f
+    #define MAG_DECLINIATION  0.0f   //(**)
 
     #define GPS_LEAD_FILTER                      // Adds a forward predictive filterig to compensate gps lag. Code based on Jason Short's lead filter implementation
     
@@ -844,11 +848,11 @@
        vbat = [0;1023]*16/VBATSCALE
        must be associated with #define BUZZER ! */
     //#define VBAT              // uncomment this line to activate the vbat code
-    #define VBATSCALE       131 // (*) change this value if readed Battery voltage is different than real voltage
+    #define VBATSCALE       131 // (*) (**) change this value if readed Battery voltage is different than real voltage
     #define VBATNOMINAL     126 // 12,6V full battery nominal voltage - only used for lcd.telemetry
-    #define VBATLEVEL_WARN1 107 // (*) 10,7V
-    #define VBATLEVEL_WARN2  99 // (*) 9.9V
-    #define VBATLEVEL_CRIT   93 // (*) 9.3V - critical condition: if vbat ever goes below this value, permanent alarm is triggered
+    #define VBATLEVEL_WARN1 107 // (*) (**) 10,7V
+    #define VBATLEVEL_WARN2  99 // (*) (**) 9.9V
+    #define VBATLEVEL_CRIT   93 // (*) (**) 9.3V - critical condition: if vbat ever goes below this value, permanent alarm is triggered
     #define NO_VBAT          16 // Avoid beeping without any battery
 
 
@@ -1002,6 +1006,8 @@
      * reset in GUI will not work on PIDs
      */
     //#define SUPPRESS_DEFAULTS_FROM_GUI
+    
+    //#define DISABLE_SETTINGS_TAB  // Saves ~400bytes on ProMini
 
   /********************************************************************/
   /****           diagnostics                                      ****/
@@ -1067,6 +1073,14 @@
     #define VBAT_SMOOTH 16              // len of averaging vector for smoothing the VBAT readings; should be power of 2; set to 1 to disable
     #define RSSI_SMOOTH 16              // len of averaging vector for smoothing the RSSI readings; should be power of 2; set to 1 to disable
 
+  /********************************************************************/
+  /****           Dynamic Motor/Prop Balancing                     ****/
+  /********************************************************************/
+  /*                   !!! No Fly Mode !!! 
+        Copter is Only possible to controll from GUI Not With RC
+        All sensordata is disabled in Mixtable.*/ 
+		
+    //#define DYNBALANCE   // (**) Dynamic balancing controlled from Gui
 
   /********************************************************************/
   /****           Regression testing                               ****/

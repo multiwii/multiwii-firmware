@@ -1483,7 +1483,6 @@
 #if defined(GPS_PROMINI_SERIAL) && defined(PROMINI)
   #define GPS_SERIAL 0
   #define GPS_PROMINI
-  #define GPS_BAUD   GPS_PROMINI_SERIAL
 #endif
 
 #if defined(GPS_SERIAL)  || defined(I2C_GPS) || defined(GPS_FROM_OSD) || defined(TINY_GPS)
@@ -1622,6 +1621,9 @@
 
 #if defined(PILOTLAMP)
   #define BUZZER
+#endif
+#if defined(DYNBALANCE)
+  #define RCSERIAL
 #endif
 
 //all new Special RX's must be added here

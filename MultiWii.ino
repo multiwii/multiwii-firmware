@@ -289,7 +289,7 @@ struct flags_struct {
   static uint16_t powerMax = 0;           // highest ever current;
   static int32_t  BAROaltMax;         // maximum value
 #endif
-#if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING)  || defined(LOG_PERMANENT)
+#if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
   static uint32_t armedTime = 0;
 #endif
 
@@ -383,6 +383,7 @@ static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 static int16_t axisPID[3];
 static int16_t motor[8];
 static int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1500};
+static uint16_t motorTogglesByte=0; // Is it Possible to change to uint8_t ?... 
 
 // ************************
 // EEPROM Layout definition
@@ -423,6 +424,9 @@ static struct {
   int16_t angleTrim[2];
   uint16_t activate[CHECKBOXITEMS];
   uint8_t powerTrigger1;
+  #if defined(MAG)
+    int16_t mag_decliniation;
+  #endif
   servo_conf_ servoConf[8];
   #ifdef FLYING_WING
     uint16_t wing_left_mid;
