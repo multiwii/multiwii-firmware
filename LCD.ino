@@ -1515,11 +1515,11 @@ void fill_line2_AmaxA() {
   line2[1] = digit100(unit);
   line2[2] = digit10(unit);
   line2[4] = digit1(unit);
-  unit = (powerMax * conf.pint2ma) / 100;
-  line2[10] = digit1000(unit);
-  line2[11] = digit100(unit);
-  line2[12] = digit10(unit);
-  line2[14] = digit1(unit);
+  if (unit > powerValueMaxMAH) powerValueMaxMAH = unit;
+  line2[10] = digit1000(powerValueMaxMAH);
+  line2[11] = digit100(powerValueMaxMAH);
+  line2[12] = digit10(powerValueMaxMAH);
+  line2[14] = digit1(powerValueMaxMAH);
 }
 #endif
 
@@ -2269,9 +2269,6 @@ void lcd_telemetry() {
       #endif
       failsafeEvents = 0; // reset failsafe counter
       i2c_errors_count = 0;
-      #ifdef LCD_TELEMETRY
-        powerMax = 0;
-      #endif
       f.OK_TO_ARM = 1; // allow arming again
       telemetry = 0; // no use to repeat this forever
       break;

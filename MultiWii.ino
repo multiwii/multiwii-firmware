@@ -286,9 +286,9 @@ struct flags_struct {
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY)
   static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
   static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
-  static uint16_t powerMax = 0;           // highest ever current;
   static int32_t  BAROaltMax;             // maximum value
   static uint8_t  GPS_speedMaxKmh = 0;    // maximum speed from gps in km/h
+  static uint16_t powerValueMaxMAH = 0;
 #endif
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
   static uint32_t armedTime = 0;
@@ -611,13 +611,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       p = psum / PSENSOR_SMOOTH;
     #endif
     powerValue = ( conf.psensornull > p ? conf.psensornull - p : p - conf.psensornull); // do not use abs(), it would induce implicit cast to uint and overrun
-    if ( powerValue < 307) {  // only accept reasonable values. 307 is empirical
-    #ifdef LCD_TELEMETRY
-      if (powerValue > powerMax) powerMax = powerValue;
-    #endif
-    } else {
-      powerValue = 307;
-    }
+    if ( powerValue > 307) powerValue = 307;  // only accept reasonable values. 307 is empirical
     pMeter[PMOTOR_SUM] += ((currentTime-lastRead) * (uint32_t)(powerValue*conf.pint2ma))/100000; // [10 mA * msec]
     lastRead = currentTime;
     break;
@@ -916,10 +910,13 @@ void go_arm() {
       #endif
       #ifdef LCD_TELEMETRY // reset some values when arming
         #if BARO
-           BAROaltMax = BaroAlt;
+          BAROaltMax = BaroAlt;
         #endif
         #if GPS
-           GPS_speedMaxKmh = 0;
+          GPS_speedMaxKmh = 0;
+        #endif
+        #ifdef POWERMETER_HARD
+          powerValueMaxMAH = 0;
         #endif
       #endif
       #ifdef LOG_PERMANENT
