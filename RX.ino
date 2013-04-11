@@ -407,8 +407,8 @@ void computeRC() {
     for (chan = 0; chan < RC_CHANS; chan++) {
       #if defined(FAILSAFE)
         uint16_t rcval = readRawRC(chan);
-        if(rcval>FAILSAFE_DETECT_TRESHOLD || chan > 3) {        // update controls channel only if pulse is above FAILSAFE_DETECT_TRESHOLD
-          rcData4Values[chan][rc4ValuesIndex] = rcval;
+        if(rcval>FAILSAFE_DETECT_TRESHOLD || chan > 3 || !f.ARMED) {        // update controls channel only if pulse is above FAILSAFE_DETECT_TRESHOLD
+          rcData4Values[chan][rc4ValuesIndex] = rcval;                      // In disarmed state allow always update for easer configuration.
         }
       #else
         rcData4Values[chan][rc4ValuesIndex] = readRawRC(chan);
