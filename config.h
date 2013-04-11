@@ -1025,10 +1025,9 @@
      * Writes to end of eeprom - should not conflict with stored parameters yet.
      * Logged values: accumulated lifetime, #powercycle/reset/initialize events, #arm events, #disarm events, last armedTime,
      *                #failsafe@disarm, #i2c_errs@disarm
-     * To activate set to size of eeprom for your mcu minus 4 : promini 328p: 1019 ; 2560: 4091.
      * Enable one or more options to show the log
      */
-    //#define LOG_PERMANENT 1019
+    //#define LOG_PERMANENT
     //#define LOG_PERMANENT_SHOW_AT_STARTUP // enable to display log at startup
     //#define LOG_PERMANENT_SHOW_AT_L // enable to display log when receiving 'L'
     //#define LOG_PERMANENT_SHOW_AFTER_CONFIG // enable to display log after exiting LCD config menu

@@ -924,7 +924,7 @@ const char PROGMEM lcd_param_text102 [] = "VBAT SCALE";
 const char PROGMEM lcd_param_text103 [] = "BattWarn 1";
 const char PROGMEM lcd_param_text104 [] = "BattWarn 2";
 const char PROGMEM lcd_param_text106 [] = "BattW Crit";
-const char PROGMEM lcd_param_text107 [] = "Batt NoBat";
+//const char PROGMEM lcd_param_text107 [] = "Batt NoBat";
 #endif
 #ifdef POWERMETER
 const char PROGMEM lcd_param_text33 [] = "pmeter sum";
@@ -2189,10 +2189,13 @@ void lcd_telemetry() {
         case 4: // gps speed
         {
           uint8_t v = (GPS_speed * 0.036f);
-          strcpy_P(line1,PSTR("Speed --km/h"));
+          if (v > GPS_speedMaxKmh) GPS_speedMaxKmh = v;
+          strcpy_P(line1,PSTR("--km/h max--km/h"));
           //                   0123456789012345
-          line1[6] = digit10(v);
-          line1[7] = digit1(v);
+          line1[0] = digit10(v);
+          line1[1] = digit1(v);
+          line1[10] = digit10(GPS_speedMaxKmh);
+          line1[11] = digit1(GPS_speedMaxKmh);
           LCDprintChar(line1);
           break;
         }
@@ -2315,6 +2318,9 @@ void toggle_telemetry(uint8_t t) {
   void dumpPLog(uint8_t full) {
     #ifdef HAS_LCD
       /*LCDclear();*/ LCDnextline();
+      LCDprintChar("LastOff   "); LCDprintChar(plog.running ? "KO" : "ok");  LCDnextline();
+      LCDprintChar("#On      "); lcdprint_int16(plog.start); LCDnextline();
+      LCDprintChar("Life[min]"); lcdprint_int16(plog.lifetime/60); LCDnextline();
       if (full) {
         #ifdef DEBUG
           LCDprintChar("#arm   "); lcdprint_int16(plog.arm); LCDnextline();
@@ -2325,9 +2331,6 @@ void toggle_telemetry(uint8_t t) {
           //            0123456789012345
         #endif
       }
-      LCDprintChar("LastOff   "); LCDprintChar(plog.running ? "KO" : "ok");  LCDnextline();
-      LCDprintChar("#On      "); lcdprint_int16(plog.start); LCDnextline();
-      LCDprintChar("Life[min]"); lcdprint_int16(plog.lifetime/60); LCDnextline();
       /*strcpy_P(line2,PSTR("Fail --- i2c ---"));
       line2[5] = digit100(plog.failsafe);
       line2[6] = digit10(plog.failsafe);

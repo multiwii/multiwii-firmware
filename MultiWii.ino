@@ -287,7 +287,8 @@ struct flags_struct {
   static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
   static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
   static uint16_t powerMax = 0;           // highest ever current;
-  static int32_t  BAROaltMax;         // maximum value
+  static int32_t  BAROaltMax;             // maximum value
+  static uint8_t  GPS_speedMaxKmh = 0;    // maximum speed from gps in km/h
 #endif
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
   static uint32_t armedTime = 0;
@@ -838,14 +839,12 @@ void setup() {
   calibratingG = 512;
   calibratingB = 200;  // 10 seconds init_delay + 200 * 25 ms = 15 seconds before ground pressure settles
   #if defined(POWERMETER)
-  {
-    for(uint8_t i=0; i<=PMOTOR_SUM; i++) pMeter[i]=0;
-  }
+    for(uint8_t j=0; j<=PMOTOR_SUM; j++) pMeter[j]=0;
   #endif
   /************************************/
   #if defined(GPS_SERIAL)
     GPS_SerialInit();
-    for(uint8_t i=0;i<=5;i++){
+    for(uint8_t j=0;j<=5;j++){
       GPS_NewData(); 
       LEDPIN_ON
       delay(20);
@@ -918,6 +917,9 @@ void go_arm() {
       #ifdef LCD_TELEMETRY // reset some values when arming
         #if BARO
            BAROaltMax = BaroAlt;
+        #endif
+        #if GPS
+           GPS_speedMaxKmh = 0;
         #endif
       #endif
       #ifdef LOG_PERMANENT

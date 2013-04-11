@@ -188,7 +188,7 @@ void LoadDefaults() {
 
 #ifdef LOG_PERMANENT
 void readPLog() {
-  eeprom_read_block((void*)&plog, (void*)(LOG_PERMANENT - sizeof(plog)), sizeof(plog));
+  eeprom_read_block((void*)&plog, (void*)(E2END - 4 - sizeof(plog)), sizeof(plog));
   if(calculate_sum((uint8_t*)&plog, sizeof(plog)) != plog.checksum) {
     blinkLED(9,100,3);
     #if defined(BUZZER)
@@ -203,6 +203,6 @@ void readPLog() {
 }
 void writePLog() {
   plog.checksum = calculate_sum((uint8_t*)&plog, sizeof(plog));
-  eeprom_write_block((const void*)&plog, (void*)(LOG_PERMANENT - sizeof(plog)), sizeof(plog));
+  eeprom_write_block((const void*)&plog, (void*)(E2END - 4 - sizeof(plog)), sizeof(plog));
 }
 #endif
