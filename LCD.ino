@@ -1578,8 +1578,8 @@ void fill_line1_cycle() {
   line1[13] = digit1(cycleTime);
 }
 void fill_line2_cycleMinMax() {
-  strcpy_P(line2,PSTR("(-----, -----)us")); //uin16_t cycleTimeMax
 #if (LOG_VALUES >= 2)
+  strcpy_P(line2,PSTR("(-----, -----)us")); //uin16_t cycleTimeMax
   line2[1] = digit10000(cycleTimeMin );
   line2[2] = digit1000(cycleTimeMin );
   line2[3] = digit100(cycleTimeMin );
@@ -1965,7 +1965,7 @@ void lcd_telemetry() {
             uint16_t ats = armedTime / 1000000;
             #ifdef ARMEDTIMEWARNING
               if (ats > conf.armedtimewarning) { LCDattributesReverse(); }
-              LCDbar(7, (ats < conf.armedtimewarning ? (((conf.armedtimewarning-ats+1)*100)/(conf.armedtimewarning+1)) : 0 ));
+              LCDbar(7, (ats < conf.armedtimewarning ? (((conf.armedtimewarning-ats+1)*50)/(conf.armedtimewarning+1)*2) : 0 ));
               LCDattributesOff();
             #endif
             LCDprint(' ');
@@ -2225,9 +2225,11 @@ void lcd_telemetry() {
       LCDprintChar(line1);
       break;
       case 1:// cycle min/max
-      fill_line2_cycleMinMax();
-      LCDprintChar(line2);
-      break;
+        #if (LOG_VALUES >= 2)
+          fill_line2_cycleMinMax();
+          LCDprintChar(line2);
+        #endif
+        break;
       case 2:// Fails, i2c
       output_fails();
       break;

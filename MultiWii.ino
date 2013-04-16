@@ -624,7 +624,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       static uint8_t ind = 0;
       static uint16_t vvec[VBAT_SMOOTH], vsum;
       uint16_t v = analogRead(V_BATPIN);
-      //debug[2] = v;
+      //debug[1] = v;
       #if VBAT_SMOOTH == 1
         analog.vbat = (v<<4) / conf.vbatscale; // result is Vbatt in 0.1V steps
       #else
