@@ -1188,15 +1188,14 @@ void mixTable() {
         servo[5]  = servoMid[5] + (axisPID[ROLL]  * dcServo[1]) ;  //  ROLLServo    D3  => Rudder servo
         motor[0] = PIDMIX(0,0,-1);                                 //  Pin D9
         motor[1] = PIDMIX(0,0,+1);                                 //  Pin D10
-      #endif
-      // For GUI throttle   
-      if (!f.ARMED){
-        servo[6] =  MINCOMMAND; // Kill throttle when disarmed
-        servo[7] =  MINCOMMAND; // Kill throttle when disarmed
-      } else {
-        servo[6] = constrain( motor[1], MINTHROTTLE, MAXTHROTTLE);
-        servo[7] = constrain( motor[0], MINTHROTTLE, MAXTHROTTLE);
-      }
+          
+        if (!f.ARMED){ // For displaying motors in GUI 
+          servo[6] =  MINCOMMAND; servo[7] =  MINCOMMAND; // Kill throttle when disarmed
+        } else {
+          servo[6] = constrain( motor[1], MINTHROTTLE, MAXTHROTTLE);
+          servo[7] = constrain( motor[0], MINTHROTTLE, MAXTHROTTLE);
+        }
+        #endif
       
       // ServoRates
       #if !defined(USE_THROTTLESERVO)&& !defined(DUALCOPTER)
