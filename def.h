@@ -80,7 +80,7 @@
 /**************************************************************************************/
 /***************             motor and servo numbers               ********************/
 /**************************************************************************************/
-#if defined (AIRPLANE) || defined(FLYING_WING)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)
+#if defined (AIRPLANE) || defined(FLYING_WING)
   #define FIXEDWING
 #endif
 
@@ -113,7 +113,7 @@
   #define PRI_SERVO_TO     7
 #elif defined(DUALCOPTER)
   #define NUMBER_MOTOR     2
-  #define PRI_SERVO_FROM   4 // use servo from 5 to 6
+  #define PRI_SERVO_FROM   5 // use servo from 5 to 6
   #define PRI_SERVO_TO     6
   
 #elif defined(AIRPLANE)
@@ -1580,7 +1580,7 @@
   #define MULTITYPE 12   //12  for MultiWinGui
 #elif defined(OCTOFLATX)
   #define MULTITYPE 13   //13  for MultiWinGui 
-#elif defined(AIRPLANE)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)    
+#elif defined(AIRPLANE)
   #define MULTITYPE 14    
 #elif defined (HELI_120_CCPM)   
   #define MULTITYPE 15      
@@ -1590,6 +1590,8 @@
  #define MULTITYPE 17
 #elif defined(HEX6H)
  #define MULTITYPE 18
+#elif defined(DUALCOPTER)|| defined(SINGLECOPTER)
+ #define MULTITYPE 20
 #endif
 
 /**************************************************************************************/

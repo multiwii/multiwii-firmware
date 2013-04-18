@@ -1184,14 +1184,22 @@ void mixTable() {
         // This is a beta requested by  xuant9
         // Assisted modes (gyro only or gyro+acc according to AUX configuration in Gui
         //http://www.kkmulticopter.kr/products_pic/index.html?sn=multicopter_v02_du&name=KKMultiCopter%20Flight%20Controller%20Blackboard%3Cbr%3E
-        servo[5]  = servoMid[5] + (axisPID[PITCH] * dcServo[0]) ;  //  PITCHServo 3  D12
-        servo[6]  = servoMid[6] + (axisPID[ROLL]  * dcServo[1]) ;  //  ROLLServo  4  D11
+        servo[4]  = servoMid[4] + (axisPID[PITCH] * dcServo[0]) ;  //  PITCHServo   D11 => Wing2 servo
+        servo[5]  = servoMid[5] + (axisPID[ROLL]  * dcServo[1]) ;  //  ROLLServo    D3  => Rudder servo
         motor[0] = PIDMIX(0,0,-1);                                 //  Pin D9
         motor[1] = PIDMIX(0,0,+1);                                 //  Pin D10
       #endif
-
+      // For GUI throttle   
+      if (!f.ARMED){
+        servo[6] =  MINCOMMAND; // Kill throttle when disarmed
+        servo[7] =  MINCOMMAND; // Kill throttle when disarmed
+      } else {
+        servo[6] = constrain( motor[1], MINTHROTTLE, MAXTHROTTLE);
+        servo[7] = constrain( motor[0], MINTHROTTLE, MAXTHROTTLE);
+      }
+      
       // ServoRates
-      #if !defined(USE_THROTTLESERVO)
+      #if !defined(USE_THROTTLESERVO)&& !defined(DUALCOPTER)
         motor[0]= rcData[THROTTLE];
       #endif
       for(i=3;i<8;i++){
