@@ -1371,6 +1371,7 @@ void configurationLoop() {
   uint8_t LCD=1;
   uint8_t refreshLCD = 1;
   uint8_t key = 0;
+  uint8_t allow_exit = 0;
   servos2Neutral();
   //#ifndef OLED_I2C_128x64
    initLCD();
@@ -1378,7 +1379,7 @@ void configurationLoop() {
   #if defined OLED_I2C_128x64LOGO_PERMANENT
     LCDclear();
   #endif
-  delay(500);
+//  delay(500);
   p = 0;
   while (LCD == 1) {
     if (refreshLCD) {
@@ -1396,11 +1397,12 @@ void configurationLoop() {
       if (key == LCD_MENU_NEXT) key=LCD_VALUE_UP; else key = LCD_MENU_NEXT;
     #endif
     for (i = ROLL; i <= THROTTLE; i++) {uint16_t Tmp = readRawRC(i); lcdStickState[i] = (Tmp < MINCHECK) | ((Tmp > MAXCHECK) << 1);};
-    if (key == LCD_MENU_SAVE_EXIT || (IsLow(YAW) && IsHigh(PITCH))) LCD = 0; // save and exit
-    else if (key == LCD_MENU_ABORT || (IsHigh(YAW) && IsHigh(PITCH))) LCD = 2;// exit without save: eeprom has only 100.000 write cycles
-    else if (key == LCD_MENU_NEXT || (IsLow(PITCH))) { //switch config param with pitch
+    if (IsMid(YAW) && IsMid(PITCH) && IsMid(ROLL)) allow_exit = 1; 
+    if (key == LCD_MENU_SAVE_EXIT || (IsLow(YAW) && IsHigh(PITCH) && allow_exit))   LCD = 0; // save and exit
+    else if (key == LCD_MENU_ABORT || (IsHigh(YAW) && IsHigh(PITCH) && allow_exit)) LCD = 2;// exit without save: eeprom has only 100.000 write cycles
+    else if (key == LCD_MENU_NEXT || (IsLow(PITCH) && IsMid(YAW))) { //switch config param with pitch
       refreshLCD = 1; p++; if (p>PARAMMAX) p = 0;
-    } else if (key == LCD_MENU_PREV || (IsHigh(PITCH))) {
+    } else if (key == LCD_MENU_PREV || (IsHigh(PITCH) && IsMid(YAW))) {
       refreshLCD = 1; p--; if (p == 0xFF) p = PARAMMAX;
     } else if (key == LCD_VALUE_DOWN || (IsLow(ROLL))) { //+ or - param with low and high roll
       refreshLCD = 1;
