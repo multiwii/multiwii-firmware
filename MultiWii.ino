@@ -945,26 +945,6 @@ void go_disarm() {
     #endif
   }
 }
-void servos2Neutral() {
-  #ifdef TRI
-    servo[TRI_SERVO-1] = 1500; // we center the yaw servo in conf mode
-    writeServos();
-  #endif
-  #ifdef FLYING_WING
-    servo[0]  = conf.wing_left_mid;
-    servo[1]  = conf.wing_right_mid;
-    writeServos();
-  #endif
-  #ifdef AIRPLANE
-    for(uint8_t i = 4; i<7 ;i++) servo[i] = 1500;
-    writeServos();
-  #endif
-  #ifdef HELICOPTER
-    servo[5] = YAW_CENTER;
-    servo[3] = servo[4] = servo[6] = 1500;
-    writeServos();
-  #endif
-}
 
 // ******** Main Loop *********
 void loop () {
@@ -1466,6 +1446,7 @@ void loop () {
   }
 
   mixTable();
-  writeServos();
+  // do not update servos during unarmed calibration of sensors which are sensitive to vibration
+  if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
   writeMotors();
 }
