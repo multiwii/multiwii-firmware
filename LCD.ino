@@ -1411,6 +1411,19 @@ void configurationLoop() {
       deft->type->inc((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), +(IsHigh(THROTTLE) ? 10 : 1) * deft->increment);
       if (p == 0) conf.pid[PITCH].P8 = conf.pid[ROLL].P8;
     }
+    #if defined(AIRPLANE) || defined(HELI_120_CCPM)
+      for(i=3; i<7; i++) servo[i] = MIDRC+conf.servoTrim[i];      
+      writeServos();    
+    #endif
+    #if defined(FLYING_WING)
+      servo[0]  = conf.wing_left_mid;
+      servo[1]  = conf.wing_right_mid;
+      writeServos();    
+    #endif
+    #if defined(TRI)
+      servo[TRI_SERVO-1] = conf.tri_yaw_middle;
+      writeServos();    
+    #endif     
   } // while (LCD == 1)
   blinkLED(20,30,1);
   #if defined(BUZZER)
