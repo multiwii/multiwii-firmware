@@ -219,11 +219,11 @@ const uint8_t PROGMEM myFont[][5] = { // Refer to "Times New Roman" Font Databas
   { 0x17,0x08,0x34,0x2A,0x7D}, //   (119) /4 - 0x00BC Vulgar Fraction One Quarter
   { 0x17,0x08,0x04,0x6A,0x59}, //   (120) /2 - 0x00BD Vulgar Fraction One Half
   { 0x30,0x48,0x45,0x40,0x20}, //   (121)  ? - 0x00BE Inverted Question Mark
-  { 0x40,0x40,0x40,0x40,0x40}, //   (122)    - 0x00BF Bargraph - 0
-  { 0x7E,0x40,0x40,0x40,0x40}, //   (123)    - 0x00BF Bargraph - 1
-  { 0x7E,0x7E,0x40,0x40,0x40}, //   (124)    - 0x00BF Bargraph - 2
-  { 0x7E,0x7E,0x7E,0x40,0x40}, //   (125)    - 0x00BF Bargraph - 3
-  { 0x7E,0x7E,0x7E,0x7E,0x40}, //   (126)    - 0x00BF Bargraph - 4
+  { 0x42,0x00,0x42,0x00,0x42}, //   (122)    - 0x00BF Bargraph - 0
+  { 0x7E,0x42,0x00,0x42,0x00}, //   (123)    - 0x00BF Bargraph - 1
+  { 0x7E,0x7E,0x00,0x42,0x00}, //   (124)    - 0x00BF Bargraph - 2
+  { 0x7E,0x7E,0x7E,0x42,0x00}, //   (125)    - 0x00BF Bargraph - 3
+  { 0x7E,0x7E,0x7E,0x7E,0x00}, //   (126)    - 0x00BF Bargraph - 4
   { 0x7E,0x7E,0x7E,0x7E,0x7E}, //   (127)    - 0x00BF Bargraph - 5
 };
 
@@ -1439,6 +1439,7 @@ void configurationLoop() {
   } else {
     strcpy_P(line1,PSTR("Aborting"));
     LCDprintChar(line1);
+    readEEPROM(); // roll back all values to last saved state
   }
   LCDsetLine(2);
   strcpy_P(line1,PSTR("Exit"));
@@ -1541,7 +1542,9 @@ void output_V() {
     line1[1] = digit100(analog.vbat);
     line1[2] = digit10(analog.vbat);
     line1[4] = digit1(analog.vbat);
-    if (analog.vbat < conf.vbatlevel_warn1) { LCDattributesReverse(); }
+    #ifndef OLED_I2C_128x64
+      if (analog.vbat < conf.vbatlevel_warn1) { LCDattributesReverse(); }
+    #endif
     LCDbar(7, (((analog.vbat - conf.vbatlevel_warn1)*100)/(VBATNOMINAL-conf.vbatlevel_warn1)) );
     LCDattributesOff(); // turn Reverse off for rest of display
     LCDprintChar(line1);
@@ -1555,7 +1558,9 @@ void output_Vmin() {
     line1[1] = digit100(vbatMin);
     line1[2] = digit10(vbatMin);
     line1[4] = digit1(vbatMin);
-    if (vbatMin < conf.vbatlevel_crit) { LCDattributesReverse(); }
+    #ifndef OLED_I2C_128x64
+      if (vbatMin < conf.vbatlevel_crit) { LCDattributesReverse(); }
+    #endif
     LCDbar(7, (vbatMin > conf.vbatlevel_crit ? (((vbatMin - conf.vbatlevel_crit)*100)/(VBATNOMINAL-conf.vbatlevel_crit)) : 0 ));
     LCDattributesOff();
     LCDprintChar(line1);
@@ -1571,7 +1576,9 @@ void output_mAh() {
     line1[5] = digit1(analog.intPowerMeterSum);
     if (conf.powerTrigger1) {
       int8_t v = 100 - ( analog.intPowerMeterSum/(uint16_t)conf.powerTrigger1) *2; // bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
-      if (v <= 0) { LCDattributesReverse(); } // buzzer on? then add some blink for attention
+      #ifndef OLED_I2C_128x64
+        if (v <= 0) { LCDattributesReverse(); } // buzzer on? then add some blink for attention
+      #endif
       LCDbar(7, v);
       LCDattributesOff();
     }
@@ -1975,7 +1982,9 @@ void lcd_telemetry() {
           } else { // ... armed time
             uint16_t ats = armedTime / 1000000;
             #ifdef ARMEDTIMEWARNING
-              if (ats > conf.armedtimewarning) { LCDattributesReverse(); }
+              #ifndef OLED_I2C_128x64
+                if (ats > conf.armedtimewarning) { LCDattributesReverse(); }
+              #endif
               LCDbar(7, (ats < conf.armedtimewarning ? (((conf.armedtimewarning-ats+1)*50)/(conf.armedtimewarning+1)*2) : 0 ));
               LCDattributesOff();
             #endif

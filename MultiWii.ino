@@ -784,35 +784,37 @@ void setup() {
   POWERPIN_OFF;
   initOutput();
   readGlobalSet();
-  #if defined(MEGA)
-    uint16_t i = 65000;                             // only first ~64K for mega board due to pgm_read_byte limitation
-  #else
-    uint16_t i = 32000;
-  #endif
-  uint16_t flashsum = 0;
-  uint8_t pbyt;
-  while(i--) {
-    pbyt =  pgm_read_byte(i);        // calculate flash checksum
-    flashsum += pbyt;
-    flashsum ^= (pbyt<<8);
-  }
-  #ifdef MULTIPLE_CONFIGURATION_PROFILES
-    global_conf.currentSet=2;
-  #else
-    global_conf.currentSet=0;
-  #endif
-  while(1) {                                                    // check settings integrity
-    if(readEEPROM()) {                                          // check current setting integrity
-      if(flashsum != global_conf.flashsum) update_constants();  // update constants if firmware is changed and integrity is OK
+  #ifndef NO_FLASH_CHECK
+    #if defined(MEGA)
+      uint16_t i = 65000;                             // only first ~64K for mega board due to pgm_read_byte limitation
+    #else
+      uint16_t i = 32000;
+    #endif
+    uint16_t flashsum = 0;
+    uint8_t pbyt;
+    while(i--) {
+      pbyt =  pgm_read_byte(i);        // calculate flash checksum
+      flashsum += pbyt;
+      flashsum ^= (pbyt<<8);
     }
-    if(global_conf.currentSet == 0) break;                      // all checks is done
-    global_conf.currentSet--;                                   // next setting for check
-  }
-  readGlobalSet();                            // reload global settings for get last profile number
-  if(flashsum != global_conf.flashsum) {
-    global_conf.flashsum = flashsum;          // new flash sum
-    writeGlobalSet(1);                        // update flash sum in global config
-  }
+    #ifdef MULTIPLE_CONFIGURATION_PROFILES
+      global_conf.currentSet=2;
+    #else
+      global_conf.currentSet=0;
+    #endif
+    while(1) {                                                    // check settings integrity
+      if(readEEPROM()) {                                          // check current setting integrity
+        if (flashsum != global_conf.flashsum) update_constants();  // update constants if firmware is changed and integrity is OK
+      }
+      if(global_conf.currentSet == 0) break;                      // all checks is done
+      global_conf.currentSet--;                                   // next setting for check
+    }
+    readGlobalSet();                            // reload global settings for get last profile number
+    if(flashsum != global_conf.flashsum) {
+      global_conf.flashsum = flashsum;          // new flash sum
+      writeGlobalSet(1);                        // update flash sum in global config
+    }
+  #endif
   readEEPROM();                               // load setting data from last used profile
   blinkLED(2,40,global_conf.currentSet+1);          
   configureReceiver();
