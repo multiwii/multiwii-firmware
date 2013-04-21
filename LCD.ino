@@ -770,7 +770,7 @@ static lcd_type_desc_t LTU8 = {&__u8Fmt, &__u8Inc};
 static lcd_type_desc_t LTU16 = {&__u16Fmt, &__u16Inc};
 static lcd_type_desc_t LTS16 = {&__s16Fmt, &__s16Inc};
 static lcd_type_desc_t LPMM = {&__upMFmt, &__nullInc};
-static lcd_type_desc_t LPMS = {&__upSFmt, &__nullInc};
+//static lcd_type_desc_t LPMS = {&__upSFmt, &__nullInc};
 static lcd_type_desc_t LAUX1 = {&__uAuxFmt1, &__u16Inc};
 static lcd_type_desc_t LAUX2 = {&__uAuxFmt2, &__u16Inc};
 static lcd_type_desc_t LAUX3 = {&__uAuxFmt3, &__u16Inc};
@@ -798,7 +798,7 @@ static lcd_param_def_t __I = {&LTU8, 3, 1, 1};
 static lcd_param_def_t __D = {&LTU8, 0, 1, 1};
 static lcd_param_def_t __RC = {&LTU8, 2, 1, 1};
 static lcd_param_def_t __PM = {&LPMM, 1, 1, 0};
-static lcd_param_def_t __PS = {&LPMS, 1, 1, 0};
+//static lcd_param_def_t __PS = {&LPMS, 1, 1, 0};
 static lcd_param_def_t __PT = {&LTU8, 0, 1, 1};
 static lcd_param_def_t __VB = {&LTU8, 1, 1, 0};
 static lcd_param_def_t __L = {&LTU8, 0, 1, 0};
@@ -929,14 +929,10 @@ const char PROGMEM lcd_param_text106 [] = "BattW Crit";
 #ifdef POWERMETER
 const char PROGMEM lcd_param_text33 [] = "pmeter sum";
 const char PROGMEM lcd_param_text34 [] = "pAlarm /50"; // change text to represent PLEVELSCALE value
-#ifdef POWERMETER_HARD
-  const char PROGMEM lcd_param_text111 [] = "PM SENSOR0";
-  const char PROGMEM lcd_param_text114 [] = "PM INT2MA ";
-#endif
+const char PROGMEM lcd_param_text111 [] = "PM SENSOR0";
+const char PROGMEM lcd_param_text114 [] = "PM INT2MA ";
 //const char PROGMEM lcd_param_text112 [] = "PM DIVSOFT";
-#ifdef POWERMETER_SOFT
-  const char PROGMEM lcd_param_text113 [] = "PM DIV    ";
-#endif
+//const char PROGMEM lcd_param_text113 [] = "PM DIV    ";
 #endif
 #ifdef MMGYRO
 const char PROGMEM lcd_param_text121 [] = "MMGYRO    ";
@@ -1144,15 +1140,11 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #endif
 #endif
 #ifdef POWERMETER
-  &lcd_param_text33, &pMeter[PMOTOR_SUM], &__PS,
+  &lcd_param_text33, &pMeter[PMOTOR_SUM], &__PM,
   &lcd_param_text34, &conf.powerTrigger1, &__PT,
+  &lcd_param_text114, &conf.pint2ma, &__PT,
   #ifdef POWERMETER_HARD
     &lcd_param_text111, &conf.psensornull, &__SE1,
-    &lcd_param_text114, &conf.pint2ma, &__PT,
-  #endif
-  //&lcd_param_text112, &conf.pleveldivsoft, &__SE, // gets computed automatically
-  #ifdef POWERMETER_SOFT
-    &lcd_param_text113, &conf.pleveldiv, &__SE,
   #endif
 #endif
 #if defined(ARMEDTIMEWARNING)
@@ -1280,23 +1272,19 @@ void __uAuxFmt(void * var, uint8_t mul, uint8_t dec, uint8_t aux) {
 #ifdef POWERMETER
   void __upMFmt(void * var, uint8_t mul, uint8_t dec) {
     uint32_t unit = *(uint32_t*)var;
-    // pmeter values need special treatment, too many digits to fit standard 8 bit scheme
-    unit = unit / conf.pleveldivsoft;// [0:1000] * 1000/3 samples per second(loop time) * 60 seconds *5 minutes -> [0:10000 e4] per motor
-                                // (that is full throttle for 5 minutes sampling with high sampling rate for wmp only)
-                                // times 6 for a maximum of 6 motors equals [0:60000 e4] for the sum
-                                // we are only interested in the big picture, so divide by 10.000
-    __u16Fmt(&unit, mul, dec);
+      unit /= PLEVELDIV;
+   __u16Fmt(&unit, mul, dec);
   }
 
-void __upSFmt(void * var, uint8_t mul, uint8_t dec) {
-  uint32_t unit = *(uint32_t*)var;
-#if defined(POWERMETER_SOFT)
-  unit = unit / conf.pleveldivsoft;
-#elif defined(POWERMETER_HARD)
-  unit = unit / conf.pleveldiv;
-#endif
-  __u16Fmt(&unit, mul, dec);
-}
+//void __upSFmt(void * var, uint8_t mul, uint8_t dec) {
+//  uint32_t unit = *(uint32_t*)var;
+//#if defined(POWERMETER_SOFT)
+//  unit = (unit * (uint32_t)conf.pint2ma) / 100000; // was = unit / conf.pleveldivsoft;
+//#elif defined(POWERMETER_HARD)
+//  unit = unit / PLEVELDIV;
+//#endif
+//  __u16Fmt(&unit, mul, dec);
+//}
 #endif
 
 static uint8_t lcdStickState[4];

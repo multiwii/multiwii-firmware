@@ -321,7 +321,7 @@ static int16_t  annex650_overrun_count = 0;
 // power meter
 // **********************
 #if defined(POWERMETER) || ( defined(LOG_VALUES) && (LOG_VALUES >= 3) )
-#define PMOTOR_SUM 8                     // index into pMeter[] for sum
+  #define PMOTOR_SUM 8                     // index into pMeter[] for sum
   static uint32_t pMeter[PMOTOR_SUM + 1];  // we use [0:7] for eight motors,one extra for sum
   static uint8_t pMeterV;                  // dummy to satisfy the paramStruct logic in ConfigurationLoop()
   static uint32_t pAlarm;                  // we scale the eeprom value from [0:255] to this value we can directly compare to the sum in pMeter[6]
@@ -452,10 +452,10 @@ static struct {
     uint8_t vbatlevel_crit;
   #endif
   #ifdef POWERMETER
-    uint16_t psensornull;
-    uint16_t pleveldivsoft;
-    uint16_t pleveldiv;
     uint8_t pint2ma;
+  #endif
+  #ifdef POWERMETER_HARD
+    uint16_t psensornull;
   #endif
   #ifdef MMGYRO
     uint8_t mmgyro;
@@ -708,7 +708,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #endif
 
   #if defined(POWERMETER)
-    analog.intPowerMeterSum = (pMeter[PMOTOR_SUM]/conf.pleveldiv);
+    analog.intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
     intPowerTrigger1 = conf.powerTrigger1 * PLEVELSCALE; 
   #endif
 

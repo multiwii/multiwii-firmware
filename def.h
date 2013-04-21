@@ -1612,6 +1612,9 @@
 
 #if defined(POWERMETER_HARD) || defined(POWERMETER_SOFT)
   #define POWERMETER
+  #define PLEVELSCALE 50 // step size you can use to set alarm
+  #define PLEVELDIVSOFT 100000
+  #define PLEVELDIV 36000
 #endif
 
 #if defined PILOTLAMP 

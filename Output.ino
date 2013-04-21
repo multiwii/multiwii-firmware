@@ -1376,7 +1376,10 @@ void mixTable() {
 
   /****************                      Powermeter Log                    ******************/
   #if (LOG_VALUES >= 3) || defined(POWERMETER_SOFT)
-    uint16_t amp, ampsum;
+  {
+    static uint32_t lastRead = currentTime;
+    uint16_t amp;
+    uint32_t ampsum, ampus; // pseudo ampere * microseconds
     /* true cubic function;
      * when divided by vbat_max=126 (12.6V) for 3 cell battery this gives maximum value of ~ 500
      * when divided by no_vbat=60 (6V) for 3 cell battery this gives maximum value of ~ 1000
@@ -1395,16 +1398,19 @@ void mixTable() {
       ampsum = 0;
       for (i =0;i<NUMBER_MOTOR;i++) {
         amp = amperes[ ((motor[i] - 1000)>>4) ] / analog.vbat; // range mapped from [1000:2000] => [0:1000]; then break that up into 64 ranges; lookup amp
-           #if (LOG_VALUES >= 3)
-           pMeter[i]+= amp; // sum up over time the mapped ESC input 
+        ampus = ( (currentTime-lastRead) * (uint32_t)amp * (uint32_t)conf.pint2ma ) / PLEVELDIVSOFT;
+        #if (LOG_VALUES >= 3)
+          pMeter[i]+= ampus; // sum up over time the mapped ESC input
         #endif
         #if defined(POWERMETER_SOFT)
-           ampsum += amp; // total sum over all motors
+          ampsum += ampus; // total sum over all motors
         #endif
       }
       #if defined(POWERMETER_SOFT)
-        pMeter[PMOTOR_SUM]+= ampsum; // total sum over all motors
+        pMeter[PMOTOR_SUM]+= ampsum / NUMBER_MOTOR; // total sum over all motors
       #endif
     }
+    lastRead = currentTime;
+  }
   #endif
 }

@@ -45,7 +45,7 @@ bool readEEPROM() {
   }
 
   #if defined(POWERMETER)
-    pAlarm = (uint32_t) conf.powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) conf.pleveldiv; // need to cast before multiplying
+    pAlarm = (uint32_t) conf.powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
   #endif
   #ifdef FLYING_WING
     conf.wing_left_mid  = constrain(conf.wing_left_mid, WING_LEFT_MIN,  WING_LEFT_MAX);   //LEFT
@@ -56,9 +56,6 @@ bool readEEPROM() {
   #endif
   #if GPS
     GPS_set_pids();    // at this time we don't have info about GPS init done
-  #endif
-  #ifdef POWERMETER_SOFT
-     conf.pleveldivsoft = conf.pleveldiv;
   #endif
   #if defined(ARMEDTIMEWARNING)
     ArmedTimeWarningMicroSeconds = (conf.armedtimewarning *1000000);
@@ -121,10 +118,10 @@ void update_constants() {
     conf.vbatlevel_crit = VBATLEVEL_CRIT;
   #endif
   #ifdef POWERMETER
-    conf.psensornull = PSENSORNULL;
-    //conf.pleveldivsoft = PLEVELDIVSOFT; // not neccessary; this gets set in the eeprom read function
-    conf.pleveldiv = PLEVELDIV;
     conf.pint2ma = PINT2mA;
+  #endif
+  #ifdef POWERMETER_HARD
+    conf.psensornull = PSENSORNULL;
   #endif
   #ifdef MMGYRO
     conf.mmgyro = MMGYRO;
@@ -140,9 +137,6 @@ void update_constants() {
     conf.governorP = GOVERNOR_P;
     conf.governorD = GOVERNOR_D;
     conf.governorR = GOVERNOR_R;
-  #endif
-  #ifdef POWERMETER_HARD
-    conf.pleveldivsoft = PLEVELDIVSOFT;
   #endif
   writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }
