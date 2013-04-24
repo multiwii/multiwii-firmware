@@ -5,12 +5,18 @@
 // the primitives for exactly one of the available types are setup
 #if defined(LCD_CONF) || defined(LCD_TELEMETRY) || defined(HAS_LCD)
 static char line1[17],line2[17];
+static char template7[7] = " .... ";
+static char template3[3] = ". ";
+
+
 #ifdef DISPLAY_FONT_DSIZE
   static uint8_t line_is_valid = 0;
 #endif
 #if ( defined(LOG_PERMANENT) && defined(DISPLAY_MULTILINE) )
   static uint8_t lnr = 0;
 #endif
+
+#define LCD_FLUSH {/*UartSendData();*/ delay(20); } // blocking - only use when not armed.
 
 char digit10000(uint16_t v) {return '0' + v / 10000;}
 char digit1000(uint16_t v) {return '0' + v / 1000 - (v/10000) * 10;}
@@ -493,6 +499,69 @@ void i2c_LCD03_set_cursor (byte col, byte row) {
   i2c_LCD03_send_cmd(col+1);
 }
 #endif // LCD_LCD03
+
+#if defined(OLED_DIGOLE) // OLED_DIGOLE
+#define OLED_DIGOLE_ADDRESS 0x27 // 7bit address
+// *********************
+// I2C LCD03 primitives
+// *********************
+void i2c_OLED_DIGOLE_init () {
+  i2c_OLED_DIGOLE_send_string("CL");    // clear screen
+  //  i2c_OLED_DIGOLE_send_string("BL");  // backlight _
+  //  i2c_write(0x01);                    // _ on
+  //  i2c_OLED_DIGOLE_send_string("CT");  // contrast _
+  //  i2c_write(7);                       // _ 70
+  //i2c_OLED_DIGOLE_send_string("DSS");    // display start screen _
+  //i2c_write(0);                         // _ off
+  //i2c_OLED_DIGOLE_send_string("CS");    // show cursor _
+  //i2c_write(0);                         // _ off
+  //i2c_OLED_DIGOLE_printString("123456789.123456789.");
+  //delayMicroseconds(100);
+}
+void i2c_OLED_DIGOLE_send_byte (byte c) {
+  i2c_rep_start(OLED_DIGOLE_ADDRESS<<1);
+  i2c_write(0x00);
+  i2c_write(c);
+}
+void i2c_OLED_DIGOLE_send_string(const char *string){  // Sends a string of chars but not the null terminator
+  i2c_rep_start(OLED_DIGOLE_ADDRESS<<1);
+  i2c_write(0x00);
+  while(*string){
+    i2c_write(*string);
+    *string++;
+  }
+  //delayMicroseconds(10);
+}
+void i2c_OLED_DIGOLE_printString(const char *string){  // prints a string of chars
+  i2c_rep_start(OLED_DIGOLE_ADDRESS<<1);
+  i2c_write(0x00);
+  i2c_write('T');
+  i2c_write('T');
+  while(*string){
+    i2c_write(*string);
+    *string++;
+  }
+  i2c_write(0x00);
+  //delayMicroseconds(10);
+}
+void i2c_OLED_DIGOLE_printChar(char c){  // prints a single char - should be printable
+  i2c_rep_start(OLED_DIGOLE_ADDRESS<<1);
+  i2c_write(0x00);
+  i2c_write('T');
+  i2c_write('T');
+  i2c_write(c);
+  i2c_write(0x00);
+  //delayMicroseconds(10);
+}
+void i2c_OLED_DIGOLE_clear(void) {
+  i2c_OLED_DIGOLE_send_string("CLSF");    // set font _
+  #ifdef DISPLAY_FONT_DSIZE
+    i2c_write(0);                         // _ one of 6,10,18,51,120,123,0 - font 0 is 5x16 linesxrows; font 10 is 7x21
+  #else
+    i2c_write(10);
+  #endif
+}
+#endif // OLED_DIGOLE
 /* ------------------------------------------------------------------ */
 void LCDprint(uint8_t i) {
   #ifdef DISPLAY_FONT_DSIZE
@@ -501,7 +570,7 @@ void LCDprint(uint8_t i) {
   #if defined(LCD_SERIAL3W)
     // 1000000 / 9600  = 104 microseconds at 9600 baud.
     // we set it below to take some margin with the running interrupts
-  #define BITDELAY 102
+    #define BITDELAY 102
     LCDPIN_OFF;
     delayMicroseconds(BITDELAY);
     for (uint8_t mask = 0x01; mask; mask <<= 1) {
@@ -518,15 +587,24 @@ void LCDprint(uint8_t i) {
     i2c_LCD03_send_char(i);
   #elif defined(OLED_I2C_128x64)
     i2c_OLED_send_char(i);
+  #elif defined(OLED_DIGOLE)
+    i2c_OLED_DIGOLE_printChar(i);
   #endif
 }
 
 void LCDprintChar(const char *s) {
-  while (*s) {LCDprint(*s++);}
+  #ifdef OLED_DIGOLE
+    #ifdef DISPLAY_FONT_DSIZE
+      if (! line_is_valid) return;
+    #endif
+    i2c_OLED_DIGOLE_printString(s);
+  #else
+    while (*s) {LCDprint(*s++);}
+  #endif
 }
 
 void LCDcrlf() {
-  #if ( defined(OLED_I2C_128x64)|| defined(LCD_VT100) )
+  #if ( defined(OLED_I2C_128x64)|| defined(LCD_VT100) || defined(OLED_DIGOLE) )
     // do nothing - these displays use line positioning
   #else
     LCDprintChar("\r\n");
@@ -551,6 +629,8 @@ void LCDclear() {
     i2c_LCD03_send_cmd(12); // clear screen
   #elif defined(OLED_I2C_128x64)
     i2c_clear_OLED();
+  #elif defined(OLED_DIGOLE)
+    i2c_OLED_DIGOLE_clear();
   #endif
   #if ( defined(LOG_PERMANENT) && defined(DISPLAY_MULTILINE) )
     lnr = 0;
@@ -591,6 +671,8 @@ void LCDsetLine(byte line) { // Line = 1 or 2 - vt100 has lines 1-99
   //    if (line<1 || line>(MULTILINE_PRE+MULTILINE_POST)) line = 1;
   //  #endif
     i2c_OLED_set_line(line-1);
+  #elif defined(OLED_DIGOLE)
+    i2c_OLED_DIGOLE_send_string("TP");  i2c_write(0);i2c_write(line-1); // first column is 0, line numbers start with 0
   #endif
 }
 #if defined(LCD_VT100)
@@ -610,11 +692,9 @@ void LCDsetLine(byte line) { // Line = 1 or 2 - vt100 has lines 1-99
   void LCDalarmAndReverse() {}
 #endif
 
-#define LCD_FLUSH {/*UartSendData();*/ delayMicroseconds(20000); }
-
-void lcdprint_int16(int16_t v) {
+void LCDprintInt16(int16_t v) {
   uint16_t unit;
-  char line[7] = "      ";
+  char line[7]; // = "      ";
   if (v < 0 ) {
     unit = -v;
     line[0] = '-';
@@ -627,10 +707,11 @@ void lcdprint_int16(int16_t v) {
   line[3] = digit100(unit);
   line[4] = digit10(unit);
   line[5] = digit1(unit);
+  line[6] = 0;
   LCDprintChar(line);
 }
 void lcdprint_uint32(uint32_t v) {
-  char line[14] = "-.---.---.---";
+  static char line[14] = "-.---.---.---";
   //               0 2 4 6 8   12
   line[0]  = '0' + v  / 1000000000;
   line[2]  = '0' + v  / 100000000 - (v/1000000000) * 10;
@@ -678,6 +759,8 @@ void initLCD() {
         i2c_OLED_Put_Logo();
       #endif
     #endif
+  #elif defined(OLED_DIGOLE)
+    i2c_OLED_DIGOLE_init();
   #endif
   #ifndef OLED_I2C_128x64LOGO_PERMANENT
     LCDclear();
@@ -846,22 +929,22 @@ const char PROGMEM lcd_param_text23 [] = "Yaw Rate  ";
 const char PROGMEM lcd_param_text24 [] = "Thrott PID";
 #ifdef LOG_VALUES
 #if (LOG_VALUES >= 3)
-const char PROGMEM lcd_param_text25 [] = "pmeter  m0";
-const char PROGMEM lcd_param_text26 [] = "pmeter  m1";
-const char PROGMEM lcd_param_text27 [] = "pmeter  m2";
-const char PROGMEM lcd_param_text28 [] = "pmeter  m3";
-const char PROGMEM lcd_param_text29 [] = "pmeter  m4";
-const char PROGMEM lcd_param_text30 [] = "pmeter  m5";
-const char PROGMEM lcd_param_text31 [] = "pmeter  m6";
-const char PROGMEM lcd_param_text32 [] = "pmeter  m7";
-#endif //                                0123456789
+const char PROGMEM lcd_param_text25 [] = "pmeter m0";
+const char PROGMEM lcd_param_text26 [] = "pmeter m1";
+const char PROGMEM lcd_param_text27 [] = "pmeter m2";
+const char PROGMEM lcd_param_text28 [] = "pmeter m3";
+const char PROGMEM lcd_param_text29 [] = "pmeter m4";
+const char PROGMEM lcd_param_text30 [] = "pmeter m5";
+const char PROGMEM lcd_param_text31 [] = "pmeter m6";
+const char PROGMEM lcd_param_text32 [] = "pmeter m7";
+#endif //                                 0123456789
 #endif
 #ifdef FLYING_WING
-const char PROGMEM lcd_param_text36 [] = "SERvTRIM 1";
-const char PROGMEM lcd_param_text37 [] = "SERvTRIM 2";
+const char PROGMEM lcd_param_text36 [] = "SERvTRIM1";
+const char PROGMEM lcd_param_text37 [] = "SERvTRIM2";
 #endif
-#ifdef TRI //                            0123456789
-const char PROGMEM lcd_param_text38 [] = "SERvTRIM Y";
+#ifdef TRI //                             0123456789
+const char PROGMEM lcd_param_text38 [] = "SERvTRIMy";
 #endif
 //#ifdef LOG_VALUES
 //const char PROGMEM lcd_param_text39 [] = "failsafes ";
@@ -888,10 +971,10 @@ const char PROGMEM lcd_param_text56 [] = "AUX osd   ";
 // 53 to 61 reserved
 #endif
 #ifdef HELI_120_CCPM //                  0123456789
-const char PROGMEM lcd_param_text73 [] = "SERvTRIM N";
-const char PROGMEM lcd_param_text74 [] = "SERvTRIM L";
-const char PROGMEM lcd_param_text75 [] = "SERvTRIM Y";
-const char PROGMEM lcd_param_text76 [] = "SERvTRIM R";
+const char PROGMEM lcd_param_text73 [] = "SERvTRIMn";
+const char PROGMEM lcd_param_text74 [] = "SERvTRIMl";
+const char PROGMEM lcd_param_text75 [] = "SERvTRIMy";
+const char PROGMEM lcd_param_text76 [] = "SERvTRIMr";
 #endif
 #ifdef GYRO_SMOOTHING //                 0123456789
 const char PROGMEM lcd_param_text80 [] = "GSMOOTH R ";
@@ -899,11 +982,11 @@ const char PROGMEM lcd_param_text81 [] = "GSMOOTH P ";
 const char PROGMEM lcd_param_text82 [] = "GSMOOTH Y ";
 #endif
 #ifdef AIRPLANE //                       0123456789
-const char PROGMEM lcd_param_text83 [] = "SERVoMID 3";
-const char PROGMEM lcd_param_text84 [] = "SERVoMID 4";
-const char PROGMEM lcd_param_text85 [] = "SERVoMID 5";
-const char PROGMEM lcd_param_text86 [] = "SERVoMID 6";
-const char PROGMEM lcd_param_text87 [] = "SERVoMID 7";
+const char PROGMEM lcd_param_text83 [] = "SERVoMID3";
+const char PROGMEM lcd_param_text84 [] = "SERVoMID4";
+const char PROGMEM lcd_param_text85 [] = "SERVoMID5";
+const char PROGMEM lcd_param_text86 [] = "SERVoMID6";
+const char PROGMEM lcd_param_text87 [] = "SERVoMID7";
 #endif
 #if GPS
 const char PROGMEM lcd_param_text91 [] = "GPS Pos. P";
@@ -916,7 +999,7 @@ const char PROGMEM lcd_param_text97 [] = "NAV Rate I";
 const char PROGMEM lcd_param_text98 [] = "NAV Rate D";
 #endif
 #if defined (FAILSAFE)
-const char PROGMEM lcd_param_text101 [] = "Fail Throt";
+const char PROGMEM lcd_param_text101 [] = "FailThrot";
 #endif
 #ifdef VBAT
 const char PROGMEM lcd_param_text35 [] =  "batt volt ";
@@ -927,9 +1010,9 @@ const char PROGMEM lcd_param_text106 [] = "BattW Crit";
 //const char PROGMEM lcd_param_text107 [] = "Batt NoBat";
 #endif
 #ifdef POWERMETER
-const char PROGMEM lcd_param_text33 [] = "pmeter sum";
+const char PROGMEM lcd_param_text33 [] = "pmeterSum";
 const char PROGMEM lcd_param_text34 [] = "pAlarm /50"; // change text to represent PLEVELSCALE value
-const char PROGMEM lcd_param_text111 [] = "PM SENSOR0";
+const char PROGMEM lcd_param_text111 [] = "PMsENSOR0";
 const char PROGMEM lcd_param_text114 [] = "PM INT2MA ";
 //const char PROGMEM lcd_param_text112 [] = "PM DIVSOFT";
 //const char PROGMEM lcd_param_text113 [] = "PM DIV    ";
@@ -937,9 +1020,9 @@ const char PROGMEM lcd_param_text114 [] = "PM INT2MA ";
 #ifdef MMGYRO
 const char PROGMEM lcd_param_text121 [] = "MMGYRO    ";
 #endif
-const char PROGMEM lcd_param_text131 [] = "MINTHROTLE";
+const char PROGMEM lcd_param_text131 [] = "MINTHROTL";
 #if defined(ARMEDTIMEWARNING)
-const char PROGMEM lcd_param_text132 [] = "ArmedTWarn";
+const char PROGMEM lcd_param_text132 [] = "ArmdTWarn";
 #endif
 #if defined(GOVERNOR_P)
 const char PROGMEM lcd_param_text133 [] = "Govern   P";
@@ -1215,28 +1298,28 @@ void __u8Fmt(void * var, uint8_t mul, uint8_t dec) {
   unit *= mul;
   char c1 = '0'+unit/100; char c2 = '0'+unit/10-(unit/100)*10; char c3 = '0'+unit-(unit/10)*10;
   switch (dec) {
-    case 0: line2[6] = c1; line2[7] = c2; line2[8] = c3; break;
-    case 1: line2[5] = c1; line2[6] = c2; line2[7] = '.'; line2[8] = c3; break;
-    case 2: line2[5] = c1; line2[6] = '.'; line2[7] = c2; line2[8] = c3; break;
-    case 3: line2[4] = '0'; line2[5] = '.'; line2[6] = c1; line2[7] = c2; line2[8] = c3; break;
+    case 0: line2[3] = c1; line2[4] = c2; line2[5] = c3; break;
+    case 1: line2[2] = c1; line2[3] = c2; line2[4] = '.'; line2[5] = c3; break;
+    case 2: line2[2] = c1; line2[3] = '.'; line2[4] = c2; line2[5] = c3; break;
+    case 3: line2[1] = '0'; line2[2] = '.'; line2[3] = c1; line2[4] = c2; line2[5] = c3; break;
   }
 }
 
 void __u16Fmt(void * var, uint8_t mul, uint8_t dec) {
   uint16_t unit = *(uint16_t*)var;
   unit *= mul;
-  line2[3] = digit10000(unit);
-  line2[4] = digit1000(unit);
-  line2[5] = digit100(unit);
-  line2[6] = digit10(unit);
-  line2[7] = digit1(unit);
+  line2[2] = digit10000(unit);
+  line2[3] = digit1000(unit);
+  line2[4] = digit100(unit);
+  line2[5] = digit10(unit);
+  line2[6] = digit1(unit);
 }
 void __s16Fmt(void * var, uint8_t mul, uint8_t dec) {
   int16_t unit = *(int16_t*)var;
   if (unit >= 0) {
-    line2[2] = ' ';
+    line2[1] = ' ';
   } else {
-    line2[2] = '-';
+    line2[1] = '-';
     unit = -unit;
   }
   __u16Fmt(&unit, mul, dec);
@@ -1337,16 +1420,19 @@ void ConfigRefresh(uint8_t p) {
 
     LCDsetLine(l++);
     if (j == p) {
-      #ifndef OLED_I2C_128x64
+      #if ( !defined(OLED_I2C_128x64) && !defined(OLED_DIGOLE) )
         LCDprint('>');
       #endif
-      LCDattributesReverse();
+      #if ( defined(OLED_DIGOLE) )
+        line2[0] = '*';
+      #endif
+     LCDattributesReverse();
     }
     LCDprintChar(line1); // the label
     if (j == p) {LCDattributesOff(); /*LCDattributesBold();*/}
     //LCDprint(' ');
     LCDprintChar(line2); // the value
-    #ifndef OLED_I2C_128x64
+    #if ( !defined(OLED_I2C_128x64) && !defined(OLED_DIGOLE) )
       if (j == p) {LCDattributesOff(); LCDprint('<');}
     #endif
     LCD_FLUSH;
@@ -1463,24 +1549,31 @@ void configurationLoop() {
 void LCDbar(uint8_t n,uint8_t v) {
   if (v > 200) v = 0;
   else if (v > 100) v = 100;
-#if defined(LCD_SERIAL3W)
-  for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
-#elif defined(LCD_TEXTSTAR)
-  LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v);
-#elif defined(LCD_VT100) || defined(LCD_TTY)
-  uint8_t i, j = (n*v)/100;
-  for (i=0; i< j; i++) LCDprint( '=' );
-  for (i=j; i< n; i++) LCDprint( '.' );
-#elif defined(LCD_ETPP)
-  ETPP_barGraph(n,v);
-#elif defined(LCD_LCD03)
-  for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
-#elif defined(OLED_I2C_128x64)
-  uint8_t i, j = (n*v)/100;
-  for (i=0; i< j; i++) LCDprint( 159 );       // full
-  if (j<n) LCDprint(154 + (v*n*5/100 - 5*j)); // partial fill
-  for (i=j+1; i< n; i++) LCDprint( 154 );    // empty
-#endif
+  #if defined(LCD_SERIAL3W)
+    for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
+  #elif defined(LCD_TEXTSTAR)
+    LCDprint(0xFE);LCDprint('b');LCDprint(n);LCDprint(v);
+  #elif defined(LCD_VT100) || defined(LCD_TTY) // || defined(OLED_DIGOLE)
+    uint8_t i, j = (n*v)/100;
+    for (i=0; i< j; i++) LCDprint( '=' );
+    for (i=j; i< n; i++) LCDprint( '.' );
+  #elif defined(LCD_ETPP)
+    ETPP_barGraph(n,v);
+  #elif defined(LCD_LCD03)
+    for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
+  #elif defined(OLED_I2C_128x64)
+    uint8_t i, j = (n*v)/100;
+    for (i=0; i< j; i++) LCDprint( 159 );       // full
+    if (j<n) LCDprint(154 + (v*n*5/100 - 5*j)); // partial fill
+    for (i=j+1; i< n; i++) LCDprint( 154 );    // empty
+  #elif defined(OLED_DIGOLE)
+    uint8_t i, j = (n*v)/100;
+    char l[n+1];
+    for (i=0; i< j; i++) l[i] = '=';
+    for (i=j; i< n; i++) l[i] = '.';
+    l[n] = 0;
+    LCDprintChar(l);
+  #endif
 }
 
 void fill_line1_deg() {
@@ -1533,7 +1626,7 @@ void output_V() {
     #ifndef OLED_I2C_128x64
       if (analog.vbat < conf.vbatlevel_warn1) { LCDattributesReverse(); }
     #endif
-    LCDbar(7, (((analog.vbat - conf.vbatlevel_warn1)*100)/(VBATNOMINAL-conf.vbatlevel_warn1)) );
+    LCDbar(DISPLAY_COLUMNS-9, (((analog.vbat - conf.vbatlevel_warn1)*100)/(VBATNOMINAL-conf.vbatlevel_warn1)) );
     LCDattributesOff(); // turn Reverse off for rest of display
     LCDprintChar(line1);
   #endif
@@ -1549,7 +1642,7 @@ void output_Vmin() {
     #ifndef OLED_I2C_128x64
       if (vbatMin < conf.vbatlevel_crit) { LCDattributesReverse(); }
     #endif
-    LCDbar(7, (vbatMin > conf.vbatlevel_crit ? (((vbatMin - conf.vbatlevel_crit)*100)/(VBATNOMINAL-conf.vbatlevel_crit)) : 0 ));
+    LCDbar(DISPLAY_COLUMNS-9, (vbatMin > conf.vbatlevel_crit ? (((vbatMin - conf.vbatlevel_crit)*100)/(VBATNOMINAL-conf.vbatlevel_crit)) : 0 ));
     LCDattributesOff();
     LCDprintChar(line1);
   #endif
@@ -1567,7 +1660,7 @@ void output_mAh() {
       #ifndef OLED_I2C_128x64
         if (v <= 0) { LCDattributesReverse(); } // buzzer on? then add some blink for attention
       #endif
-      LCDbar(7, v);
+      LCDbar(DISPLAY_COLUMNS-9, v);
       LCDattributesOff();
     }
     LCDprintChar(line1);
@@ -1688,7 +1781,7 @@ void outputSensor(uint8_t num, int16_t data, int16_t limit) {
 }
 void print_uptime(uint16_t sec) {
   uint16_t m, s;
-  char line[6] = "--:--";
+  static char line[6] = "--:--";
   m = sec / 60;
   s = sec - (60 * m);
   line[0] = digit10(m);
@@ -1700,11 +1793,11 @@ void print_uptime(uint16_t sec) {
 #if GPS
 void fill_line1_gps_lat(uint8_t sat) {
   int32_t aGPS_latitude = abs(GPS_coord[LAT]);
-  strcpy_P(line1,PSTR(".---.-------    "));
+  strcpy_P(line1,PSTR(".---.------- #  "));
   //                   0123456789012345
   line1[0] = GPS_coord[LAT]<0?'S':'N';
   if (sat) {
-    line1[13] = '#';
+    //line1[13] = '#';
     line1[14] = digit10(GPS_numSat);
     line1[15] = digit1(GPS_numSat);
   } //                                987654321
@@ -1865,10 +1958,10 @@ void lcd_telemetry() {
     case 9:
     case '9':
       LCDsetLine(1);
-      lcdprint_int16(debug[0]); LCDprint(' ');
-      lcdprint_int16(debug[1]); LCDprint(' ');
-      lcdprint_int16(debug[2]); LCDprint(' ');
-      lcdprint_int16(debug[3]); LCDprint(' ');
+      LCDprintInt16(debug[0]); LCDprint(' ');
+      LCDprintInt16(debug[1]); LCDprint(' ');
+      LCDprintInt16(debug[2]); LCDprint(' ');
+      LCDprintInt16(debug[3]); LCDprint(' ');
       break;
 #endif
 
@@ -1915,15 +2008,13 @@ void outputMotorServo(uint8_t i, uint16_t unit) {
       "S1", "S2","S3", "S4", "S5", "S6", "S7", "S8",};
   #endif
   LCDprintChar(outputNames[i]);
-  LCDprint(' ');
-  //unit = servo[j-1]; // [1000 ; 2000]
-  LCDprint( digit1000(unit) );
-  LCDprint( digit100(unit) );
-  LCDprint( digit10(unit) );
-  LCDprint( digit1(unit) );
-  LCDprint(' ');
+  template7[1] = digit1000(unit);
+  template7[2] = digit100(unit);
+  template7[3] = digit10(unit);
+  template7[4] = digit1(unit);
+  LCDprintChar(template7);
   unit = constrain(unit,1000,2000);
-  LCDbar(12, (unit-1000)/10 );
+  LCDbar(DISPLAY_COLUMNS-8, (unit-1000)/10 );
   LCDcrlf();
 }
 #endif
@@ -1945,7 +2036,7 @@ void lcd_telemetry() {
 #ifndef SUPPRESS_TELEMETRY_PAGE_1
   #ifdef DISPLAY_FONT_DSIZE
     case '!':
-      { offset = 4; }
+      { offset = MULTILINE_PRE+MULTILINE_POST; }
       // no break !!
   #endif
     case 1:// overall display
@@ -1973,7 +2064,7 @@ void lcd_telemetry() {
               #ifndef OLED_I2C_128x64
                 if (ats > conf.armedtimewarning) { LCDattributesReverse(); }
               #endif
-              LCDbar(7, (ats < conf.armedtimewarning ? (((conf.armedtimewarning-ats+1)*50)/(conf.armedtimewarning+1)*2) : 0 ));
+              LCDbar(DISPLAY_COLUMNS-9, (ats < conf.armedtimewarning ? (((conf.armedtimewarning-ats+1)*50)/(conf.armedtimewarning+1)*2) : 0 ));
               LCDattributesOff();
             #endif
             LCDprint(' ');
@@ -1982,14 +2073,14 @@ void lcd_telemetry() {
           break;
         case 6:// height
           #if BARO
-             {
-               int16_t h = BaroAlt / 100;
-               LCDprint('A'); lcdprint_int16(h); LCDprint('m');
-               h = BAROaltMax / 100;
-               LCDprintChar(" ("); lcdprint_int16(h);
-             }
-           #endif
-           break;
+            {
+              int16_t h = BaroAlt / 100;
+              LCDprint('A'); LCDprintInt16(h); LCDprint('m');
+              h = BAROaltMax / 100;
+              LCDprintChar(" ("); LCDprintInt16(h);
+            }
+          #endif
+          break;
         case 8:// uptime, eeprom set#
           strcpy_P(line1,PSTR("Up ")); LCDprintChar(line1); print_uptime(millis() / 1000 );
           strcpy_P(line1,PSTR("  Cset -")); line1[7] = digit1(global_conf.currentSet); LCDprintChar(line1);
@@ -2033,28 +2124,28 @@ void lcd_telemetry() {
     LCDprint(' ');
     switch (i) {
       case 0:
-        lcdprint_int16(imu.gyroData[0]); LCDprint(' ');
-        outputSensor(10, imu.gyroData[0], GYROLIMIT);
+        LCDprintInt16(imu.gyroData[0]); LCDprint(' ');
+        outputSensor(DISPLAY_COLUMNS-10, imu.gyroData[0], GYROLIMIT);
       break;
       case 1:
-        lcdprint_int16(imu.gyroData[1]); LCDprint(' ');
-        outputSensor(10, imu.gyroData[1], GYROLIMIT);
+        LCDprintInt16(imu.gyroData[1]); LCDprint(' ');
+        outputSensor(DISPLAY_COLUMNS-10, imu.gyroData[1], GYROLIMIT);
       break;
       case 2:
-        lcdprint_int16(imu.gyroData[2]); LCDprint(' ');
-        outputSensor(10, imu.gyroData[2], GYROLIMIT);
+        LCDprintInt16(imu.gyroData[2]); LCDprint(' ');
+        outputSensor(DISPLAY_COLUMNS-10, imu.gyroData[2], GYROLIMIT);
       break;
       case 3:
-        lcdprint_int16(imu.accSmooth[0]); LCDprint(' ');
-        outputSensor(10, imu.accSmooth[0], ACCLIMIT);
+        LCDprintInt16(imu.accSmooth[0]); LCDprint(' ');
+        outputSensor(DISPLAY_COLUMNS-10, imu.accSmooth[0], ACCLIMIT);
       break;
       case 4:
-        lcdprint_int16(imu.accSmooth[1]); LCDprint(' ');
-        outputSensor(10, imu.accSmooth[1], ACCLIMIT);
+        LCDprintInt16(imu.accSmooth[1]); LCDprint(' ');
+        outputSensor(DISPLAY_COLUMNS-10, imu.accSmooth[1], ACCLIMIT);
       break;
       case 5:
-        lcdprint_int16(imu.accSmooth[2]); LCDprint(' ');
-        outputSensor(10, imu.accSmooth[2] - ACC_1G, ACCLIMIT);
+        LCDprintInt16(imu.accSmooth[2]); LCDprint(' ');
+        outputSensor(DISPLAY_COLUMNS-10, imu.accSmooth[2] - ACC_1G, ACCLIMIT);
       break;
     }
     LCDcrlf();
@@ -2063,7 +2154,7 @@ void lcd_telemetry() {
 #ifndef SUPPRESS_TELEMETRY_PAGE_3
   #ifdef DISPLAY_FONT_DSIZE
     case '#':
-      { offset = 4; }
+      { offset = MULTILINE_PRE+MULTILINE_POST; }
     // no break !!
   #endif
     case 3: // checkboxes and modes
@@ -2090,30 +2181,31 @@ void lcd_telemetry() {
   #endif
     case 4: // RX inputs
     case '4':
-    static char channelNames[8][4] = {"Ail", "Ele", "Yaw", "Thr", "Ax1", "Ax2", "Ax3", "Ax4"};
-    i = linenr++ % 8; // 8 channels
-    LCDsetLine((i - POSSIBLE_OFFSET)%8 + 1);
-    //strcpy_P(line1,PSTR("-Thr ---- "));
-    //                   0123456789.12345
-    LCDprint( '0' + i+1);// channel numbering [1;8]
-    LCDprint(' ');
-    LCDprintChar(channelNames[i]);
-    LCDprint(' ');
-    unit = rcData[i];
-    LCDprint( digit1000(unit) );
-    LCDprint( digit100(unit) );
-    LCDprint( digit10(unit) );
-    LCDprint( digit1(unit) );
-    LCDprint(' ');
-    unit = constrain(rcData[i],1000,2000);
-    LCDbar(10, (unit-1000)/10 );
-    LCDcrlf();
-    break;
+    {
+      static char channelNames[8][4] = {"Ail", "Ele", "Yaw", "Thr", "Ax1", "Ax2", "Ax3", "Ax4"};
+      i = linenr++ % 8; // 8 channels
+      LCDsetLine((i - POSSIBLE_OFFSET)%8 + 1);
+      //strcpy_P(line1,PSTR("-Thr ---- "));
+      //                   0123456789.12345
+      template3[0] = ( '0' + i+1);// channel numbering [1;8]
+      LCDprintChar(template3);
+      LCDprintChar(channelNames[i]);
+      unit = rcData[i];
+      template7[1] = digit1000(unit);
+      template7[2] = digit100(unit);
+      template7[3] = digit10(unit);
+      template7[4] = digit1(unit);
+      LCDprintChar(template7);
+      unit = constrain(rcData[i],1000,2000);
+      LCDbar(DISPLAY_COLUMNS-11, (unit-1000)/10 );
+      LCDcrlf();
+      break;
+    }
 #endif
 #ifndef SUPPRESS_TELEMETRY_PAGE_5
   #ifdef DISPLAY_FONT_DSIZE
     case '%':
-      { offset = 4; }
+      { offset = MULTILINE_PRE+MULTILINE_POST; }
       // no break !!
   #endif
     case 5: // outputs motors+servos
@@ -2158,7 +2250,7 @@ void lcd_telemetry() {
   #if GPS
     #ifdef DISPLAY_FONT_DSIZE
     case '&':
-      { offset = 4; }
+      { offset = MULTILINE_PRE+MULTILINE_POST; }
       // no break !!
     #endif
     case 7: // GPS
@@ -2247,19 +2339,19 @@ void lcd_telemetry() {
 #ifdef DEBUG
       case 4:// debug
       LCDprintChar("D1 ");
-      lcdprint_int16(debug[0]);
+      LCDprintInt16(debug[0]);
       break;
       case 5:// debug
       LCDprintChar("D2 ");
-      lcdprint_int16(debug[1]);
+      LCDprintInt16(debug[1]);
       break;
       case 6:// debug
       LCDprintChar("D3 ");
-      lcdprint_int16(debug[2]);
+      LCDprintInt16(debug[2]);
       break;
       case 7:// debug
       LCDprintChar("D4 ");
-      lcdprint_int16(debug[3]);
+      LCDprintInt16(debug[3]);
       break;
 #endif
     }
@@ -2326,15 +2418,15 @@ void toggle_telemetry(uint8_t t) {
     #ifdef HAS_LCD
       /*LCDclear();*/ LCDnextline();
       LCDprintChar("LastOff   "); LCDprintChar(plog.running ? "KO" : "ok");  LCDnextline();
-      LCDprintChar("#On      "); lcdprint_int16(plog.start); LCDnextline();
-      LCDprintChar("Life[min]"); lcdprint_int16(plog.lifetime/60); LCDnextline();
+      LCDprintChar("#On      "); LCDprintInt16(plog.start); LCDnextline();
+      LCDprintChar("Life[min]"); LCDprintInt16(plog.lifetime/60); LCDnextline();
       if (full) {
         #ifdef DEBUG
-          LCDprintChar("#arm   "); lcdprint_int16(plog.arm); LCDnextline();
-          LCDprintChar("#disarm"); lcdprint_int16(plog.disarm); LCDnextline();
-          LCDprintChar("last[s]"); lcdprint_int16(plog.armed_time/1000000); LCDnextline();
-          LCDprintChar("#fail@dis"); lcdprint_int16(plog.failsafe); LCDnextline();
-          LCDprintChar("#i2c@dis "); lcdprint_int16(plog.i2c); LCDnextline();
+          LCDprintChar("#arm   "); LCDprintInt16(plog.arm); LCDnextline();
+          LCDprintChar("#disarm"); LCDprintInt16(plog.disarm); LCDnextline();
+          LCDprintChar("last[s]"); LCDprintInt16(plog.armed_time/1000000); LCDnextline();
+          LCDprintChar("#fail@dis"); LCDprintInt16(plog.failsafe); LCDnextline();
+          LCDprintChar("#i2c@dis "); LCDprintInt16(plog.i2c); LCDnextline();
           //            0123456789012345
         #endif
       }

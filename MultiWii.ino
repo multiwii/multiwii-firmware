@@ -601,7 +601,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     static uint8_t ind = 0;
     static uint16_t pvec[PSENSOR_SMOOTH], psum;
     uint16_t p =  analogRead(PSENSORPIN);
-    //lcdprint_int16(p); LCDcrlf();
+    //LCDprintInt16(p); LCDcrlf();
     //debug[0] = p;
     #if PSENSOR_SMOOTH != 1
       psum += p;
@@ -862,7 +862,7 @@ void setup() {
    GPS_Enable = 1;
   #endif
   
-  #if defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) || defined(LCD_TELEMETRY_STEP)
+  #if defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) || defined(OLED_DIGOLE) || defined(LCD_TELEMETRY_STEP)
     initLCD();
   #endif
   #ifdef LCD_TELEMETRY_DEBUG

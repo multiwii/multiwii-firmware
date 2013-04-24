@@ -57,6 +57,27 @@
   #define LOG_PERMANENT_SHOW_AT_STARTUP
   #define LOG_PERMANENT_SHOW_AT_L
   #define LOG_PERMANENT_SERVICE_LIFETIME 36000
+  #define GOVERNOR_P 0
+  #define GOVERNOR_D 10
+  #define GOVERNOR_R 10
+#elif COPTERTEST == 6
+  #define HEX6H
+  #define DIYFLYING_MAGE_V1
+  #define BUZZER
+  #define RCOPTIONSBEEP // ca. 80byte
+  #define ARMEDTIMEWARNING 480 // 8 min = 480seconds
+  #define VBAT
+  #define GOVERNOR_P 0
+  #define GOVERNOR_D 10
+  #define GOVERNOR_R 10
+  #define MEGA_HW_PWM_SERVOS
+  #define SERVO_RFR_RATE  300    // In Hz, you can set it from 20 to 400Hz, used only in HW PWM mode
+  #define LOG_VALUES 1
+  #define DEBUG
+  #define MULTIPLE_CONFIGURATION_PROFILES
+  #define DISPLAY_FONT_DSIZE
+  #define OLED_DIGOLE
+  #define LCD_CONF
 #elif defined(COPTERTEST)
   #error "*** this test is not yet defined"
 #endif
@@ -1794,7 +1815,7 @@
 #endif
 
 #if !(defined(DISPLAY_2LINES)) && !(defined(DISPLAY_MULTILINE))
-  #if (defined(LCD_VT100)) || (defined(OLED_I2C_128x64))
+  #if (defined(LCD_VT100)) || (defined(OLED_I2C_128x64) || defined(OLED_DIGOLE) )
     #define DISPLAY_MULTILINE
   #else
     #define DISPLAY_2LINES
@@ -1807,6 +1828,9 @@
   #endif
   #if !(defined(MULTILINE_POST))
     #define MULTILINE_POST 9
+  #endif
+  #if !(defined(DISPLAY_COLUMNS))
+    #define DISPLAY_COLUMNS 40
   #endif
 #elif (defined(OLED_I2C_128x64) && defined(DISPLAY_FONT_DSIZE))
   #if !(defined(MULTILINE_PRE))
@@ -1822,6 +1846,30 @@
   #if !(defined(MULTILINE_POST))
     #define MULTILINE_POST 5
   #endif
+  #if !(defined(DISPLAY_COLUMNS))
+    #define DISPLAY_COLUMNS 21
+  #endif
+#elif (defined(OLED_DIGOLE) && defined(DISPLAY_FONT_DSIZE))
+  #if !(defined(MULTILINE_PRE))
+    #define MULTILINE_PRE 2
+  #endif
+  #if !(defined(MULTILINE_POST))
+    #define MULTILINE_POST 3
+  #endif
+#elif (defined(OLED_DIGOLE))
+  #if !(defined(MULTILINE_PRE))
+    #define MULTILINE_PRE 3
+  #endif
+  #if !(defined(MULTILINE_POST))
+    #define MULTILINE_POST 4
+  #endif
+  #if !(defined(DISPLAY_COLUMNS))
+    #define DISPLAY_COLUMNS 21
+  #endif
+#endif
+
+#if !(defined(DISPLAY_COLUMNS))
+  #define DISPLAY_COLUMNS 16
 #endif
 
 #if !defined(ALT_HOLD_THROTTLE_NEUTRAL_ZONE)
@@ -1870,12 +1918,12 @@
         #error "NUMBER_MOTOR is not set, most likely you have not defined any type of multicopter"
 #endif
 
-#if (defined(LCD_DUMMY) || defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_TTY) || defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) )
+#if (defined(LCD_DUMMY) || defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_TTY) || defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) ) || defined(OLED_DIGOLE)
   #define HAS_LCD
 #endif
 
 #if (defined(LCD_CONF) || defined(LCD_TELEMETRY)) && !(defined(HAS_LCD) )
-  #error "LCD_CONF or LCD_TELEMETRY defined, and choice of LCD not defined.  Uncomment one of LCD_SERIAL3W, LCD_TEXTSTAR, LCD_VT100, LCD_TTY or LCD_ETPP, LCD_LCD03, OLED_I2C_128x64"
+  #error "LCD_CONF or LCD_TELEMETRY defined, and choice of LCD not defined.  Uncomment one of LCD_SERIAL3W, LCD_TEXTSTAR, LCD_VT100, LCD_TTY or LCD_ETPP, LCD_LCD03, OLED_I2C_128x64, OLED_DIGOLE"
 #endif
 
 #if defined(POWERMETER_SOFT) && !(defined(VBAT))
