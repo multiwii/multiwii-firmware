@@ -296,7 +296,7 @@ void evaluateCommand() {
      /*conf.mincommand  = */read16();
      /*conf.midrc       = */read16();
      #if MAG
-       conf.mag_decliniation = read16()-1000;
+       conf.mag_decliniation = read16();
      #else
        read16();
      #endif
@@ -324,7 +324,7 @@ void evaluateCommand() {
        serialize32(0);
      #endif
      #if MAG
-       serialize16(conf.mag_decliniation+1000);
+       serialize16(conf.mag_decliniation);
      #else
        serialize16(0);
      #endif
