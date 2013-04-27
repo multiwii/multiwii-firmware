@@ -131,7 +131,7 @@ void update_constants() {
   #endif
   conf.minthrottle = MINTHROTTLE;
   #if defined(MAG)
-    conf.mag_decliniation = MAG_DECLINIATION;
+    conf.mag_decliniation = (int16_t)(MAG_DECLINIATION * 10);
   #endif
   #ifdef GOVERNOR_P
     conf.governorP = GOVERNOR_P;

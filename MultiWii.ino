@@ -797,25 +797,31 @@ void setup() {
       flashsum += pbyt;
       flashsum ^= (pbyt<<8);
     }
-    #ifdef MULTIPLE_CONFIGURATION_PROFILES
-      global_conf.currentSet=2;
-    #else
-      global_conf.currentSet=0;
-    #endif
-    while(1) {                                                    // check settings integrity
-      if(readEEPROM()) {                                          // check current setting integrity
-        if (flashsum != global_conf.flashsum) update_constants();  // update constants if firmware is changed and integrity is OK
-      }
-      if(global_conf.currentSet == 0) break;                      // all checks is done
-      global_conf.currentSet--;                                   // next setting for check
+  #endif
+  #ifdef MULTIPLE_CONFIGURATION_PROFILES
+    global_conf.currentSet=2;
+  #else
+    global_conf.currentSet=0;
+  #endif
+  while(1) {                                                    // check settings integrity
+  #ifndef NO_FLASH_CHECK
+    if(readEEPROM()) {                                          // check current setting integrity
+      if(flashsum != global_conf.flashsum) update_constants();  // update constants if firmware is changed and integrity is OK
     }
-    readGlobalSet();                            // reload global settings for get last profile number
+  #else
+    readEEPROM();                                               // check current setting integrity
+  #endif  
+    if(global_conf.currentSet == 0) break;                      // all checks is done
+    global_conf.currentSet--;                                   // next setting for check
+  }
+  readGlobalSet();                              // reload global settings for get last profile number
+  #ifndef NO_FLASH_CHECK
     if(flashsum != global_conf.flashsum) {
       global_conf.flashsum = flashsum;          // new flash sum
       writeGlobalSet(1);                        // update flash sum in global config
     }
   #endif
-  readEEPROM();                               // load setting data from last used profile
+  readEEPROM();                                 // load setting data from last used profile
   blinkLED(2,40,global_conf.currentSet+1);          
   configureReceiver();
   #if defined (PILOTLAMP) 
