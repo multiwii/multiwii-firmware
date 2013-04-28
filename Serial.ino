@@ -59,7 +59,6 @@ const uint32_t capability = 0+BIND_CAPABLE;
 #define MSP_WP                   118   //out message         get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
 #define MSP_BOXIDS               119   //out message         get the permanent IDs associated to BOXes
 #define MSP_SERVO_CONF           120   //out message         Servo settings
-#define MSP_MISC_CONF            121   //out message         minthrottle,maxthrottle,mincommand,midrc,Vbat  Only prepared
 
 #define MSP_SET_RAW_RC           200   //in message          8 rc chan
 #define MSP_SET_RAW_GPS          201   //in message          fix, numsat, lat, lon, alt, speed
@@ -74,7 +73,6 @@ const uint32_t capability = 0+BIND_CAPABLE;
 #define MSP_SELECT_SETTING       210   //in message          Select Setting Number (0-2)
 #define MSP_SET_HEAD             211   //in message          define a new heading hold direction
 #define MSP_SET_SERVO_CONF       212   //in message          Servo settings
-#define MSP_SET_MISC_CONF        213   //in message          minthrottle,maxthrottle,mincommand,midrc Only prepared
 #define MSP_SET_MOTOR            214   //in message          PropBalance function
 
 #define MSP_BIND                 240   //in message          no param
@@ -250,14 +248,63 @@ void evaluateCommand() {
    case MSP_SET_RC_TUNING:
      s_struct_w((uint8_t*)&conf.rcRate8,7);
      break;
+   #if !defined(DISABLE_SETTINGS_TAB)
    case MSP_SET_MISC:
+     struct {
+       uint16_t a,b,c,d,e,f;
+       uint8_t  g,h,i,j;
+     } set_misc;
+     s_struct_w((uint8_t*)&set_misc,16);
      #if defined(POWERMETER)
-       conf.powerTrigger1 = read16() / PLEVELSCALE;
+       conf.powerTrigger1 = set_misc.a / PLEVELSCALE;
      #endif
-     headSerialReply(0);
+     conf.minthrottle = set_misc.b;
+     #if MAG
+       conf.mag_decliniation = set_misc.f;
+     #endif
+     #if defined(VBAT)
+       conf.vbatscale        = set_misc.g;
+       conf.vbatlevel_warn1  = set_misc.h;
+       conf.vbatlevel_warn2  = set_misc.i;
+       conf.vbatlevel_crit   = set_misc.j;
+     #endif
      break;
+   case MSP_MISC:
+     struct {
+       uint16_t a,b,c,d,e,f;
+       uint32_t g;
+       uint16_t h;
+       uint8_t  i,j,k,l;
+     } misc;
+     misc.a = intPowerTrigger1;
+     misc.b = conf.minthrottle;
+     misc.c = MAXTHROTTLE;
+     misc.d = MINCOMMAND;
+     misc.e = MIDRC;
+     #ifdef LOG_PERMANENT
+       misc.f = plog.arm;
+       misc.g = plog.lifetime + (plog.armed_time / 1000000); // <- computation must be moved outside from serial
+     #else
+       misc.f = 0; misc.g =0;
+     #endif
+     #if MAG
+       misc.h = conf.mag_decliniation;
+     #else
+       misc.h = 0;
+     #endif
+     #ifdef VBAT
+       misc.i = conf.vbatscale;
+       misc.j = conf.vbatlevel_warn1;
+       misc.k = conf.vbatlevel_warn2;
+       misc.l = conf.vbatlevel_crit;
+     #else
+       misc.i = 0;misc.j = 0;misc.k = 0;misc.l = 0;
+     #endif
+     s_struct((uint8_t*)&misc,22);
+     break;
+   #endif
    #if defined (DYNBALANCE)
-     case MSP_SET_MOTOR:
+     case MSP_SET_MOTOR: // <- must be rewritten to send 8x motors values with no toggle principle. it should be a mirror of MSP_MOTOR
        motorTogglesByte = read8();
        f.ARMED = 0;
        break;
@@ -287,58 +334,6 @@ void evaluateCommand() {
      id.cap   = capability;
      s_struct((uint8_t*)&id,7);
      break;
-     
-   #if !defined(DISABLE_SETTINGS_TAB)  
-   case MSP_SET_MISC_CONF:
-     conf.minthrottle = read16();
-     // Prepared for future use
-     /*conf.maxthrottle = */read16();
-     /*conf.mincommand  = */read16();
-     /*conf.midrc       = */read16();
-     #if MAG
-       conf.mag_decliniation = read16();
-     #else
-       read16();
-     #endif
-     #if defined(VBAT)
-       conf.vbatscale        = read8();
-       conf.vbatlevel_warn1  = read8();
-       conf.vbatlevel_warn2  = read8();
-       conf.vbatlevel_crit   = read8();
-     #else
-       for(uint8_t i=0;i<4;i++) read8();
-     #endif
-     headSerialReply(0);
-     break;
-   case MSP_MISC_CONF:
-     headSerialReply(20);
-     serialize16(conf.minthrottle);
-     serialize16(MAXTHROTTLE);
-     serialize16(MINCOMMAND );
-     serialize16(MIDRC);
-     #ifdef LOG_PERMANENT
-       serialize16(plog.arm);
-       serialize32(plog.lifetime + (plog.armed_time / 1000000));//lifetime
-     #else
-       serialize16(0);
-       serialize32(0);
-     #endif
-     #if MAG
-       serialize16(conf.mag_decliniation);
-     #else
-       serialize16(0);
-     #endif
-     #ifdef VBAT
-       serialize8(conf.vbatscale      );
-       serialize8(conf.vbatlevel_warn1);
-       serialize8(conf.vbatlevel_warn2);
-       serialize8(conf.vbatlevel_crit );
-     #else
-       for(uint8_t i=0;i<4;i++) serialize8(0);
-     #endif
-     break;
-   #endif
-     
    case MSP_STATUS:
      struct {
        uint16_t cycleTime,i2c_errors_count,sensor;
@@ -398,7 +393,7 @@ void evaluateCommand() {
        if(rcOptions[BOXOSD]) tmp |= 1<<BOXOSD;
      #endif
      if(f.ARMED) tmp |= 1<<BOXARM;
-     st.flag=tmp;
+     st.flag             = tmp;
      st.set              = global_conf.currentSet;
      s_struct((uint8_t*)&st,11);
      break;
@@ -471,9 +466,6 @@ void evaluateCommand() {
      for(uint8_t i=0;i<CHECKBOXITEMS;i++) {
        serialize8(pgm_read_byte(&(boxids[i])));
      }
-     break;
-   case MSP_MISC:
-     s_struct((uint8_t*)&intPowerTrigger1,2);
      break;
    case MSP_MOTOR_PINS:
      s_struct((uint8_t*)&PWM_PIN,8);
