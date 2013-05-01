@@ -64,8 +64,8 @@ void configureReceiver() {
       //Trottle on pin 7
       DDRE &= ~(1 << 6); // pin 7 to input
       PORTE |= (1 << 6); // enable pullups
-      EIMSK |= (1 << INT6); // enable interuppt
       EICRB |= (1 << ISC60);
+      EIMSK |= (1 << INT6); // enable interuppt
       // Aux2 pin on PBO (D17/RXLED)
       #if defined(RCAUX2PIND17)
         DDRB &= ~(1 << 0); // set D17 to input 
@@ -74,8 +74,8 @@ void configureReceiver() {
       #if defined(RCAUX2PINRXO)
         DDRD &= ~(1 << 2); // RX to input
         PORTD |= (1 << 2); // enable pullups
-        EIMSK |= (1 << INT2); // enable interuppt
         EICRA |= (1 << ISC20);
+        EIMSK |= (1 << INT2); // enable interuppt
       #endif
     #endif
     
