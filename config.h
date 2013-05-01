@@ -391,10 +391,6 @@
          You have to invert the S-Bus-Serial Signal e.g. with a Hex-Inverter like IC SN74 LS 04 */
       //#define SBUS
 
-    /******************* RC signal from the serial port via Multiwii Serial Protocol *********/
-      //#define RCSERIAL
-
-
 
 
 /*************************************************************************************************/
@@ -727,11 +723,11 @@
     #define NAV_SET_TAKEOFF_HEADING    true      // true - when copter arrives to home position it rotates it's head to takeoff direction
     
     
-    /* Get your magnetic decliniation from here : http://magnetic-declination.com/
+    /* Get your magnetic declination from here : http://magnetic-declination.com/
        Convert the degree+minutes into decimal degree by ==> degree+minutes*(1/60)
        Note the sign on declination it could be negative or positive (WEST or EAST) */
-    //#define MAG_DECLINIATION  3.96f              //For Budapest Hungary.
-    #define MAG_DECLINIATION  0.0f   //(**)
+    //#define MAG_DECLINATION  3.96f              //For Budapest Hungary.
+    #define MAG_DECLINATION  0.0f   //(**)
 
     #define GPS_LEAD_FILTER                      // Adds a forward predictive filterig to compensate gps lag. Code based on Jason Short's lead filter implementation
     

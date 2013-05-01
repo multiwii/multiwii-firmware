@@ -11,11 +11,11 @@ void computeIMU () {
   //gyro only: the delay to read 2 consecutive values can be reduced to only 0.65ms
   #if defined(NUNCHUCK)
     annexCode();
-    while((micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
+    while((uint16_t)(micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
     timeInterleave=micros();
     ACC_getADC();
     getEstimatedAttitude(); // computation time must last less than one interleaving delay
-    while((micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
+    while((uint16_t)(micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
     timeInterleave=micros();
     f.NUNCHUKDATA = 1;
     while(f.NUNCHUKDATA) ACC_getADC(); // For this interleaving reading, we must have a gyro update at this point (less delay)
@@ -38,10 +38,10 @@ void computeIMU () {
       gyroADCp[axis] =  imu.gyroADC[axis];
     timeInterleave=micros();
     annexCode();
-    if ((micros()-timeInterleave)>650) {
+    if ((uint16_t)(micros()-timeInterleave)>650) {
        annex650_overrun_count++;
     } else {
-       while((micros()-timeInterleave)<650) ; //empirical, interleaving delay between 2 consecutive reads
+       while((uint16_t)(micros()-timeInterleave)<650) ; //empirical, interleaving delay between 2 consecutive reads
     }
     #if GYRO
       Gyro_getADC();
@@ -210,7 +210,7 @@ void getEstimatedAttitude(){
   }
 
   accMag = accMag*100/((int32_t)ACC_1G*ACC_1G);
-  validAcc = 72 < accMag && accMag < 133;
+  validAcc = 72 < (uint16_t)accMag && (uint16_t)accMag < 133;
   // Apply complimentary filter (Gyro drift correction)
   // If accel magnitude >1.15G or <0.85G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
   // To do that, we just skip filter, as EstV already rotated by Gyro
@@ -234,7 +234,7 @@ void getEstimatedAttitude(){
     att.heading = _atan2(
       EstM32.V.Z * EstG32.V.X - EstM32.V.X * EstG32.V.Z,
       (EstM.V.Y * sqGX_sqGZ  - (EstM32.V.X * EstG32.V.X + EstM32.V.Z * EstG32.V.Z) * EstG.V.Y)*invG ); 
-    att.heading += conf.mag_decliniation; // Set from GUI
+    att.heading += conf.mag_declination; // Set from GUI
     att.heading /= 10;
   #endif
 
@@ -261,8 +261,9 @@ void getEstimatedAttitude(){
 
 #if BARO
 uint8_t getEstimatedAltitude(){
-  static uint32_t deadLine;
   static int32_t baroGroundPressure;
+  static float vel = 0.0f;
+  int16_t vel_tmp;
   static uint16_t previousT;
   uint16_t currentT = micros();
   uint16_t dTime;
@@ -306,11 +307,6 @@ uint8_t getEstimatedAltitude(){
     accZ -= accZoffset>>3;
     applyDeadband(accZ, ACC_Z_DEADBAND);
 
-    static float vel = 0.0f;
-
-    // Integrator - velocity, cm/sec
-    vel += accZ * ACC_VelScale * dTime;
-
     static int32_t lastBaroAlt;
     int16_t baroVel = (alt.EstAlt - lastBaroAlt) * 1000000.0f / dTime;
     lastBaroAlt = alt.EstAlt;
@@ -318,12 +314,15 @@ uint8_t getEstimatedAltitude(){
     baroVel = constrain(baroVel, -300, 300); // constrain baro velocity +/- 300cm/s
     applyDeadband(baroVel, 10); // to reduce noise near zero
 
+    // Integrator - velocity, cm/sec
+    vel += accZ * ACC_VelScale * dTime;
+
     // apply Complimentary Filter to keep the calculated velocity based on baro velocity (i.e. near real velocity). 
     // By using CF it's possible to correct the drift of integrated accZ (velocity) without loosing the phase, i.e without delay
     vel = vel * 0.985f + baroVel * 0.015f;
 
     //D
-    int16_t vel_tmp = vel;
+    vel_tmp = vel;
     applyDeadband(vel_tmp, 5);
     alt.vario = vel_tmp;
     BaroPID -= constrain(conf.pid[PIDALT].D8 * vel_tmp >>4, -150, 150);

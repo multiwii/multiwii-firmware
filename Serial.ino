@@ -225,7 +225,8 @@ void evaluateCommand() {
 
   switch(cmdMSP[CURRENTPORT]) {
    case MSP_SET_RAW_RC:
-     s_struct_w((uint8_t*)&rcData,16);
+     s_struct_w((uint8_t*)&rcSerial,16);
+     rcSerialCount = 25; // 0.5s transition
      break;
    #if GPS
    case MSP_SET_RAW_GPS:
@@ -260,7 +261,7 @@ void evaluateCommand() {
      #endif
      conf.minthrottle = set_misc.b;
      #if MAG
-       conf.mag_decliniation = set_misc.f;
+       conf.mag_declination = set_misc.f;
      #endif
      #if defined(VBAT)
        conf.vbatscale        = set_misc.g;
@@ -288,7 +289,7 @@ void evaluateCommand() {
        misc.f = 0; misc.g =0;
      #endif
      #if MAG
-       misc.h = conf.mag_decliniation;
+       misc.h = conf.mag_declination;
      #else
        misc.h = 0;
      #endif

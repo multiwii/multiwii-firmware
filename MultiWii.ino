@@ -364,7 +364,9 @@ static int16_t failsafeEvents = 0;
 volatile int16_t failsafeCnt = 0;
 
 static int16_t rcData[RC_CHANS];    // interval [1000;2000]
+static int16_t rcSerial[8];         // interval [1000;2000] - is rcData coming from MSP
 static int16_t rcCommand[4];        // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW 
+static uint8_t rcSerialCount = 0;   // a counter to select legacy RX when there is no more MSP rc serial data
 static int16_t lookupPitchRollRC[5];// lookup table for expo & RC rate PITCH+ROLL
 static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 
@@ -425,8 +427,8 @@ static struct {
   int16_t angleTrim[2];
   uint16_t activate[CHECKBOXITEMS];
   uint8_t powerTrigger1;
-  #if defined(MAG)
-    int16_t mag_decliniation;
+  #if MAG
+    int16_t mag_declination;
   #endif
   servo_conf_ servoConf[8];
   #ifdef FLYING_WING

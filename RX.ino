@@ -93,9 +93,6 @@ void configureReceiver() {
   #if defined(SBUS)
     SerialOpen(1,100000);
   #endif
-  #if defined (RCSERIAL)
-    for (int chan = 0; chan < RC_CHANS; chan++) rcData[chan]=1502;
-  #endif
 }
 
 /**************************************************************************************/
@@ -398,7 +395,7 @@ void computeRC() {
   static uint16_t rcData4Values[RC_CHANS][4], rcDataMean[RC_CHANS];
   static uint8_t rc4ValuesIndex = 0;
   uint8_t chan,a;
-  #if !(defined(RCSERIAL) || defined(OPENLRSv2MULTI)) // dont know if this is right here
+  #if !defined(OPENLRSv2MULTI) // dont know if this is right here
     #if defined(SBUS)
       readSBus();
     #endif
@@ -418,6 +415,13 @@ void computeRC() {
       rcDataMean[chan]= (rcDataMean[chan]+2)>>2;
       if ( rcDataMean[chan] < (uint16_t)rcData[chan] -3)  rcData[chan] = rcDataMean[chan]+2;
       if ( rcDataMean[chan] > (uint16_t)rcData[chan] +3)  rcData[chan] = rcDataMean[chan]-2;
+      if (chan<8 && rcSerialCount > 0) { // rcData comes from MSP and overrides RX Data until rcSerialCount reaches 0
+        rcSerialCount --;
+        #if defined(FAILSAFE)
+          failsafeCnt = 0;
+        #endif
+        if (rcSerial[chan] >900) {rcData[chan] = rcSerial[chan];} // only relevant channels are overridden
+      }
     }
   #endif
 }
