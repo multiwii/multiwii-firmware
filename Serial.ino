@@ -226,7 +226,7 @@ void evaluateCommand() {
   switch(cmdMSP[CURRENTPORT]) {
    case MSP_SET_RAW_RC:
      s_struct_w((uint8_t*)&rcSerial,16);
-     rcSerialCount = 25; // 0.5s transition
+     rcSerialCount = 25; // 0.5s transition 
      break;
    #if GPS
    case MSP_SET_RAW_GPS:
@@ -253,21 +253,26 @@ void evaluateCommand() {
    case MSP_SET_MISC:
      struct {
        uint16_t a,b,c,d,e,f;
-       uint8_t  g,h,i,j;
+       uint32_t g;
+       uint16_t h;
+       uint8_t  i,j,k,l;
      } set_misc;
-     s_struct_w((uint8_t*)&set_misc,16);
+     s_struct_w((uint8_t*)&set_misc,22);
      #if defined(POWERMETER)
        conf.powerTrigger1 = set_misc.a / PLEVELSCALE;
      #endif
      conf.minthrottle = set_misc.b;
+     #ifdef FAILSAFE 
+       conf.failsafe_throttle = set_misc.e;
+     #endif  
      #if MAG
-       conf.mag_declination = set_misc.f;
+       conf.mag_declination = set_misc.h;
      #endif
      #if defined(VBAT)
-       conf.vbatscale        = set_misc.g;
-       conf.vbatlevel_warn1  = set_misc.h;
-       conf.vbatlevel_warn2  = set_misc.i;
-       conf.vbatlevel_crit   = set_misc.j;
+       conf.vbatscale        = set_misc.i;
+       conf.vbatlevel_warn1  = set_misc.j;
+       conf.vbatlevel_warn2  = set_misc.k;
+       conf.vbatlevel_crit   = set_misc.l;
      #endif
      break;
    case MSP_MISC:
@@ -281,7 +286,11 @@ void evaluateCommand() {
      misc.b = conf.minthrottle;
      misc.c = MAXTHROTTLE;
      misc.d = MINCOMMAND;
-     misc.e = MIDRC;
+     #ifdef FAILSAFE 
+       misc.e = conf.failsafe_throttle;
+     #else  
+       misc.e = 0;
+     #endif
      #ifdef LOG_PERMANENT
        misc.f = plog.arm;
        misc.g = plog.lifetime + (plog.armed_time / 1000000); // <- computation must be moved outside from serial

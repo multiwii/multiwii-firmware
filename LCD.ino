@@ -1246,17 +1246,17 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 //  &lcd_param_text107, &conf.no_vbat, &__P,
 #endif
 #ifdef FLYING_WING
-  &lcd_param_text36, &conf.wing_left_mid, &__SE,
-  &lcd_param_text37, &conf.wing_right_mid, &__SE,
+  &lcd_param_text36, &conf.servoConf[3].middle, &__SE,
+  &lcd_param_text37, &conf.servoConf[4].middle, &__SE,
 #endif
 #ifdef TRI
-  &lcd_param_text38, &conf.tri_yaw_middle, &__SE,
+  &lcd_param_text38, &conf.servoConf[TRI_SERVO-1].middle, &__SE, &__SE,
 #endif
 #ifdef HELI_120_CCPM
-  &lcd_param_text73, &conf.servoTrim[3], &__ST,
-  &lcd_param_text74, &conf.servoTrim[4], &__ST,
-  &lcd_param_text76, &conf.servoTrim[6], &__ST,
-  &lcd_param_text75, &conf.servoTrim[5], &__ST,
+  &lcd_param_text73, &conf.servoConf[3].middle, &__SE,
+  &lcd_param_text74, &conf.servoConf[4].middle, &__SE,
+  &lcd_param_text76, &conf.servoConf[6].middle, &__SE,
+  &lcd_param_text75, &conf.servoConf[5].middle, &__SE,
 #endif
 #ifdef GOVERNOR_P
   &lcd_param_text133, &conf.governorP, &__D,
@@ -1270,10 +1270,10 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text82, &conf.Smoothing[2], &__D,
 #endif
 #ifdef AIRPLANE
-  &lcd_param_text83, &conf.servoTrim[3], &__ST,
-  &lcd_param_text84, &conf.servoTrim[4], &__ST,
-  &lcd_param_text85, &conf.servoTrim[5], &__ST,
-  &lcd_param_text86, &conf.servoTrim[6], &__ST,
+  &lcd_param_text83, &conf.servoConf[3].middle, &__SE,
+  &lcd_param_text84, &conf.servoConf[4].middle, &__SE,
+  &lcd_param_text85, &conf.servoConf[5].middle, &__SE,
+  &lcd_param_text86, &conf.servoConf[6].middle, &__SE,
 #endif
 #ifdef MMGYRO
   &lcd_param_text121, &conf.mmgyro, &__D,
@@ -1485,19 +1485,17 @@ void configurationLoop() {
       deft->type->inc((void*)pgm_read_word(&(lcd_param_ptr_table[(p * 3) + 1])), +(IsHigh(THROTTLE) ? 10 : 1) * deft->increment);
       if (p == 0) conf.pid[PITCH].P8 = conf.pid[ROLL].P8;
     }
-    #if defined(AIRPLANE) || defined(HELI_120_CCPM)
-      for(i=3; i<7; i++) servo[i] = MIDRC+conf.servoTrim[i];      
+    #if defined(PRI_SERVO_TO)
+      #define MAX_SERV 7
+      #if(PRI_SERVO_TO < MAX_SERV)
+        #define MAX_SERV PRI_SERVO_TO
+      #endif
+      for(i=PRI_SERVO_FROM-1; i<MAX_SERV; i++) servo[i] = conf.servoConf[i].middle;
+      #if defined(HELICOPTER) && YAWMOTOR
+        servo[5] =  MINCOMMAND;
+      #endif  
       writeServos();    
     #endif
-    #if defined(FLYING_WING)
-      servo[0]  = conf.wing_left_mid;
-      servo[1]  = conf.wing_right_mid;
-      writeServos();    
-    #endif
-    #if defined(TRI)
-      servo[TRI_SERVO-1] = conf.tri_yaw_middle;
-      writeServos();    
-    #endif     
   } // while (LCD == 1)
   blinkLED(20,30,1);
   #if defined(BUZZER)

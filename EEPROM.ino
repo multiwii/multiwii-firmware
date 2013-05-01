@@ -47,13 +47,6 @@ bool readEEPROM() {
   #if defined(POWERMETER)
     pAlarm = (uint32_t) conf.powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
   #endif
-  #ifdef FLYING_WING
-    conf.wing_left_mid  = constrain(conf.wing_left_mid, WING_LEFT_MIN,  WING_LEFT_MAX);   //LEFT
-    conf.wing_right_mid = constrain(conf.wing_right_mid, WING_RIGHT_MIN, WING_RIGHT_MAX); //RIGHT
-  #endif
-  #ifdef TRI
-    conf.tri_yaw_middle = constrain(conf.tri_yaw_middle, TRI_YAW_CONSTRAINT_MIN, TRI_YAW_CONSTRAINT_MAX); //REAR
-  #endif
   #if GPS
     GPS_set_pids();    // at this time we don't have info about GPS init done
   #endif
@@ -89,19 +82,6 @@ void writeParams(uint8_t b) {
 }
 
 void update_constants() { 
-  #ifdef FLYING_WING
-    conf.wing_left_mid  = WING_LEFT_MID; 
-    conf.wing_right_mid = WING_RIGHT_MID; 
-  #endif
-  #ifdef TRI
-    conf.tri_yaw_middle = TRI_YAW_MIDDLE;
-  #endif
-  #if defined HELICOPTER || defined(AIRPLANE)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)
-    {
-      int16_t s[8] = SERVO_OFFSET;
-      for(uint8_t i=0;i<8;i++) conf.servoTrim[i] = s[i];
-    }
-  #endif
   #if defined(GYRO_SMOOTHING)
     {
       uint8_t s[3] = GYRO_SMOOTHING;
@@ -167,11 +147,12 @@ void LoadDefaults() {
     conf.angleTrim[0] = 0; conf.angleTrim[1] = 0;
     conf.powerTrigger1 = 0;
   #endif
+  int8_t sr[8] = SERVO_RATES;
   for(i=0;i<8;i++) {
       conf.servoConf[i].min = 1020;
       conf.servoConf[i].max = 2000;
       conf.servoConf[i].middle = 1500;
-      conf.servoConf[i].rate = 100;
+      conf.servoConf[i].rate = sr[i];
   }
   #ifdef FIXEDWING
     conf.dynThrPID = 50;

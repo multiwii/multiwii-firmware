@@ -205,18 +205,8 @@
 /*****************                                                                 ***************/
 /*************************************************************************************************/
 
-  /********************************    TRI    *********************************/
     #define YAW_DIRECTION 1
     //#define YAW_DIRECTION -1 // if you want to reverse the yaw correction direction
-    /* you can change the tricopter servo travel here */
-      #define TRI_YAW_CONSTRAINT_MIN 1020
-      #define TRI_YAW_CONSTRAINT_MAX 2000
-      #define TRI_YAW_MIDDLE 1500 // (*) tail servo center pos. - use this for initial trim; later trim midpoint via LCD
-
-  /********************************    BI    *********************************/
-    /* you can change the bicopter servo travel direction here */     
-    //#define BI_PITCH_DIRECTION 1
-     #define BI_PITCH_DIRECTION -1
 
    /********************************    ARM/DISARM    *********************************/
    /* optionally disable stick combinations to arm/disarm the motors.
@@ -229,63 +219,24 @@
     //#define SERVO_MIX_TILT
     //#define SERVO_TILT
 
-    /* The following lines enable pitch and roll servo streetching to values defined as TILT_MIN and TILT_MAX 
-       This work only with haedware PWM's for gimbal servos (MEGA board with uncommented MEGA_HW_PWM_SERVOS option) 
-       Tipical TILT_MIN should be about 500 and TILT_MAX abiut 2500 for 180 degres servo range */
-    //#define SERVO_STRETH
-
-    #define TILT_PITCH_MIN    1020    //servo travel min, don't set it below 1020 except mega HW pwm's is used
-    #define TILT_PITCH_MAX    2000    //servo travel max, max value=2000
-    #define TILT_PITCH_MIDDLE 1500    //servo neutral value
-    #define TILT_PITCH_PROP   10      //servo proportional (tied to angle) ; can be negative to invert movement
-    #define TILT_PITCH_AUX_CH AUX3    //AUX channel to overwrite CAM pitch (AUX1-AUX4), comment to disable manual input and free the AUX channel
-    #define TILT_ROLL_MIN     1020
-    #define TILT_ROLL_MAX     2000
-    #define TILT_ROLL_MIDDLE  1500
-    #define TILT_ROLL_PROP    10
-    #define TILT_ROLL_AUX_CH  AUX4    //AUX channel to overwrite CAM Roll (AUX1-AUX4), comment to disable manual input and free the AUX channel
-
     /* camera trigger function : activated via Rc Options in the GUI, servo output=A2 on promini */
+    // trigger interval can be changed via (*GUI*) or via AUX channel
     //#define CAMTRIG
-    #define CAM_SERVO_HIGH 2000  // the position of HIGH state servo
-    #define CAM_SERVO_LOW 1020   // the position of LOW state servo
     #define CAM_TIME_HIGH 1000   // the duration of HIGH state servo expressed in ms
-    #define CAM_TIME_LOW 1000    // the duration of LOW state servo expressed in ms
-
-  /***********************          Flying Wing                   ***********************/
-    /* you can change change servo orientation and servo min/max values here
-       valid for all flight modes, even passThrough mode
-       need to setup servo directions here; no need to swap servos amongst channels at rx */
-    #define PITCH_DIRECTION_L 1 // left servo - pitch orientation
-    #define PITCH_DIRECTION_R -1  // right servo - pitch orientation (opposite sign to PITCH_DIRECTION_L, if servos are mounted in mirrored orientation)
-    #define ROLL_DIRECTION_L 1 // left servo - roll orientation
-    #define ROLL_DIRECTION_R 1  // right servo - roll orientation  (same sign as ROLL_DIRECTION_L, if servos are mounted in mirrored orientation)
-    #define WING_LEFT_MID  1500 // (*) left servo center pos. - use this for initial trim; later trim midpoint via LCD
-    #define WING_RIGHT_MID 1500 // (*) right servo center pos. - use this for initial trim; later trim midpoint via LCD
-    #define WING_LEFT_MIN  1020 // limit servo travel range must be inside [1020;2000]
-    #define WING_LEFT_MAX  2000 // limit servo travel range must be inside [1020;2000]
-    #define WING_RIGHT_MIN 1020 // limit servo travel range must be inside [1020;2000]
-    #define WING_RIGHT_MAX 2000 // limit servo travel range must be inside [1020;2000]
 
   /***********************          Airplane                       ***********************/
-    //#define USE_THROTTLESERVO // For use of standard 50Hz servo on throttle.
-    #define SERVO_RATES      {100, 100, 100, 100, 100, 100, 100, 100} // Rates in 0-100%
-    #define SERVO_DIRECTION  { -1,   1,   1,   -1,  1,   1,   1,   1 } // Invert servos by setting -1
+    #define USE_THROTTLESERVO // For use of standard 50Hz servo on throttle.
 
     //#define FLAPPERONS    AUX4          // Mix Flaps with Aileroins.
     #define FLAPPERON_EP   { 1500, 1700 } // Endpooints for flaps on a 2 way switch else set {1020,2000} and program in radio.
     //#define FLAPPERON_EP   { 1200, 1500 } // Or Flapperons up for CrowMix 
     #define FLAPPERON_INVERT { 1, -1 }    // Change direction om flapperons { Wing1, Wing2 }
     
-    //#define FLAPS         AUX4          // Traditional Flaps on A2 invert with SERVO_DIRECTION servo[2).
-    #define FLAP_EP      { 1500, 1900 }   // Endpooints for flaps on a 2 way switch else set {1020,2000} and program in radio.
-
+    //#define FLAPS                       // Traditional Flaps on SERVO3.
     //#define FLAPSPEED     3             // Make flaps move slowm Higher value is Higher Speed.
 
   /***********************      Common for Heli & Airplane         ***********************/
     //#define D12_POWER      // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12
-    #define SERVO_OFFSET     {  0,   0,   0,  0,   0,   0,  0,   0 } // (*) Adjust Servo MID Offset & Swash angles
-    // Selectable channels:=    ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4
 
     /* Governor: attempts to maintain rpm through pitch and voltage changes
      * predictive approach: observe input signals and voltage and guess appropriate corrections.
@@ -299,24 +250,16 @@
   /***********************          Heli                           ***********************/
     /* Channel to control CollectivePitch */
     #define COLLECTIVE_PITCH      THROTTLE
-    /* Set Maximum available movement for the servos. Depending on model */
-    #define SERVO_ENDPOINT_HIGH {2000,2000,2000,2000,2000,2000,2000,2000};
-    #define SERVO_ENDPOINT_LOW  {1020,1020,1020,1020,1020,1020,1020,1020};
 
     /* Limit the range of Collective Pitch. 100% is Full Range each way and position for Zero Pitch */
     #define COLLECTIVE_RANGE { 80, 0, 80 }// {Min%, ZeroPitch offset from 1500, Max%}.
-    #define YAW_CENTER             1500      // Use servo[5] SERVO_ENDPOINT_HIGH/LOW for the endpoits.
     #define YAWMOTOR                 0       // If a motor is used as YAW Set to 1 else set to 0.
 
-    /* Servo mixing for heli 120 Use 1/10 fractions (ex.5 = 5/10 = 1/2)
+    /* Servo mixing for heli 120
                          {Coll,Nick,Roll} */
-    #define SERVO_NICK   { +10, -10, -0 }
+    #define SERVO_NICK   { +10, -10,  0 }
     #define SERVO_LEFT   { +10, +5, +10 } 
     #define SERVO_RIGHT  { +10, +5, -10 } 
-
-    /* Servo mixing for heli 90 
-                            {Coll,Nick,Roll} */
-    #define SERVO_DIRECTIONS { +1, -1, -1 } // -1 will invert servo
 
     /* Limit Maximum controll for Roll & Nick  in 0-100% */
     #define CONTROL_RANGE   { 100, 100 }      //  { ROLL,PITCH }
@@ -324,16 +267,6 @@
     /* use servo code to drive the throttle output. You want this for analog servo driving the throttle on IC engines.
        if inactive, throttle output will be treated as a motor output, so it can drive an ESC */
     //#define HELI_USE_SERVO_FOR_THROTTLE
-
-  /***********************      Single and DualCopter Settings     ***********************/
-    /* Change to -1 to reverse servomovement per axis
-       Servosettings for SingleCopter */
-    #define SINGLECOPTRER_YAW   {1, 1, 1, 1} // Left, Right,Front,Rear
-    #define SINGLECOPTRER_SERVO {1,-1, 1,-1} // Pitch,Pitch,Roll, Roll    
-  
-    /* Servosettings for DualCopter */
-     #define DUALCOPTER_SERVO {1,1} //Pitch,Roll
-    /* Use  SERVO_OFFSET and SERVO_RATES in Heli and Airplane section for centering and endpoints */
 
   /***********************      your individual mixing     ***********************/
     /* if you want to override an existing entry in the mixing table, you may want to avoid esditing the
@@ -390,7 +323,6 @@
       /* The following line apply only for Futaba S-Bus Receiver on MEGA boards at RX1 only (Serial 1).
          You have to invert the S-Bus-Serial Signal e.g. with a Hex-Inverter like IC SN74 LS 04 */
       //#define SBUS
-
 
 
 /*************************************************************************************************/
@@ -671,10 +603,9 @@
        
     //#define GPS_SERIAL 2         // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
     //#define GPS_PROMINI_SERIAL   // Will Autosense if GPS is connected when ardu boots.
-    
-    //#define GPS_BAUD   57600
-    #define GPS_BAUD   115200
 
+    // avoid using 115200 baud because with 16MHz arduino the 115200 baudrate have more than 2% speed error (57600 have 0.8% error)
+    #define GPS_BAUD   57600
 
    /* GPS protocol 
        NMEA  - Standard NMEA protocol GGA, GSA and RMC  sentences are needed
@@ -975,7 +906,7 @@
       SERVO7  = pin 7   (elevator for fixed wing)
       SERVO8  = pin 8   (motor for fixed wing)       */ 
 
-    //#define MEGA_HW_PWM_SERVOS
+    #define MEGA_HW_PWM_SERVOS
     #define SERVO_RFR_RATE  50    // In Hz, you can set it from 20 to 400Hz, used only in HW PWM mode
  
   /********************************************************************/

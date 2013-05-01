@@ -101,6 +101,8 @@
 /**************************************************************************************/
 /***************             motor and servo numbers               ********************/
 /**************************************************************************************/
+#define SERVO_RATES      {30,30,100,100,100,100,100,100}
+
 #if defined (AIRPLANE) || defined(FLYING_WING)
   #define FIXEDWING
 #endif
@@ -124,10 +126,14 @@
   #define PRI_SERVO_FROM   1 // use servo from 1 to 2
   #define PRI_SERVO_TO     2
 #elif defined(FLYING_WING)
-  #define NUMBER_MOTOR     1
-  #define PRI_SERVO_FROM   1 // use servo from 1 to 2
-  #define PRI_SERVO_TO     2
-  
+  #define PRI_SERVO_FROM   4
+  #if defined (USE_THROTTLESERVO)
+    #define NUMBER_MOTOR   0
+    #define PRI_SERVO_TO   8 // use servo from 4,5 and 8
+  #else
+    #define NUMBER_MOTOR   1
+    #define PRI_SERVO_TO   5 // use servo from 4 to 5
+  #endif
 #elif defined(SINGLECOPTER)
   #define NUMBER_MOTOR     1
   #define PRI_SERVO_FROM   4 // use servo from 4 to 7
@@ -136,20 +142,20 @@
   #define NUMBER_MOTOR     2
   #define PRI_SERVO_FROM   5 // use servo from 5 to 6
   #define PRI_SERVO_TO     6
-  
 #elif defined(AIRPLANE)
-    #if defined (USE_THROTTLESERVO)
-      #define NUMBER_MOTOR     0
-    #else
-      #define NUMBER_MOTOR     1
-    #endif
-    #if defined(FLAPS) 
-      #define PRI_SERVO_FROM   3 // use servo from 3 to 8    
-      #undef CAMTRIG             // Disable Camtrig on A2
-    #else
-      #define PRI_SERVO_FROM   4 // use servo from 4 to 8
-    #endif  
-  #define PRI_SERVO_TO     8
+  #if defined (USE_THROTTLESERVO)
+    #define NUMBER_MOTOR   0
+    #define PRI_SERVO_TO   8
+  #else
+    #define NUMBER_MOTOR   1
+    #define PRI_SERVO_TO   7
+  #endif
+  #if defined(FLAPS) 
+    #define PRI_SERVO_FROM   3 // use servo from 3 to 8    
+    #undef CAMTRIG             // Disable Camtrig on A2
+  #else
+    #define PRI_SERVO_FROM   4 // use servo from 4 to 8
+  #endif  
 #elif defined(BI)
   #define NUMBER_MOTOR     2
   #define PRI_SERVO_FROM   5 // use servo from 5 to 6
@@ -165,14 +171,13 @@
 #elif defined(OCTOX8) || defined(OCTOFLATP) || defined(OCTOFLATX)
   #define NUMBER_MOTOR     8
 #elif defined(HELICOPTER)
+  #define PRI_SERVO_FROM   4
   #ifdef HELI_USE_SERVO_FOR_THROTTLE
-    #define NUMBER_MOTOR     0 // use servo to drive throttle output
-    #define PRI_SERVO_FROM   4 // use servo from 4 to 8
-    #define PRI_SERVO_TO     8
+    #define NUMBER_MOTOR   0 // use servo to drive throttle output
+    #define PRI_SERVO_TO   8 // use servo from 4 to 8
   #else
-    #define NUMBER_MOTOR     1 // use 1 motor for throttle
-    #define PRI_SERVO_FROM   4 // use servo from 4 to 7
-    #define PRI_SERVO_TO     7
+    #define NUMBER_MOTOR   2 // use motor1 for throttle, and optionally motor2 for YAWMOTOR
+    #define PRI_SERVO_TO   7 // use servo from 4 to 7
   #endif
 #endif
 
@@ -1583,6 +1588,7 @@
   #define MULTITYPE 3
 #elif defined(BI)
   #define MULTITYPE 4
+  #define SERVO_RATES      {30,30,100,100,0,1,100,100}
 #elif defined(GIMBAL)
   #define MULTITYPE 5
 #elif defined(Y6)
@@ -1591,6 +1597,7 @@
   #define MULTITYPE 7
 #elif defined(FLYING_WING)
   #define MULTITYPE 8
+  #define SERVO_RATES      {30,30,100,0,1,100,100,100}
 #elif defined(Y4)
   #define MULTITYPE 9
 #elif defined(HEX6X)
@@ -1603,16 +1610,21 @@
   #define MULTITYPE 13   //13  for MultiWinGui 
 #elif defined(AIRPLANE)
   #define MULTITYPE 14    
+  #define SERVO_RATES      {30,30,100,100,-100,100,100,100}
 #elif defined (HELI_120_CCPM)   
   #define MULTITYPE 15      
 #elif defined (HELI_90_DEG)   
   #define MULTITYPE 16      
+  #define SERVO_RATES      {30,30,100,-100,-100,100,100,100}
 #elif defined(VTAIL4)
- #define MULTITYPE 17
+  #define MULTITYPE 17
 #elif defined(HEX6H)
- #define MULTITYPE 18
-#elif defined(DUALCOPTER)|| defined(SINGLECOPTER)
- #define MULTITYPE 20
+  #define MULTITYPE 18
+#elif defined(SINGLECOPTER)
+  #define MULTITYPE 20
+  #define SERVO_RATES      {30,30,100,0,1,0,1,100}
+#elif defined(DUALCOPTER)
+  #define MULTITYPE 20
 #endif
 
 /**************************************************************************************/
@@ -1664,7 +1676,6 @@
 #if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS)
   #define STANDARD_RX
 #endif
-
 
 // Spektrum Satellite
 #if defined(SPEKTRUM)

@@ -26,7 +26,11 @@ enum rc {
   AUX1,
   AUX2,
   AUX3,
-  AUX4
+  AUX4,
+  AUX5,
+  AUX6,
+  AUX7,
+  AUX8
 };
 
 enum pid {
@@ -364,9 +368,9 @@ static int16_t failsafeEvents = 0;
 volatile int16_t failsafeCnt = 0;
 
 static int16_t rcData[RC_CHANS];    // interval [1000;2000]
-static int16_t rcSerial[8];         // interval [1000;2000] - is rcData coming from MSP
+static int16_t rcSerial[8];         // interval [1000;2000] - is rcData coming from MSP 
 static int16_t rcCommand[4];        // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW 
-static uint8_t rcSerialCount = 0;   // a counter to select legacy RX when there is no more MSP rc serial data
+static uint8_t rcSerialCount = 0;   // a counter to select legacy RX when there is no more MSP rc serial data 
 static int16_t lookupPitchRollRC[5];// lookup table for expo & RC rate PITCH+ROLL
 static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 
@@ -385,7 +389,7 @@ static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 // *************************
 static int16_t axisPID[3];
 static int16_t motor[8];
-static int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1500};
+static int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1000};
 static uint16_t motorTogglesByte=0; // Is it Possible to change to uint8_t ?... 
 
 // ************************
@@ -415,7 +419,6 @@ struct servo_conf_ {  // this is a generic way to configure a servo, every multi
 };
 
 static struct {
-//  uint8_t checkNewConf;   not used anymore, should be removed
   pid_    pid[PIDITEMS];
   uint8_t rcRate8;
   uint8_t rcExpo8;
@@ -431,16 +434,6 @@ static struct {
     int16_t mag_declination;
   #endif
   servo_conf_ servoConf[8];
-  #ifdef FLYING_WING
-    uint16_t wing_left_mid;
-    uint16_t wing_right_mid;
-  #endif
-  #ifdef TRI
-    uint16_t tri_yaw_middle;
-  #endif
-  #if defined HELICOPTER || defined(AIRPLANE)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)
-    int16_t servoTrim[8];
-  #endif
   #if defined(GYRO_SMOOTHING)
     uint8_t Smoothing[3];
   #endif
