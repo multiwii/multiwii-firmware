@@ -390,6 +390,16 @@ void GPS_NewData() {
         varptr = (uint8_t *)&GPS_altitude;       // altitude in meters for OSD
         *varptr++ = i2c_readAck();
         *varptr   = i2c_readAck();
+		
+#if defined(I2C_GPS_SONAR)
+        i2c_rep_start(I2C_GPS_ADDRESS<<1);
+        i2c_write(I2C_GPS_SONAR_ALT);         
+        i2c_rep_start((I2C_GPS_ADDRESS<<1)|1);
+
+        varptr = (uint8_t *)&sonarAlt;          // altitude (in cm? maybe)
+        *varptr++ = i2c_readAck();
+        *varptr   = i2c_readNak();
+#endif		
 
         //GPS_ground_course
         varptr = (uint8_t *)&GPS_ground_course;
