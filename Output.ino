@@ -77,6 +77,44 @@
 #endif
 
 /**************************************************************************************/
+/***************       Calculate first and last used servos        ********************/
+/**************************************************************************************/
+#if defined(SERVO)
+  #if defined(PRI_SERVO_FROM) && defined(SEC_SERVO_FROM)
+    #if PRI_SERVO_FROM < SEC_SERVO_FROM
+      #define SERVO_START PRI_SERVO_FROM
+    #else
+      #define SERVO_START SEC_SERVO_FROM
+    #endif
+  #else
+    #if defined(PRI_SERVO_FROM)
+      #define SERVO_START PRI_SERVO_FROM
+    #endif
+    #if defined(SEC_SERVO_FROM)
+      #define SERVO_START SEC_SERVO_FROM
+    #endif
+  #endif
+  #if defined(PRI_SERVO_TO) && defined(SEC_SERVO_TO)
+    #if PRI_SERVO_TO > SEC_SERVO_TO
+      #define SERVO_END PRI_SERVO_TO
+    #else
+      #define SERVO_END SEC_SERVO_TO
+    #endif
+  #else
+    #if defined(PRI_SERVO_TO)
+      #define SERVO_END PRI_SERVO_TO
+    #endif
+    #if defined(SEC_SERVO_TO)
+      #define SERVO_END SEC_SERVO_TO
+    #endif
+  #endif
+  #if SERVO_END == 8      // Exclude Motor servo
+    #undef SERVO_END
+    #define SERVO_END 7
+  #endif  
+#endif
+
+/**************************************************************************************/
 /***************   Writes the Servos values to the needed format   ********************/
 /**************************************************************************************/
 void writeServos() {
@@ -892,7 +930,9 @@ void mixTable() {
   #if defined(DYNBALANCE)
     for(uint8_t axis=0;axis<3;axis++) {axisPID[axis] = 0;} // Zero PID's for DYNBALANCE
   #endif
-  for(i=0; i<7; i++) servo[i] = 0;
+  #if defined(SERVO)
+    for(i=SERVO_START-1; i<SERVO_END; i++) servo[i] = 0;
+  #endif  
   #define PIDMIX(X,Y,Z) rcCommand[THROTTLE] + axisPID[ROLL]*X + axisPID[PITCH]*Y + YAW_DIRECTION * axisPID[YAW]*Z
   #define SERVODIR(n,b) ((conf.servoConf[n].rate & b) ? -1 : 1)
   
@@ -1294,22 +1334,24 @@ void mixTable() {
 
 
   /************************************************************************************************************/
-  // add midpoint offset, then scale and limit servo outputs - except SERVO8 used commonly as Moror output
-  // don't add offset for camtrig servo (SERVO3)
-  for(i=0; i<7; i++) {
-    // add direct offset or offset from RC channel to servos value (except camtrig servo)
-    if((i != 2)
-   #if defined(HELICOPTER) && YAWMOTOR
-      && (i != 5)
-   #endif
-   #if defined(SERVO_MIX_TILT)
-      && (i != S_PITCH) && (i != S_ROLL)
-   #endif
-      ) servo[i] += (conf.servoConf[i].middle < RC_CHANS) ? rcData[conf.servoConf[i].middle] : conf.servoConf[i].middle;
-    servo[i] = map(servo[i], 1020,2000, conf.servoConf[i].min, conf.servoConf[i].max);       // servo travel scaling
-    servo[i] = constrain(servo[i], conf.servoConf[i].min, conf.servoConf[i].max);            // limit the values
-  }
-
+    // add midpoint offset, then scale and limit servo outputs - except SERVO8 used commonly as Moror output
+    // don't add offset for camtrig servo (SERVO3)
+    #if defined(SERVO)
+      for(i=SERVO_START-1; i<SERVO_END; i++) {
+        // add direct offset or offset from RC channel to servos value (except camtrig servo)
+        if((i != 2)
+       #if defined(HELICOPTER) && YAWMOTOR
+          && (i != 5)
+       #endif
+       #if defined(SERVO_MIX_TILT)
+          && (i != S_PITCH) && (i != S_ROLL)
+       #endif
+          ) servo[i] += (conf.servoConf[i].middle < RC_CHANS) ? rcData[conf.servoConf[i].middle] : conf.servoConf[i].middle;
+        servo[i] = map(servo[i], 1020,2000, conf.servoConf[i].min, conf.servoConf[i].max);       // servo travel scaling
+        servo[i] = constrain(servo[i], conf.servoConf[i].min, conf.servoConf[i].max);            // limit the values
+      }
+    #endif
+    
   #endif //MY_PRIVATE_MIXING
 
   /****************                Filter the Motors values                ******************/
