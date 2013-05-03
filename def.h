@@ -1577,6 +1577,22 @@
 #define ACC_25deg    (uint16_t)(ACC_1G * 0.423)
 #define ACC_VelScale (9.80665f / 10000.0f / ACC_1G)
 
+#if defined(ITG3200)
+  #define GYRO_SCALE (4 / 14.375 * PI / 180.0 / 1000000.0) //ITG3200   14.375 LSB/(deg/s) and we ignore the last 2 bits
+#endif
+#if defined(L3G4200D)
+  #define GYRO_SCALE (20 / 70 * PI / 180.0 / 1000000.0)   //l3g4200   70 LSB/(deg/s)
+#endif
+#if defined(MPU6050)
+  #define GYRO_SCALE (4 / 16.4 * PI / 180.0 / 1000000.0)   //MPU6050 and MPU3050   16.4 LSB/(deg/s) and we ignore the last 2 bits
+#endif
+#if defined(MPU3050)
+  #define GYRO_SCALE (4 / 16.4 * PI / 180.0 / 1000000.0)   //MPU6050 and MPU3050   16.4 LSB/(deg/s) and we ignore the last 2 bits
+#endif
+#if defined(WMP)
+  #define GYRO_SCALE (1.0f/200e6f)
+#endif
+
 /**************************************************************************************/
 /***************      Multitype decleration for the GUI's          ********************/
 /**************************************************************************************/

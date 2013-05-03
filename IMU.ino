@@ -108,11 +108,6 @@ void computeIMU () {
 #define INV_GYR_CMPF_FACTOR   (1.0f / (GYR_CMPF_FACTOR  + 1.0f))
 #define INV_GYR_CMPFM_FACTOR  (1.0f / (GYR_CMPFM_FACTOR + 1.0f))
 
-#define GYRO_SCALE ((2279 * PI)/((32767.0f / 4.0f ) * 180.0f * 1000000.0f)) //(ITG3200 and MPU6050)
-// +-2000/sec deg scale
-// for WMP, empirical value should be #define GYRO_SCALE (1.0f/200e6f)
-// !!!!should be adjusted to the rad/sec and be part defined in each gyro sensor
-
 typedef struct fp_vector {		
   float X,Y,Z;		
 } t_fp_vector_def;
@@ -184,12 +179,12 @@ void getEstimatedAttitude(){
   static uint16_t previousT;
   uint16_t currentT = micros();
 
-  scale = (currentT - previousT) * GYRO_SCALE;
+  scale = (currentT - previousT) * GYRO_SCALE; // GYRO_SCALE unit: radian/microsecond
   previousT = currentT;
 
   // Initialization
   for (axis = 0; axis < 3; axis++) {
-    deltaGyroAngle[axis] = imu.gyroADC[axis]  * scale;
+    deltaGyroAngle[axis] = imu.gyroADC[axis]  * scale; // radian
 
     accLPF32[axis]    -= accLPF32[axis]>>ACC_LPF_FACTOR;
     accLPF32[axis]    += imu.accADC[axis];

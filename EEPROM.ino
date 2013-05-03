@@ -147,13 +147,15 @@ void LoadDefaults() {
     conf.angleTrim[0] = 0; conf.angleTrim[1] = 0;
     conf.powerTrigger1 = 0;
   #endif
-  int8_t sr[8] = SERVO_RATES;
-  for(i=0;i<8;i++) {
-      conf.servoConf[i].min = 1020;
-      conf.servoConf[i].max = 2000;
-      conf.servoConf[i].middle = 1500;
-      conf.servoConf[i].rate = sr[i];
-  }
+  #if defined(SERVO)
+    int8_t sr[8] = SERVO_RATES;
+    for(i=0;i<8;i++) {
+        conf.servoConf[i].min = 1020;
+        conf.servoConf[i].max = 2000;
+        conf.servoConf[i].middle = 1500;
+        conf.servoConf[i].rate = sr[i];
+    }
+  #endif
   #ifdef FIXEDWING
     conf.dynThrPID = 50;
     conf.rcExpo8   =  0;
