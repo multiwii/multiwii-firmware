@@ -1046,11 +1046,8 @@ void mixTable() {
     /*****************************             FLYING WING                **************************************/
 
     #if defined(FLYING_WING)
-      if (!f.ARMED)
-        servo[7] = MINCOMMAND;        // Kill throttle when disarmed 
-      else 
-        servo[7] = rcCommand[THROTTLE];
-      motor[0] = rcCommand[THROTTLE];
+      if (!f.ARMED) {servo[7] = MINCOMMAND;} else {servo[7] = rcCommand[THROTTLE];}    // Kill throttle when disarmed 
+      motor[0] = servo[7];
       if (f.PASSTHRU_MODE) {// do not use sensors for correction, simple 2 channel mixing
         servo[3] = (SERVODIR(3,1) * rcCommand[PITCH]) + (SERVODIR(3,2) * rcCommand[ROLL]);
         servo[4] = (SERVODIR(4,1) * rcCommand[PITCH]) + (SERVODIR(4,2) * rcCommand[ROLL]);
@@ -1066,10 +1063,7 @@ void mixTable() {
       // servo[7] is programmed with safty features to avoid motorstarts when ardu reset..
       // All other servos go to center at reset..  Half throttle can be dangerus
       // Only use servo[7] as motorcontrol if motor is used in the setup            */
-      if (!f.ARMED)
-        servo[7] = MINCOMMAND;        // Kill throttle when disarmed 
-      else 
-        servo[7] = rcCommand[THROTTLE];
+      if (!f.ARMED){servo[7] = MINCOMMAND;} else {servo[7] = rcCommand[THROTTLE];}    // Kill throttle when disarmed 
       motor[0] = servo[7];
 
       // Flapperon Controll TODO - optimalisation
@@ -1092,12 +1086,12 @@ void mixTable() {
       #if defined(FLAPS)
         // configure SERVO3 middle point in GUI to using an AUX channel for FLAPS control
         // use servo min, servo max and servo rate for propper endpoints adjust
-        int16_t lFlap = (conf.servoConf[i].middle < RC_CHANS) ? rcData[conf.servoConf[i].middle] : conf.servoConf[i].middle;
+        int16_t lFlap = (conf.servoConf[2].middle < RC_CHANS) ? rcData[conf.servoConf[2].middle] : conf.servoConf[2].middle;
         lFlap = constrain(lFlap, conf.servoConf[2].min, conf.servoConf[2].max);
         lFlap = MIDRC - lFlap;
         static int16_t slow_LFlaps= lFlap;
         #if defined(FLAPSPEED)
-          if (slow_LFlaps < lFlap ){slow_LFlaps+=FLAPSPEED;}else if(slow_LFlaps > lFlap){slow_LFlaps-=FLAPSPEED;}
+          if (slow_LFlaps < lFlap ){slow_LFlaps+=FLAPSPEED;} else if(slow_LFlaps > lFlap){slow_LFlaps-=FLAPSPEED;}
         #else
           slow_LFlaps = lFlap;
         #endif
@@ -1292,6 +1286,8 @@ void mixTable() {
     #endif 
     
     #ifdef GIMBAL
+      #define S_PITCH 0
+      #define S_ROLL  1
       for(i=0;i<2;i++) {
         servo[i] = ((int32_t)conf.servoConf[i].rate * att.angle[1-i]) /50L;
       }
@@ -1338,17 +1334,22 @@ void mixTable() {
     // don't add offset for camtrig servo (SERVO3)
     #if defined(SERVO)
       for(i=SERVO_START-1; i<SERVO_END; i++) {
-        // add direct offset or offset from RC channel to servos value (except camtrig servo)
+        // add direct offset or offset from RC channel to servos value (except camtrig, heli YAW and Engine servos)
         if((i != 2)
        #if defined(HELICOPTER) && YAWMOTOR
           && (i != 5)
        #endif
        #if defined(SERVO_MIX_TILT)
+          // special case for handling gimbal mixed servos
           && (i != S_PITCH) && (i != S_ROLL)
        #endif
           ) servo[i] += (conf.servoConf[i].middle < RC_CHANS) ? rcData[conf.servoConf[i].middle] : conf.servoConf[i].middle;
-        servo[i] = map(servo[i], 1020,2000, conf.servoConf[i].min, conf.servoConf[i].max);       // servo travel scaling
-        servo[i] = constrain(servo[i], conf.servoConf[i].min, conf.servoConf[i].max);            // limit the values
+       #if defined(S_PITCH) && defined(S_ROLL)
+        if(i == S_PITCH || i == S_ROLL) {
+          servo[i] = map(servo[i], 1020,2000, conf.servoConf[i].min, conf.servoConf[i].max);   // servo travel scaling, only for gimbal servos
+        }
+       #endif 
+        servo[i] = constrain(servo[i], conf.servoConf[i].min, conf.servoConf[i].max);                // limit the values
       }
     #endif
     
