@@ -1205,7 +1205,7 @@ void mixTable() {
 
       // Yaw is common for Heli 90 & 120
       int16_t yawControll =  axisPID[YAW] * SERVODIR(5,1);
-      servo[5] = conf.servoConf[5].middle;
+      //servo[5] = conf.servoConf[5].middle; // Added twice! Remove
 
       /* Throttle & YAW
       ********************
