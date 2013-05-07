@@ -149,11 +149,22 @@ void LoadDefaults() {
   #endif
   #if defined(SERVO)
     int8_t sr[8] = SERVO_RATES;
+    #ifdef SERVO_MIN
+      int16_t smin[8] = SERVO_MIN;
+      int16_t smax[8] = SERVO_MAX;
+      int16_t smid[8] = SERVO_MID;
+    #endif
     for(i=0;i<8;i++) {
+      #ifdef SERVO_MIN
+        conf.servoConf[i].min = smin[i];
+        conf.servoConf[i].max = smax[i];
+        conf.servoConf[i].middle = smid[i];
+      #else
         conf.servoConf[i].min = 1020;
         conf.servoConf[i].max = 2000;
         conf.servoConf[i].middle = 1500;
-        conf.servoConf[i].rate = sr[i];
+      #endif
+      conf.servoConf[i].rate = sr[i];
     }
   #endif
   #ifdef FIXEDWING

@@ -1903,39 +1903,43 @@
 #endif 
 
 /**************************************************************************************/
-/***************               override default pin assignments ?  ********************/
+/***************               override defaults                   ********************/
 /**************************************************************************************/
-#ifdef OVERRIDE_V_BATPIN
-  #define V_BATPIN OVERRIDE_V_BATPIN
-#endif
-#ifdef OVERRIDE_PSENSORPIN
-  #define PSENSORPIN OVERRIDE_PSENSORPIN
-#endif
-#ifdef OVERRIDE_LEDPIN_PINMODE
-  #define LEDPIN_PINMODE OVERRIDE_LEDPIN_PINMODE
-  #define LEDPIN_TOGGLE  OVERRIDE_LEDPIN_TOGGLE
-  #define LEDPIN_OFF     OVERRIDE_LEDPIN_OFF
-  #define LEDPIN_ON      OVERRIDE_LEDPIN_ON
-#endif
-#ifdef OVERRIDE_BUZZERPIN_PINMODE
-  #define BUZZERPIN_PINMODE OVERRIDE_BUZZERPIN_PINMODE
-  #define BUZZERPIN_ON      OVERRIDE_BUZZERPIN_ON
-  #define BUZZERPIN_OFF     OVERRIDE_BUZZERPIN_OFF
-#endif
 
-/**************************************************************************************/
-/********* enforce your sensors orientation - possibly overriding board defaults  *****/
-/**************************************************************************************/
-#ifdef FORCE_GYRO_ORIENTATION
-  #define GYRO_ORIENTATION FORCE_GYRO_ORIENTATION
-#endif
-#ifdef FORCE_ACC_ORIENTATION
-  #define ACC_ORIENTATION FORCE_ACC_ORIENTATION
-#endif
-#ifdef FORCE_MAG_ORIENTATION
-  #define MAG_ORIENTATION FORCE_MAG_ORIENTATION
-#endif
+  /***************               pin assignments ?  ********************/
+  #ifdef OVERRIDE_V_BATPIN
+    #define V_BATPIN OVERRIDE_V_BATPIN
+  #endif
+  #ifdef OVERRIDE_PSENSORPIN
+    #define PSENSORPIN OVERRIDE_PSENSORPIN
+  #endif
+  #ifdef OVERRIDE_LEDPIN_PINMODE
+    #define LEDPIN_PINMODE OVERRIDE_LEDPIN_PINMODE
+    #define LEDPIN_TOGGLE  OVERRIDE_LEDPIN_TOGGLE
+    #define LEDPIN_OFF     OVERRIDE_LEDPIN_OFF
+    #define LEDPIN_ON      OVERRIDE_LEDPIN_ON
+  #endif
+  #ifdef OVERRIDE_BUZZERPIN_PINMODE
+    #define BUZZERPIN_PINMODE OVERRIDE_BUZZERPIN_PINMODE
+    #define BUZZERPIN_ON      OVERRIDE_BUZZERPIN_ON
+    #define BUZZERPIN_OFF     OVERRIDE_BUZZERPIN_OFF
+  #endif
 
+  /*********  sensors orientation - possibly overriding board defaults  *****/
+  #ifdef FORCE_GYRO_ORIENTATION
+    #define GYRO_ORIENTATION FORCE_GYRO_ORIENTATION
+  #endif
+  #ifdef FORCE_ACC_ORIENTATION
+    #define ACC_ORIENTATION FORCE_ACC_ORIENTATION
+  #endif
+  #ifdef FORCE_MAG_ORIENTATION
+    #define MAG_ORIENTATION FORCE_MAG_ORIENTATION
+  #endif
+
+  /*********  servo rates                                               *****/
+  #ifdef FORCE_SERVO_RATES
+    #define SERVO_RATES FORCE_SERVO_RATES
+  #endif
 /**************************************************************************************/
 /***************               Error Checking Section              ********************/
 /**************************************************************************************/
