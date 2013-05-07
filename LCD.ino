@@ -503,7 +503,7 @@ void i2c_LCD03_set_cursor (byte col, byte row) {
 #if defined(OLED_DIGOLE) // OLED_DIGOLE
 #define OLED_DIGOLE_ADDRESS 0x27 // 7bit address
 // *********************
-// I2C LCD03 primitives
+// I2C DIGOLE primitives
 // *********************
 void i2c_OLED_DIGOLE_init () {
   i2c_OLED_DIGOLE_send_string("CL");    // clear screen
