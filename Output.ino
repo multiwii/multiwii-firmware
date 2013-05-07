@@ -1050,12 +1050,16 @@ void mixTable() {
     /*****************************             FLYING WING                **************************************/
 
     #if defined(FLYING_WING)
-      if (!f.ARMED) {servo[7] = MINCOMMAND;} else {servo[7] = rcCommand[THROTTLE];}    // Kill throttle when disarmed 
+      if (!f.ARMED) {
+        servo[7] = MINCOMMAND;       // Kill throttle when disarmed 
+      } else {
+        servo[7] = constrain(rcCommand[THROTTLE], conf.minthrottle, MAXTHROTTLE);
+      }
       motor[0] = servo[7];
-      if (f.PASSTHRU_MODE) {// do not use sensors for correction, simple 2 channel mixing
+      if (f.PASSTHRU_MODE) {         // do not use sensors for correction, simple 2 channel mixing
         servo[3] = (SERVODIR(3,1) * rcCommand[PITCH]) + (SERVODIR(3,2) * rcCommand[ROLL]);
         servo[4] = (SERVODIR(4,1) * rcCommand[PITCH]) + (SERVODIR(4,2) * rcCommand[ROLL]);
-      } else { // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration
+      } else {                       // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration
         servo[3] = (SERVODIR(3,1) * axisPID[PITCH])   + (SERVODIR(3,2) * axisPID[ROLL]);
         servo[4] = (SERVODIR(4,1) * axisPID[PITCH])   + (SERVODIR(4,2) * axisPID[ROLL]);
       }
@@ -1069,7 +1073,11 @@ void mixTable() {
       // servo[7] is programmed with safty features to avoid motorstarts when ardu reset..
       // All other servos go to center at reset..  Half throttle can be dangerus
       // Only use servo[7] as motorcontrol if motor is used in the setup            */
-      if (!f.ARMED){servo[7] = MINCOMMAND;} else {servo[7] = rcCommand[THROTTLE];}    // Kill throttle when disarmed 
+      if (!f.ARMED) {
+        servo[7] = MINCOMMAND;       // Kill throttle when disarmed 
+      } else {
+        servo[7] = constrain(rcCommand[THROTTLE], conf.minthrottle, MAXTHROTTLE);
+      }
       motor[0] = servo[7];
 
       // Flapperon Controll TODO - optimalisation
@@ -1207,8 +1215,8 @@ void mixTable() {
       #endif
 
       if(f.PASSTHRU_MODE){ // Use Rcdata Without sensors
-        heliRoll=  rcCommand[ROLL] ;
-        heliNick=  rcCommand[PITCH];
+        heliRoll= rcCommand[ROLL] ;
+        heliNick= rcCommand[PITCH];
       } else{ // Assisted modes
         heliRoll= axisPID[ROLL];
         heliNick= axisPID[PITCH];
@@ -1219,25 +1227,22 @@ void mixTable() {
       heliRoll*=cRange[0]*0.01;
       heliNick*=cRange[1]*0.01;
 
-      // Yaw is common for Heli 90 & 120
-      int16_t yawControll =  axisPID[YAW] * SERVODIR(5,1);
-      servo[5] = get_middle(5);
-
       /* Throttle & YAW
-      ********************
-      Handeled in common functions for Heli */
+      ******************** */
+      // Yaw control is common for Heli 90 & 120
+      servo[5] = (axisPID[YAW] * SERVODIR(5,1)) + conf.servoConf[5].middle;
+      #if YAWMOTOR
+        servo[5] = constrain(servo[5], conf.servoConf[5].min, conf.servoConf[5].max);       // limit the values
+        if (rcCommand[THROTTLE]<conf.minthrottle || !f.ARMED) {servo[5] =  MINCOMMAND;}     // Kill YawMotor
+      #endif
       if (!f.ARMED){
-        servo[7] = MINCOMMAND;      // Kill throttle when disarmed
+        servo[7] = MINCOMMAND;               // Kill throttle when disarmed
       } else {
-        servo[7]  = rcCommand[THROTTLE]; //   50hz ESC or servo
+        servo[7] = rcCommand[THROTTLE];     //   50hz ESC or servo
         #ifdef GOVERNOR_P
-          servo[7]  += governorThrottle;
+          servo[7] += governorThrottle;
         #endif
-      }
-      if (YAWMOTOR && (rcCommand[THROTTLE]<conf.minthrottle || !f.ARMED)) {
-        servo[5] =  MINCOMMAND;
-      } else { 
-        servo[5] += yawControll;      // YawSero
+        servo[7] = constrain(servo[7], conf.minthrottle, MAXTHROTTLE);   //  limit min & max
       }
       #ifndef HELI_USE_SERVO_FOR_THROTTLE
         motor[0] = servo[7];     // use real motor output - ESC capable
@@ -1252,9 +1257,9 @@ void mixTable() {
       // original #define HeliXPIDMIX(Z,Y,X) collRange[1]+collective*Z + heliNick*Y +  heliRoll*X
 
       #ifdef HELI_120_CCPM
-        static int8_t nickMix[3] =SERVO_NICK;
-        static int8_t leftMix[3] =SERVO_LEFT;
-        static int8_t rightMix[3]=SERVO_RIGHT;
+        static int8_t nickMix[3] = SERVO_NICK;
+        static int8_t leftMix[3] = SERVO_LEFT;
+        static int8_t rightMix[3]= SERVO_RIGHT;
 
         servo[3]  =  HeliXPIDMIX( ( nickMix[0]), nickMix[1], nickMix[2]);   //    NICK  servo
         servo[4]  =  HeliXPIDMIX( ( leftMix[0]), leftMix[1], leftMix[2]);   //    LEFT servo
@@ -1353,7 +1358,10 @@ void mixTable() {
             servo[i] = map(servo[i], 1020,2000, conf.servoConf[i].min, conf.servoConf[i].max);   // servo travel scaling, only for gimbal servos
           }
         #endif 
-        servo[i] = constrain(servo[i], conf.servoConf[i].min, conf.servoConf[i].max);          // limit the values
+        #if defined(HELICOPTER) && YAWMOTOR)
+          if(i != 5)  // not limit YawMotor
+        #endif  
+            servo[i] = constrain(servo[i], conf.servoConf[i].min, conf.servoConf[i].max);          // limit the values
       }
     #endif
     
