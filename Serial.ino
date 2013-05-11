@@ -226,7 +226,7 @@ void evaluateCommand() {
   switch(cmdMSP[CURRENTPORT]) {
    case MSP_SET_RAW_RC:
      s_struct_w((uint8_t*)&rcSerial,16);
-     rcSerialCount = 25; // 0.5s transition 
+     rcSerialCount = 50; // 1s transition 
      break;
    #if GPS
    case MSP_SET_RAW_GPS:

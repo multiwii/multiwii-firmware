@@ -176,7 +176,7 @@
     #define NUMBER_MOTOR   0 // use servo to drive throttle output
     #define PRI_SERVO_TO   8 // use servo from 4 to 8
   #else
-    #define NUMBER_MOTOR   1 // use motor1 for throttle, DO  NOT SET TO 2, OR IT WILL BREAK SERVO7 USED FOR SWASH
+    #define NUMBER_MOTOR   2 // use motor1 for throttle, and optionally motor2 for YAWMOTOR
     #define PRI_SERVO_TO   7 // use servo from 4 to 7
   #endif
 #endif
@@ -1581,7 +1581,7 @@
   #define GYRO_SCALE (4 / 14.375 * PI / 180.0 / 1000000.0) //ITG3200   14.375 LSB/(deg/s) and we ignore the last 2 bits
 #endif
 #if defined(L3G4200D)
-  #define GYRO_SCALE (20 / 70 * PI / 180.0 / 1000000.0)   //l3g4200   70 LSB/(deg/s)
+  #define GYRO_SCALE ((4.0f * PI * 70.0f)/(1000.0f * 180.0f * 1000000.0f))
 #endif
 #if defined(MPU6050)
   #define GYRO_SCALE (4 / 16.4 * PI / 180.0 / 1000000.0)   //MPU6050 and MPU3050   16.4 LSB/(deg/s) and we ignore the last 2 bits
