@@ -176,7 +176,7 @@
     #define NUMBER_MOTOR   0 // use servo to drive throttle output
     #define PRI_SERVO_TO   8 // use servo from 4 to 8
   #else
-    #define NUMBER_MOTOR   2 // use motor1 for throttle, and optionally motor2 for YAWMOTOR
+    #define NUMBER_MOTOR   1 // use motor1 for throttle, DO  NOT SET TO 2, OR IT WILL BREAK SERVO7 USED FOR SWASH
     #define PRI_SERVO_TO   7 // use servo from 4 to 7
   #endif
 #endif

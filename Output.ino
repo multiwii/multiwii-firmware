@@ -1336,7 +1336,6 @@ void mixTable() {
     }
   #endif
 
-
   /****************                Filter the Motors values                ******************/
   #ifdef GOVERNOR_P
     if (rcOptions[BOXGOV] ) {

@@ -148,11 +148,11 @@ void LoadDefaults() {
     conf.powerTrigger1 = 0;
   #endif
   #if defined(SERVO)
-    int8_t sr[8] = SERVO_RATES;
+    static int8_t sr[8] = SERVO_RATES;
     #ifdef SERVO_MIN
-      int16_t smin[8] = SERVO_MIN;
-      int16_t smax[8] = SERVO_MAX;
-      int16_t smid[8] = SERVO_MID;
+      static int16_t smin[8] = SERVO_MIN;
+      static int16_t smax[8] = SERVO_MAX;
+      static int16_t smid[8] = SERVO_MID;
     #endif
     for(i=0;i<8;i++) {
       #ifdef SERVO_MIN

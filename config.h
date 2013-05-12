@@ -238,7 +238,7 @@
     #define CAM_TIME_HIGH 1000   // the duration of HIGH state servo expressed in ms
 
   /***********************          Airplane                       ***********************/
-    #define USE_THROTTLESERVO // For use of standard 50Hz servo on throttle.
+    //#define USE_THROTTLESERVO // For use of standard 50Hz servo on throttle.
 
     //#define FLAPPERONS    AUX4          // Mix Flaps with Aileroins.
     #define FLAPPERON_EP   { 1500, 1700 } // Endpooints for flaps on a 2 way switch else set {1020,2000} and program in radio.
@@ -585,7 +585,7 @@
   /**************************    Disable WMP power pin     *******************************/
     /* disable use of the POWER PIN
        (allready done if the option RCAUXPIN12 is selected) */
-    //#define DISABLE_POWER_PIN
+    #define DISABLE_POWER_PIN
 
   /*******************************    OSD Switch    *************************************/
     // This adds a box that can be interpreted by OSD in activation status (to switch on/off the overlay for instance)
