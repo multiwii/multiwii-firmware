@@ -108,10 +108,8 @@
       #define SERVO_END SEC_SERVO_TO
     #endif
   #endif
-  #if SERVO_END == 8      // Exclude Motor servo
-    #undef SERVO_END
-    #define SERVO_END 7
-  #endif  
+
+
 #endif
 
 /**************************************************************************************/
