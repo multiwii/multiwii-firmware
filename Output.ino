@@ -955,6 +955,10 @@ void mixTable() {
     motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
     motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
     servo[TRI_SERVO-1] = (SERVODIR(TRI_SERVO-1, 1) * axisPID[YAW]) + get_middle(TRI_SERVO-1); //REAR
+    
+    #if defined(MEGA_HW_PWM_SERVOS) && defined(MEGA)
+      conf.servoConf[5].middle = 0;
+    #endif
   #elif defined( QUADP )
     motor[0] = PIDMIX( 0,+1,-1); //REAR
     motor[1] = PIDMIX(-1, 0,+1); //RIGHT
@@ -1079,6 +1083,7 @@ void mixTable() {
     #if defined(FLAPS)
       // configure SERVO3 middle point in GUI to using an AUX channel for FLAPS control
       // use servo min, servo max and servo rate for propper endpoints adjust
+      conf.servoConf[2].middle=constrain(conf.servoConf[2].middle,0,10); // Change Center to match channels
       int16_t lFlap = get_middle(2);
       lFlap = constrain(lFlap, conf.servoConf[2].min, conf.servoConf[2].max);
       lFlap = MIDRC - lFlap;

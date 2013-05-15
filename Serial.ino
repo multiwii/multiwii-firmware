@@ -352,7 +352,7 @@ void evaluateCommand() {
      } st;
      st.cycleTime        = cycleTime;
      st.i2c_errors_count = i2c_errors_count;
-     st.sensor           = ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4;
+     st.sensor           = ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4|DYNBAL<<5;
      #if ACC
        if(f.ANGLE_MODE)   tmp |= 1<<BOXANGLE;
        if(f.HORIZON_MODE) tmp |= 1<<BOXHORIZON;

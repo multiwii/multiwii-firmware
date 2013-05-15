@@ -115,6 +115,12 @@
   #define SERVO
 #endif
 
+#if defined(DYNBALANCE)
+  #define DYNBAL 1
+#else
+  #define DYNBAL 0
+#endif
+
 #if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS)
   #define TRI_SERVO  4
 #else

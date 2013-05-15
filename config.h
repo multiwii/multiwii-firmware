@@ -220,13 +220,13 @@
     /* temporary info on which servos connect where is here
      * http://www.multiwii.com/forum/viewtopic.php?f=8&t=3498 <== NEEDS FIXING - MOVE TO WIKI */
 
-    //#define FORCE_SERVO_RATES      {30,30,100,100,100,100,100,100} // 0 = normal, 1= reverse
 
     /* if you want to preset min/middle/max values for servos right after flashing, because of limited physical
      * room for servo travel, then you must enable and set all three following options */
      //#define SERVO_MIN  {1020, 1020, 1020, 1020, 1020, 1020, 1020, 1020}
      //#define  SERVO_MAX {2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000}
      //#define  SERVO_MID {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500} // (*)
+     //#define FORCE_SERVO_RATES      {30,30,100,100,100,100,100,100} // 0 = normal, 1= reverse
 
   /***********************          Cam Stabilisation             ***********************/
     /* The following lines apply only for a pitch/roll tilt stabilization system. Uncomment the first or second line to activate it */
@@ -243,8 +243,7 @@
 
     //#define FLAPPERONS    AUX4          // Mix Flaps with Aileroins.
     #define FLAPPERON_EP   { 1500, 1700 } // Endpooints for flaps on a 2 way switch else set {1020,2000} and program in radio.
-    //#define FLAPPERON_EP   { 1200, 1500 } // Or Flapperons up for CrowMix 
-    #define FLAPPERON_INVERT { 1, -1 }    // Change direction om flapperons { Wing1, Wing2 }
+    #define FLAPPERON_INVERT { -1, 1 }    // Change direction om flapperons { Wing1, Wing2 }
     
     //#define FLAPS                       // Traditional Flaps on SERVO3.
     //#define FLAPSPEED     3             // Make flaps move slowm Higher value is Higher Speed.
