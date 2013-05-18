@@ -954,10 +954,9 @@ void mixTable() {
     motor[0] = PIDMIX( 0,+4/3, 0); //REAR
     motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
     motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
-    servo[TRI_SERVO-1] = (SERVODIR(TRI_SERVO-1, 1) * axisPID[YAW]) + get_middle(TRI_SERVO-1); //REAR
-    
+    servo[5] = (SERVODIR(5, 1) * axisPID[YAW]) + get_middle(5); //REAR
     #if defined(MEGA_HW_PWM_SERVOS) && defined(MEGA)
-      conf.servoConf[5].middle = 0;
+      servo[3] = servo[5];
     #endif
   #elif defined( QUADP )
     motor[0] = PIDMIX( 0,+1,-1); //REAR
@@ -1083,7 +1082,7 @@ void mixTable() {
     #if defined(FLAPS)
       // configure SERVO3 middle point in GUI to using an AUX channel for FLAPS control
       // use servo min, servo max and servo rate for propper endpoints adjust
-      conf.servoConf[2].middle=constrain(conf.servoConf[2].middle,0,10); // Change Center to match channels
+//      conf.servoConf[2].middle=constrain(conf.servoConf[2].middle,0,10); // Change Center to match channels - THIS IS WRONG WAY
       int16_t lFlap = get_middle(2);
       lFlap = constrain(lFlap, conf.servoConf[2].min, conf.servoConf[2].max);
       lFlap = MIDRC - lFlap;
@@ -1141,14 +1140,7 @@ void mixTable() {
     }
     motor[0] = PIDMIX(0,0,-1);                                 //  Pin D9
     motor[1] = PIDMIX(0,0,+1);                                 //  Pin D10
-/*
-    if (!f.ARMED){ // For displaying motors in GUI
-      servo[6] =  MINCOMMAND; servo[7] =  MINCOMMAND; // Kill throttle when disarmed
-    } else {
-      servo[6] = motor[1];
-      servo[7] = motor[0];
-    }
-*/
+
   #elif defined( HELICOPTER )
     /*****************************               HELICOPTERS               **************************************/
    // Common controlls for Helicopters
@@ -1249,8 +1241,6 @@ void mixTable() {
     servo[4] += get_middle(4);
     servo[6] += get_middle(6);
   #elif defined( GIMBAL )
-    #define S_PITCH 0
-    #define S_ROLL  1
     for(i=0;i<2;i++) {
       servo[i]  = ((int32_t)conf.servoConf[i].rate * att.angle[1-i]) /50L;
       servo[i] += get_middle(i);
@@ -1262,32 +1252,24 @@ void mixTable() {
   /************************************************************************************************************/
   /****************************                Cam stabilize Servos             *******************************/
 
-  #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
-    #define S_PITCH 3
-    #define S_ROLL  4
-  #else
-    #define S_PITCH 0
-    #define S_ROLL  1
-  #endif
-
   #if defined(SERVO_TILT)
+    servo[0] = get_middle(0);
+    servo[1] = get_middle(1);
     if (rcOptions[BOXCAMSTAB]) {
-      servo[S_PITCH] = ((int32_t)conf.servoConf[S_PITCH].rate * att.angle[PITCH]) /50L;
-      servo[S_ROLL]  = ((int32_t)conf.servoConf[S_ROLL].rate  * att.angle[ROLL])  /50L;
-      servo[S_PITCH] += get_middle(S_PITCH);
-      servo[S_ROLL]  += get_middle(S_ROLL);
+      servo[0] += ((int32_t)conf.servoConf[0].rate * att.angle[PITCH]) /50L;
+      servo[1] += ((int32_t)conf.servoConf[1].rate * att.angle[ROLL])  /50L;
     }
   #endif
 
   #ifdef SERVO_MIX_TILT
-    int16_t angleP = get_middle(S_PITCH) - MIDRC;
-    int16_t angleR = get_middle(S_ROLL)  - MIDRC;
+    int16_t angleP = get_middle(0) - MIDRC;
+    int16_t angleR = get_middle(1) - MIDRC;
     if (rcOptions[BOXCAMSTAB]) {
-      angleP += ((int32_t)conf.servoConf[S_PITCH].rate * att.angle[PITCH]) /50L;
-      angleR += ((int32_t)conf.servoConf[S_ROLL].rate  * att.angle[ROLL])  /50L;
+      angleP += ((int32_t)conf.servoConf[0].rate * att.angle[PITCH]) /50L;
+      angleR += ((int32_t)conf.servoConf[1].rate * att.angle[ROLL])  /50L;
     }
-    servo[S_PITCH] = MIDRC+angleP-angleR;
-    servo[S_ROLL]  = MIDRC-angleP-angleR;
+    servo[0] = MIDRC+angleP-angleR;
+    servo[1] = MIDRC-angleP-angleR;
   #endif
 
 /****************                    Cam trigger Servo                ******************/
@@ -1327,16 +1309,18 @@ void mixTable() {
   // don't add offset for camtrig servo (SERVO3)
   #if defined(SERVO)
     for(i=SERVO_START-1; i<SERVO_END; i++) {
-      #if defined(S_PITCH) && defined(S_ROLL)
-        if((i == S_PITCH) || (i == S_ROLL)) {
-          servo[i] = map(servo[i], 1020,2000, conf.servoConf[i].min, conf.servoConf[i].max);   // servo travel scaling, only for gimbal servos
-        }
-      #endif
+      if(i < 2) {
+        servo[i] = map(servo[i], 1020,2000, conf.servoConf[i].min, conf.servoConf[i].max);   // servo travel scaling, only for gimbal servos
+      }
     #if defined(HELICOPTER) && (YAWMOTOR)
       if(i != 5) // not limit YawMotor
     #endif
         servo[i] = constrain(servo[i], conf.servoConf[i].min, conf.servoConf[i].max); // limit the values
     }
+    #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
+      servo[3] = servo[0];    // copy CamPitch value to propper output servo for A0_A1_PIN_HEX
+      servo[4] = servo[1];    // copy CamRoll  value to propper output servo for A0_A1_PIN_HEX
+    #endif
   #endif
 
   /****************                Filter the Motors values                ******************/
