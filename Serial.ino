@@ -625,7 +625,7 @@ void evaluateOtherData(uint8_t sr) {
       #if defined(LOG_VALUES) || defined(DEBUG)
         case 'R':
       #endif
-      #ifdef DEBUG
+      #if defined(DEBUG) || defined(DEBUG_FREE)
         case 'F':
       #endif
           toggle_telemetry(sr);

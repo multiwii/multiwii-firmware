@@ -16,7 +16,7 @@ static char template3[3] = ". ";
   static uint8_t lnr = 0;
 #endif
 
-#define LCD_FLUSH {/*UartSendData();*/ delay(20); } // blocking - only use when not armed.
+#define LCD_FLUSH {/*UartSendData();*/ delayMicroseconds(20000); }
 
 char digit10000(uint16_t v) {return '0' + v / 10000;}
 char digit1000(uint16_t v) {return '0' + v / 1000 - (v/10000) * 10;}
@@ -1024,10 +1024,10 @@ const char PROGMEM lcd_param_text131 [] = "MINTHROTL";
 #if defined(ARMEDTIMEWARNING)
 const char PROGMEM lcd_param_text132 [] = "ArmdTWarn";
 #endif
-#if defined(GOVERNOR_P)
-const char PROGMEM lcd_param_text133 [] = "Govern   P";
-const char PROGMEM lcd_param_text134 [] = "Govern   D";
-const char PROGMEM lcd_param_text135 [] = "Govern Rpm";
+#ifdef GOVERNOR_P
+const char PROGMEM lcd_param_text133 [] = "Govern  P";
+const char PROGMEM lcd_param_text134 [] = "Govern  D";
+const char PROGMEM lcd_param_text135 [] = "GovernRpm";
 #endif
 //                                         0123456789
 
@@ -1263,7 +1263,6 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text134, &conf.governorD, &__D,
   &lcd_param_text135, &conf.governorR, &__P,
 #endif
-
 #ifdef GYRO_SMOOTHING
   &lcd_param_text80, &conf.Smoothing[0], &__D,
   &lcd_param_text81, &conf.Smoothing[1], &__D,
@@ -1501,7 +1500,6 @@ void configurationLoop() {
   #if defined(BUZZER)
     alarmArray[7] = 1;
   #endif
-
   LCDclear();
   LCDsetLine(1);
   if (LCD == 0) {
@@ -2374,7 +2372,7 @@ void lcd_telemetry() {
       break;
     }
 #endif // case R
-#ifdef DEBUG
+#if defined(DEBUG) || defined(DEBUG_FREE)
     case 'F':
     extern unsigned int __bss_end;
     extern unsigned int __heap_start;

@@ -1290,7 +1290,7 @@ void mixTable() {
     servo[S_ROLL]  = MIDRC-angleP-angleR;
   #endif
 
-/****************                    Cam trigger Sevo                ******************/
+/****************                    Cam trigger Servo                ******************/
   #if defined(CAMTRIG)
     // setup MIDDLE for using as camtrig interval (in msec) or RC channel pointer for interval control
     #define CAM_TIME_LOW  conf.servoConf[2].middle
@@ -1342,8 +1342,16 @@ void mixTable() {
   /****************                Filter the Motors values                ******************/
   #ifdef GOVERNOR_P
     if (rcOptions[BOXGOV] ) {
-      static int8_t g[37] = { 0,3,5,8,11,14,17,19,22,25,28,31,34,38,41,44,47,51,54,58,61,65,68,72,76,79,83,87,91,95,99,104,108,112,117,121,126 };
-      uint8_t v = constrain( VBATNOMINAL - constrain(analog.vbat, conf.vbatlevel_crit, VBATNOMINAL), 0, 36);
+      #if (VBATNOMINAL == 126)
+        #define GOV_R_NUM 36
+        static int8_t g[] = { 0,3,5,8,11,14,17,19,22,25,28,31,34,38,41,44,47,51,54,58,61,65,68,72,76,79,83,87,91,95,99,104,108,112,117,121,126 };
+      #elif (VBATNOMINAL == 84)
+        #define GOV_R_NUM 24
+        static int8_t g[] = { 0,4,8,12,17,21,25,30,34,39,44,49,54,59,65,70,76,81,87,93,99,106,112,119,126 };
+      #else
+        #error "GOVERNOR_R requires correction values which fit VBATNOMINAL; not yet defined for your value of VBATNOMINAL"
+      #endif
+      uint8_t v = constrain( VBATNOMINAL - constrain(analog.vbat, conf.vbatlevel_crit, VBATNOMINAL), 0, GOV_R_NUM);
       for (i = 0; i < NUMBER_MOTOR; i++) {
         motor[i] += ( ( (int32_t)(motor[i]-1000) * (int32_t)g[v] ) * (int32_t)conf.governorR )/ 5000;
       }

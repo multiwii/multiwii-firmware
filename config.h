@@ -218,7 +218,8 @@
 
     /********************************    SERVOS      *********************************/
     /* temporary info on which servos connect where is here
-     * http://www.multiwii.com/forum/viewtopic.php?f=8&t=3498 <== NEEDS FIXING - MOVE TO WIKI */
+     * http://www.multiwii.com/forum/viewtopic.php?f=8&t=3498 <== NEEDS FIXING - MOVE TO WIKI
+     * http://www.multiwii.com/forum/viewtopic.php?f=8&t=3498&start=30#p36023  <== NEEDS FIXING - MOVE TO WIKI  */
 
 
     /* if you want to preset min/middle/max values for servos right after flashing, because of limited physical
@@ -981,6 +982,7 @@
        not needed and not recommended for normal operation
        will add extra code that may slow down the main loop or make copter non-flyable */
     //#define DEBUG
+    //#define DEBUG_FREE // will add 'F' command to show free memory
 
     /* Use this to trigger LCD configuration without a TX - only for debugging - do NOT fly with this activated */
     //#define LCD_CONF_DEBUG
