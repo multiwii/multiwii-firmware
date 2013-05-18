@@ -1250,7 +1250,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text37, &conf.servoConf[4].middle, &__SE,
 #endif
 #ifdef TRI
-  &lcd_param_text38, &conf.servoConf[TRI_SERVO-1].middle, &__SE, &__SE,
+  &lcd_param_text38, &conf.servoConf[TRI_SERVO-1].middle, &__SE,
 #endif
 #ifdef HELI_120_CCPM
   &lcd_param_text73, &conf.servoConf[3].middle, &__SE,
