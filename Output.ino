@@ -955,9 +955,6 @@ void mixTable() {
     motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
     motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
     servo[5] = (SERVODIR(5, 1) * axisPID[YAW]) + get_middle(5); //REAR
-    #if defined(MEGA_HW_PWM_SERVOS) && defined(MEGA)
-      servo[3] = servo[5];
-    #endif
   #elif defined( QUADP )
     motor[0] = PIDMIX( 0,+1,-1); //REAR
     motor[1] = PIDMIX(-1, 0,+1); //RIGHT
@@ -1302,6 +1299,7 @@ void mixTable() {
     }
     if (rcOptions[BOXCAMTRIG]) camCycle=1;
     servo[2] = (camState==1) ? conf.servoConf[2].max : conf.servoConf[2].min;
+    servo[2] *= SERVODIR(2,1);
   #endif
 
 /************************************************************************************************************/
@@ -1320,6 +1318,9 @@ void mixTable() {
     #if defined(A0_A1_PIN_HEX) && (NUMBER_MOTOR == 6) && defined(PROMINI)
       servo[3] = servo[0];    // copy CamPitch value to propper output servo for A0_A1_PIN_HEX
       servo[4] = servo[1];    // copy CamRoll  value to propper output servo for A0_A1_PIN_HEX
+    #endif
+    #if defined(TRI) && defined(MEGA_HW_PWM_SERVOS) && defined(MEGA)
+      servo[3] = servo[5];    // copy TRI serwo value to propper output servo for MEGA_HW_PWM_SERVOS
     #endif
   #endif
 
