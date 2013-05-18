@@ -1079,7 +1079,6 @@ void mixTable() {
     #if defined(FLAPS)
       // configure SERVO3 middle point in GUI to using an AUX channel for FLAPS control
       // use servo min, servo max and servo rate for propper endpoints adjust
-//      conf.servoConf[2].middle=constrain(conf.servoConf[2].middle,0,10); // Change Center to match channels - THIS IS WRONG WAY
       int16_t lFlap = get_middle(2);
       lFlap = constrain(lFlap, conf.servoConf[2].min, conf.servoConf[2].max);
       lFlap = MIDRC - lFlap;
@@ -1298,8 +1297,8 @@ void mixTable() {
       }
     }
     if (rcOptions[BOXCAMTRIG]) camCycle=1;
-    servo[2] = (camState==1) ? conf.servoConf[2].max : conf.servoConf[2].min;
-    servo[2] *= SERVODIR(2,1);
+    servo[2] =(camState==1) ? conf.servoConf[2].max : conf.servoConf[2].min;
+    servo[2] = (servo[2]-1500)*SERVODIR(2,1)+1500;
   #endif
 
 /************************************************************************************************************/

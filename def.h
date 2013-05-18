@@ -120,6 +120,11 @@
 #else
   #define DYNBAL 0
 #endif
+#if defined(FLAPS)
+  #define FLAP 1
+#else
+  #define FLAP 0
+#endif
 
 #if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS)
   #define TRI_SERVO  4

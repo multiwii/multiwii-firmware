@@ -341,7 +341,7 @@ void evaluateCommand() {
      id.v     = VERSION;
      id.t     = MULTITYPE;
      id.msp_v = MSP_VERSION;
-     id.cap   = capability;
+     id.cap   = capability|DYNBAL<<2|FLAP<<3;
      s_struct((uint8_t*)&id,7);
      break;
    case MSP_STATUS:
@@ -352,7 +352,7 @@ void evaluateCommand() {
      } st;
      st.cycleTime        = cycleTime;
      st.i2c_errors_count = i2c_errors_count;
-     st.sensor           = ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4|DYNBAL<<5;
+     st.sensor           = ACC|BARO<<1|MAG<<2|GPS<<3|SONAR<<4;
      #if ACC
        if(f.ANGLE_MODE)   tmp |= 1<<BOXANGLE;
        if(f.HORIZON_MODE) tmp |= 1<<BOXHORIZON;
