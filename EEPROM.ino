@@ -194,3 +194,54 @@ void writePLog() {
   eeprom_write_block((const void*)&plog, (void*)(E2END - 4 - sizeof(plog)), sizeof(plog));
 }
 #endif
+
+#if defined(GPS)
+//Stores the WP data in the wp struct in the EEPROM
+void storeWP() {
+#ifdef MULTIPLE_CONFIGURATION_PROFILES
+    #define PROFILES 3
+#else
+    #define PROFILES 1
+#endif
+	if (mission_step.number >254) return;
+	mission_step.checksum = calculate_sum((uint8_t*)&mission_step, sizeof(mission_step));
+	eeprom_write_block((void*)&mission_step, (void*)(PROFILES * sizeof(conf) + sizeof(global_conf)+(sizeof(mission_step)*mission_step.number)),sizeof(mission_step));
+}
+
+// Read the given number of WP from the eeprom, supposedly we can use this during flight.
+// Returns true when reading is successfull and returns false if there were some error (for example checksum)
+bool recallWP(uint8_t wp_number) {
+#ifdef MULTIPLE_CONFIGURATION_PROFILES
+    #define PROFILES 3
+#else
+    #define PROFILES 1
+#endif
+	if (wp_number > 254) return false;
+
+	eeprom_read_block((void*)&mission_step, (void*)(PROFILES * sizeof(conf) + sizeof(global_conf)+(sizeof(mission_step)*wp_number)), sizeof(mission_step));
+	if(calculate_sum((uint8_t*)&mission_step, sizeof(mission_step)) != mission_step.checksum) return false;
+
+	return true;
+}
+
+// Returns the maximum WP number that can be stored in the EEPROM, calculated from conf and plog sizes, and the eeprom size
+uint8_t getMaxWPNumber() {
+#ifdef LOG_PERMANENT
+    #define PLOG_SIZE sizeof(plog)
+#else 
+    #define PLOG_SIZE 0
+#endif
+#ifdef MULTIPLE_CONFIGURATION_PROFILES
+    #define PROFILES 3
+#else
+	#define PROFILES 1
+#endif
+
+	uint16_t first_avail = PROFILES*sizeof(conf) + sizeof(global_conf)+ 1; //Add one byte for addtnl separation
+	uint16_t last_avail  = E2END - PLOG_SIZE - 4;										  //keep the last 4 bytes intakt
+	uint16_t wp_num = (last_avail-first_avail)/sizeof(mission_step);
+	if (wp_num>254) wp_num = 254;
+	return wp_num;
+}
+
+#endif
