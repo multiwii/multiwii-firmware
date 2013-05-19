@@ -195,7 +195,7 @@ void writePLog() {
 }
 #endif
 
-#if defined(GPS)
+#if defined(GPS_NAV)
 //Stores the WP data in the wp struct in the EEPROM
 void storeWP() {
 #ifdef MULTIPLE_CONFIGURATION_PROFILES
