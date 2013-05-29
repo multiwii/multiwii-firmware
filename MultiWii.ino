@@ -390,7 +390,6 @@ static int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 static int16_t axisPID[3];
 static int16_t motor[8];
 static int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1000};
-static uint16_t motorTogglesByte=0; // Is it Possible to change to uint8_t ?... 
 
 // ************************
 // EEPROM Layout definition

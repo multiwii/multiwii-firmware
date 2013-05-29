@@ -314,10 +314,9 @@ void evaluateCommand() {
      break;
    #endif
    #if defined (DYNBALANCE)
-     case MSP_SET_MOTOR: // <- must be rewritten to send 8x motors values with no toggle principle. it should be a mirror of MSP_MOTOR
-       motorTogglesByte = read8();
-       f.ARMED = 0;
-       break;
+     case MSP_SET_MOTOR:
+       s_struct_w((uint8_t*)&motor,16);
+     break;
    #endif
    #ifdef MULTIPLE_CONFIGURATION_PROFILES
    case MSP_SELECT_SETTING:
@@ -409,8 +408,7 @@ void evaluateCommand() {
      break;
    case MSP_RAW_IMU:
      #if defined(DYNBALANCE)
-       // Send the unfiltered Gyro & Acc values to gui.
-       for(uint8_t axis=0;axis<3;axis++) {imu.gyroData[axis]=imu.gyroADC[axis];imu.accSmooth[axis]= imu.accADC[axis];}
+       for(uint8_t axis=0;axis<3;axis++) {imu.gyroData[axis]=imu.gyroADC[axis];imu.accSmooth[axis]= imu.accADC[axis];} // Send the unfiltered Gyro & Acc values to gui.
      #endif 
      s_struct((uint8_t*)&imu,18);
      break;

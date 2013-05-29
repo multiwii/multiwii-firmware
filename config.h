@@ -1021,9 +1021,7 @@
   /********************************************************************/
   /****           Dynamic Motor/Prop Balancing                     ****/
   /********************************************************************/
-  /*                   !!! No Fly Mode !!! 
-        Copter is Only possible to controll from GUI Not With RC
-        All sensordata is disabled in Mixtable.*/ 
+  /*                   !!! No Fly Mode !!!                            */ 
 		
     //#define DYNBALANCE   // (**) Dynamic balancing controlled from Gui
 
