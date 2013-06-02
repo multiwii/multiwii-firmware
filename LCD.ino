@@ -1076,9 +1076,13 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #ifdef LCD_CONF_AUX
   #if ACC
     &lcd_param_text41, &conf.activate[BOXANGLE], &__AUX1,
-    &lcd_param_text41, &conf.activate[BOXANGLE], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text41, &conf.activate[BOXANGLE], &__AUX2,
+    #endif
     &lcd_param_text42, &conf.activate[BOXHORIZON], &__AUX1,
-    &lcd_param_text42, &conf.activate[BOXHORIZON], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text42, &conf.activate[BOXHORIZON], &__AUX2,
+    #endif
     #ifndef SUPPRESS_LCD_CONF_AUX34
       &lcd_param_text41, &conf.activate[BOXANGLE], &__AUX3,
       &lcd_param_text41, &conf.activate[BOXANGLE], &__AUX4,
@@ -1088,7 +1092,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   #endif
   #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
     &lcd_param_text43, &conf.activate[BOXBARO], &__AUX1,
-    &lcd_param_text43, &conf.activate[BOXBARO], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text43, &conf.activate[BOXBARO], &__AUX2,
+    #endif
     #ifndef SUPPRESS_LCD_CONF_AUX34
       &lcd_param_text43, &conf.activate[BOXBARO], &__AUX3,
       &lcd_param_text43, &conf.activate[BOXBARO], &__AUX4,
@@ -1096,7 +1102,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   #endif
   #if MAG
     &lcd_param_text44, &conf.activate[BOXMAG], &__AUX1,
-    &lcd_param_text44, &conf.activate[BOXMAG], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text44, &conf.activate[BOXMAG], &__AUX2,
+    #endif
     #ifndef SUPPRESS_LCD_CONF_AUX34
       &lcd_param_text44, &conf.activate[BOXMAG], &__AUX3,
       &lcd_param_text44, &conf.activate[BOXMAG], &__AUX4,
@@ -1104,33 +1112,43 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   #endif
   #ifdef GIMBAL
     &lcd_param_text45, &conf.activate[BOXCAMSTAB], &__AUX1,
-    &lcd_param_text45, &conf.activate[BOXCAMSTAB], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text45, &conf.activate[BOXCAMSTAB], &__AUX2,
+    #endif
     #ifndef SUPPRESS_LCD_CONF_AUX34
       &lcd_param_text45, &conf.activate[BOXCAMSTAB], &__AUX3,
       &lcd_param_text45, &conf.activate[BOXCAMSTAB], &__AUX4,
     #endif
     &lcd_param_text46, &conf.activate[BOXCAMTRIG], &__AUX1,
-    &lcd_param_text46, &conf.activate[BOXCAMTRIG], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text46, &conf.activate[BOXCAMTRIG], &__AUX2,
+    #endif
     #ifndef SUPPRESS_LCD_CONF_AUX34
       &lcd_param_text46, &conf.activate[BOXCAMTRIG], &__AUX3,
       &lcd_param_text46, &conf.activate[BOXCAMTRIG], &__AUX4,
     #endif
   #endif
   &lcd_param_text47, &conf.activate[BOXARM], &__AUX1,
-  &lcd_param_text47, &conf.activate[BOXARM], &__AUX2,
+  #ifndef SUPPRESS_LCD_CONF_AUX2
+    &lcd_param_text47, &conf.activate[BOXARM], &__AUX2,
+  #endif
   #ifndef SUPPRESS_LCD_CONF_AUX34
     &lcd_param_text47, &conf.activate[BOXARM], &__AUX3,
     &lcd_param_text47, &conf.activate[BOXARM], &__AUX4,
   #endif
   #if GPS
     &lcd_param_text48, &conf.activate[BOXGPSHOME], &__AUX1,
-    &lcd_param_text48, &conf.activate[BOXGPSHOME], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text48, &conf.activate[BOXGPSHOME], &__AUX2,
+    #endif
     #ifndef SUPPRESS_LCD_CONF_AUX34
       &lcd_param_text48, &conf.activate[BOXGPSHOME], &__AUX3,
       &lcd_param_text48, &conf.activate[BOXGPSHOME], &__AUX4,
     #endif
     &lcd_param_text49, &conf.activate[BOXGPSHOLD], &__AUX1,
-    &lcd_param_text49, &conf.activate[BOXGPSHOLD], &__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text49, &conf.activate[BOXGPSHOLD], &__AUX2,
+    #endif
     #ifndef SUPPRESS_LCD_CONF_AUX34
       &lcd_param_text49, &conf.activate[BOXGPSHOLD], &__AUX3,
       &lcd_param_text49, &conf.activate[BOXGPSHOLD], &__AUX4,
@@ -1138,7 +1156,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   #endif
   #if defined(FIXEDWING) || defined(HELICOPTER)
     &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX1,
-    &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX2,
+    #endif
     #ifndef SUPPRESS_LCD_CONF_AUX34
       &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX3,
       &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX4,
@@ -1146,7 +1166,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   #endif
   #if MAG
     &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX1,
-    &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX2,
+    #endif
     #ifndef SUPPRESS_LCD_CONF_AUX34
       &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX3,
       &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX4,
@@ -1154,7 +1176,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   #endif
   #if defined(BUZZER)
     &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX1,
-    &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX2,
+    #endif
     #ifndef SUPPRESS_LCD_CONF_AUX34
       &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX3,
       &lcd_param_text52, &conf.activate[BOXBEEPERON],&__AUX4,
@@ -1162,7 +1186,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   #endif
   #ifdef VARIOMETER
     &lcd_param_text53, &conf.activate[BOXVARIO],&__AUX1,
-    &lcd_param_text53, &conf.activate[BOXVARIO],&__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text53, &conf.activate[BOXVARIO],&__AUX2,
+    #endif
     #ifndef SUPPRESS_LCD_CONF_AUX34
       &lcd_param_text53, &conf.activate[BOXVARIO],&__AUX3,
       &lcd_param_text53, &conf.activate[BOXVARIO],&__AUX4,
@@ -1170,7 +1196,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   #endif
   #ifdef INFLIGHT_ACC_CALIBRATION
     &lcd_param_text54, &conf.activate[BOXCALIB],&__AUX1,
-    &lcd_param_text54, &conf.activate[BOXCALIB],&__AUX2,
+    #ifndef SUPPRESS_LCD_CONF_AUX2
+      &lcd_param_text54, &conf.activate[BOXCALIB],&__AUX2,
+    #endif
     #ifndef SUPPRESS_LCD_CONF_AUX34
       &lcd_param_text54, &conf.activate[BOXCALIB],&__AUX3,
       &lcd_param_text54, &conf.activate[BOXCALIB],&__AUX4,
@@ -1178,7 +1206,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   #endif
 #ifdef GOVERNOR_P
   &lcd_param_text55, &conf.activate[BOXGOV],&__AUX1,
-  &lcd_param_text55, &conf.activate[BOXGOV],&__AUX2,
+  #ifndef SUPPRESS_LCD_CONF_AUX2
+    &lcd_param_text55, &conf.activate[BOXGOV],&__AUX2,
+  #endif
   #ifndef SUPPRESS_LCD_CONF_AUX34
     &lcd_param_text55, &conf.activate[BOXGOV],&__AUX3,
     &lcd_param_text55, &conf.activate[BOXGOV],&__AUX4,
@@ -1186,7 +1216,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #endif
 #ifdef OSD_SWITCH
   &lcd_param_text56, &conf.activate[BOXOSD],&__AUX1,
-  &lcd_param_text56, &conf.activate[BOXOSD],&__AUX2,
+  #ifndef SUPPRESS_LCD_CONF_AUX2
+    &lcd_param_text56, &conf.activate[BOXOSD],&__AUX2,
+  #endif
   #ifndef SUPPRESS_LCD_CONF_AUX34
     &lcd_param_text56, &conf.activate[BOXOSD],&__AUX3,
     &lcd_param_text56, &conf.activate[BOXOSD],&__AUX4,
@@ -1833,6 +1865,39 @@ void fill_line2_gps_lon(uint8_t status) {
 }
 #endif
 
+#if defined(DEBUG) || defined(DEBUG_FREE)
+  #define PRINT_FREE_RAM  { \
+    extern unsigned int __bss_end; \
+    extern unsigned int __heap_start; \
+    extern void *__brkval; \
+    int free_memory; \
+    if((int)__brkval == 0) \
+      free_memory = ((int)&free_memory) - ((int)&__bss_end); \
+    else \
+      free_memory = ((int)&free_memory) - ((int)__brkval); \
+    strcpy_P(line1,PSTR(" Free ----")); \
+    line1[6] = digit1000( free_memory ); \
+    line1[7] = digit100( free_memory ); \
+    line1[8] = digit10( free_memory ); \
+    line1[9] = digit1( free_memory ); \
+    LCDsetLine(1); LCDprintChar(line1); \
+    telemetry = 0; \
+  }
+  #define PRINT_FREE_RAM_v2  { \
+    const uint8_t *ptr = &_end; \
+    uint16_t       free_memory = 0; \
+    while(*ptr == 0xa5 && ptr <= &__stack) \
+    {   ptr++; free_memory++; } \
+    strcpy_P(line1,PSTR(" Free ----")); \
+    line1[6] = digit1000( free_memory ); \
+    line1[7] = digit100( free_memory ); \
+    line1[8] = digit10( free_memory ); \
+    line1[9] = digit1( free_memory ); \
+    LCDsetLine(1); LCDprintChar(line1); \
+    telemetry = 0; \
+  }
+#endif
+
 /* ------------ DISPLAY_2LINES ------------------------------------*/
 #ifdef DISPLAY_2LINES
 void lcd_telemetry() {
@@ -1972,22 +2037,9 @@ void lcd_telemetry() {
     telemetry = 0;// no use to repeat this forever
     break;
 #endif // case R
-#ifdef DEBUG
+#if defined(DEBUG) || defined(DEBUG_FREE)
     case 'F':
-    extern unsigned int __bss_end;
-    extern unsigned int __heap_start;
-    extern void *__brkval;
-    int free_memory;
-    if((int)__brkval == 0)
-    free_memory = ((int)&free_memory) - ((int)&__bss_end);
-    else
-    free_memory = ((int)&free_memory) - ((int)__brkval);
-    strcpy_P(line1,PSTR(" Free ----")); // uint8_t free_memory
-    line1[6] = digit1000( free_memory );
-    line1[7] = digit100( free_memory );
-    line1[8] = digit10( free_memory );
-    line1[9] = digit1( free_memory );
-    LCDsetLine(1); LCDprintChar(line1);
+    PRINT_FREE_RAM;
     break;
 #endif // DEBUG
     // WARNING: if you add another case here, you should also add a case: in Serial.pde, so users can access your case via terminal input
@@ -2377,22 +2429,8 @@ void lcd_telemetry() {
 #endif // case R
 #if defined(DEBUG) || defined(DEBUG_FREE)
     case 'F':
-    extern unsigned int __bss_end;
-    extern unsigned int __heap_start;
-    extern void *__brkval;
-    int free_memory;
-    if((int)__brkval == 0)
-    free_memory = ((int)&free_memory) - ((int)&__bss_end);
-    else
-    free_memory = ((int)&free_memory) - ((int)__brkval);
-    strcpy_P(line1,PSTR(" Free ----")); // uint8_t free_memory
-    line1[6] = digit1000( free_memory );
-    line1[7] = digit100( free_memory );
-    line1[8] = digit10( free_memory );
-    line1[9] = digit1( free_memory );
-    LCDsetLine(1); LCDprintChar(line1);
-    telemetry = 0;// no use to repeat this forever
-    break;
+      PRINT_FREE_RAM;
+      break;
 #endif // DEBUG
     // WARNING: if you add another case here, you should also add a case: in Serial.pde, so users can access your case via terminal input
   } // end switch (telemetry)

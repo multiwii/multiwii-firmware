@@ -13,6 +13,7 @@
  * 6 - OPTIONAL FEATURES - enable nice to have features here (FlightModes, LCD, telemetry, battery monitor etc.)
  * 7 - TUNING & DEVELOPER - if you know what you are doing; you have been warned
  *     - (ESCs calibration, Dynamic Motor/Prop Balancing, Diagnostics,Memory savings.....)
+ * 8 - DEPRECATED - these features will be removed in some future release
  */
 
 /* Notes:
@@ -250,7 +251,6 @@
     //#define FLAPSPEED     3             // Make flaps move slowm Higher value is Higher Speed.
 
   /***********************      Common for Heli & Airplane         ***********************/
-    //#define D12_POWER      // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12
 
     /* Governor: attempts to maintain rpm through pitch and voltage changes
      * predictive approach: observe input signals and voltage and guess appropriate corrections.
@@ -583,11 +583,6 @@
     /* This will activate the ACC-Inflight calibration if unchecked */
     //#define INFLIGHT_ACC_CALIBRATION
 
-  /**************************    Disable WMP power pin     *******************************/
-    /* disable use of the POWER PIN
-       (allready done if the option RCAUXPIN12 is selected) */
-    #define DISABLE_POWER_PIN
-
   /*******************************    OSD Switch    *************************************/
     // This adds a box that can be interpreted by OSD in activation status (to switch on/off the overlay for instance)
   //#define OSD_SWITCH
@@ -740,7 +735,8 @@
     /* to include setting the aux switches for AUX1 -> AUX4 via LCD */
       //#define LCD_CONF_AUX
 
-    /* optional exclude some functionality - uncomment to suppress some unwanted telemetry pages */
+    /* optional exclude some functionality - uncomment to suppress unwanted aux channel configuration options */
+      //#define SUPPRESS_LCD_CONF_AUX2
       //#define SUPPRESS_LCD_CONF_AUX34
 
   /**************************************************************************************/
@@ -827,7 +823,7 @@
     /* uncomment to disable the altitude hold feature.
      * This is useful if all of the following apply
      * + you have a baro
-     * + want altitude readout
+     * + want altitude readout and/or variometer
      * + do not use altitude hold feature
      * + want to save memory space
      */
@@ -929,7 +925,7 @@
   /****           Memory savings                                   ****/
   /********************************************************************/
 
-    /* options to counter the general shortage of memory, like with leonardo m32u4 and others */
+    /* options to counter the general shortage of both flash and ram memory, like with leonardo m32u4 and others */
 
     /**** suppress handling of serial commands.***
      * This does _not_ affect handling of RXserial, Spektrum or GPS. Those will not be affected and still work the same.
@@ -1040,6 +1036,22 @@
        - repeat with other values of 2, 3, 4 etc.
         */
     //#define COPTERTEST 1
+
+/*************************************************************************************************/
+/*****************                                                                 ***************/
+/****************  SECTION  8 - DEPRECATED                                                 *******/
+/*****************                                                                 ***************/
+/*************************************************************************************************/
+
+  /* these features will be removed in the unforseeable future. Do not build new products or
+   * functionality based on such features. The default for all such features is OFF.
+   */
+
+  /**************************    WMP power pin     *******************************/
+  //#define D12_POWER      // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12
+  /* disable use of the POWER PIN (allready done if the option RCAUXPIN12 is selected) */
+  #define DISABLE_POWER_PIN
+
 
 /*************************************************************************************************/
 /****           END OF CONFIGURABLE PARAMETERS                                                ****/
