@@ -604,7 +604,7 @@ void GPS_set_pids() {
     i2c_rep_start(I2C_GPS_ADDRESS<<1);
       i2c_write(I2C_GPS_HOLD_P);
        i2c_write(conf.pid[PIDPOS].P8);
-       i2c_write(conf.pid[PIDPOS].P8);
+       i2c_write(conf.pid[PIDPOS].I8);
     
     i2c_rep_start(I2C_GPS_ADDRESS<<1);
       i2c_write(I2C_GPS_HOLD_RATE_P);
