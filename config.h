@@ -337,7 +337,7 @@
       /* The following line apply only for Futaba S-Bus Receiver on MEGA boards at RX1 only (Serial 1).
          You have to invert the S-Bus-Serial Signal e.g. with a Hex-Inverter like IC SN74 LS 04 */
       //#define SBUS
-
+      //#define SBUS_SERIAL_PORT 1
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/

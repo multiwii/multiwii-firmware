@@ -161,10 +161,14 @@ void serialCom() {
     #endif
     #define SPEK_COND
     #if defined(SPEKTRUM) && (UART_NUMBER > 1)
-      #define SPEK_COND  && (SPEK_SERIAL_PORT != CURRENTPORT)
+      #define SPEK_COND && (SPEK_SERIAL_PORT != CURRENTPORT)
+    #endif
+    #define SBUS_COND
+    #if defined(SBUS) && (UART_NUMBER > 1)
+      #define SBUS_COND && (SBUS_SERIAL_PORT != CURRENTPORT)
     #endif
     uint8_t cc = SerialAvailable(CURRENTPORT);
-    while (cc-- GPS_COND SPEK_COND) {
+    while (cc-- GPS_COND SPEK_COND SBUS_COND) {
       uint8_t bytesTXBuff = ((uint8_t)(serialHeadTX[CURRENTPORT]-serialTailTX[CURRENTPORT]))%TX_BUFFER_SIZE; // indicates the number of occupied bytes in TX buffer
       if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (50 bytes margin)
       c = SerialRead(CURRENTPORT);
