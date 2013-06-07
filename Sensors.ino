@@ -1086,7 +1086,7 @@ uint8_t Mag_getADC() { // return 1 when news values are available, 0 otherwise
   } else {
     #if defined(SENSORS_TILT_45DEG_LEFT)
       int16_t temp = ((imu.magADC[PITCH] - imu.magADC[ROLL] )*7)/10;
-      magADC[ROLL] = ((imu.magADC[ROLL]  + imu.magADC[PITCH])*7)/10;
+      imu.magADC[ROLL] = ((imu.magADC[ROLL]  + imu.magADC[PITCH])*7)/10;
       imu.magADC[PITCH] = temp;
     #endif
     #if defined(SENSORS_TILT_45DEG_RIGHT)
