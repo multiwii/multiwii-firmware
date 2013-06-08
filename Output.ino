@@ -911,6 +911,8 @@ int16_t get_middle(uint8_t nr) {
   return (conf.servoConf[nr].middle < RC_CHANS) ? rcData[conf.servoConf[nr].middle] : conf.servoConf[nr].middle;
 }
 
+// int8_t servodir(uint8_t n, uint8_t b) { return ((conf.servoConf[n].rate & b) ? -1 : 1) ; }
+
 void mixTable() {
   int16_t maxMotor;
   uint8_t i;
@@ -1199,15 +1201,15 @@ void mixTable() {
 
     //              ( Collective, Pitch/Nick, Roll ) Change sign to invert
     /************************************************************************************************************/
-    #define HeliXPIDMIX(Z,Y,X) (collRange[1]*Z + collective*Z + heliNick*Y +  heliRoll*X)/10
+    #define HeliXPIDMIX(Z,Y,X) ( (collRange[1] + collective)*Z + heliNick*Y +  heliRoll*X)/10
     #ifdef HELI_120_CCPM
       static int8_t nickMix[3] = SERVO_NICK;
       static int8_t leftMix[3] = SERVO_LEFT;
       static int8_t rightMix[3]= SERVO_RIGHT;
 
-      servo[3]  =  HeliXPIDMIX( ( nickMix[0]), nickMix[1], nickMix[2]);   //    NICK  servo
-      servo[4]  =  HeliXPIDMIX( ( leftMix[0]), leftMix[1], leftMix[2]);   //    LEFT servo
-      servo[6]  =  HeliXPIDMIX( (rightMix[0]),rightMix[1],rightMix[2]);   //    RIGHT  servo
+      servo[3]  =  HeliXPIDMIX( ( SERVODIR(3,4) * nickMix[0]), SERVODIR(3,2) * nickMix[1], SERVODIR(3,1) * nickMix[2]);   //    NICK  servo
+      servo[4]  =  HeliXPIDMIX( ( SERVODIR(4,4) * leftMix[0]), SERVODIR(4,2) * leftMix[1], SERVODIR(4,1) * leftMix[2]);   //    LEFT  servo
+      servo[6]  =  HeliXPIDMIX( ( SERVODIR(6,4) * rightMix[0]),SERVODIR(6,2) * rightMix[1],SERVODIR(6,1) * rightMix[2]);  //    RIGHT servo
     #endif
     /************************************************************************************************************/
     #ifdef HELI_90_DEG
@@ -1305,9 +1307,9 @@ void mixTable() {
     #endif
   #endif
 
-  /****************                Filter the Motors values                ******************/
-  #ifdef GOVERNOR_P
-    if (rcOptions[BOXGOV] ) {
+  /****************                compensate the Motors values                ******************/
+  #ifdef VOLTAGEDROP_COMPENSATION
+    {
       #if (VBATNOMINAL == 126)
         #define GOV_R_NUM 36
         static int8_t g[] = { 0,3,5,8,11,14,17,19,22,25,28,31,34,38,41,44,47,51,54,58,61,65,68,72,76,79,83,87,91,95,99,104,108,112,117,121,126 };
@@ -1315,11 +1317,11 @@ void mixTable() {
         #define GOV_R_NUM 24
         static int8_t g[] = { 0,4,8,12,17,21,25,30,34,39,44,49,54,59,65,70,76,81,87,93,99,106,112,119,126 };
       #else
-        #error "GOVERNOR_R requires correction values which fit VBATNOMINAL; not yet defined for your value of VBATNOMINAL"
+        #error "VOLTAGEDROP_COMPENSATION requires correction values which fit VBATNOMINAL; not yet defined for your value of VBATNOMINAL"
       #endif
       uint8_t v = constrain( VBATNOMINAL - constrain(analog.vbat, conf.vbatlevel_crit, VBATNOMINAL), 0, GOV_R_NUM);
       for (i = 0; i < NUMBER_MOTOR; i++) {
-        motor[i] += ( ( (int32_t)(motor[i]-1000) * (int32_t)g[v] ) * (int32_t)conf.governorR )/ 5000;
+        motor[i] += ( ( (int32_t)(motor[i]-1000) * (int32_t)g[v] ) )/ 500;
       }
     }
   #endif

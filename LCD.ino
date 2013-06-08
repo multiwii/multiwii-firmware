@@ -16,7 +16,7 @@ static char template3[3] = ". ";
   static uint8_t lnr = 0;
 #endif
 
-#define LCD_FLUSH {/*UartSendData();*/ delayMicroseconds(20000); }
+#define LCD_FLUSH {/*UartSendData();*/ delay(30); }
 
 char digit10000(uint16_t v) {return '0' + v / 10000;}
 char digit1000(uint16_t v) {return '0' + v / 1000 - (v/10000) * 10;}
@@ -507,16 +507,23 @@ void i2c_LCD03_set_cursor (byte col, byte row) {
 // *********************
 void i2c_OLED_DIGOLE_init () {
   i2c_OLED_DIGOLE_send_string("CL");    // clear screen
+  //  delayMicroseconds(500);
   //  i2c_OLED_DIGOLE_send_string("BL");  // backlight _
   //  i2c_write(0x01);                    // _ on
-  //  i2c_OLED_DIGOLE_send_string("CT");  // contrast _
-  //  i2c_write(7);                       // _ 70
+  i2c_OLED_DIGOLE_send_string("CT");  // contrast _
+  i2c_write(100); // contrast [0;100]
+  //  i2c_write('C'); i2c_write('T'); i2c_write(100); // contrast [0;100]
   //i2c_OLED_DIGOLE_send_string("DSS");    // display start screen _
   //i2c_write(0);                         // _ off
   //i2c_OLED_DIGOLE_send_string("CS");    // show cursor _
   //i2c_write(0);                         // _ off
   //i2c_OLED_DIGOLE_printString("123456789.123456789.");
-  //delayMicroseconds(100);
+//    delayMicroseconds(500);
+//    i2c_OLED_DIGOLE_send_string("MCD"); // manual command
+//    i2c_write(0x81); //ssd1306: set contrast to _
+//    i2c_OLED_DIGOLE_send_string("MCD"); // manual data
+//    i2c_write(0xFF);  // _ value [0;255]
+//    delayMicroseconds(500);
 }
 void i2c_OLED_DIGOLE_send_byte (byte c) {
   i2c_rep_start(OLED_DIGOLE_ADDRESS<<1);
@@ -533,10 +540,11 @@ void i2c_OLED_DIGOLE_send_string(const char *string){  // Sends a string of char
   //delayMicroseconds(10);
 }
 void i2c_OLED_DIGOLE_printString(const char *string){  // prints a string of chars
-  i2c_rep_start(OLED_DIGOLE_ADDRESS<<1);
-  i2c_write(0x00);
-  i2c_write('T');
-  i2c_write('T');
+  //  i2c_rep_start(OLED_DIGOLE_ADDRESS<<1);
+  //  i2c_write(0x00);
+  //  i2c_write('T');
+  //  i2c_write('T');
+  i2c_OLED_DIGOLE_send_string("TT");  // type text _
   while(*string){
     i2c_write(*string);
     *string++;
@@ -850,6 +858,7 @@ typedef void (*inc_func_ptr)(void *, int16_t);
 };
 
 static lcd_type_desc_t LTU8 = {&__u8Fmt, &__u8Inc};
+static lcd_type_desc_t LTS8 = {&__s8BitsFmt, &__s8Inc};
 static lcd_type_desc_t LTU16 = {&__u16Fmt, &__u16Inc};
 static lcd_type_desc_t LTS16 = {&__s16Fmt, &__s16Inc};
 static lcd_type_desc_t LPMM = {&__upMFmt, &__nullInc};
@@ -893,6 +902,7 @@ static lcd_param_def_t __AUX1 = {&LAUX1, 0, 1, 1};
 static lcd_param_def_t __AUX2 = {&LAUX2, 0, 1, 8};
 static lcd_param_def_t __AUX3 = {&LAUX3, 0, 1, 64};
 static lcd_param_def_t __AUX4 = {&LAUX4, 0, 1, 512};
+static lcd_param_def_t __BITS = {&LTS8, 0, 1, 1};
 
 // Program Space Strings - These sit in program flash, not SRAM.
 //                                       0123456789
@@ -975,6 +985,10 @@ const char PROGMEM lcd_param_text73 [] = "SERvTRIMn";
 const char PROGMEM lcd_param_text74 [] = "SERvTRIMl";
 const char PROGMEM lcd_param_text75 [] = "SERvTRIMy";
 const char PROGMEM lcd_param_text76 [] = "SERvTRIMr";
+const char PROGMEM lcd_param_text140 [] = "SERvINVn";
+const char PROGMEM lcd_param_text141 [] = "SERvINVl";
+const char PROGMEM lcd_param_text142 [] = "SERvINVy";
+const char PROGMEM lcd_param_text143 [] = "SERvINVr";
 #endif
 #ifdef GYRO_SMOOTHING //                 0123456789
 const char PROGMEM lcd_param_text80 [] = "GSMOOTH R ";
@@ -1289,11 +1303,14 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text74, &conf.servoConf[4].middle, &__SE,
   &lcd_param_text76, &conf.servoConf[6].middle, &__SE,
   &lcd_param_text75, &conf.servoConf[5].middle, &__SE,
+  &lcd_param_text140, &conf.servoConf[3].rate, &__BITS,
+  &lcd_param_text141, &conf.servoConf[4].rate, &__BITS,
+  &lcd_param_text143, &conf.servoConf[6].rate, &__BITS,
+  &lcd_param_text142, &conf.servoConf[5].rate, &__BITS,
 #endif
 #ifdef GOVERNOR_P
   &lcd_param_text133, &conf.governorP, &__D,
   &lcd_param_text134, &conf.governorD, &__D,
-  &lcd_param_text135, &conf.governorR, &__P,
 #endif
 #ifdef GYRO_SMOOTHING
   &lcd_param_text80, &conf.Smoothing[0], &__D,
@@ -1320,6 +1337,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 // ************************************************************************************************************
 
 void __u8Inc(void * var, int16_t inc) {*(uint8_t*)var += (uint8_t)inc;};
+void __s8Inc(void * var, int16_t inc) {*(int8_t*)var += (int8_t)inc;};
 void __u16Inc(void * var, int16_t inc) {*(uint16_t*)var += inc;};
 void __s16Inc(void * var, int16_t inc) {*(int16_t*)var += inc;};
 void __nullInc(void * var, int16_t inc) {};
@@ -1363,24 +1381,17 @@ void __uAuxFmt4(void * var, uint8_t mul, uint8_t dec) {  __uAuxFmt(var, mul, dec
 
 void __uAuxFmt(void * var, uint8_t mul, uint8_t dec, uint8_t aux) {
   uint16_t unit = *(uint16_t*)var;
-  line2[0] =  (aux == 1 ? '1' : ' ');
-  line2[1] =  ( unit & 1<<0 ? 'L' : '.' );
-  line2[2] =  ( unit & 1<<1 ? 'M' : '.' );
-  line2[3] =  ( unit & 1<<2 ? 'H' : '.' );
-  line2[4] =  (aux == 2 ? '2' : ' ');
-  line2[5] =  ( unit & 1<<3 ? 'L' : '.' );
-  line2[6] =  ( unit & 1<<4 ? 'M' : '.' );
-  line2[7] =  ( unit & 1<<5 ? 'H' : '.' );
-#ifndef OLED_I2C_128x64 // not enough space for 16 chars, sorry
-  line2[8] =  (aux == 3 ? '3' : ' ');
-  line2[9] =  ( unit & 1<<6 ? 'L' : '.' );
-  line2[10] = ( unit & 1<<7 ? 'M' : '.' );
-  line2[11] = ( unit & 1<<8 ? 'H' : '.' );
-  line2[12] = (aux == 4 ? '4' : ' ');
-  line2[13] = ( unit & 1<<9 ? 'L' : '.' );
-  line2[14] = ( unit & 1<<10 ? 'M' : '.' );
-  line2[15] = ( unit & 1<<11 ? 'H' : '.' );
-#endif
+  line2[1] =  digit1(aux);
+  line2[3] =  ( unit & 1<<(3*aux-3) ? 'L' : '.' );
+  line2[4] =  ( unit & 1<<(3*aux-2) ? 'M' : '.' );
+  line2[5] =  ( unit & 1<<(3*aux-1) ? 'H' : '.' );
+}
+
+void __s8BitsFmt(void * var, uint8_t mul, uint8_t dec) {
+  int8_t unit = *(int8_t*)var;
+  line2[1] =  ( unit & 1<<2 ? 'C' : '.' );
+  line2[2] =  ( unit & 1<<1 ? 'N' : '.' );
+  line2[3] =  ( unit & 1<<0 ? 'R' : '.' );
 }
 
 #ifdef POWERMETER
@@ -2441,11 +2452,13 @@ void lcd_telemetry() {
 void toggle_telemetry(uint8_t t) {
   if (telemetry == t) telemetry = 0; 
   else {
-     telemetry = t; 
-     #ifdef OLED_I2C_128x64
-       if (telemetry != 0) i2c_OLED_init();
-     #endif
-     LCDclear();
+    telemetry = t;
+    #if defined( OLED_I2C_128x64)
+      if (telemetry != 0) i2c_OLED_init();
+    #elif defined(OLED_DIGOLE)
+      if (telemetry != 0) i2c_OLED_DIGOLE_init();
+    #endif
+    LCDclear();
   }
 }
 #endif //  LCD_TELEMETRY

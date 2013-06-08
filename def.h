@@ -59,7 +59,7 @@
   #define LOG_PERMANENT_SERVICE_LIFETIME 36000
   #define GOVERNOR_P 0
   #define GOVERNOR_D 10
-  #define GOVERNOR_R 10
+  #define VOLTAGEDROP_COMPENSATION
 #elif COPTERTEST == 6
   #define HEX6H
   #define DIYFLYING_MAGE_V1
@@ -67,9 +67,7 @@
   #define RCOPTIONSBEEP // ca. 80byte
   #define ARMEDTIMEWARNING 480 // 8 min = 480seconds
   #define VBAT
-  #define GOVERNOR_P 0
-  #define GOVERNOR_D 10
-  #define GOVERNOR_R 10
+  #define VOLTAGEDROP_COMPENSATION
   #define MEGA_HW_PWM_SERVOS
   #define SERVO_RFR_RATE  300    // In Hz, you can set it from 20 to 400Hz, used only in HW PWM mode
   #define LOG_VALUES 1

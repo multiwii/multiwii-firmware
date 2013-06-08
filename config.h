@@ -259,7 +259,8 @@
      */
     //#define GOVERNOR_P 7     // (*) proportional factor. Higher value -> higher throttle increase. Must be >=1; 0 = turn off
     //#define GOVERNOR_D 4     // (*) decay timing. Higher value -> takes longer to return throttle to normal. Must be >=1;
-    //#define GOVERNOR_R 10    // (*) voltage impact correction scale in 0.1 units. Higher value -> more compensation for voltage drops. normal is value 10 <=> 1.0; 0 is off
+
+    //#define VOLTAGEDROP_COMPENSATION // voltage impact correction
 
   /***********************          Heli                           ***********************/
     /* Channel to control CollectivePitch */

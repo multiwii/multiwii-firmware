@@ -461,7 +461,6 @@ static struct {
   #ifdef GOVERNOR_P
    int16_t governorP;
    int16_t governorD;
-   int8_t  governorR;
   #endif
   uint8_t  checksum;      // MUST BE ON LAST POSITION OF CONF STRUCTURE ! 
 } conf;
@@ -1084,8 +1083,10 @@ void loop () {
         #ifdef LCD_TELEMETRY_STEP
           else if (rcSticks == THR_LO + YAW_CE + PIT_HI + ROL_HI) {              // Telemetry next step
             telemetry = telemetryStepSequence[++telemetryStepIndex % strlen(telemetryStepSequence)];
-            #ifdef OLED_I2C_128x64
+            #if defined( OLED_I2C_128x64)
               if (telemetry != 0) i2c_OLED_init();
+            #elif defined(OLED_DIGOLE)
+              if (telemetry != 0) i2c_OLED_DIGOLE_init();
             #endif
             LCDclear();
           }
