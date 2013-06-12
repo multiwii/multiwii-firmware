@@ -291,7 +291,7 @@ struct flags_struct {
   static uint16_t cycleTimeMax = 0;       // highest ever cycle timen
   static uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
   static int32_t  BAROaltMax;             // maximum value
-  static uint8_t  GPS_speedMaxKmh = 0;    // maximum speed from gps in km/h
+  static uint8_t  GPS_speedMax = 0;    // maximum speed from gps
   static uint16_t powerValueMaxMAH = 0;
 #endif
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
@@ -754,6 +754,9 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       #if BARO
         if ( (BaroAlt > BAROaltMax) ) BAROaltMax = BaroAlt;
       #endif
+      #if GPS
+        if ( (GPS_speed > GPS_speedMax) ) GPS_speedMax = GPS_speed;
+      #endif
     #endif
   }
 }
@@ -914,7 +917,7 @@ void go_arm() {
           BAROaltMax = BaroAlt;
         #endif
         #if GPS
-          GPS_speedMaxKmh = 0;
+          GPS_speedMax = 0;
         #endif
         #ifdef POWERMETER_HARD
           powerValueMaxMAH = 0;

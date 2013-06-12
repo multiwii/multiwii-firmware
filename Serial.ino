@@ -624,7 +624,7 @@ void evaluateOtherData(uint8_t sr) {
         case '7':
         case '8':
         case '9':
-      #if defined(LOG_VALUES) || defined(DEBUG)
+      #ifndef SUPPRESS_TELEMETRY_PAGE_R
         case 'R':
       #endif
       #if defined(DEBUG) || defined(DEBUG_FREE)

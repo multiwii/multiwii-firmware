@@ -767,6 +767,7 @@
     //#define SUPPRESS_TELEMETRY_PAGE_7
     //#define SUPPRESS_TELEMETRY_PAGE_8
     //#define SUPPRESS_TELEMETRY_PAGE_9
+    //#define SUPPRESS_TELEMETRY_PAGE_R
 
   /********************************************************************/
   /****                             RSSI                           ****/

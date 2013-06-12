@@ -2351,13 +2351,13 @@ void lcd_telemetry() {
         case 4: // gps speed
         {
           uint8_t v = (GPS_speed * 0.036f);
-          if (v > GPS_speedMaxKmh) GPS_speedMaxKmh = v;
           strcpy_P(line1,PSTR("--km/h max--km/h"));
           //                   0123456789012345
           line1[0] = digit10(v);
           line1[1] = digit1(v);
-          line1[10] = digit10(GPS_speedMaxKmh);
-          line1[11] = digit1(GPS_speedMaxKmh);
+          v = (GPS_speedMax * 0.036f);
+          line1[10] = digit10(v);
+          line1[11] = digit1(v);
           LCDprintChar(line1);
           break;
         }
@@ -2420,18 +2420,22 @@ void lcd_telemetry() {
     LCDcrlf();
     break;
 #endif // page 9
-#if defined(LOG_VALUES) || defined(DEBUG)
+#ifndef SUPPRESS_TELEMETRY_PAGE_R
     case 'R':
     {
       //Reset logvalues
-      cycleTimeMax = 0;
-      cycleTimeMin = 65535;
+      #if defined(LOG_VALUES) && (LOG_VALUES >= 2)
+        cycleTimeMax = 0;
+        cycleTimeMin = 65535;
+      #endif
       #if BARO
         #if defined(LOG_VALUES)
           BAROaltMax = 0;
         #endif
       #endif
-      failsafeEvents = 0; // reset failsafe counter
+      #if defined(FAILSAFE)
+          failsafeEvents = 0; // reset failsafe counter
+      #endif
       i2c_errors_count = 0;
       f.OK_TO_ARM = 1; // allow arming again
       telemetry = 0; // no use to repeat this forever
