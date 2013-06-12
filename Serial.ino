@@ -207,6 +207,7 @@ void serialCom() {
             evaluateCommand();  // we got a valid packet, evaluate it
           }
           c_state[CURRENTPORT] = IDLE;
+          cc = 0; // no more than one MSP per port and per cycle
         }
       #endif // SUPPRESS_ALL_SERIAL_MSP
     }
