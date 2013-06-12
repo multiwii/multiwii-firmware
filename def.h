@@ -185,7 +185,7 @@
     #define NUMBER_MOTOR   0 // use servo to drive throttle output
     #define PRI_SERVO_TO   8 // use servo from 4 to 8
   #else
-    #define NUMBER_MOTOR   1 // use motor1 for throttle, DO  NOT SET TO 2, OR IT WILL BREAK SERVO7 USED FOR SWASH
+    #define NUMBER_MOTOR   1 // use motor1 for throttle, DO  NOT SET TO 2, OR IT WILL BURN/DESTROY SERVO7 USED FOR SWASH
     #define PRI_SERVO_TO   7 // use servo from 4 to 7
   #endif
 #endif
@@ -800,8 +800,8 @@
   #endif
 #endif
 
-#if defined(MEGA) && defined(MEGA_HW_PWM_SERVOS)
-  #undef SERVO_1_HIGH                                    // No software PWM's if we use hardware MEGA PWM
+#if ( defined(MEGA) && defined(MEGA_HW_PWM_SERVOS) ) || (defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS))
+  #undef SERVO_1_HIGH                                    // No software PWM's if we use hardware MEGA PWM or promicro hardware pwm
 #endif
 
 
@@ -1996,4 +1996,8 @@
 
 #if defined(LCD_TELEMETRY_STEP) && !(defined(LCD_TELEMETRY))
         #error "to use single step telemetry, you MUST also define and configure LCD_TELEMETRY"
+#endif
+
+#if defined(A32U4_4_HW_PWM_SERVOS) && !(defined(HELI_120_CCPM))
+  #error "for your protection: A32U4_4_HW_PWM_SERVOS was not tested with your coptertype"
 #endif

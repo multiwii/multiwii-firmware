@@ -8,16 +8,20 @@
 #endif
 #if defined(PROMICRO)
   #if !defined(HWPWM6)
-    #if !defined(TEENSY20)
-      uint8_t PWM_PIN[8] = {9,10,5,6,4,A2,SW_PWM_P3,SW_PWM_P4};   //for a quad+: rear,right,left,front
-    #else
+    #if defined(TEENSY20)
       uint8_t PWM_PIN[8] = {14,15,9,12,22,18,16,17};   //for a quad+: rear,right,left,front
+    #elif defined(A32U4_4_HW_PWM_SERVOS)
+      uint8_t PWM_PIN[8] = {6,9,10,11,5,13,SW_PWM_P3,SW_PWM_P4};   //
+    #else
+    uint8_t PWM_PIN[8] = {9,10,5,6,4,A2,SW_PWM_P3,SW_PWM_P4};   //for a quad+: rear,right,left,front
     #endif
   #else
-    #if !defined(TEENSY20)
-      uint8_t PWM_PIN[8] = {9,10,5,6,11,13,SW_PWM_P3,SW_PWM_P4};   //for a quad+: rear,right,left,front
-    #else
+    #if defined(TEENSY20)
       uint8_t PWM_PIN[8] = {14,15,9,12,4,10,16,17};   //for a quad+: rear,right,left,front
+    #elif defined(A32U4_4_HW_PWM_SERVOS)
+      uint8_t PWM_PIN[8] = {6,9,10,11,5,13,SW_PWM_P3,SW_PWM_P4};   //
+    #else
+      uint8_t PWM_PIN[8] = {9,10,5,6,11,13,SW_PWM_P3,SW_PWM_P4};   //for a quad+: rear,right,left,front
     #endif
   #endif
 #endif
@@ -28,9 +32,10 @@
 /**************************************************************************************/
 /***************         Software PWM & Servo variables            ********************/
 /**************************************************************************************/
-#if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))
+#if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || \
+  (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))  || (defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS))
   #if defined(SERVO)
-    #if defined(AIRPLANE)|| defined(HELICOPTER)
+    #if defined(AIRPLANE) || defined(HELICOPTER)
       // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
       volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,5}; 
     #else
@@ -119,7 +124,8 @@ void writeServos() {
   #if defined(SERVO)
     #if defined(PRI_SERVO_FROM)    // write primary servos
       for(uint8_t i = (PRI_SERVO_FROM-1); i < PRI_SERVO_TO; i++){
-        #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))
+        #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || \
+            (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))   || (defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS))
           atomicServo[i] = (servo[i]-1000)>>2;
         #else
           atomicServo[i] = (servo[i]-1000)<<4;
@@ -182,6 +188,21 @@ void writeServos() {
         OCR4C = servo[7];
       #endif
     #endif
+    // write HW PWM servos for the promicro
+    #if defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS)
+      #if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7)
+        OCR1A = servo[6];// Pin 9
+      #endif
+      #if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5)
+        OCR1B = servo[4];// Pin 10
+      #endif
+      #if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6)
+        OCR1C = servo[5];// Pin 11
+      #endif
+      #if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4)
+        OCR3A = servo[3];// Pin 5
+      #endif
+    #endif
   #endif
 }
 
@@ -238,14 +259,26 @@ void writeMotors() { // [1000;2000] => [125;250]
       #endif
     #endif
   #endif
-  
+
   /******** Specific PWM Timers & Registers for the atmega32u4 (Promicro)   ************/
   #if defined(PROMICRO)
-    #if (NUMBER_MOTOR > 0) // Timer 1 A & B [1000:2000] => [8000:16000]
-      #ifndef EXT_MOTOR_RANGE 
-        OCR1A = motor[0]<<3; //  pin 9
+    #if (NUMBER_MOTOR > 0)
+      #if defined(A32U4_4_HW_PWM_SERVOS)
+        // write motor0 to pin 6
+        // Timer 4 A & D [1000:2000] => [1000:2000]
+        #ifndef EXT_MOTOR_RANGE
+          TC4H = motor[0]>>8; OCR4D = (motor[0]&0xFF); //  pin 6
+        #else
+          TC4H = (((motor[0]-1000)<<1)+16)>>8; OCR4D = ((((motor[0]-1000)<<1)+16)&0xFF); //  pin 6
+        #endif
       #else
-        OCR1A = ((motor[0]<<4) - 16000) + 128;
+        // write motor0 to pin 9
+        // Timer 1 A & B [1000:2000] => [8000:16000]
+        #ifndef EXT_MOTOR_RANGE
+          OCR1A = motor[0]<<3; //  pin 9
+        #else
+          OCR1A = ((motor[0]<<4) - 16000) + 128;
+        #endif
       #endif
     #endif
     #if (NUMBER_MOTOR > 1)
@@ -315,7 +348,7 @@ void writeMotors() { // [1000;2000] => [125;250]
       #endif
     #endif
   #endif
-  
+
   /********  Specific PWM Timers & Registers for the atmega328P (Promini)   ************/
   #if defined(PROMINI)
     #if (NUMBER_MOTOR > 0)
@@ -433,7 +466,7 @@ void initOutput() {
   
   /******** Specific PWM Timers & Registers for the atmega32u4 (Promicro)   ************/
   #if defined(PROMICRO)
-    #if (NUMBER_MOTOR > 0)
+    #if (NUMBER_MOTOR > 0) && ( !defined(A32U4_4_HW_PWM_SERVOS) )
       TCCR1A |= (1<<WGM11); // phase correct mode & no prescaler
       TCCR1A &= ~(1<<WGM10);
       TCCR1B &= ~(1<<WGM12) &  ~(1<<CS11) & ~(1<<CS12);
@@ -459,7 +492,7 @@ void initOutput() {
         TCCR3A |= _BV(COM3A1); // connect pin 5 to timer 3 channel A    
       #endif 
     #endif
-    #if (NUMBER_MOTOR > 3)
+    #if (NUMBER_MOTOR > 3) || ( (NUMBER_MOTOR > 0) && defined(A32U4_4_HW_PWM_SERVOS) )
       #if defined(HWPWM6) 
         TCCR4E |= (1<<ENHC4); // enhanced pwm mode
         TCCR4B &= ~(1<<CS41); TCCR4B |= (1<<CS42)|(1<<CS40); // prescaler to 16
@@ -535,7 +568,8 @@ void initOutput() {
 /************                Initialize the PWM Servos               ******************/
 /**************************************************************************************/
 void initializeServo() {
-  #if !defined(MEGA) || !defined(MEGA_HW_PWM_SERVOS)    // no pins init with mega and HW PWM's there
+  #if ! ( (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))  ||  (defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS)) )
+  // do pins init if not with one of (mega & HW PWMs) or (promicro & HW PWMs)
     #if (PRI_SERVO_FROM == 1) || (SEC_SERVO_FROM == 1)
       SERVO_1_PINMODE;
     #endif
@@ -562,7 +596,7 @@ void initializeServo() {
     #endif
   #endif
 
-  #if defined(SERVO_1_HIGH)  
+  #if defined(SERVO_1_HIGH) && !defined(A32U4_4_HW_PWM_SERVOS) // but this is off for servo hw pwm, please
     #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) // uses timer 0 Comperator A (8 bit)
       TCCR0A = 0; // normal counting mode
       TIMSK0 |= (1<<OCIE0A); // Enable CTC interrupt
@@ -668,6 +702,43 @@ void initializeServo() {
         TCCR4A |= _BV(COM4C1); // connect pin 8 to timer 4 channel C
       #endif
     #endif 
+  #endif // mega hw pwm
+
+  #if defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS)
+    TIMSK1 &= ~(1<<OCIE1A) & ~(1<<OCIE1B) & ~(1<<OCIE1C);
+    TCCR1A |= (1<<WGM11); // phase correct mode & prescaler to 8
+    TCCR1A &= ~(1<<WGM10);
+    TCCR1B &= ~(1<<WGM12) &  ~(1<<CS10) & ~(1<<CS12);
+    TCCR1B |= (1<<WGM13) | (1<<CS11);
+    pinMode(9,OUTPUT);
+    TCCR1A |= (1<<COM1A1); // pin 9
+    pinMode(10,OUTPUT);
+    TCCR1A |= (1<<COM1B1); // pin 10
+    pinMode(11,OUTPUT);
+    TCCR1A |= (1<<COM1C1); // pin 11
+
+    TCCR3A |= (1<<WGM31); // phase correct mode & prescaler to 8
+    TCCR3A &= ~(1<<WGM30);
+    TCCR3B &= ~(1<<WGM32) &  ~(1<<CS30) & ~(1<<CS32);
+    TCCR3B |= (1<<WGM33) | (1<<CS31);
+    pinMode(5,OUTPUT);
+    TCCR3A |= (1<<COM3A1); // pin 5
+    #if defined(SERVO_RFR_RATE)
+      #if (SERVO_RFR_RATE < 50) || (SERVO_RFR_RATE > 400)
+        #error "* invalid SERVO_RFR_RATE specified"
+      #endif
+      #define SERVO_TOP_VAL (uint16_t)(1000000L / SERVO_RFR_RATE)
+    #elif defined(SERVO_RFR_50HZ)
+      #define SERVO_TOP_VAL 16700
+    #elif defined(SERVO_RFR_160HZ)
+      #define SERVO_TOP_VAL 6200
+    #elif defined(SERVO_RFR_300HZ)
+      #define SERVO_TOP_VAL 3300
+    #else
+      #error "* must set SERVO_RFR_RATE or one of the fixed refresh rates of 50, 160 or 300 Hz"
+    #endif
+    ICR1   = SERVO_TOP_VAL; // set TOP
+    ICR3   = SERVO_TOP_VAL; // set TOP
   #endif
 }
 
@@ -681,7 +752,7 @@ void initializeServo() {
 
 // for servo 2-8
 // its almost the same as for servo 1
-#if defined(SERVO_1_HIGH)
+#if defined(SERVO_1_HIGH) && !defined(A32U4_4_HW_PWM_SERVOS)
   #define SERVO_PULSE(PIN_HIGH,ACT_STATE,SERVO_NUM,LAST_PIN_LOW) \
     }else if(state == ACT_STATE){                                \
       LAST_PIN_LOW;                                              \
@@ -1305,6 +1376,12 @@ void mixTable() {
     #if defined(TRI) && defined(MEGA_HW_PWM_SERVOS) && defined(MEGA)
       servo[3] = servo[5];    // copy TRI serwo value to propper output servo for MEGA_HW_PWM_SERVOS
     #endif
+//    #if defined(HELICOPTER) && defined(A32U4_4_HW_PWM_SERVOS) && defined(PROMICRO)
+//      servo[0] = servo[3];
+//      servo[1] = servo[4];
+//      servo[2] = servo[5];
+//      servo[3] = servo[6];
+//    #endif
   #endif
 
   /****************                compensate the Motors values                ******************/
