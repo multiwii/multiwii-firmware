@@ -956,9 +956,8 @@ void loop () {
   static uint8_t rcSticks;       // this hold sticks position for command combos
   uint8_t axis,i;
   int16_t error,errorAngle;
-  int16_t delta,deltaSum;
-  int16_t PTerm,ITerm,DTerm;
-  int16_t PTermACC = 0 , ITermACC = 0 , PTermGYRO = 0 , ITermGYRO = 0;
+  int16_t delta;
+  int16_t PTerm = 0,ITerm = 0,DTerm, PTermACC, ITermACC;
   static int16_t lastGyro[3] = {0,0,0};
   static int16_t delta1[3],delta2[3];
   static int16_t errorGyroI[3] = {0,0,0};
@@ -1404,53 +1403,44 @@ void loop () {
   #endif
 
   //**** PITCH & ROLL & YAW PID ****
-  int16_t prop;
-  prop = min(max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])),500); // range [0;500]
+  int32_t prop = 0;
+  if ( f.HORIZON_MODE ) prop = min(max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])),512);
 
   for(axis=0;axis<3;axis++) {
-    if ((f.ANGLE_MODE || f.HORIZON_MODE) && axis<2 ) { // MODE relying on ACC
+    if (abs(rcCommand[axis])<500) error =          (rcCommand[axis]<<6)/conf.pid[axis].P8 ; // 16 bits is needed for calculation: 500*64 = 32000      16 bits is ok for result if P8>5 (P>0.5)
+                             else error = ((int32_t)rcCommand[axis]<<6)/conf.pid[axis].P8 ; // 32 bits is needed for calculation
+                                  error -= imu.gyroData[axis];
+
+    errorGyroI[axis]  = constrain(errorGyroI[axis]+error,-16000,+16000);         // WindUp   16 bits is ok here
+    if (abs(imu.gyroData[axis])>640) errorGyroI[axis] = 0;
+    ITerm = ((errorGyroI[axis]>>7)*conf.pid[axis].I8)>>6;                        // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
+    PTerm = rcCommand[axis];
+
+    if ((f.ANGLE_MODE || f.HORIZON_MODE) && axis<2 ) { // axis relying on ACC,    ie pitch&roll with angle or horizon mode
       // 50 degrees max inclination
-      errorAngle = constrain((rcCommand[axis]<<1) + GPS_angle[axis],-500,+500) - att.angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
-      PTermACC = ((int32_t)errorAngle*conf.pid[PIDLEVEL].P8)>>7;                          // 32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
-      PTermACC = constrain(PTermACC,-conf.pid[PIDLEVEL].D8*5,+conf.pid[PIDLEVEL].D8*5);
+      errorAngle         = constrain((rcCommand[axis]<<1) + GPS_angle[axis],-500,+500) - att.angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
+      errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);                                                // WindUp     //16 bits is ok here
 
-      errorAngleI[axis]     = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);    // WindUp     //16 bits is ok here
-      ITermACC              = ((int32_t)errorAngleI[axis]*conf.pid[PIDLEVEL].I8)>>12;            // 32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
-    }
-    if ( !f.ANGLE_MODE || f.HORIZON_MODE || axis == 2 ) { // MODE relying on GYRO or YAW axis
-      if (abs(rcCommand[axis])<500) error =          (rcCommand[axis]<<6)/conf.pid[axis].P8 ; // 16 bits is needed for calculation: 500*64 = 32000      16 bits is ok for result if P8>5 (P>0.5)
-                               else error = ((int32_t)rcCommand[axis]<<6)/conf.pid[axis].P8 ; // 32 bits is needed for calculation
-
-      error -= imu.gyroData[axis];
-
-      PTermGYRO = rcCommand[axis];
+      PTermACC           = ((int32_t)errorAngle*conf.pid[PIDLEVEL].P8)>>7; // 32 bits is needed for calculation: errorAngle*P8 could exceed 32768   16 bits is ok for result
       
-      errorGyroI[axis]  = constrain(errorGyroI[axis]+error,-16000,+16000);         // WindUp   16 bits is ok here
-      if (abs(imu.gyroData[axis])>640) errorGyroI[axis] = 0;
-      ITermGYRO = ((errorGyroI[axis]>>7)*conf.pid[axis].I8)>>6;                        // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
-    }
-    if ( f.HORIZON_MODE && axis<2) {
-      PTerm = ((int32_t)PTermACC*(512-prop) + (int32_t)PTermGYRO*prop)>>9;         // the real factor should be 500, but 512 is ok
-      ITerm = ((int32_t)ITermACC*(512-prop) + (int32_t)ITermGYRO*prop)>>9;
-    } else {
-      if ( f.ANGLE_MODE && axis<2) {
-        PTerm = PTermACC;
-        ITerm = ITermACC;
-      } else {
-        PTerm = PTermGYRO;
-        ITerm = ITermGYRO;
-      }
+      int16_t limit      = conf.pid[PIDLEVEL].D8*5;
+      PTermACC           = constrain(PTermACC,-limit,+limit);
+
+      ITermACC           = ((int32_t)errorAngleI[axis]*conf.pid[PIDLEVEL].I8)>>12;   // 32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
+
+      ITerm              = ITermACC + ((ITerm-ITermACC)*prop>>9);
+      PTerm              = PTermACC + ((PTerm-PTermACC)*prop>>9);
     }
 
     PTerm -= ((int32_t)imu.gyroData[axis]*dynP8[axis])>>6; // 32 bits is needed for calculation   
 
     delta          = imu.gyroData[axis] - lastGyro[axis];  // 16 bits is ok here, the dif between 2 consecutive gyro reads is limited to 800
     lastGyro[axis] = imu.gyroData[axis];
-    deltaSum       = delta1[axis]+delta2[axis]+delta;
+    DTerm          = delta1[axis]+delta2[axis]+delta;
     delta2[axis]   = delta1[axis];
     delta1[axis]   = delta;
  
-    DTerm = ((int32_t)deltaSum*dynD8[axis])>>5;        // 32 bits is needed for calculation
+    DTerm = ((int32_t)DTerm*dynD8[axis])>>5;        // 32 bits is needed for calculation
                       
     axisPID[axis] =  PTerm + ITerm - DTerm;
   }
