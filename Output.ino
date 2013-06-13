@@ -197,10 +197,10 @@ void writeServos() {
         OCR1B = servo[4];// Pin 10
       #endif
       #if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6)
-        OCR1C = servo[5];// Pin 11
+        OCR3A = servo[5];// Pin 5
       #endif
       #if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4)
-        OCR3A = servo[3];// Pin 5
+        OCR1C = servo[3];// Pin 11
       #endif
     #endif
   #endif
@@ -705,6 +705,7 @@ void initializeServo() {
   #endif // mega hw pwm
 
   #if defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS)
+    // atm. always initialize 4 servos to pins 9, 10, 11, 5
     TIMSK1 &= ~(1<<OCIE1A) & ~(1<<OCIE1B) & ~(1<<OCIE1C);
     TCCR1A |= (1<<WGM11); // phase correct mode & prescaler to 8
     TCCR1A &= ~(1<<WGM10);
@@ -737,8 +738,16 @@ void initializeServo() {
     #else
       #error "* must set SERVO_RFR_RATE or one of the fixed refresh rates of 50, 160 or 300 Hz"
     #endif
-    ICR1   = SERVO_TOP_VAL; // set TOP
-    ICR3   = SERVO_TOP_VAL; // set TOP
+    #if defined(SERVO_PIN5_RFR_RATE)
+      #if (SERVO_PIN5_RFR_RATE < 50) || (SERVO_PIN5_RFR_RATE > 400)
+        #error "* invalid SERVO_PIN5_RFR_RATE specified"
+      #endif
+      #define SERVO_PIN5_TOP_VAL (uint16_t)(1000000L / SERVO_PIN5_RFR_RATE)
+    #else
+      #define SERVO_PIN5_TOP_VAL SERVO_TOP_VAL
+    #endif
+    ICR1   = SERVO_TOP_VAL;      // set TOP timer 1
+    ICR3   = SERVO_PIN5_TOP_VAL; // set TOP timer 3
   #endif
 }
 
@@ -752,7 +761,7 @@ void initializeServo() {
 
 // for servo 2-8
 // its almost the same as for servo 1
-#if defined(SERVO_1_HIGH) && !defined(A32U4_4_HW_PWM_SERVOS)
+#if defined(SERVO_1_HIGH) && !defined(A32U4_4_HW_PWM_SERVOS)  && !defined(MEGA_HW_PWM_SERVOS)
   #define SERVO_PULSE(PIN_HIGH,ACT_STATE,SERVO_NUM,LAST_PIN_LOW) \
     }else if(state == ACT_STATE){                                \
       LAST_PIN_LOW;                                              \

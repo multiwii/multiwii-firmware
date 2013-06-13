@@ -925,15 +925,17 @@
     /* HW PWM Servo outputs for 32u4 NanoWii, MicroWii etc. - works with either the variable SERVO_RFR_RATE or
      * one of the 3 fixed servo.refresh.rates *
      * Tested only for heli_120, i.e. 1 motor + 4 servos, moves..
-     * motor[0] = pin  6 = motor
-     * servo[3] = pin  5 = nick  servo
-     * servo[4] = pin 10 = left  servo
-     * servo[5] = pin 11 = yaw   servo
-     * servo[6] = pin  9 = right servo
+     * motor[0] = motor       = pin  6
+     * servo[3] = nick  servo = pin 11
+     * servo[4] = left  servo = pin 10
+     * servo[5] = yaw   servo = pin  5
+     * servo[6]  = right servo= pin  9
      */
     //#define A32U4_4_HW_PWM_SERVOS
 
     #define SERVO_RFR_RATE  50    // In Hz, you can set it from 20 to 400Hz, used only in HW PWM mode for mega and 32u4
+    //#define SERVO_PIN5_RFR_RATE  200    // separate yaw pwm rate.
+                                          // In Hz, you can set it from 20 to 400Hz, used only in HW PWM mode for 32u4
 
 
   /********************************************************************/
