@@ -32,16 +32,7 @@
 /**************************************************************************************/
 /***************         Software PWM & Servo variables            ********************/
 /**************************************************************************************/
-#if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || \
-  (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))  || (defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS))
-  #if defined(SERVO)
-    #if defined(AIRPLANE) || defined(HELICOPTER)
-      // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
-      volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,5}; 
-    #else
-      volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
-    #endif
-  #endif
+#if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))
   #if (NUMBER_MOTOR > 4)
     //for HEX Y6 and HEX6/HEX6X/HEX6H flat for promini
     volatile uint8_t atomicPWM_PIN5_lowState;
@@ -57,14 +48,6 @@
     volatile uint8_t atomicPWM_PIN12_highState;
   #endif
 #else
-  #if defined(SERVO)
-    #if defined(AIRPLANE)|| defined(HELICOPTER)
-      // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
-      volatile uint16_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,320}; 
-    #else
-      volatile uint16_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,8000};
-    #endif
-  #endif
   #if (NUMBER_MOTOR > 4)
     //for HEX Y6 and HEX6/HEX6X/HEX6H and for Promicro
     volatile uint16_t atomicPWM_PIN5_lowState;
@@ -78,6 +61,26 @@
     volatile uint16_t atomicPWM_PINA2_highState;
     volatile uint16_t atomicPWM_PIN12_lowState;
     volatile uint16_t atomicPWM_PIN12_highState;
+  #endif
+#endif
+
+#if defined(SERVO)
+  #if (defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS))  || (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))
+    // hw servo pwm does not need atomicServo[]
+  #elif defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6))
+    #if defined(AIRPLANE) || defined(HELICOPTER)
+      // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
+      volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,5};
+    #else
+      volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
+    #endif
+  #else
+    #if defined(AIRPLANE)|| defined(HELICOPTER)
+      // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
+      volatile uint16_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,320};
+    #else
+      volatile uint16_t atomicServo[8] = {8000,8000,8000,8000,8000,8000,8000,8000};
+    #endif
   #endif
 #endif
 
@@ -122,10 +125,9 @@
 /**************************************************************************************/
 void writeServos() {
   #if defined(SERVO)
-    #if defined(PRI_SERVO_FROM)    // write primary servos
+    #if defined(PRI_SERVO_FROM) && !(defined(PROMICRO)&&defined(A32U4_4_HW_PWM_SERVOS)) && !(defined(MEGA)&&defined(MEGA_HW_PWM_SERVOS))   // write primary servos
       for(uint8_t i = (PRI_SERVO_FROM-1); i < PRI_SERVO_TO; i++){
-        #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || \
-            (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))   || (defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS))
+        #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))
           atomicServo[i] = (servo[i]-1000)>>2;
         #else
           atomicServo[i] = (servo[i]-1000)<<4;
@@ -568,7 +570,7 @@ void initOutput() {
 /************                Initialize the PWM Servos               ******************/
 /**************************************************************************************/
 void initializeServo() {
-  #if ! ( (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))  ||  (defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS)) )
+  #if !(defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))  &&  !(defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS))
   // do pins init if not with one of (mega & HW PWMs) or (promicro & HW PWMs)
     #if (PRI_SERVO_FROM == 1) || (SEC_SERVO_FROM == 1)
       SERVO_1_PINMODE;
@@ -596,7 +598,7 @@ void initializeServo() {
     #endif
   #endif
 
-  #if defined(SERVO_1_HIGH) && !defined(A32U4_4_HW_PWM_SERVOS) // but this is off for servo hw pwm, please
+  #if defined(SERVO_1_HIGH)
     #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) // uses timer 0 Comperator A (8 bit)
       TCCR0A = 0; // normal counting mode
       TIMSK0 |= (1<<OCIE0A); // Enable CTC interrupt
@@ -748,7 +750,7 @@ void initializeServo() {
     #endif
     ICR1   = SERVO_TOP_VAL;      // set TOP timer 1
     ICR3   = SERVO_PIN5_TOP_VAL; // set TOP timer 3
-  #endif
+  #endif // promicro hw pwm
 }
 
 /**************************************************************************************/
@@ -761,7 +763,7 @@ void initializeServo() {
 
 // for servo 2-8
 // its almost the same as for servo 1
-#if defined(SERVO_1_HIGH) && !defined(A32U4_4_HW_PWM_SERVOS)  && !defined(MEGA_HW_PWM_SERVOS)
+#if defined(SERVO_1_HIGH) && !defined(A32U4_4_HW_PWM_SERVOS)
   #define SERVO_PULSE(PIN_HIGH,ACT_STATE,SERVO_NUM,LAST_PIN_LOW) \
     }else if(state == ACT_STATE){                                \
       LAST_PIN_LOW;                                              \
@@ -1385,12 +1387,6 @@ void mixTable() {
     #if defined(TRI) && defined(MEGA_HW_PWM_SERVOS) && defined(MEGA)
       servo[3] = servo[5];    // copy TRI serwo value to propper output servo for MEGA_HW_PWM_SERVOS
     #endif
-//    #if defined(HELICOPTER) && defined(A32U4_4_HW_PWM_SERVOS) && defined(PROMICRO)
-//      servo[0] = servo[3];
-//      servo[1] = servo[4];
-//      servo[2] = servo[5];
-//      servo[3] = servo[6];
-//    #endif
   #endif
 
   /****************                compensate the Motors values                ******************/
