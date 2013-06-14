@@ -65,7 +65,7 @@
 #endif
 
 #if defined(SERVO)
-  #if (defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS))  || (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))
+  #if defined(HW_PWM_SERVOS)
     // hw servo pwm does not need atomicServo[]
   #elif defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6))
     #if defined(AIRPLANE) || defined(HELICOPTER)
@@ -125,7 +125,7 @@
 /**************************************************************************************/
 void writeServos() {
   #if defined(SERVO)
-    #if defined(PRI_SERVO_FROM) && !(defined(PROMICRO)&&defined(A32U4_4_HW_PWM_SERVOS)) && !(defined(MEGA)&&defined(MEGA_HW_PWM_SERVOS))   // write primary servos
+    #if defined(PRI_SERVO_FROM) && !defined(HW_PWM_SERVOS)   // write primary servos
       for(uint8_t i = (PRI_SERVO_FROM-1); i < PRI_SERVO_TO; i++){
         #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) || (defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))
           atomicServo[i] = (servo[i]-1000)>>2;
@@ -570,8 +570,8 @@ void initOutput() {
 /************                Initialize the PWM Servos               ******************/
 /**************************************************************************************/
 void initializeServo() {
-  #if !(defined(MEGA) && defined(MEGA_HW_PWM_SERVOS))  &&  !(defined(PROMICRO) && defined(A32U4_4_HW_PWM_SERVOS))
-  // do pins init if not with one of (mega & HW PWMs) or (promicro & HW PWMs)
+  #if !defined(HW_PWM_SERVOS)
+  // do pins init
     #if (PRI_SERVO_FROM == 1) || (SEC_SERVO_FROM == 1)
       SERVO_1_PINMODE;
     #endif
