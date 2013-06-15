@@ -394,7 +394,7 @@ static int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1000};
 // ************************
 // EEPROM Layout definition
 // ************************
-static uint8_t dynP8[3], dynD8[3];
+static uint8_t dynP8[2], dynD8[2];
 
 static struct {
   uint8_t currentSet;
@@ -561,12 +561,11 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       rcCommand[axis] = lookupPitchRollRC[tmp2] + ((tmp-(tmp2<<7)) * (lookupPitchRollRC[tmp2+1]-lookupPitchRollRC[tmp2])>>7);
       prop1 = 128-((uint16_t)conf.rollPitchRate*tmp>>9); // prop1 was 100, is 128 now -- and /512 instead of /500
       prop1 = (uint16_t)prop1*prop2>>7; // prop1: max is 128   prop2: max is 128   result prop1: max is 128
+      dynP8[axis] = (uint16_t)conf.pid[axis].P8*prop1>>7; // was /100, is /128 now
+      dynD8[axis] = (uint16_t)conf.pid[axis].D8*prop1>>7; // was /100, is /128 now
     } else {      // YAW
       rcCommand[axis] = tmp;
-      prop1 = 128-((uint16_t)conf.yawRate*tmp>>9); // prop1 was 100, is 128 now -- and /512 instead of /500
     }
-    dynP8[axis] = (uint16_t)conf.pid[axis].P8*prop1>>7; // was /100, is /128 now
-    dynD8[axis] = (uint16_t)conf.pid[axis].D8*prop1>>7; // was /100, is /128 now
     if (rcData[axis]<MIDRC) rcCommand[axis] = -rcCommand[axis];
   }
   tmp = constrain(rcData[THROTTLE],MINCHECK,2000);
@@ -958,13 +957,16 @@ void loop () {
   int16_t error,errorAngle;
   int16_t delta;
   int16_t PTerm = 0,ITerm = 0,DTerm, PTermACC, ITermACC;
-  static int16_t lastGyro[3] = {0,0,0};
-  static int16_t delta1[3],delta2[3];
-  static int16_t errorGyroI[3] = {0,0,0};
+  static int16_t lastGyro[2] = {0,0};
+  static int16_t delta1[2],delta2[2];
+  static int16_t errorGyroI[2] = {0,0};
+  static int32_t errorGyroI_YAW;
   static int16_t errorAngleI[2] = {0,0};
   static uint32_t rcTime  = 0;
   static int16_t initialThrottleHold;
   static uint32_t timestamp_fixated = 0;
+  int16_t rc;
+  int32_t prop = 0;
 
   #if defined(SPEKTRUM)
     if (spekFrameFlags == 0x01) readSpektrum();
@@ -1011,7 +1013,7 @@ void loop () {
     
     // perform actions    
     if (rcData[THROTTLE] <= MINCHECK) {            // THROTTLE at minimum
-      errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0; errorGyroI[YAW] = 0;
+      errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0; errorGyroI_YAW = 0; 
       errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
       if (conf.activate[BOXARM] > 0) {             // Arming/Disarming via ARM BOX
         if ( rcOptions[BOXARM] && f.OK_TO_ARM ) go_arm(); else if (f.ARMED) go_disarm();
@@ -1403,22 +1405,22 @@ void loop () {
   #endif
 
   //**** PITCH & ROLL & YAW PID ****
-  int32_t prop = 0;
   if ( f.HORIZON_MODE ) prop = min(max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])),512);
 
-  for(axis=0;axis<3;axis++) {
-    if (abs(rcCommand[axis])<500) error =          (rcCommand[axis]<<6)/conf.pid[axis].P8 ; // 16 bits is needed for calculation: 500*64 = 32000      16 bits is ok for result if P8>5 (P>0.5)
-                             else error = ((int32_t)rcCommand[axis]<<6)/conf.pid[axis].P8 ; // 32 bits is needed for calculation
-                                  error -= imu.gyroData[axis];
-
-    errorGyroI[axis]  = constrain(errorGyroI[axis]+error,-16000,+16000);         // WindUp   16 bits is ok here
+  // PITCH & ROLL
+  for(axis=0;axis<2;axis++) {
+    rc = rcCommand[axis]<<1;
+    error = rc - imu.gyroData[axis];
+    errorGyroI[axis]  = constrain(errorGyroI[axis]+error,-16000,+16000);       // WindUp   16 bits is ok here
     if (abs(imu.gyroData[axis])>640) errorGyroI[axis] = 0;
-    ITerm = ((errorGyroI[axis]>>7)*conf.pid[axis].I8)>>6;                        // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
-    PTerm = rcCommand[axis];
 
-    if ((f.ANGLE_MODE || f.HORIZON_MODE) && axis<2 ) { // axis relying on ACC,    ie pitch&roll with angle or horizon mode
+    ITerm = (errorGyroI[axis]>>7)*conf.pid[axis].I8>>6;                        // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
+
+    PTerm = (int32_t)rc*conf.pid[axis].P8>>6;
+
+    if (f.ANGLE_MODE || f.HORIZON_MODE) { // axis relying on ACC
       // 50 degrees max inclination
-      errorAngle         = constrain((rcCommand[axis]<<1) + GPS_angle[axis],-500,+500) - att.angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
+      errorAngle         = constrain(rc + GPS_angle[axis],-500,+500) - att.angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
       errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);                                                // WindUp     //16 bits is ok here
 
       PTermACC           = ((int32_t)errorAngle*conf.pid[PIDLEVEL].P8)>>7; // 32 bits is needed for calculation: errorAngle*P8 could exceed 32768   16 bits is ok for result
@@ -1433,7 +1435,7 @@ void loop () {
     }
 
     PTerm -= ((int32_t)imu.gyroData[axis]*dynP8[axis])>>6; // 32 bits is needed for calculation   
-
+    
     delta          = imu.gyroData[axis] - lastGyro[axis];  // 16 bits is ok here, the dif between 2 consecutive gyro reads is limited to 800
     lastGyro[axis] = imu.gyroData[axis];
     DTerm          = delta1[axis]+delta2[axis]+delta;
@@ -1441,9 +1443,27 @@ void loop () {
     delta1[axis]   = delta;
  
     DTerm = ((int32_t)DTerm*dynD8[axis])>>5;        // 32 bits is needed for calculation
-                      
+
     axisPID[axis] =  PTerm + ITerm - DTerm;
   }
+
+  //YAW
+  #define GYRO_P_MAX 300
+  #define GYRO_I_MAX 250
+
+  rc = (int32_t)rcCommand[YAW] * (conf.yawRate + 60)  >> 5;
+
+  error = rc - imu.gyroData[YAW];
+  errorGyroI_YAW  += (int32_t)error*conf.pid[YAW].I8;
+  errorGyroI_YAW  = constrain(errorGyroI_YAW, -(int32_t)1<<30, (int32_t)1<<30);
+  if (abs(rc) > 50) errorGyroI_YAW = 0;
+  
+  PTerm = (int32_t)error*conf.pid[YAW].P8>>6;
+  PTerm = constrain(PTerm,-GYRO_P_MAX,+GYRO_P_MAX);
+  
+  ITerm = constrain((int16_t)(errorGyroI_YAW>>13),-GYRO_I_MAX,+GYRO_I_MAX);
+  
+  axisPID[YAW] =  PTerm + ITerm;
 
   mixTable();
   // do not update servos during unarmed calibration of sensors which are sensitive to vibration

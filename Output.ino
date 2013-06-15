@@ -1003,11 +1003,7 @@ void mixTable() {
   #endif
   #define PIDMIX(X,Y,Z) rcCommand[THROTTLE] + axisPID[ROLL]*X + axisPID[PITCH]*Y + YAW_DIRECTION * axisPID[YAW]*Z
   #define SERVODIR(n,b) ((conf.servoConf[n].rate & b) ? -1 : 1)
-  
-  #if NUMBER_MOTOR > 3
-    //prevent "yaw jump" during yaw correction
-    axisPID[YAW] = constrain(axisPID[YAW],-100-abs(rcCommand[YAW]),+100+abs(rcCommand[YAW]));
-  #endif
+
   /****************                   main Mix Table                ******************/
   #if defined( MY_PRIVATE_MIXING )
     #include MY_PRIVATE_MIXING
