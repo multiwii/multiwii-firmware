@@ -959,9 +959,17 @@ void loop () {
   int16_t PTerm = 0,ITerm = 0,DTerm, PTermACC, ITermACC;
   static int16_t lastGyro[2] = {0,0};
   static int16_t delta1[2],delta2[2];
-  static int16_t errorGyroI[2] = {0,0};
   static int32_t errorGyroI_YAW;
+#if PID_CONTROLLER == 1
+  static int16_t errorGyroI[2] = {0,0};
   static int16_t errorAngleI[2] = {0,0};
+#elif PID_CONTROLLER == 2
+  static int32_t errorGyroI[2] = {0,0};
+  static int32_t errorAngleI[2] = {0,0};
+  static int16_t lastError[3] = {0,0,0};
+  int16_t deltaSum;
+  int16_t AngleRates[2], AngleRateTmp, AngleError, RateError;
+#endif
   static uint32_t rcTime  = 0;
   static int16_t initialThrottleHold;
   static uint32_t timestamp_fixated = 0;
@@ -1405,6 +1413,7 @@ void loop () {
   #endif
 
   //**** PITCH & ROLL & YAW PID ****
+#if PID_CONTROLLER == 1 // oldschool
   if ( f.HORIZON_MODE ) prop = min(max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])),512);
 
   // PITCH & ROLL
@@ -1457,14 +1466,81 @@ void loop () {
   errorGyroI_YAW  += (int32_t)error*conf.pid[YAW].I8;
   errorGyroI_YAW  = constrain(errorGyroI_YAW, -(int32_t)1<<30, (int32_t)1<<30);
   if (abs(rc) > 50) errorGyroI_YAW = 0;
-  
-  PTerm = (int32_t)error*conf.pid[YAW].P8>>6;
-  PTerm = constrain(PTerm,-GYRO_P_MAX,+GYRO_P_MAX);
-  
-  ITerm = constrain((int16_t)(errorGyroI_YAW>>13),-GYRO_I_MAX,+GYRO_I_MAX);
-  
-  axisPID[YAW] =  PTerm + ITerm;
 
+  PTerm = (int32_t)error*conf.pid[YAW].P8>>6;
+  #ifndef SERVO
+    PTerm = constrain(PTerm,-GYRO_P_MAX,+GYRO_P_MAX);
+  #endif
+
+  ITerm = constrain((int16_t)(errorGyroI_YAW>>13),-GYRO_I_MAX,+GYRO_I_MAX);
+
+  axisPID[YAW] =  PTerm + ITerm;
+#elif PID_CONTROLLER == 2 // alexK
+  #define GYRO_I_MAX 256
+  #define ACC_I_MAX 256
+  prop = min(max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])),500); // range [0;500]
+
+  //----------PID controller----------
+  for(axis=0;axis<3;axis++) {
+    //-----Get the desired angle rate depending on flight mode
+    if ((f.ANGLE_MODE || f.HORIZON_MODE) && axis<2 ) { // MODE relying on ACC
+      // calculate error and limit the angle to 50 degrees max inclination
+      errorAngle = constrain((rcCommand[axis]<<1) + GPS_angle[axis],-500,+500) - angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
+    }
+    if (axis == 2) {//YAW is always gyro-controlled (MAG correction is applied to rcCommand)
+      AngleRateTmp = (((int32_t) (conf.yawRate + 27) * rcCommand[2]) >> 5);
+    } else {
+      if (!f.ANGLE_MODE) {//control is GYRO based (ACRO and HORIZON - direct sticks control is applied to rate PID
+        AngleRateTmp = ((int32_t) (conf.rollPitchRate + 27) * rcCommand[axis]) >> 4;
+        if (f.HORIZON_MODE) {
+          //mix up angle error to desired AngleRateTmp to add a little auto-level feel
+          AngleRateTmp += ((int32_t) errorAngle * conf.pid[PIDLEVEL].I8)>>8;
+        }
+      } else {//it's the ANGLE mode - control is angle based, so control loop is needed
+        AngleRateTmp = ((int32_t) errorAngle * conf.pid[PIDLEVEL].P8)>>4;
+      }
+    }
+
+    //--------low-level gyro-based PID. ----------
+    //Used in stand-alone mode for ACRO, controlled by higher level regulators in other modes
+    //-----calculate scaled error.AngleRates
+    //multiplication of rcCommand corresponds to changing the sticks scaling here
+    RateError = AngleRateTmp  - imu.gyroData[axis];
+
+    //-----calculate P component
+    PTerm = ((int32_t) RateError * conf.pid[axis].P8)>>7;
+
+    //-----calculate I component
+    //there should be no division before accumulating the error to integrator, because the precision would be reduced.
+    //Precision is critical, as I prevents from long-time drift. Thus, 32 bits integrator is used.
+    //Time correction (to avoid different I scaling for different builds based on average cycle time)
+    //is normalized to cycle time = 2048.
+    errorGyroI[axis]  += (((int32_t) RateError * cycleTime)>>11) * conf.pid[axis].I8;
+    //limit maximum integrator value to prevent WindUp - accumulating extreme values when system is saturated.
+    //I coefficient (I8) moved before integration to make limiting independent from PID settings
+    errorGyroI[axis]  = constrain(errorGyroI[axis], (int32_t) -GYRO_I_MAX<<13, (int32_t) +GYRO_I_MAX<<13);
+    ITerm = errorGyroI[axis]>>13;
+
+    //-----calculate D-term
+    delta          = RateError - lastError[axis];  // 16 bits is ok here, the dif between 2 consecutive gyro reads is limited to 800
+    lastError[axis] = RateError;
+
+    //Correct difference by cycle time. Cycle time is jittery (can be different 2 times), so calculated difference
+    // would be scaled by different dt each time. Division by dT fixes that.
+    delta = ((int32_t) delta * ((uint16_t)0xFFFF / (cycleTime>>4)))>>6;
+    //add moving average here to reduce noise
+    deltaSum       = delta1[axis]+delta2[axis]+delta;
+    delta2[axis]   = delta1[axis];
+    delta1[axis]   = delta;
+
+    DTerm = (deltaSum*conf.pid[axis].D8)>>8;
+
+    //-----calculate total PID output
+    axisPID[axis] =  PTerm + ITerm + DTerm;
+  }
+#else
+  #error "*** must set PID_CONTROLLER to one existing implementation"
+#endif
   mixTable();
   // do not update servos during unarmed calibration of sensors which are sensitive to vibration
   if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
