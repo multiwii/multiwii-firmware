@@ -955,6 +955,7 @@ const char PROGMEM lcd_param_text37 [] = "SERvTRIM2";
 #endif
 #ifdef TRI //                             0123456789
 const char PROGMEM lcd_param_text38 [] = "SERvTRIMy";
+const char PROGMEM lcd_param_text39 [] = "SERvINVy";
 #endif
 //#ifdef LOG_VALUES
 //const char PROGMEM lcd_param_text39 [] = "failsafes ";
@@ -1297,6 +1298,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #endif
 #ifdef TRI
   &lcd_param_text38, &conf.servoConf[5].middle, &__SE,
+  &lcd_param_text39, &conf.servoConf[5].rate, &__BITS,
 #endif
 #ifdef HELI_120_CCPM
   &lcd_param_text73, &conf.servoConf[3].middle, &__SE,

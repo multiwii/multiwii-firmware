@@ -958,17 +958,17 @@ void loop () {
   int16_t delta;
   int16_t PTerm = 0,ITerm = 0,DTerm, PTermACC, ITermACC;
   static int16_t lastGyro[2] = {0,0};
-  static int16_t delta1[2],delta2[2];
   static int32_t errorGyroI_YAW;
-#if PID_CONTROLLER == 1
-  static int16_t errorGyroI[2] = {0,0};
   static int16_t errorAngleI[2] = {0,0};
+#if PID_CONTROLLER == 1
+  static int16_t delta1[2],delta2[2];
+  static int16_t errorGyroI[2] = {0,0};
 #elif PID_CONTROLLER == 2
-  static int32_t errorGyroI[2] = {0,0};
-  static int32_t errorAngleI[2] = {0,0};
+  static int16_t delta1[3],delta2[3];
+  static int32_t errorGyroI[3] = {0,0,0};
   static int16_t lastError[3] = {0,0,0};
   int16_t deltaSum;
-  int16_t AngleRates[2], AngleRateTmp, AngleError, RateError;
+  int16_t AngleRateTmp, RateError;
 #endif
   static uint32_t rcTime  = 0;
   static int16_t initialThrottleHold;
@@ -1413,7 +1413,7 @@ void loop () {
   #endif
 
   //**** PITCH & ROLL & YAW PID ****
-#if PID_CONTROLLER == 1 // oldschool
+#if PID_CONTROLLER == 1 // evolved oldschool
   if ( f.HORIZON_MODE ) prop = min(max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])),512);
 
   // PITCH & ROLL
@@ -1539,7 +1539,7 @@ void loop () {
     axisPID[axis] =  PTerm + ITerm + DTerm;
   }
 #else
-  #error "*** must set PID_CONTROLLER to one existing implementation"
+  #error "*** you must set PID_CONTROLLER to one existing implementation"
 #endif
   mixTable();
   // do not update servos during unarmed calibration of sensors which are sensitive to vibration
