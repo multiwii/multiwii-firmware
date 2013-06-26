@@ -1468,7 +1468,7 @@ void loop () {
   if (abs(rc) > 50) errorGyroI_YAW = 0;
 
   PTerm = (int32_t)error*conf.pid[YAW].P8>>6;
-  #ifndef SERVO
+  #ifndef COPTER_WITH_SERVO
     PTerm = constrain(PTerm,-GYRO_P_MAX,+GYRO_P_MAX);
   #endif
 

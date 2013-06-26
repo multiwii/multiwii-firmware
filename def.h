@@ -109,7 +109,11 @@
   #define HELICOPTER
 #endif
 
-#if defined(BI) || defined(TRI) || defined(SERVO_TILT) || defined(GIMBAL) || defined(FLYING_WING) || defined(AIRPLANE) || defined(CAMTRIG) || defined(HELICOPTER) || defined(SERVO_MIX_TILT)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)
+#if defined(BI) || defined(TRI) || defined(FIXEDWING) || defined(HELICOPTER) || defined(SINGLECOPTER)|| defined(DUALCOPTER)
+  #define COPTER_WITH_SERVO
+#endif
+
+#if defined(COPTER_WITH_SERVO) || defined(SERVO_TILT) || defined(GIMBAL) || defined(CAMTRIG) || defined(SERVO_MIX_TILT)
   #define SERVO
 #endif
 
