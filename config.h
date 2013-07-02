@@ -149,6 +149,7 @@
       //#define DIYFLYING_MAGE_V1  // diyflying 10DOF mega board with MPU6050 + HMC5883L + BMP085 http://www.indoor-flying.hk
       //#define MultiWii_32U4_SE         // Hextronik MultiWii_32U4_SE
       //#define MultiWii_32U4_SE_no_baro // Hextronik MultiWii_32U4_SE without the MS561101BA for more free flash-memory
+      //#define Flyduino9DOF       // Flyduino 9DOF IMU MPU6050+HMC5883l
       
     /***************************    independent sensors    ********************************/
       /* leave it commented if you already checked a specific board above */
