@@ -1,3 +1,6 @@
+#ifndef CONFIG_H_
+#define CONFIG_H_
+
 /*************************************************************************************************/
 /****           CONFIGURABLE PARAMETERS                                                       ****/
 /*************************************************************************************************/
@@ -207,7 +210,6 @@
 /****************  SECTION  2 - COPTER TYPE SPECIFIC OPTIONS                               *******/
 /*****************                                                                 ***************/
 /*************************************************************************************************/
-
   /********************************  PID Controller *********************************/
     /* choose one of the alternate PID control algorithms
      * 1 = evolved oldschool algorithm (similar to v2.2)
@@ -219,13 +221,13 @@
     #define YAW_DIRECTION 1
     //#define YAW_DIRECTION -1 // if you want to reverse the yaw correction direction
 
-  /********************************    ARM/DISARM    *********************************/
+   /********************************    ARM/DISARM    *********************************/
    /* optionally disable stick combinations to arm/disarm the motors.
      * In most cases one of the two options to arm/disarm via TX stick is sufficient */
     #define ALLOW_ARM_DISARM_VIA_TX_YAW
     //#define ALLOW_ARM_DISARM_VIA_TX_ROLL
 
-  /********************************    SERVOS      *********************************/
+    /********************************    SERVOS      *********************************/
     /* temporary info on which servos connect where is here
      * http://www.multiwii.com/forum/viewtopic.php?f=8&t=3498 <== NEEDS FIXING - MOVE TO WIKI
      * http://www.multiwii.com/forum/viewtopic.php?f=8&t=3498&start=30#p36023  <== NEEDS FIXING - MOVE TO WIKI  */
@@ -1081,3 +1083,5 @@
 /*************************************************************************************************/
 /****           END OF CONFIGURABLE PARAMETERS                                                ****/
 /*************************************************************************************************/
+
+#endif /* CONFIG_H_ */

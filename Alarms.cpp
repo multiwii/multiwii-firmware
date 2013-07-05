@@ -1,3 +1,18 @@
+#include "Arduino.h"
+#include "config.h"
+#include "def.h"
+#include "types.h"
+#include "MultiWii.h"
+#include "LCD.h"
+#include "Sensors.h"
+
+void alarmPatternComposer();
+void patternDecode(uint8_t resource,uint16_t first,uint16_t second,uint16_t third,uint16_t cyclepause, uint16_t endpause);
+void setTiming(uint8_t resource, uint16_t pulse, uint16_t pause);
+void turnOff(uint8_t resource);
+void toggleResource(uint8_t resource, uint8_t activate);
+void vario_output(uint16_t d, uint8_t up);
+
 static uint8_t cycleDone[5]={0,0,0,0,0}, 
                resourceIsOn[5] = {0,0,0,0,0};
 static uint32_t LastToggleTime[5] ={0,0,0,0,0};
@@ -6,7 +21,7 @@ static int16_t  i2c_errors_count_old = 0;
 static uint8_t SequenceActive[5]={0,0,0,0,0};
 
 #if defined(BUZZER)
-  uint8_t isBuzzerON() { return resourceIsOn[1]; } // returns true while buzzer is buzzing; returns 0 for silent periods
+  uint8_t isBuzzerON(void) { return resourceIsOn[1]; } // returns true while buzzer is buzzing; returns 0 for silent periods
 #else
   uint8_t isBuzzerON() { return 0; }
 #endif  //end of buzzer define
@@ -34,7 +49,7 @@ Resources:
 3: PL BLUE
 4: PL RED
 */
-void alarmHandler(){
+void alarmHandler(void){
   
   #if defined(RCOPTIONSBEEP)
     static uint8_t i = 0,firstrun = 1, last_rcOptions[CHECKBOXITEMS];
@@ -376,7 +391,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
   
   #define LED_RING_ADDRESS 0xDA //7 bits
   
-  void i2CLedRingState() {
+  void i2CLedRingState(void) {
     uint8_t b[10];
   
     b[0]='M'; // MultiwII mode
@@ -439,7 +454,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
   # endif
   }
   
-  void blinkLedRing() {
+  void blinkLedRing(void) {
     uint8_t b[3];
     b[0]='g';
     b[1]= 10;
@@ -592,7 +607,7 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
    * higher abs(vario) -> shorther silence & longer signal duration.
    * Utilize two methods for combined short and long term observation
    */
-void vario_signaling() {
+void vario_signaling(void) {
   static int16_t last_v = 0;
   static uint16_t silence = 0;
   static int16_t max_v = 0;

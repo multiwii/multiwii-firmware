@@ -1,3 +1,6 @@
+#ifndef TINYGPS_H_
+#define TINYGPS_H_
+
 #ifndef NMEA_STRUCTS_H
 #define NMEA_STRUCTS_H
 
@@ -74,3 +77,5 @@ struct nav_data_t {
   struct optical_data_t optical;
 };
 #endif
+
+#endif /* TINYGPS_H_ */

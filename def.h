@@ -1,3 +1,6 @@
+#ifndef DEF_H_
+#define DEF_H_
+
 /**************************************************************************************/
 /***************             test configurations                   ********************/
 /**************************************************************************************/
@@ -2016,3 +2019,5 @@
 #if defined(A32U4_4_HW_PWM_SERVOS) && !(defined(HELI_120_CCPM))
   #error "for your protection: A32U4_4_HW_PWM_SERVOS was not tested with your coptertype"
 #endif
+
+#endif /* DEF_H_ */

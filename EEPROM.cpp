@@ -1,5 +1,14 @@
 #include <avr/eeprom.h>
+#include "Arduino.h"
+#include "config.h"
+#include "def.h"
+#include "types.h"
+#include "EEPROM.h"
+#include "MultiWii.h"
+#include "Alarms.h"
+#include "GPS.h"
 
+void LoadDefaults(void);
 
 uint8_t calculate_sum(uint8_t *cb , uint8_t siz) {
   uint8_t sum=0x55;  // checksum init
@@ -123,7 +132,7 @@ void update_constants() {
 void LoadDefaults() {
   uint8_t i;
   #ifndef SUPPRESS_DEFAULTS_FROM_GUI
-    #if PID_CONTROLLER == 1
+	#if PID_CONTROLLER == 1
       conf.pid[ROLL].P8     = 33;  conf.pid[ROLL].I8    = 30; conf.pid[ROLL].D8     = 23;
       conf.pid[PITCH].P8    = 33; conf.pid[PITCH].I8    = 30; conf.pid[PITCH].D8    = 23;
       conf.pid[PIDLEVEL].P8 = 90; conf.pid[PIDLEVEL].I8 = 10; conf.pid[PIDLEVEL].D8 = 100;
@@ -180,7 +189,7 @@ void LoadDefaults() {
 }
 
 #ifdef LOG_PERMANENT
-void readPLog() {
+void readPLog(void) {
   eeprom_read_block((void*)&plog, (void*)(E2END - 4 - sizeof(plog)), sizeof(plog));
   if(calculate_sum((uint8_t*)&plog, sizeof(plog)) != plog.checksum) {
     blinkLED(9,100,3);
@@ -194,7 +203,7 @@ void readPLog() {
     writePLog();
   }
 }
-void writePLog() {
+void writePLog(void) {
   plog.checksum = calculate_sum((uint8_t*)&plog, sizeof(plog));
   eeprom_write_block((const void*)&plog, (void*)(E2END - 4 - sizeof(plog)), sizeof(plog));
 }

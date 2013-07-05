@@ -1,3 +1,36 @@
+#include "Arduino.h"
+#include "config.h"
+#include "def.h"
+#include "types.h"
+#include "MultiWii.h"
+#include "Alarms.h"
+#include "EEPROM.h"
+#include "Output.h"
+#include "RX.h"
+#include "Serial.h"
+#include "Sensors.h"
+
+void __u8Inc(void * var, int16_t inc);
+void __s8Inc(void * var, int16_t inc);
+void __u16Inc(void * var, int16_t inc);
+void __s16Inc(void * var, int16_t inc);
+void __nullInc(void * var, int16_t inc);
+void __u8Fmt(void * var, uint8_t mul, uint8_t dec);
+void __u16Fmt(void * var, uint8_t mul, uint8_t dec);
+void __s8BitsFmt(void * var, uint8_t mul, uint8_t dec);
+void __s16Fmt(void * var, uint8_t mul, uint8_t dec);
+void __uAuxFmt(void * var, uint8_t mul, uint8_t dec, uint8_t aux);
+void __uAuxFmt1(void * var, uint8_t mul, uint8_t dec);
+void __uAuxFmt2(void * var, uint8_t mul, uint8_t dec);
+void __uAuxFmt3(void * var, uint8_t mul, uint8_t dec);
+void __uAuxFmt4(void * var, uint8_t mul, uint8_t dec);
+void __upMFmt(void * var, uint8_t mul, uint8_t dec);
+
+void serviceCheckPLog(void);
+void i2c_clear_OLED(void);
+void LCDnextline(void);
+void i2c_OLED_DIGOLE_send_string(const char *string);
+
 // ************************************************************************************************************
 // LCD & display & monitoring
 // ************************************************************************************************************
@@ -2504,7 +2537,7 @@ void toggle_telemetry(uint8_t t) {
     #endif
   }
 
-  void LCDnextline() {
+  void LCDnextline(void) {
     #if ( defined(DISPLAY_MULTILINE) )
       lnr++;
       if (lnr > (MULTILINE_PRE+MULTILINE_POST)) {
@@ -2518,14 +2551,16 @@ void toggle_telemetry(uint8_t t) {
       #if (! (defined(LCD_TTY)  ) )
         delay(600);
       #endif
+      #ifdef HAS_LCD
       LCDprintChar("\r\n");
+      #endif
     #else
       // no LCD, nothing to do here
     #endif
   }
 
   #ifdef LOG_PERMANENT_SERVICE_LIFETIME
-  void serviceCheckPLog() {
+  void serviceCheckPLog(void) {
     if ( (!f.ARMED) && (plog.lifetime > LOG_PERMANENT_SERVICE_LIFETIME) ){
       for (uint8_t i = 0; i<max(1, min(9,(plog.lifetime-LOG_PERMANENT_SERVICE_LIFETIME)>>10 )); i++) {
         #ifdef HAS_LCD
