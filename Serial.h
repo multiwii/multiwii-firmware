@@ -9,5 +9,8 @@ uint8_t SerialAvailable(uint8_t port);
 void debugmsg_append_str(const char *str);
 void SerialEnd(uint8_t port);
 uint8_t SerialPeek(uint8_t port);
+#if defined(GPS_SERIAL)
+  bool SerialTXfree(uint8_t port);
+#endif
 
 #endif /* SERIAL_H_ */

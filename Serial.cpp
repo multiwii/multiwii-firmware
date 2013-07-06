@@ -5,6 +5,7 @@
 #include "EEPROM.h"
 #include "LCD.h"
 #include "Output.h"
+#include "GPS.h"
 #include "MultiWii.h"
 
 uint16_t read16();

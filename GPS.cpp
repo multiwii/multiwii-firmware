@@ -4,11 +4,22 @@
 #include "types.h"
 #include "GPS.h"
 #include "Serial.h"
+#include "Sensors.h"
 #include "MultiWii.h"
 
 #if GPS
 
 bool GPS_newFrame(char c);
+#if defined(NMEA)
+  bool GPS_NMEA_newFrame(char c);
+#endif
+#if defined(UBLOX)
+  bool GPS_UBLOX_newFrame(uint8_t data);
+  bool UBLOX_parse_gps(void);
+#endif
+#if defined(MTK_BINARY16) || defined(MTK_BINARY19)
+  bool GPS_MTK_newFrame(uint8_t data);
+#endif
 void GPS_distance_cm_bearing(int32_t* lat1, int32_t* lon1, int32_t* lat2, int32_t* lon2,uint32_t* dist, int32_t* bearing);
 static void GPS_calc_velocity(void);
 static void GPS_calc_location_error( int32_t* target_lat, int32_t* target_lng, int32_t* gps_lat, int32_t* gps_lng );
