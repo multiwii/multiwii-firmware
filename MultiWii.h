@@ -187,6 +187,11 @@ extern int16_t lookupThrottleRC[11];
   extern uint32_t  ArmedTimeWarningMicroSeconds;
 #endif
 
+#if defined(THROTTLE_ANGLE_CORRECTION)
+  extern int16_t throttleAngleCorrection;
+  extern int8_t  cosZ;
+#endif
+
 void annexCode();
 
 #endif /* MULTIWII_H_ */

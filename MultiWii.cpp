@@ -200,8 +200,8 @@ int16_t  annex650_overrun_count = 0;
 
 
 #if defined(THROTTLE_ANGLE_CORRECTION)
-  static int16_t throttleAngleCorrection = 0;	// correction of throttle in lateral wind,
-  static int8_t  cosZ = 100;					// cos(angleZ)*100
+  int16_t throttleAngleCorrection = 0;	// correction of throttle in lateral wind,
+  int8_t  cosZ = 100;					// cos(angleZ)*100
 #endif
 
 
