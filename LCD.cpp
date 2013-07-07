@@ -9,6 +9,7 @@
 #include "RX.h"
 #include "Serial.h"
 #include "Sensors.h"
+#include "LCD.h"
 
 void __u8Inc(void * var, int16_t inc);
 void __s8Inc(void * var, int16_t inc);
@@ -753,7 +754,7 @@ void LCDprintInt16(int16_t v) {
 }
 void lcdprint_uint32(uint32_t v) {
   static char line[14] = "-.---.---.---";
-  //               0 2 4 6 8   12
+  //                      0 2 4 6 8   12
   line[0]  = '0' + v  / 1000000000;
   line[2]  = '0' + v  / 100000000 - (v/1000000000) * 10;
   line[3]  = '0' + v  / 10000000  - (v/100000000)  * 10;
@@ -1565,6 +1566,7 @@ void configurationLoop() {
     #if defined(PRI_SERVO_TO)
       #define MAX_SERV 7
       #if(PRI_SERVO_TO < MAX_SERV)
+        #undef  MAX_SERV
         #define MAX_SERV PRI_SERVO_TO
       #endif
       for(i=PRI_SERVO_FROM-1; i<MAX_SERV; i++) servo[i] = conf.servoConf[i].middle;
