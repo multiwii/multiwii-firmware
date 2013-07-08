@@ -1256,7 +1256,7 @@ void loop () {
   #define GYRO_P_MAX 300
   #define GYRO_I_MAX 250
 
-  rc = (int32_t)rcCommand[YAW] * (conf.yawRate + 60)  >> 5;
+  rc = (int32_t)rcCommand[YAW] * (2*conf.yawRate + 30)  >> 5;
 
   error = rc - imu.gyroData[YAW];
   errorGyroI_YAW  += (int32_t)error*conf.pid[YAW].I8;
