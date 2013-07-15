@@ -1260,7 +1260,7 @@ void loop () {
 
   error = rc - imu.gyroData[YAW];
   errorGyroI_YAW  += (int32_t)error*conf.pid[YAW].I8;
-  errorGyroI_YAW  = constrain(errorGyroI_YAW, -(int32_t)1<<30, (int32_t)1<<30);
+  errorGyroI_YAW  = constrain(errorGyroI_YAW, 2-((int32_t)1<<28), -2+((int32_t)1<<28));
   if (abs(rc) > 50) errorGyroI_YAW = 0;
   
   PTerm = (int32_t)error*conf.pid[YAW].P8>>6;
