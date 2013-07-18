@@ -1393,6 +1393,7 @@ void mixTable() {
       servo[4] = servo[1];    // copy CamRoll  value to propper output servo for A0_A1_PIN_HEX
     #endif
     #if defined(TRI) && defined(MEGA_HW_PWM_SERVOS) && defined(MEGA)
+      servo[5] = constrain(servo[5], conf.servoConf[5].min, conf.servoConf[5].max); // servo[5] is still use by gui for this config (more genereic)
       servo[3] = servo[5];    // copy TRI serwo value to propper output servo for MEGA_HW_PWM_SERVOS
     #endif
   #endif
