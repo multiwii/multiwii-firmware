@@ -187,7 +187,7 @@ flags_struct_t f;
   uint16_t cycleTimeMax = 0;       // highest ever cycle timen
   uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
   int32_t  BAROaltMax;             // maximum value
-  uint8_t  GPS_speedMax = 0;    // maximum speed from gps
+  uint16_t  GPS_speedMax = 0;    // maximum speed from gps
   uint16_t powerValueMaxMAH = 0;
 #endif
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
@@ -399,6 +399,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       p = psum / PSENSOR_SMOOTH;
     #endif
     powerValue = ( conf.psensornull > p ? conf.psensornull - p : p - conf.psensornull); // do not use abs(), it would induce implicit cast to uint and overrun
+    analog.amperage = powerValue * conf.pint2ma;
     if ( powerValue > 307) powerValue = 307;  // only accept reasonable values. 307 is empirical
     pMeter[PMOTOR_SUM] += ((currentTime-lastRead) * (uint32_t)(powerValue*conf.pint2ma))/100000; // [10 mA * msec]
     lastRead = currentTime;

@@ -1090,7 +1090,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text07, &conf.pid[PITCH].D8, &__D,
   &lcd_param_text08, &conf.pid[YAW].P8, &__P,
   &lcd_param_text09, &conf.pid[YAW].I8, &__I,
+#if PID_CONTROLLER == 2
   &lcd_param_text10, &conf.pid[YAW].D8, &__D,
+#endif
 #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
   &lcd_param_text11, &conf.pid[PIDALT].P8, &__P,
   &lcd_param_text12, &conf.pid[PIDALT].I8, &__I,
@@ -1728,12 +1730,15 @@ void output_Vmin() {
 }
 void output_mAh() {
   #ifdef POWERMETER
+    uint16_t mah = analog.intPowerMeterSum; // fallback: display consumed mAh
+    if (analog.intPowerMeterSum < conf.powerTrigger1 * PLEVELSCALE)
+      mah = conf.powerTrigger1 * PLEVELSCALE - analog.intPowerMeterSum; // display mah mAh
     strcpy_P(line1,PSTR(" -----mAh"));
-    line1[1] = digit10000(analog.intPowerMeterSum);
-    line1[2] = digit1000(analog.intPowerMeterSum);
-    line1[3] = digit100(analog.intPowerMeterSum);
-    line1[4] = digit10(analog.intPowerMeterSum);
-    line1[5] = digit1(analog.intPowerMeterSum);
+    line1[1] = digit10000(mah);
+    line1[2] = digit1000(mah);
+    line1[3] = digit100(mah);
+    line1[4] = digit10(mah);
+    line1[5] = digit1(mah);
     if (conf.powerTrigger1) {
       int8_t v = 100 - ( analog.intPowerMeterSum/(uint16_t)conf.powerTrigger1) *2; // bar graph powermeter (scale intPowerMeterSum/powerTrigger1 with *100/PLEVELSCALE)
       #ifndef OLED_I2C_128x64
@@ -2167,7 +2172,11 @@ void lcd_telemetry() {
               LCDattributesOff();
             #endif
             LCDprint(' ');
-            print_uptime(ats);
+            #ifdef ARMEDTIMEWARNING
+              print_uptime( (conf.armedtimewarning > ats ? conf.armedtimewarning - ats : ats) );
+            #else
+              print_uptime(ats);
+            #endif
           }
           break;
         case 6:// height

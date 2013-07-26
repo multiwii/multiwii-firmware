@@ -93,7 +93,8 @@ typedef struct {
 typedef struct {
   uint8_t  vbat;               // battery voltage in 0.1V steps
   uint16_t intPowerMeterSum;
-  uint16_t rssi;               // range: [0;1023]
+  uint16_t rssi;              // range: [0;1023]
+  uint16_t amperage;
 } analog_t;
 
 typedef struct {

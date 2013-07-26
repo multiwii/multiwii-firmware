@@ -108,7 +108,7 @@ extern int16_t lookupThrottleRC[11];
   extern uint16_t cycleTimeMax;       // highest ever cycle timen
   extern uint16_t cycleTimeMin;       // lowest ever cycle timen
   extern int32_t  BAROaltMax;         // maximum value
-  extern uint8_t  GPS_speedMax;       // maximum speed from gps
+  extern uint16_t GPS_speedMax;       // maximum speed from gps
   extern uint16_t powerValueMaxMAH;
 #endif
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)

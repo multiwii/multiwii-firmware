@@ -180,6 +180,7 @@ void serialCom() {
       #if defined(GPS_PROMINI)
         #define GPS_COND       
       #else
+        #undef GPS_COND
         #define GPS_COND  && (GPS_SERIAL != CURRENTPORT)
       #endif      
     #endif
@@ -481,7 +482,7 @@ void evaluateCommand() {
      s_struct((uint8_t*)&alt,6);
      break;
    case MSP_ANALOG:
-     s_struct((uint8_t*)&analog,5);
+     s_struct((uint8_t*)&analog,7);
      break;
    case MSP_RC_TUNING:
      s_struct((uint8_t*)&conf.rcRate8,7);
