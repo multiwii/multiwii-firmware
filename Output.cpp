@@ -3,6 +3,7 @@
 #include "def.h"
 #include "types.h"
 #include "MultiWii.h"
+#include "Alarms.h"
 
 void initializeSoftPWM(void);
 
