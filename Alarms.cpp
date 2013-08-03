@@ -5,6 +5,7 @@
 #include "MultiWii.h"
 #include "LCD.h"
 #include "Sensors.h"
+#include "Alarms.h"
 
 void alarmPatternComposer();
 void patternDecode(uint8_t resource,uint16_t first,uint16_t second,uint16_t third,uint16_t cyclepause, uint16_t endpause);
@@ -12,6 +13,9 @@ void setTiming(uint8_t resource, uint16_t pulse, uint16_t pause);
 void turnOff(uint8_t resource);
 void toggleResource(uint8_t resource, uint8_t activate);
 void vario_output(uint16_t d, uint8_t up);
+void inline switch_led_flasher(uint8_t on);
+void inline switch_landing_lights(uint8_t on);
+void PilotLampSequence(uint16_t speed, uint16_t pattern, uint8_t num_patterns);
 
 static uint8_t cycleDone[5]={0,0,0,0,0}, 
                resourceIsOn[5] = {0,0,0,0,0};
