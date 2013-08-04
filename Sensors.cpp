@@ -321,7 +321,7 @@ void GYRO_Common() {
       imu.gyroADC[axis]=0;
       gyroZero[axis]=0;
       if (calibratingG == 1) {
-        gyroZero[axis]=g[axis]>>9;
+        gyroZero[axis]=(g[axis]+256)>>9;
       #if defined(BUZZER)
         alarmArray[7] = 4;
       #else
@@ -379,7 +379,6 @@ void GYRO_Common() {
 // ****************
 void ACC_Common() {
   static int32_t a[3];
-  
   if (calibratingA>0) {
     for (uint8_t axis = 0; axis < 3; axis++) {
       // Reset a[axis] at start of calibration
@@ -392,9 +391,9 @@ void ACC_Common() {
     }
     // Calculate average, shift Z down by ACC_1G and store values in EEPROM at end of calibration
     if (calibratingA == 1) {
-      global_conf.accZero[ROLL]  = a[ROLL]>>9;
-      global_conf.accZero[PITCH] = a[PITCH]>>9;
-      global_conf.accZero[YAW]   = (a[YAW]>>9)-ACC_1G; // for nunchuk 200=1G
+      global_conf.accZero[ROLL]  = (a[ROLL]+256)>>9;
+      global_conf.accZero[PITCH] = (a[PITCH]+256)>>9;
+      global_conf.accZero[YAW]   = ((a[YAW]+256)>>9)-ACC_1G; // for nunchuk 200=1G
       conf.angleTrim[ROLL]   = 0;
       conf.angleTrim[PITCH]  = 0;
       writeGlobalSet(1); // write accZero in EEPROM
