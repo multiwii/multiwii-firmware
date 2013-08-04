@@ -419,11 +419,15 @@ void computeRC() {
       #else
         rcData4Values[chan][rc4ValuesIndex] = readRawRC(chan);
       #endif
-      rcDataMean[chan] = 0;
-      for (a=0;a<4;a++) rcDataMean[chan] += rcData4Values[chan][a];
-      rcDataMean[chan]= (rcDataMean[chan]+2)>>2;
-      if ( rcDataMean[chan] < (uint16_t)rcData[chan] -3)  rcData[chan] = rcDataMean[chan]+2;
-      if ( rcDataMean[chan] > (uint16_t)rcData[chan] +3)  rcData[chan] = rcDataMean[chan]-2;
+      #if defined(SPEKTRUM) || defined(SBUS) // no averaging for Spektrum & SBUS signal
+        rcData[chan] = rcData4Values[chan][rc4ValuesIndex];
+      #else
+        rcDataMean[chan] = 0;
+        for (a=0;a<4;a++) rcDataMean[chan] += rcData4Values[chan][a];
+        rcDataMean[chan]= (rcDataMean[chan]+2)>>2;
+        if ( rcDataMean[chan] < (uint16_t)rcData[chan] -3)  rcData[chan] = rcDataMean[chan]+2;
+        if ( rcDataMean[chan] > (uint16_t)rcData[chan] +3)  rcData[chan] = rcDataMean[chan]-2;
+      #endif
       if (chan<8 && rcSerialCount > 0) { // rcData comes from MSP and overrides RX Data until rcSerialCount reaches 0
         rcSerialCount --;
         #if defined(FAILSAFE)
