@@ -104,6 +104,11 @@
   #define SUPPRESS_DEFAULTS_FROM_GUI
   #define NO_FLASH_CHECK
   #define DEBUG_FREE
+#elif COPTERTEST == 8
+  #define BI
+  #define ITG3200
+  #define PID_CONTROLLER 2
+  #define ESC_CALIB_CANNOT_FLY
 #elif defined(COPTERTEST)
   #error "*** this test is not yet defined"
 #endif
@@ -1726,6 +1731,9 @@
     #define SERVO_4_PIN_HIGH           ;
     #define SERVO_4_PIN_LOW            ;
   #else
+    #undef POWERPIN_PINMODE
+    #undef POWERPIN_ON
+    #undef POWERPIN_OFF
     #define POWERPIN_PINMODE           ;
     #define POWERPIN_ON                ;
     #define POWERPIN_OFF               ;
@@ -1937,6 +1945,9 @@
   #endif
   #if !(defined(MULTILINE_POST))
     #define MULTILINE_POST 3
+  #endif
+  #if !(defined(DISPLAY_COLUMNS))
+    #define DISPLAY_COLUMNS 21
   #endif
 #elif (defined(OLED_I2C_128x64))
   #if !(defined(MULTILINE_PRE))

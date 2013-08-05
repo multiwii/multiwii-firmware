@@ -755,9 +755,9 @@ void loop () {
   int16_t delta;
   int16_t PTerm = 0,ITerm = 0,DTerm, PTermACC, ITermACC;
   static int16_t lastGyro[2] = {0,0};
-  static int32_t errorGyroI_YAW;
   static int16_t errorAngleI[2] = {0,0};
 #if PID_CONTROLLER == 1
+  static int32_t errorGyroI_YAW;
   static int16_t delta1[2],delta2[2];
   static int16_t errorGyroI[2] = {0,0};
 #elif PID_CONTROLLER == 2
@@ -818,7 +818,12 @@ void loop () {
     
     // perform actions    
     if (rcData[THROTTLE] <= MINCHECK) {            // THROTTLE at minimum
-      errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0; errorGyroI_YAW = 0; 
+      errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0;
+      #if PID_CONTROLLER == 1
+        errorGyroI_YAW = 0;
+      #elif PID_CONTROLLER == 2
+        errorGyroI[YAW] = 0;
+      #endif
       errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
       if (conf.activate[BOXARM] > 0) {             // Arming/Disarming via ARM BOX
         if ( rcOptions[BOXARM] && f.OK_TO_ARM ) go_arm(); else if (f.ARMED) go_disarm();

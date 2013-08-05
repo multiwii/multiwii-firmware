@@ -1078,6 +1078,9 @@ const char PROGMEM lcd_param_text133 [] = "Govern  P";
 const char PROGMEM lcd_param_text134 [] = "Govern  D";
 const char PROGMEM lcd_param_text135 [] = "GovernRpm";
 #endif
+#ifdef MULTIPLE_CONFIGURATION_PROFILES
+const char PROGMEM lcd_param_text150 [] = "writeCset";
+#endif
 //                                         0123456789
 
 PROGMEM const void * const lcd_param_ptr_table [] = {
@@ -1305,28 +1308,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #endif
 #endif
 #endif
-#ifdef POWERMETER
-  &lcd_param_text33, &pMeter[PMOTOR_SUM], &__PM,
-  &lcd_param_text34, &conf.powerTrigger1, &__PT,
-  &lcd_param_text114, &conf.pint2ma, &__PT,
-  #ifdef POWERMETER_HARD
-    &lcd_param_text111, &conf.psensornull, &__SE1,
-  #endif
-#endif
-#if defined(ARMEDTIMEWARNING)
-  &lcd_param_text132, &conf.armedtimewarning, &__SE,
-#endif
   &lcd_param_text131, &conf.minthrottle, &__ST,
 #if defined (FAILSAFE)
   &lcd_param_text101, &conf.failsafe_throttle, &__ST,
-#endif
-#ifdef VBAT
-  &lcd_param_text35, &analog.vbat, &__VB,
-  &lcd_param_text102, &conf.vbatscale, &__PT,
-  &lcd_param_text103, &conf.vbatlevel_warn1, &__P,
-  &lcd_param_text104, &conf.vbatlevel_warn2, &__P,
-  &lcd_param_text106, &conf.vbatlevel_crit, &__P,
-//  &lcd_param_text107, &conf.no_vbat, &__P,
 #endif
 #ifdef FLYING_WING
   &lcd_param_text36, &conf.servoConf[3].middle, &__SE,
@@ -1363,6 +1347,28 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #endif
 #ifdef MMGYRO
   &lcd_param_text121, &conf.mmgyro, &__D,
+#endif
+#ifdef VBAT
+//  &lcd_param_text35, &analog.vbat, &__VB,
+  &lcd_param_text102, &conf.vbatscale, &__PT,
+  &lcd_param_text103, &conf.vbatlevel_warn1, &__P,
+  &lcd_param_text104, &conf.vbatlevel_warn2, &__P,
+  &lcd_param_text106, &conf.vbatlevel_crit, &__P,
+//  &lcd_param_text107, &conf.no_vbat, &__P,
+#endif
+#ifdef POWERMETER
+//  &lcd_param_text33, &pMeter[PMOTOR_SUM], &__PM,
+  &lcd_param_text114, &conf.pint2ma, &__PT,
+  #ifdef POWERMETER_HARD
+    &lcd_param_text111, &conf.psensornull, &__SE1,
+  #endif
+  &lcd_param_text34, &conf.powerTrigger1, &__PT,
+#endif
+#if defined(ARMEDTIMEWARNING)
+  &lcd_param_text132, &conf.armedtimewarning, &__SE,
+#endif
+#ifdef MULTIPLE_CONFIGURATION_PROFILES
+  &lcd_param_text150, &global_conf.currentSet, &__D,
 #endif
 
 //#ifdef LOG_VALUES
@@ -1526,6 +1532,9 @@ void configurationLoop() {
   uint8_t refreshLCD = 1;
   uint8_t key = 0;
   uint8_t allow_exit = 0;
+  #ifdef MULTIPLE_CONFIGURATION_PROFILES
+    uint8_t currentSet = global_conf.currentSet; // keep a copy for abort.case
+  #endif
   initLCD();
   #if defined OLED_I2C_128x64LOGO_PERMANENT
     LCDclear();
@@ -1590,10 +1599,16 @@ void configurationLoop() {
   if (LCD == 0) {
     strcpy_P(line1,PSTR("Saving..."));
     LCDprintChar(line1);
+    #ifdef MULTIPLE_CONFIGURATION_PROFILES
+      writeGlobalSet(0);
+    #endif
     writeParams(1);
   } else {
     strcpy_P(line1,PSTR("Aborting"));
     LCDprintChar(line1);
+    #ifdef MULTIPLE_CONFIGURATION_PROFILES
+      global_conf.currentSet = currentSet; // restore
+    #endif
     readEEPROM(); // roll back all values to last saved state
   }
   LCDsetLine(2);
@@ -2168,7 +2183,7 @@ void lcd_telemetry() {
               #ifndef OLED_I2C_128x64
                 if (ats > conf.armedtimewarning) { LCDattributesReverse(); }
               #endif
-              LCDbar(DISPLAY_COLUMNS-9, (ats < conf.armedtimewarning ? (((conf.armedtimewarning-ats+1)*50)/(conf.armedtimewarning+1)*2) : 0 ));
+              LCDbar(DISPLAY_COLUMNS-9, (ats < conf.armedtimewarning ? (((conf.armedtimewarning-ats+1)*25)/(conf.armedtimewarning+1)*4) : 0 ));
               LCDattributesOff();
             #endif
             LCDprint(' ');
