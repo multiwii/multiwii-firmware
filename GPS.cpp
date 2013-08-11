@@ -269,7 +269,7 @@ static int16_t nav_takeoff_bearing;
  #endif
 
   void GPS_SerialInit(void) {
-    SerialOpen(GPS_SERIAL,GPS_BAUD);  
+    SerialOpen(GPS_SERIAL,GPS_BAUD);
     delay(1000);
     #if defined(UBLOX)
       for(uint8_t i=0;i<5;i++){
@@ -331,9 +331,7 @@ static int16_t nav_takeoff_bearing;
       #if defined(MTK_BINARY19) || defined(MTK_BINARY16)
         SerialGpsPrint(MTK_SET_BINARY);
       #endif
-
-
-#endif  //elif init_mtk_gps
+    #endif  //elif init_mtk_gps
   }
 #endif //gps_serial
 

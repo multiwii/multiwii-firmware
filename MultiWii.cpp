@@ -24,6 +24,7 @@ March  2013     V2.2
 #include "Sensors.h"
 #include "Serial.h"
 #include "GPS.h"
+#include "Protocol.h"
 
 #include <avr/pgmspace.h>
 #define  VERSION  221
@@ -692,7 +693,7 @@ void setup() {
     plog.armed_time = 0;   // lifetime in seconds
     //plog.running = 0;       // toggle on arm & disarm to monitor for clean shutdown vs. powercut
   #endif
-
+  
   debugmsg_append_str("initialization completed\n");
 }
 

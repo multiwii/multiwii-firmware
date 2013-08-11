@@ -3,6 +3,7 @@
 #include "def.h"
 #include "types.h"
 #include "Serial.h"
+#include "Protocol.h"
 #include "MultiWii.h"
 
 /**************************************************************************************/
