@@ -103,8 +103,8 @@ typedef struct {
 } alt_t;
 
 typedef struct {
-  int16_t angle[2];
-  int16_t heading;              // variometer in cm/s
+  int16_t angle[2];            // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
+  int16_t heading;             // variometer in cm/s
 } att_t;
 
 typedef struct {

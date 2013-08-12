@@ -164,7 +164,6 @@ int16_t  errorAltitudeI = 0;
 // gyro+acc IMU
 // **************
 int16_t gyroZero[3] = {0,0,0};
-int16_t angle[2]    = {0,0};  // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
 
 imu_t imu;
 
@@ -1288,7 +1287,7 @@ void loop () {
     //-----Get the desired angle rate depending on flight mode
     if ((f.ANGLE_MODE || f.HORIZON_MODE) && axis<2 ) { // MODE relying on ACC
       // calculate error and limit the angle to 50 degrees max inclination
-      errorAngle = constrain((rcCommand[axis]<<1) + GPS_angle[axis],-500,+500) - angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
+      errorAngle = constrain((rcCommand[axis]<<1) + GPS_angle[axis],-500,+500) - att.angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
     }
     if (axis == 2) {//YAW is always gyro-controlled (MAG correction is applied to rcCommand)
       AngleRateTmp = (((int32_t) (conf.yawRate + 27) * rcCommand[2]) >> 5);
