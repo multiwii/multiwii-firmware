@@ -703,7 +703,7 @@ void go_arm() {
     && failsafeCnt < 2
   #endif
     ) {
-    if(!f.ARMED) { // arm now!
+    if(!f.ARMED && !f.BARO_MODE) { // arm now!
       f.ARMED = 1;
       headFreeModeHold = att.heading;
       #if defined(VBAT)
