@@ -2,7 +2,7 @@
 #include "config.h"
 #include "def.h"
 #include "Serial.h"
-#include "Multiwii.h"
+#include "MultiWii.h"
 
 static volatile uint8_t serialHeadRX[UART_NUMBER],serialTailRX[UART_NUMBER];
 static uint8_t serialBufferRX[RX_BUFFER_SIZE][UART_NUMBER];
