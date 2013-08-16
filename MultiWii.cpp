@@ -705,6 +705,7 @@ void go_arm() {
     if(!f.ARMED && !f.BARO_MODE) { // arm now!
       f.ARMED = 1;
       headFreeModeHold = att.heading;
+      magHold = att.heading;
       #if defined(VBAT)
         if (analog.vbat > NO_VBAT) vbatMin = analog.vbat;
       #endif
