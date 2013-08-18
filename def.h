@@ -1982,9 +1982,6 @@
   #define DISPLAY_COLUMNS 16
 #endif
 
-#if !defined(ALT_HOLD_THROTTLE_NEUTRAL_ZONE)
-  #define ALT_HOLD_THROTTLE_NEUTRAL_ZONE 40
-#endif 
 
 /**************************************************************************************/
 /***************               override defaults                   ********************/

@@ -267,7 +267,6 @@ void getEstimatedAttitude(){
 uint8_t getEstimatedAltitude(){
   static int32_t baroGroundPressure;
   static float vel = 0.0f;
-  int16_t vel_tmp;
   static uint16_t previousT;
   uint16_t currentT = micros();
   uint16_t dTime;
@@ -326,10 +325,9 @@ uint8_t getEstimatedAltitude(){
     vel = vel * 0.985f + baroVel * 0.015f;
 
     //D
-    vel_tmp = vel;
-    applyDeadband(vel_tmp, 5);
-    alt.vario = vel_tmp;
-    BaroPID -= constrain(conf.pid[PIDALT].D8 * vel_tmp >>4, -150, 150);
+    alt.vario = vel;
+    applyDeadband(alt.vario, 5);
+    BaroPID -= constrain(conf.pid[PIDALT].D8 * alt.vario >>4, -150, 150);
   #endif
   return 1;
 }

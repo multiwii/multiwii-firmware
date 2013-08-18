@@ -606,11 +606,6 @@
        Must be greater than zero, comment if you dont want a deadband on roll, pitch and yaw */
     //#define DEADBAND 6
 
-    /* defines the neutral zone of throttle stick during altitude hold, default setting is
-       +/-40 uncommend and change the value below if you want to change it. */
-    //#define ALT_HOLD_THROTTLE_NEUTRAL_ZONE 40 
-
-
   /**************************************************************************************/
   /***********************                  GPS                **************************/
   /**************************************************************************************/
@@ -832,20 +827,19 @@
   /****           altitude hold                                    ****/
   /********************************************************************/
 
+    /* defines the neutral zone of throttle stick during altitude hold, default setting is
+       +/-50 uncommend and change the value below if you want to change it. */
+    #define ALT_HOLD_THROTTLE_NEUTRAL_ZONE    50
+    //#define ALT_HOLD_THROTTLE_MIDPOINT        1500  // in us    - if uncommented, this value is used in ALT_HOLD for throttle stick middle point instead of initialThrottleHold parameter.
+
+
     /* uncomment to disable the altitude hold feature.
      * This is useful if all of the following apply
      * + you have a baro
      * + want altitude readout and/or variometer
      * + do not use altitude hold feature
-     * + want to save memory space
-     */
+     * + want to save memory space */
     //#define SUPPRESS_BARO_ALTHOLD
-
-  /* Natural alt change for rapid pilots. It's temporary switch OFF the althold when throttle stick is out of deadband defined with ALT_HOLD_THROTTLE_NEUTRAL_ZONE
-   * but if it's commented: Smooth alt change routine is activated, for slow auto and aerophoto modes (in general solution from alexmos). It's slowly increase/decrease 
-   * altitude proportional to stick movement (+/-100 throttle gives about +/-50 cm in 1 second with cycle time about 3-4ms)
-   */
-  #define ALTHOLD_FAST_THROTTLE_CHANGE
 
   /********************************************************************/
   /****           altitude variometer                              ****/

@@ -982,15 +982,19 @@ void loop () {
     #if BARO
       #if (!defined(SUPPRESS_BARO_ALTHOLD))
         if (rcOptions[BOXBARO]) {
-            if (!f.BARO_MODE) {
-              f.BARO_MODE = 1;
-              AltHold = alt.EstAlt;
+          if (!f.BARO_MODE) {
+            f.BARO_MODE = 1;
+            AltHold = alt.EstAlt;
+            #if defined(ALT_HOLD_THROTTLE_MIDPOINT)
+              initialThrottleHold = ALT_HOLD_THROTTLE_MIDPOINT;
+            #else
               initialThrottleHold = rcCommand[THROTTLE];
-              errorAltitudeI = 0;
-              BaroPID=0;
-            }
+            #endif
+            errorAltitudeI = 0;
+            BaroPID=0;
+          }
         } else {
-            f.BARO_MODE = 0;
+          f.BARO_MODE = 0;
         }
       #endif
       #ifdef VARIOMETER
@@ -1156,37 +1160,26 @@ void loop () {
   #endif
 
   #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
+    /* Smooth alt change routine , for slow auto and aerophoto modes (in general solution from alexmos). It's slowly increase/decrease 
+     * altitude proportional to stick movement (+/-100 throttle gives about +/-50 cm in 1 second with cycle time about 3-4ms)
+     */
     if (f.BARO_MODE) {
       static uint8_t isAltHoldChanged = 0;
-      #if defined(ALTHOLD_FAST_THROTTLE_CHANGE)
-        if (abs(rcCommand[THROTTLE]-initialThrottleHold) > ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
-          errorAltitudeI = 0;
-          isAltHoldChanged = 1;
-          rcCommand[THROTTLE] += (rcCommand[THROTTLE] > initialThrottleHold) ? -ALT_HOLD_THROTTLE_NEUTRAL_ZONE : ALT_HOLD_THROTTLE_NEUTRAL_ZONE;
-        } else {
-          if (isAltHoldChanged) {
-            AltHold = alt.EstAlt;
-            isAltHoldChanged = 0;
-          }
-          rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
+      static int16_t AltHoldCorr = 0;
+      if (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
+        // Slowly increase/decrease AltHold proportional to stick movement ( +100 throttle gives ~ +50 cm in 1 second with cycle time about 3-4ms)
+        AltHoldCorr+= rcCommand[THROTTLE] - initialThrottleHold;
+        if(abs(AltHoldCorr) > 512) {
+          AltHold += AltHoldCorr/512;
+          AltHoldCorr %= 512;
         }
-      #else
-        static int16_t AltHoldCorr = 0;
-        if (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) {
-          // Slowly increase/decrease AltHold proportional to stick movement ( +100 throttle gives ~ +50 cm in 1 second with cycle time about 3-4ms)
-          AltHoldCorr+= rcCommand[THROTTLE] - initialThrottleHold;
-          if(abs(AltHoldCorr) > 500) {
-            AltHold += AltHoldCorr/500;
-            AltHoldCorr %= 500;
-          }
-          errorAltitudeI = 0;
-          isAltHoldChanged = 1;
-        } else if (isAltHoldChanged) {
-          AltHold = alt.EstAlt;
-          isAltHoldChanged = 0;
-        }
-        rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
-      #endif
+        errorAltitudeI = 0;
+        isAltHoldChanged = 1;
+      } else if (isAltHoldChanged) {
+        AltHold = alt.EstAlt;
+        isAltHoldChanged = 0;
+      }
+      rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
     }
   #endif
 
