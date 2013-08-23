@@ -47,11 +47,9 @@ void computeIMU () {
       gyroADCp[axis] =  imu.gyroADC[axis];
     timeInterleave=micros();
     annexCode();
-    if ((uint16_t)(micros()-timeInterleave)>650) {
-       annex650_overrun_count++;
-    } else {
-       while((uint16_t)(micros()-timeInterleave)<650) ; //empirical, interleaving delay between 2 consecutive reads
-    }
+    uint8_t t=0;
+    while((uint16_t)(micros()-timeInterleave)<650) t=1; //empirical, interleaving delay between 2 consecutive reads
+    if (!t) annex650_overrun_count++;
     #if GYRO
       Gyro_getADC();
     #endif
