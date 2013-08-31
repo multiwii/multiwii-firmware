@@ -294,11 +294,19 @@
     //#define HELI_USE_SERVO_FOR_THROTTLE
 
   /***********************      your individual mixing     ***********************/
-    /* if you want to override an existing entry in the mixing table, you may want to avoid esditing the
+    /* if you want to override an existing entry in the mixing table, you may want to avoid editing the
      * mixTable() function for every version again and again. 
      * howto: http://www.multiwii.com/wiki/index.php?title=Config.h#Individual_Mixing
      */
     //#define MY_PRIVATE_MIXING "filename.h"
+
+  /***********************      your individual defaults     ***********************/
+    /* if you want to replace the hardcoded default values with your own (e.g. from a previous save to an .mwi file),
+     * you may want to avoid editing the LoadDefaults() function for every version again and again.
+     * howto: http://www.multiwii.com/forum/viewtopic.php?f=8&t=3987
+     */
+    //#define MY_PRIVATE_DEFAULTS "filename.h"
+
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/
