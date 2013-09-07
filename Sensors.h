@@ -21,6 +21,10 @@ uint8_t Mag_getADC();
 uint8_t Baro_update();
 #endif
 
+#if SONAR
+void Sonar_update();
+#endif
+
 void initSensors();
 void i2c_rep_start(uint8_t address);
 void i2c_write(uint8_t data );

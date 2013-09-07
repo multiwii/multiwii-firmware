@@ -156,6 +156,7 @@ int16_t  magHold,headFreeModeHold; // [-180;+180]
 uint8_t  vbatMin = VBATNOMINAL;  // lowest battery voltage in 0.1V steps
 uint8_t  rcOptions[CHECKBOXITEMS];
 int32_t  BaroAlt,AltHold; // in cm
+int16_t  sonarAlt;
 int16_t  BaroPID = 0;
 int16_t  errorAltitudeI = 0;
 
@@ -177,7 +178,6 @@ att_t att;
 #endif
 
 int16_t  debug[4];
-int16_t  sonarAlt; //to think about the unit
 
 flags_struct_t f;
 

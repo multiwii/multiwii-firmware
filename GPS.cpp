@@ -346,6 +346,18 @@ void GPS_NewData(void) {
 
     GPS_numSat = (_i2c_gps_status & 0xf0) >> 4;
     _i2c_gps_status = i2c_readReg(I2C_GPS_ADDRESS,I2C_GPS_STATUS_00);                 //Get status register 
+
+    uint8_t *varptr;
+    #if defined(I2C_GPS_SONAR)
+      i2c_rep_start(I2C_GPS_ADDRESS<<1);
+      i2c_write(I2C_GPS_SONAR_ALT);         
+      i2c_rep_start((I2C_GPS_ADDRESS<<1)|1);
+
+      varptr = (uint8_t *)&sonarAlt;          // altitude (in cm? maybe)
+      *varptr++ = i2c_readAck();
+      *varptr   = i2c_readNak();
+    #endif	
+    
     if (_i2c_gps_status & I2C_GPS_STATUS_3DFIX) {                                     //Check is we have a good 3d fix (numsats>5)
       f.GPS_FIX = 1;
 
@@ -369,7 +381,7 @@ void GPS_NewData(void) {
         i2c_write(I2C_GPS_NAV_BEARING);                                               //Start read from here 2x2 bytes distance and direction
         i2c_rep_start((I2C_GPS_ADDRESS<<1)|1);
 
-        uint8_t *varptr = (uint8_t *)&nav_bearing;
+        varptr = (uint8_t *)&nav_bearing;
         *varptr++ = i2c_readAck();
         *varptr   = i2c_readAck();
 
@@ -419,17 +431,7 @@ void GPS_NewData(void) {
 
         varptr = (uint8_t *)&GPS_altitude;       // altitude in meters for OSD
         *varptr++ = i2c_readAck();
-        *varptr   = i2c_readAck();
-		
-#if defined(I2C_GPS_SONAR)
-        i2c_rep_start(I2C_GPS_ADDRESS<<1);
-        i2c_write(I2C_GPS_SONAR_ALT);         
-        i2c_rep_start((I2C_GPS_ADDRESS<<1)|1);
-
-        varptr = (uint8_t *)&sonarAlt;          // altitude (in cm? maybe)
-        *varptr++ = i2c_readAck();
-        *varptr   = i2c_readNak();
-#endif		
+        *varptr   = i2c_readAck();	
 
         //GPS_ground_course
         varptr = (uint8_t *)&GPS_ground_course;

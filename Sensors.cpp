@@ -1711,7 +1711,7 @@ void Sonar_update() {
 }
 #else
 inline void Sonar_init() {}
-inline void Sonar_update() {}
+void Sonar_update() {}
 #endif
 
 
