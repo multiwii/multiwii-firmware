@@ -36,8 +36,6 @@
   static uint8_t PCInt_RX_Pins[PCINT_PIN_COUNT] = {PCINT_RX_BITS}; // if this slowes the PCINT readings we can switch to a define for each pcint bit
 #endif
 
-#define FAILSAFE_DETECT_TRESHOLD  985
-
 void rxInt(void);
 
 /**************************************************************************************/

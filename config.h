@@ -20,8 +20,7 @@
  */
 
 /* Notes:
- * 1. parameters marked with (*) in the comment are stored in eeprom and cannot currently be changed via the GUI but
- *    can be changed via serial monitor or LCD.
+ * 1. parameters marked with (*) in the comment are stored in eeprom and can be changed via serial monitor or LCD.
  * 2. parameters marked with (**) in the comment are stored in eeprom and can be changed via the GUI
  */
 
@@ -565,6 +564,8 @@
     #define FAILSAFE_DELAY     10                     // Guard time for failsafe activation after signal lost. 1 step = 0.1sec - 1sec in example
     #define FAILSAFE_OFF_DELAY 200                    // Time for Landing before motors stop in 0.1sec. 1 step = 0.1sec - 20sec in example
     #define FAILSAFE_THROTTLE  (MINTHROTTLE + 200)    // (*) Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
+    
+    #define FAILSAFE_DETECT_TRESHOLD  985
 
 
   /*****************                DFRobot LED RING    *********************************/
