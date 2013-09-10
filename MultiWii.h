@@ -39,7 +39,7 @@ extern uint16_t calibratingG;
 extern int16_t  magHold,headFreeModeHold;
 extern uint8_t  vbatMin;
 extern uint8_t  rcOptions[CHECKBOXITEMS];
-extern int32_t  BaroAlt,AltHold;
+extern int32_t  AltHold;
 extern int16_t  sonarAlt;
 extern int16_t  BaroPID;
 extern int16_t  errorAltitudeI;

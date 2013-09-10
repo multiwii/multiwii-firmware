@@ -263,6 +263,7 @@ void getEstimatedAttitude(){
 
 #if BARO
 uint8_t getEstimatedAltitude(){
+  int32_t  BaroAlt;
   static int32_t baroGroundPressure;
   static float vel = 0.0f;
   static uint16_t previousT;

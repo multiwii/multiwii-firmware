@@ -155,7 +155,7 @@ uint16_t calibratingG;
 int16_t  magHold,headFreeModeHold; // [-180;+180]
 uint8_t  vbatMin = VBATNOMINAL;  // lowest battery voltage in 0.1V steps
 uint8_t  rcOptions[CHECKBOXITEMS];
-int32_t  BaroAlt,AltHold; // in cm
+int32_t  AltHold; // in cm
 int16_t  sonarAlt;
 int16_t  BaroPID = 0;
 int16_t  errorAltitudeI = 0;
@@ -186,7 +186,7 @@ flags_struct_t f;
   uint16_t cycleTimeMax = 0;       // highest ever cycle timen
   uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
   int32_t  BAROaltMax;             // maximum value
-  uint16_t  GPS_speedMax = 0;    // maximum speed from gps
+  uint16_t GPS_speedMax = 0;       // maximum speed from gps
   uint16_t powerValueMaxMAH = 0;
 #endif
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
@@ -547,7 +547,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     #endif
     #ifdef LCD_TELEMETRY
       #if BARO
-        if ( (BaroAlt > BAROaltMax) ) BAROaltMax = BaroAlt;
+        if ( (alt.EstAlt > BAROaltMax) ) BAROaltMax = alt.EstAlt;
       #endif
       #if GPS
         if ( (GPS_speed > GPS_speedMax) ) GPS_speedMax = GPS_speed;
@@ -710,7 +710,7 @@ void go_arm() {
       #endif
       #ifdef LCD_TELEMETRY // reset some values when arming
         #if BARO
-          BAROaltMax = BaroAlt;
+          BAROaltMax = alt.EstAlt;
         #endif
         #if GPS
           GPS_speedMax = 0;

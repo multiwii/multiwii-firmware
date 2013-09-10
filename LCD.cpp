@@ -2212,7 +2212,7 @@ void lcd_telemetry() {
         case 6:// height
           #if BARO
             {
-              int16_t h = BaroAlt / 100;
+              int16_t h = alt.EstAlt / 100;
               LCDprint('A'); LCDprintInt16(h); LCDprint('m');
               h = BAROaltMax / 100;
               LCDprintChar(" ("); LCDprintInt16(h);

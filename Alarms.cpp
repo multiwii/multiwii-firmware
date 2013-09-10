@@ -649,14 +649,14 @@ void vario_signaling(void) {
     static uint16_t t = 0;
     if (!(t++ % ALTITUDE_INTERVAL)) {
       static int32_t last_BaroAlt = 0;
-      int32_t delta_BaroAlt = BaroAlt - last_BaroAlt;
+      int32_t delta_BaroAlt = alt.EstAlt - last_BaroAlt;
       if (abs(delta_BaroAlt) > DELTA_ALT_TRESHOLD) {
         // inject suitable values
         max_v = abs(delta_BaroAlt / DELTA_T);
         max_up = (delta_BaroAlt > 0 ? 1 : 0);
         silence = 0;
       }
-      last_BaroAlt = BaroAlt;
+      last_BaroAlt = alt.EstAlt;
     }
   }
   #endif // end method 2
