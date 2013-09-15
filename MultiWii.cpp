@@ -1172,7 +1172,6 @@ void loop () {
           AltHold += AltHoldCorr/512;
           AltHoldCorr %= 512;
         }
-        errorAltitudeI = 0;
         isAltHoldChanged = 1;
       } else if (isAltHoldChanged) {
         AltHold = alt.EstAlt;
