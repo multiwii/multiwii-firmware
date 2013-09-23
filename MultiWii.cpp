@@ -1263,12 +1263,14 @@ void loop () {
   
   PTerm = (int32_t)error*conf.pid[YAW].P8>>6;
   #ifndef COPTER_WITH_SERVO
-    PTerm = constrain(PTerm,-GYRO_P_MAX,+GYRO_P_MAX);
+    int16_t limit = GYRO_P_MAX-conf.pid[YAW].D8;
+    PTerm = constrain(PTerm,-limit,+limit);
   #endif
   
   ITerm = constrain((int16_t)(errorGyroI_YAW>>13),-GYRO_I_MAX,+GYRO_I_MAX);
   
   axisPID[YAW] =  PTerm + ITerm;
+  
 #elif PID_CONTROLLER == 2 // alexK
   #define GYRO_I_MAX 256
   #define ACC_I_MAX 256
