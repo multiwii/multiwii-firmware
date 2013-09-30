@@ -205,12 +205,6 @@ void getEstimatedAttitude(){
     rotateV(&EstM.V,deltaGyroAngle);
   #endif
 
-  if ( abs(imu.accSmooth[ROLL])<ACC_25deg && abs(imu.accSmooth[PITCH])<ACC_25deg && imu.accSmooth[YAW]>0) {
-    f.SMALL_ANGLES_25 = 1;
-  } else {
-    f.SMALL_ANGLES_25 = 0;
-  }
-
   accMag = accMag*100/((int32_t)ACC_1G*ACC_1G);
   validAcc = 72 < (uint16_t)accMag && (uint16_t)accMag < 133;
   // Apply complimentary filter (Gyro drift correction)
@@ -225,6 +219,11 @@ void getEstimatedAttitude(){
       EstM32.A[axis] = EstM.A[axis];
     #endif
   }
+  
+  if (abs((int16_t)EstG32.A[2]) > ACCZ_25deg)
+    f.SMALL_ANGLES_25 = 1;
+  else
+    f.SMALL_ANGLES_25 = 0;
 
   // Attitude of the estimated vector
   int32_t sqGX_sqGZ = sq(EstG32.V.X) + sq(EstG32.V.Z);

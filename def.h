@@ -1671,7 +1671,7 @@
 #if !defined(ACC_1G)
   #define ACC_1G 256
 #endif
-#define ACC_25deg    (uint16_t)(ACC_1G * 0.423)
+#define ACCZ_25deg   (uint16_t)(ACC_1G * cos(3.1415927/180*25))
 #define ACC_VelScale (9.80665f / 10000.0f / ACC_1G)
 
 #if defined(ITG3200)
