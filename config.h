@@ -215,7 +215,7 @@
   /********************************  PID Controller *********************************/
     /* choose one of the alternate PID control algorithms
      * 1 = evolved oldschool algorithm (similar to v2.2)
-     * 2 = new experimental algorithm from Alex Khoroshko http://www.multiwii.com/forum/viewtopic.php?f=8&t=3671&start=10#p37387
+     * 2 = new experimental algorithm from Alex Khoroshko - unsupported - http://www.multiwii.com/forum/viewtopic.php?f=8&t=3671&start=10#p37387
      * */
     #define PID_CONTROLLER 1
 
@@ -230,9 +230,9 @@
     //#define ALLOW_ARM_DISARM_VIA_TX_ROLL
 
     /********************************    SERVOS      *********************************/
-    /* temporary info on which servos connect where is here
-     * http://www.multiwii.com/forum/viewtopic.php?f=8&t=3498 <== NEEDS FIXING - MOVE TO WIKI
-     * http://www.multiwii.com/forum/viewtopic.php?f=8&t=3498&start=30#p36023  <== NEEDS FIXING - MOVE TO WIKI  */
+    /* info on which servos connect where and how to setup can be found here
+     * http://www.multiwii.com/wiki/index.php?title=Config.h#Servos_configuration
+     */
 
 
     /* if you want to preset min/middle/max values for servos right after flashing, because of limited physical
@@ -305,7 +305,7 @@
   /***********************      your individual defaults     ***********************/
     /* if you want to replace the hardcoded default values with your own (e.g. from a previous save to an .mwi file),
      * you may want to avoid editing the LoadDefaults() function for every version again and again.
-     * howto: http://www.multiwii.com/forum/viewtopic.php?f=8&t=3987
+     * http://www.multiwii.com/wiki/index.php?title=Config.h#Individual_defaults
      */
     //#define MY_PRIVATE_DEFAULTS "filename.h"
 

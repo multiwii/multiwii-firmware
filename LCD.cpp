@@ -1761,7 +1761,7 @@ void output_Vmin() {
 void output_mAh() {
   #ifdef POWERMETER
     uint16_t mah = analog.intPowerMeterSum; // fallback: display consumed mAh
-    if (analog.intPowerMeterSum < conf.powerTrigger1 * PLEVELSCALE)
+    if (analog.intPowerMeterSum < (uint16_t)conf.powerTrigger1 * PLEVELSCALE)
       mah = conf.powerTrigger1 * PLEVELSCALE - analog.intPowerMeterSum; // display mah mAh
     strcpy_P(line1,PSTR(" -----mAh"));
     line1[1] = digit10000(mah);
