@@ -220,7 +220,7 @@ void getEstimatedAttitude(){
     #endif
   }
   
-  if (abs((int16_t)EstG32.A[2]) > ACCZ_25deg)
+  if ((int16_t)EstG32.A[2] > ACCZ_25deg)
     f.SMALL_ANGLES_25 = 1;
   else
     f.SMALL_ANGLES_25 = 0;
