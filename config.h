@@ -657,13 +657,6 @@
     // If your I2C GPS board has Sonar support enabled
     //#define I2C_GPS_SONAR
 
-    /* I2C GPS device made with an indeedent ATTiny[24]313 + GPS device and
-       optional sonar device.    https://github.com/wertarbyte/tiny-gps/ */
-    /* get GPS data from Tiny-GPS */
-    //#define TINY_GPS
-    /* get sonar data from Tiny-GPS */
-    //#define TINY_GPS_SONAR
-
     /* GPS data readed from Misio-OSD - GPS module connected to OSD, and MultiWii read GPS data from OSD - tested and working OK ! */
     //#define GPS_FROM_OSD
 
