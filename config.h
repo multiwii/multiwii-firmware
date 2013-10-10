@@ -223,6 +223,8 @@
     #define YAW_DIRECTION 1
     //#define YAW_DIRECTION -1 // if you want to reverse the yaw correction direction
 
+    #define ONLYARMWHENFLAT //prevent the copter from arming when the copter is tilted
+
    /********************************    ARM/DISARM    *********************************/
    /* optionally disable stick combinations to arm/disarm the motors.
      * In most cases one of the two options to arm/disarm via TX stick is sufficient */

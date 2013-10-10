@@ -696,7 +696,10 @@ void setup() {
 }
 
 void go_arm() {
-  if(calibratingG == 0 && f.ACC_CALIBRATED 
+  if(calibratingG == 0
+  #if defined(ONLYARMWHENFLAT)
+    && f.ACC_CALIBRATED 
+  #endif
   #if defined(FAILSAFE)
     && failsafeCnt < 2
   #endif
