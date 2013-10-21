@@ -237,7 +237,7 @@ static int16_t nav_takeoff_bearing;
 #if defined(GPS_SERIAL) 
  #if defined(INIT_MTK_GPS) || defined(UBLOX)
   uint32_t init_speed[5] = {9600,19200,38400,57600,115200};
-  void SerialGpsPrint(prog_char* str) {
+  void SerialGpsPrint(const char PROGMEM * str) {
     char b;
     while(str && (b = pgm_read_byte(str++))) {
       SerialWrite(GPS_SERIAL, b); 
