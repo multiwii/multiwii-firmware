@@ -242,9 +242,6 @@ uint16_t intPowerTrigger1;
 // ******************
 // rc functions
 // ******************
-#define MINCHECK 1100
-#define MAXCHECK 1900
-
 #define ROL_LO  (1<<(2*ROLL))
 #define ROL_CE  (3<<(2*ROLL))
 #define ROL_HI  (2<<(2*ROLL))
