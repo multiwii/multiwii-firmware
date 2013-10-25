@@ -107,8 +107,9 @@
       //#define SIRIUS          // Sirius Navigator IMU                                             <- confirmed by Alex
       //#define SIRIUSGPS       // Sirius Navigator IMU  using external MAG on GPS board            <- confirmed by Alex
       //#define SIRIUS600       // Sirius Navigator IMU  using the WMP for the gyro
-      //#define SIRIUS_AIR      // Sirius Navigator IMU 6050 32U4 from MultiWiiCopter.com
+      //#define SIRIUS_AIR      // Sirius Navigator IMU 6050 32U4 from MultiWiiCopter.com           <- confirmed by Alex
       //#define SIRIUS_AIR_GPS  // Sirius Navigator IMU 6050 32U4 from MultiWiiCopter.com with GPS/MAG remote located
+      //#define SIRIUS_MEGAv5_OSD //  Paris_Sirius™ ITG3050,BMA280,MS5611,HMC5883,uBlox  http://www.Multiwiicopter.com <- confirmed by Alex
       //#define MINIWII         // Jussi's MiniWii Flight Controller                                <- confirmed by Alex
       //#define MICROWII        // MicroWii 10DOF with ATmega32u4, MPU6050, HMC5883L, MS561101BA from http://flyduino.net/
       //#define CITRUSv2_1      // CITRUS from qcrc.ca
@@ -160,6 +161,7 @@
       /* I2C gyroscope */
       //#define WMP
       //#define ITG3200
+      //#define MPU3050
       //#define L3G4200D
       //#define MPU6050       //combo + ACC
       //#define LSM330        //combo + ACC
@@ -170,6 +172,7 @@
       //#define ADXL345
       //#define BMA020
       //#define BMA180
+      //#define BMA280
       //#define NUNCHACK  // if you want to use the nunckuk as a standalone I2C ACC without WMP
       //#define LIS3LV02
       //#define LSM303DLx_ACC

@@ -1080,6 +1080,17 @@
   #define HWPWM6
 #endif
 
+#if defined(SIRIUS_MEGAv5_OSD)
+  #define ITG3200 // in fact a ITG3050
+  #define BMA280
+  #define MS561101BA
+  #define HMC5883
+  #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = -X; imu.accADC[PITCH]  =  -Y; imu.accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] = -X; imu.gyroADC[PITCH] =  -Y; imu.gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  Y; imu.magADC[PITCH]  =  -X; imu.magADC[YAW]  = -Z;}
+  #undef INTERNAL_I2C_PULLUPS
+#endif
+
 #if defined(MINIWII)
   #define ITG3200
   #define BMA180
@@ -1586,7 +1597,7 @@
 /***************              Sensor Type definitions              ********************/
 /**************************************************************************************/
 
-#if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LIS3LV02) || defined(LSM303DLx_ACC) || defined(MPU6050) || defined(LSM330) || defined(MMA8451Q) || defined(NUNCHUCK)
+#if defined(ADXL345) || defined(BMA020) || defined(BMA180) || defined(BMA280) || defined(NUNCHACK) || defined(MMA7455) || defined(ADCACC) || defined(LIS3LV02) || defined(LSM303DLx_ACC) || defined(MPU6050) || defined(LSM330) || defined(MMA8451Q) || defined(NUNCHUCK)
   #define ACC 1
 #else
   #define ACC 0
@@ -1638,6 +1649,9 @@
   #define ACC_1G 265
 #endif
 #if defined(BMA180)
+  #define ACC_1G 255
+#endif
+#if defined(BMA280)
   #define ACC_1G 255
 #endif
 #if defined(BMA020)

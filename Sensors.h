@@ -2,7 +2,7 @@
 #define SENSORS_H_
 
 #if defined(MMA7455) || defined(MMA8451Q) || defined(ADXL345) || \
-    defined(BMA180) || defined(BMA020) || defined(NUNCHACK) || \
+    defined(BMA180) || defined(BMA280) || defined(BMA020) || defined(NUNCHACK) || \
     defined(LIS3LV02) || defined(LSM303DLx_ACC) || defined(ADCACC) || \
     defined(MPU6050) || defined(LSM330) || defined(NUNCHUCK)
 void ACC_getADC ();

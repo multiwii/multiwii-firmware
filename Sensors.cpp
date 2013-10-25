@@ -52,6 +52,11 @@ void ACC_init();
   //#define BMA180_ADDRESS 0x41
 #endif
 
+#if !defined(BMA280_ADDRESS) 
+  #define BMA280_ADDRESS 0x18 // SDO PIN on GND
+  //#define BMA280_ADDRESS 0x19  // SDO PIN on Vddio
+#endif
+
 #if !defined(ITG3200_ADDRESS) 
   #define ITG3200_ADDRESS 0X68
   //#define ITG3200_ADDRESS 0X69
@@ -877,6 +882,28 @@ void ACC_init () {
 void ACC_getADC () {
   TWBR = ((F_CPU / 400000L) - 16) / 2;  // Optional line.  Sensor is good for it in the spec.
   i2c_getSixRawADC(BMA180_ADDRESS,0x02);
+  //usefull info is on the 14 bits  [2-15] bits  /4 => [0-13] bits  /4 => 12 bit resolution
+  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>4 ,
+                   ((rawADC[3]<<8) | rawADC[2])>>4 ,
+                   ((rawADC[5]<<8) | rawADC[4])>>4 );
+  ACC_Common();
+}
+#endif
+
+// ************************************************************************************************************
+// I2C Accelerometer BMA280
+// ************************************************************************************************************
+#if defined(BMA280)
+void ACC_init () {
+  delay(10);
+  i2c_writeReg(BMA280_ADDRESS, 0x10, 0x09); //set BW to 15,63Hz
+  delay(5);
+  i2c_writeReg(BMA280_ADDRESS, 0x0F, 0x08); //set range to 8G
+}
+
+void ACC_getADC () {
+  TWBR = ((F_CPU / 400000L) - 16) / 2;
+  i2c_getSixRawADC(BMA280_ADDRESS,0x02);
   //usefull info is on the 14 bits  [2-15] bits  /4 => [0-13] bits  /4 => 12 bit resolution
   ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>4 ,
                    ((rawADC[3]<<8) | rawADC[2])>>4 ,
