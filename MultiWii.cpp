@@ -396,8 +396,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     #endif
     powerValue = ( conf.psensornull > p ? conf.psensornull - p : p - conf.psensornull); // do not use abs(), it would induce implicit cast to uint and overrun
     analog.amperage = powerValue * conf.pint2ma;
-    if ( powerValue > 307) powerValue = 307;  // only accept reasonable values. 307 is empirical
-    pMeter[PMOTOR_SUM] += ((currentTime-lastRead) * (uint32_t)(powerValue*conf.pint2ma))/100000; // [10 mA * msec]
+    pMeter[PMOTOR_SUM] += ((currentTime-lastRead) * (uint32_t)((uint32_t)powerValue*conf.pint2ma))/100000; // [10 mA * msec]
     lastRead = currentTime;
     break;
   }
