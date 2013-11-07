@@ -271,7 +271,7 @@ int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 #endif
 
 #if defined(OPENLRSv2MULTI)
-  static uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim or other usages
+  uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim or other usages
 #endif
 
 

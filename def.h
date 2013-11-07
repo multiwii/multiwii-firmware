@@ -1555,13 +1555,7 @@
   #define RF22B_Rx_packet_received_interrupt   0x02 
   #define RF22B_PACKET_SENT_INTERRUPT  04 
   #define RF22B_PWRSTATE_POWERDOWN  00    
-  
-  unsigned char ItStatus1, ItStatus2;  
-  typedef struct   
-  { 
-   unsigned char reach_1s    : 1; 
-  } FlagType; 
-  FlagType               Flag;   
+
 #endif
 
 #if defined(DESQUARED6DOFV2GO)

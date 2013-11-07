@@ -9,6 +9,7 @@
 #include "MultiWii.h"
 #include "Serial.h"
 #include "Protocol.h"
+#include "RX.h"
 
 /************************************** MultiWii Serial Protocol *******************************************************/
 // Multiwii Serial Protocol 0 
