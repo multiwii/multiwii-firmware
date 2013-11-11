@@ -7,6 +7,8 @@
 #include "EEPROM.h"
 #include "IMU.h"
 #include "LCD.h"
+#include "Sensors.h"
+
 
 void i2c_BMP085_UT_Start(void);
 
