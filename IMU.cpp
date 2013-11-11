@@ -157,15 +157,52 @@ float InvSqrt (float x){
   return 0.5f * conv.f * (3.0f - x * conv.f * conv.f);
 }
 
+// signed16 * signed16
+// 22 cycles
+// http://mekonik.wordpress.com/2009/03/18/arduino-avr-gcc-multiplication/
+#define MultiS16X16to32(longRes, intIn1, intIn2) \
+asm volatile ( \
+"clr r26 \n\t" \
+"mul %A1, %A2 \n\t" \
+"movw %A0, r0 \n\t" \
+"muls %B1, %B2 \n\t" \
+"movw %C0, r0 \n\t" \
+"mulsu %B2, %A1 \n\t" \
+"sbc %D0, r26 \n\t" \
+"add %B0, r0 \n\t" \
+"adc %C0, r1 \n\t" \
+"adc %D0, r26 \n\t" \
+"mulsu %B1, %A2 \n\t" \
+"sbc %D0, r26 \n\t" \
+"add %B0, r0 \n\t" \
+"adc %C0, r1 \n\t" \
+"adc %D0, r26 \n\t" \
+"clr r1 \n\t" \
+: \
+"=&r" (longRes) \
+: \
+"a" (intIn1), \
+"a" (intIn2) \
+: \
+"r26" \
+)
+
+int32_t  __attribute__ ((noinline)) mul(int16_t a, int16_t b) {
+  int32_t r;
+  MultiS16X16to32(r, a, b);
+  //r = (int32_t)a*b; without asm requirement
+  return r;
+}
+
 // Rotate Estimated vector(s) with small angle approximation, according to the gyro data
 void rotateV32(struct int32_t_vector *v,int16_t* delta) {
-  int32_t X = v->X>>16;
-  int32_t Y = v->Y>>16;
-  int32_t Z = v->Z>>16;
-
-  v->Z -= delta[ROLL]  * X + delta[PITCH] * Y;
-  v->X += delta[ROLL]  * Z - delta[YAW]   * Y;
-  v->Y += delta[PITCH] * Z + delta[YAW]   * X;
+  int16_t X = v->X>>16;
+  int16_t Y = v->Y>>16;
+  int16_t Z = v->Z>>16;
+  
+  v->Z -=  mul(delta[ROLL]  ,  X)  + mul(delta[PITCH] , Y);
+  v->X +=  mul(delta[ROLL]  ,  Z)  - mul(delta[YAW]   , Y);
+  v->Y +=  mul(delta[PITCH] ,  Z)  + mul(delta[YAW]   , X);
 }
 
 
@@ -199,8 +236,8 @@ void getEstimatedAttitude(){
     // valid as long as LPF_FACTOR is less than 15
     imu.accSmooth[axis]  = LPFAcc.A[axis]>>ACC_LPF_FACTOR;
     LPFAcc.A[axis]      += imu.accADC[axis] - imu.accSmooth[axis];
-
-    accMag += (int32_t)imu.accSmooth[axis]*imu.accSmooth[axis] ;
+    // used to calculate later the magnitude of acc vector
+    accMag   += mul(imu.accSmooth[axis] , imu.accSmooth[axis]);
   }
   
   // we rotate the intermediate 32 bit vector with the radian vector (deltaGyroAngle16), scaled by 2^16
@@ -232,16 +269,16 @@ void getEstimatedAttitude(){
     f.SMALL_ANGLES_25 = 0;
 
   // Attitude of the estimated vector
-  int32_t sqGX_sqGZ = sq((int32_t)EstG16.V.X) + sq((int32_t)EstG16.V.Z);
-  invG = InvSqrt(sqGX_sqGZ + sq((int32_t)EstG16.V.Y));
-  att.angle[ROLL]  = _atan2((int32_t)EstG16.V.X , (int32_t)EstG16.V.Z);
-  att.angle[PITCH] = _atan2((int32_t)EstG16.V.Y , InvSqrt(sqGX_sqGZ)*sqGX_sqGZ);
+  int32_t sqGX_sqGZ = mul(EstG16.V.X,EstG16.V.X) + mul(EstG16.V.Z,EstG16.V.Z);
+  invG = InvSqrt(sqGX_sqGZ + mul(EstG16.V.Y,EstG16.V.Y));
+  att.angle[ROLL]  = _atan2(EstG16.V.X , EstG16.V.Z);
+  att.angle[PITCH] = _atan2(EstG16.V.Y , InvSqrt(sqGX_sqGZ)*sqGX_sqGZ);
 
   #if MAG
     //note on the second term: mathematically there is a risk of overflow (16*16*16=48 bits). assumed to be null with real values
     att.heading = _atan2(
-      (int32_t)EstM16.V.Z * EstG16.V.X - (int32_t)EstM16.V.X * EstG16.V.Z,
-      ((int32_t)EstM16.V.Y * sqGX_sqGZ  - ((int32_t)EstM16.V.X * EstG16.V.X + (int32_t)EstM16.V.Z * EstG16.V.Z) * EstG16.V.Y)*invG ); 
+      mul(EstM16.V.Z , EstG16.V.X) - mul(EstM16.V.X , EstG16.V.Z),
+      (EstM16.V.Y * sqGX_sqGZ  - (mul(EstM16.V.X , EstG16.V.X) + mul(EstM16.V.Z , EstG16.V.Z)) * EstG16.V.Y)*invG );
     att.heading += conf.mag_declination; // Set from GUI
     att.heading /= 10;
   #endif
@@ -305,7 +342,7 @@ uint8_t getEstimatedAltitude(){
  
     // projection of ACC vector to global Z, with 1G subtructed
     // Math: accZ = A * G / |G| - 1G
-    int16_t accZ = (imu.accSmooth[ROLL] * (int32_t)EstG16.V.X + imu.accSmooth[PITCH] * (int32_t)EstG16.V.Y + imu.accSmooth[YAW] * (int32_t)EstG16.V.Z) * invG;
+    int16_t accZ = (mul(imu.accSmooth[ROLL] , EstG16.V.X) + mul(imu.accSmooth[PITCH] , EstG16.V.Y) + mul(imu.accSmooth[YAW] , EstG16.V.Z)) * invG;
 
     static int16_t accZoffset = 0;
     if (!f.ARMED) {
