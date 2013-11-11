@@ -348,8 +348,9 @@ uint8_t getEstimatedAltitude(){
     applyDeadband(accZ, ACC_Z_DEADBAND);
 
     static int32_t lastBaroAlt;
-    //int16_t baroVel = (alt.EstAlt - lastBaroAlt) * 1000000.0f / dTime;
-    int16_t baroVel = (alt.EstAlt - lastBaroAlt) * (1000000 / UPDATE_INTERVAL);
+    // could only overflow with a difference of 320m, which is highly improbable here
+    int16_t baroVel = mul((alt.EstAlt - lastBaroAlt) , (1000000 / UPDATE_INTERVAL));
+
     lastBaroAlt = alt.EstAlt;
 
     baroVel = constrain(baroVel, -300, 300); // constrain baro velocity +/- 300cm/s
