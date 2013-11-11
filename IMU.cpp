@@ -205,13 +205,7 @@ void rotateV32(struct int32_t_vector *v,int16_t* delta) {
   v->Y +=  mul(delta[PITCH] ,  Z)  + mul(delta[YAW]   , X);
 }
 
-
-static float invG; // 1/|G|
-
-static t_int16_t_vector EstG16;
-#if MAG
-  static t_int16_t_vector EstM16;
-#endif
+static int16_t accZ=0;
 
 void getEstimatedAttitude(){
   uint8_t axis;
@@ -219,6 +213,10 @@ void getEstimatedAttitude(){
   float scale;
   int16_t deltaGyroAngle16[3];
   static t_int32_t_vector LPFA,LPFM,LPFAcc;
+  t_int16_t_vector EstG16,EstM16;
+  float invG; // 1/|G|
+  static int16_t accZoffset = 0;
+  int32_t accZ_tmp=0;
   uint8_t validAcc;
   static uint16_t previousT;
   uint16_t currentT = micros();
@@ -257,6 +255,7 @@ void getEstimatedAttitude(){
     EstG16.A[axis] = LPFA.A[axis]>>16;
     if ( validAcc )
       LPFA.A[axis] += (int32_t)(imu.accSmooth[axis] - EstG16.A[axis])<<(16-GYR_CMPF_FACTOR);
+    accZ_tmp += mul(imu.accSmooth[axis] , EstG16.A[axis]);
     #if MAG
       EstM16.A[axis] = LPFM.A[axis]>>16;
       LPFM.A[axis]  += (int32_t)(imu.magADC[axis] - EstM16.A[axis])<<(16-GYR_CMPFM_FACTOR);
@@ -287,6 +286,15 @@ void getEstimatedAttitude(){
     cosZ = EstG.V.Z / ACC_1G * 100.0f;                                                        // cos(angleZ) * 100 
     throttleAngleCorrection = THROTTLE_ANGLE_CORRECTION * constrain(100 - cosZ, 0, 100) >>3;  // 16 bit ok: 200*150 = 30000  
   #endif
+
+  // projection of ACC vector to global Z, with 1G subtructed
+  // Math: accZ = A * G / |G| - 1G
+  accZ = accZ_tmp *  invG;
+  if (!f.ARMED) {
+    accZoffset -= accZoffset>>3;
+    accZoffset += accZ;
+  }  
+  accZ -= accZoffset>>3;
 }
 
 #define UPDATE_INTERVAL 25000    // 40hz update rate (20hz LPF on acc)
@@ -340,16 +348,6 @@ uint8_t getEstimatedAltitude(){
     errorAltitudeI = constrain(errorAltitudeI,-30000,30000);
     BaroPID += errorAltitudeI>>9; //I in range +/-60
  
-    // projection of ACC vector to global Z, with 1G subtructed
-    // Math: accZ = A * G / |G| - 1G
-    int16_t accZ = (mul(imu.accSmooth[ROLL] , EstG16.V.X) + mul(imu.accSmooth[PITCH] , EstG16.V.Y) + mul(imu.accSmooth[YAW] , EstG16.V.Z)) * invG;
-
-    static int16_t accZoffset = 0;
-    if (!f.ARMED) {
-      accZoffset -= accZoffset>>3;
-      accZoffset += accZ;
-    }  
-    accZ -= accZoffset>>3;
     applyDeadband(accZ, ACC_Z_DEADBAND);
 
     static int32_t lastBaroAlt;
