@@ -104,25 +104,13 @@ void computeIMU () {
 /* Set the Gyro Weight for Gyro/Acc complementary filter
    Increasing this value would reduce and delay Acc influence on the output of the filter*/
 #ifndef GYR_CMPF_FACTOR
-  #define GYR_CMPF_FACTOR 600
+  #define GYR_CMPF_FACTOR 9 //  that means a CMP_FACTOR of 512 (2^9)
 #endif
 
 /* Set the Gyro Weight for Gyro/Magnetometer complementary filter
    Increasing this value would reduce and delay Magnetometer influence on the output of the filter*/
-#define GYR_CMPFM_FACTOR 250
+#define GYR_CMPFM_FACTOR 8 // that means a CMP_FACTOR of 256 (2^8)
 
-//****** end of advanced users settings *************
-#define INV_GYR_CMPF_FACTOR   (1.0f / (GYR_CMPF_FACTOR  + 1.0f))
-#define INV_GYR_CMPFM_FACTOR  (1.0f / (GYR_CMPFM_FACTOR + 1.0f))
-
-typedef struct fp_vector {		
-  float X,Y,Z;		
-} t_fp_vector_def;
-
-typedef union {		
-  float A[3];		
-  t_fp_vector_def V;		
-} t_fp_vector;
 
 typedef struct int32_t_vector {
   int32_t X,Y,Z;
@@ -160,28 +148,26 @@ float InvSqrt (float x){
 }
 
 // Rotate Estimated vector(s) with small angle approximation, according to the gyro data
-void rotateV(struct fp_vector *v,float* delta) {
-  fp_vector v_tmp = *v;
+void rotateV(struct int32_t_vector *v,float* delta) {
+  int32_t_vector v_tmp = *v;
   v->Z -= delta[ROLL]  * v_tmp.X + delta[PITCH] * v_tmp.Y;
   v->X += delta[ROLL]  * v_tmp.Z - delta[YAW]   * v_tmp.Y;
   v->Y += delta[PITCH] * v_tmp.Z + delta[YAW]   * v_tmp.X;
 }
 
 
-static int32_t accLPF32[3]    = {0, 0, 1};
 static float invG; // 1/|G|
 
-static t_fp_vector EstG;
 static t_int32_t_vector EstG32;
 #if MAG
   static t_int32_t_vector EstM32;
-  static t_fp_vector EstM;
 #endif
 
 void getEstimatedAttitude(){
   uint8_t axis;
   int32_t accMag = 0;
   float scale, deltaGyroAngle[3];
+  static t_int32_t_vector LPFA,LPFM,LPFAcc;
   uint8_t validAcc;
   static uint16_t previousT;
   uint16_t currentT = micros();
@@ -192,17 +178,19 @@ void getEstimatedAttitude(){
   // Initialization
   for (axis = 0; axis < 3; axis++) {
     deltaGyroAngle[axis] = imu.gyroADC[axis]  * scale; // radian
-
-    accLPF32[axis]    -= accLPF32[axis]>>ACC_LPF_FACTOR;
-    accLPF32[axis]    += imu.accADC[axis];
-    imu.accSmooth[axis]    = accLPF32[axis]>>ACC_LPF_FACTOR;
+    // valid as long as LPF_FACTOR is less than 15
+    imu.accSmooth[axis]  = LPFAcc.A[axis]>>ACC_LPF_FACTOR;
+    LPFAcc.A[axis]      += imu.accADC[axis] - imu.accSmooth[axis];
 
     accMag += (int32_t)imu.accSmooth[axis]*imu.accSmooth[axis] ;
   }
-
-  rotateV(&EstG.V,deltaGyroAngle);
+  
+  // we rotate the intermediate 32 bit vector with the radian vector (deltaGyroAngle16), scaled by 2^16
+  // however, only the first 16 MSB of the 32 bit vector is used to compute the result
+  // it is ok to use this approximation as the 16 LSB are used only for the complementary filter part
+  rotateV(&LPFA.V,deltaGyroAngle);
   #if MAG
-    rotateV(&EstM.V,deltaGyroAngle);
+    rotateV(&LPFM.V,deltaGyroAngle);
   #endif
 
   accMag = accMag*100/((int32_t)ACC_1G*ACC_1G);
@@ -211,12 +199,12 @@ void getEstimatedAttitude(){
   // If accel magnitude >1.15G or <0.85G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
   // To do that, we just skip filter, as EstV already rotated by Gyro
   for (axis = 0; axis < 3; axis++) {
+     EstG32.A[axis] = LPFA.A[axis]>>16;
     if ( validAcc )
-      EstG.A[axis] = (EstG.A[axis] * GYR_CMPF_FACTOR + imu.accSmooth[axis]) * INV_GYR_CMPF_FACTOR;
-    EstG32.A[axis] = EstG.A[axis]; //int32_t cross calculation is a little bit faster than float	
+      LPFA.A[axis] += (int32_t)(imu.accSmooth[axis] - EstG32.A[axis])<<(16-GYR_CMPF_FACTOR);
     #if MAG
-      EstM.A[axis] = (EstM.A[axis] * GYR_CMPFM_FACTOR  + imu.magADC[axis]) * INV_GYR_CMPFM_FACTOR;
-      EstM32.A[axis] = EstM.A[axis];
+      EstM32.A[axis] = LPFM.A[axis]>>16;
+      LPFM.A[axis]  += (int32_t)(imu.magADC[axis] - EstM32.A[axis])<<(16-GYR_CMPFM_FACTOR);
     #endif
   }
   
@@ -232,9 +220,10 @@ void getEstimatedAttitude(){
   att.angle[PITCH] = _atan2(EstG32.V.Y , InvSqrt(sqGX_sqGZ)*sqGX_sqGZ);
 
   #if MAG
+    //note on the second term: mathematically there is a risk of overflow (16*16*16=48 bits). assumed to be null with real values
     att.heading = _atan2(
       EstM32.V.Z * EstG32.V.X - EstM32.V.X * EstG32.V.Z,
-      (EstM.V.Y * sqGX_sqGZ  - (EstM32.V.X * EstG32.V.X + EstM32.V.Z * EstG32.V.Z) * EstG.V.Y)*invG ); 
+      (EstM32.V.Y * sqGX_sqGZ  - (EstM32.V.X * EstG32.V.X + EstM32.V.Z * EstG32.V.Z) * EstG32.V.Y)*invG ); 
     att.heading += conf.mag_declination; // Set from GUI
     att.heading /= 10;
   #endif
