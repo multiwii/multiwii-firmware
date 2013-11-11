@@ -13,12 +13,12 @@ void computeIMU () {
   static int16_t gyroADCprevious[3] = {0,0,0};
   int16_t gyroADCp[3];
   int16_t gyroADCinter[3];
-  static uint32_t timeInterleave = 0;
 
   //we separate the 2 situations because reading gyro values with a gyro only setup can be acchieved at a higher rate
   //gyro+nunchuk: we must wait for a quite high delay betwwen 2 reads to get both WM+ and Nunchuk data. It works with 3ms
   //gyro only: the delay to read 2 consecutive values can be reduced to only 0.65ms
   #if defined(NUNCHUCK)
+    static uint32_t timeInterleave = 0;
     annexCode();
     while((uint16_t)(micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
     timeInterleave=micros();
@@ -36,6 +36,7 @@ void computeIMU () {
       gyroADCprevious[axis] = imu.gyroADC[axis];
     }
   #else
+    uint16_t timeInterleave = 0;
     #if ACC
       ACC_getADC();
       getEstimatedAttitude();
