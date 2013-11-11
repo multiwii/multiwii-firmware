@@ -121,6 +121,16 @@ typedef union {
   t_int32_t_vector_def V;
 } t_int32_t_vector;
 
+typedef struct int16_t_vector {
+  int16_t X,Y,Z;
+} t_int16_t_vector_def;
+
+typedef union {
+  int16_t A[3];
+  t_int16_t_vector_def V;
+} t_int16_t_vector;
+
+
 int16_t _atan2(int32_t y, int32_t x){
   float z = (float)y / x;
   int16_t a;
@@ -158,9 +168,9 @@ void rotateV(struct int32_t_vector *v,float* delta) {
 
 static float invG; // 1/|G|
 
-static t_int32_t_vector EstG32;
+static t_int16_t_vector EstG16;
 #if MAG
-  static t_int32_t_vector EstM32;
+  static t_int16_t_vector EstM16;
 #endif
 
 void getEstimatedAttitude(){
@@ -199,31 +209,31 @@ void getEstimatedAttitude(){
   // If accel magnitude >1.15G or <0.85G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
   // To do that, we just skip filter, as EstV already rotated by Gyro
   for (axis = 0; axis < 3; axis++) {
-     EstG32.A[axis] = LPFA.A[axis]>>16;
+    EstG16.A[axis] = LPFA.A[axis]>>16;
     if ( validAcc )
-      LPFA.A[axis] += (int32_t)(imu.accSmooth[axis] - EstG32.A[axis])<<(16-GYR_CMPF_FACTOR);
+      LPFA.A[axis] += (int32_t)(imu.accSmooth[axis] - EstG16.A[axis])<<(16-GYR_CMPF_FACTOR);
     #if MAG
-      EstM32.A[axis] = LPFM.A[axis]>>16;
-      LPFM.A[axis]  += (int32_t)(imu.magADC[axis] - EstM32.A[axis])<<(16-GYR_CMPFM_FACTOR);
+      EstM16.A[axis] = LPFM.A[axis]>>16;
+      LPFM.A[axis]  += (int32_t)(imu.magADC[axis] - EstM16.A[axis])<<(16-GYR_CMPFM_FACTOR);
     #endif
   }
   
-  if ((int16_t)EstG32.A[2] > ACCZ_25deg)
+  if (EstG16.A[2] > ACCZ_25deg)
     f.SMALL_ANGLES_25 = 1;
   else
     f.SMALL_ANGLES_25 = 0;
 
   // Attitude of the estimated vector
-  int32_t sqGX_sqGZ = sq(EstG32.V.X) + sq(EstG32.V.Z);
-  invG = InvSqrt(sqGX_sqGZ + sq(EstG32.V.Y));
-  att.angle[ROLL]  = _atan2(EstG32.V.X , EstG32.V.Z);
-  att.angle[PITCH] = _atan2(EstG32.V.Y , InvSqrt(sqGX_sqGZ)*sqGX_sqGZ);
+  int32_t sqGX_sqGZ = sq((int32_t)EstG16.V.X) + sq((int32_t)EstG16.V.Z);
+  invG = InvSqrt(sqGX_sqGZ + sq((int32_t)EstG16.V.Y));
+  att.angle[ROLL]  = _atan2((int32_t)EstG16.V.X , (int32_t)EstG16.V.Z);
+  att.angle[PITCH] = _atan2((int32_t)EstG16.V.Y , InvSqrt(sqGX_sqGZ)*sqGX_sqGZ);
 
   #if MAG
     //note on the second term: mathematically there is a risk of overflow (16*16*16=48 bits). assumed to be null with real values
     att.heading = _atan2(
-      EstM32.V.Z * EstG32.V.X - EstM32.V.X * EstG32.V.Z,
-      (EstM32.V.Y * sqGX_sqGZ  - (EstM32.V.X * EstG32.V.X + EstM32.V.Z * EstG32.V.Z) * EstG32.V.Y)*invG ); 
+      (int32_t)EstM16.V.Z * EstG16.V.X - (int32_t)EstM16.V.X * EstG16.V.Z,
+      ((int32_t)EstM16.V.Y * sqGX_sqGZ  - ((int32_t)EstM16.V.X * EstG16.V.X + (int32_t)EstM16.V.Z * EstG16.V.Z) * EstG16.V.Y)*invG ); 
     att.heading += conf.mag_declination; // Set from GUI
     att.heading /= 10;
   #endif
@@ -287,7 +297,7 @@ uint8_t getEstimatedAltitude(){
  
     // projection of ACC vector to global Z, with 1G subtructed
     // Math: accZ = A * G / |G| - 1G
-    int16_t accZ = (imu.accSmooth[ROLL] * EstG32.V.X + imu.accSmooth[PITCH] * EstG32.V.Y + imu.accSmooth[YAW] * EstG32.V.Z) * invG;
+    int16_t accZ = (imu.accSmooth[ROLL] * (int32_t)EstG16.V.X + imu.accSmooth[PITCH] * (int32_t)EstG16.V.Y + imu.accSmooth[YAW] * (int32_t)EstG16.V.Z) * invG;
 
     static int16_t accZoffset = 0;
     if (!f.ARMED) {
