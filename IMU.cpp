@@ -158,11 +158,14 @@ float InvSqrt (float x){
 }
 
 // Rotate Estimated vector(s) with small angle approximation, according to the gyro data
-void rotateV(struct int32_t_vector *v,float* delta) {
-  int32_t_vector v_tmp = *v;
-  v->Z -= delta[ROLL]  * v_tmp.X + delta[PITCH] * v_tmp.Y;
-  v->X += delta[ROLL]  * v_tmp.Z - delta[YAW]   * v_tmp.Y;
-  v->Y += delta[PITCH] * v_tmp.Z + delta[YAW]   * v_tmp.X;
+void rotateV32(struct int32_t_vector *v,int16_t* delta) {
+  int32_t X = v->X>>16;
+  int32_t Y = v->Y>>16;
+  int32_t Z = v->Z>>16;
+
+  v->Z -= delta[ROLL]  * X + delta[PITCH] * Y;
+  v->X += delta[ROLL]  * Z - delta[YAW]   * Y;
+  v->Y += delta[PITCH] * Z + delta[YAW]   * X;
 }
 
 
@@ -176,18 +179,23 @@ static t_int16_t_vector EstG16;
 void getEstimatedAttitude(){
   uint8_t axis;
   int32_t accMag = 0;
-  float scale, deltaGyroAngle[3];
+  float scale;
+  int16_t deltaGyroAngle16[3];
   static t_int32_t_vector LPFA,LPFM,LPFAcc;
   uint8_t validAcc;
   static uint16_t previousT;
   uint16_t currentT = micros();
 
-  scale = (currentT - previousT) * GYRO_SCALE; // GYRO_SCALE unit: radian/microsecond
+  // unit: radian per bit, scaled by 2^16 for further multiplication
+  // with a delta time of 3000 us, and GYRO scale of most gyros, scale = a little bit less than 1
+  scale = (currentT - previousT) * (GYRO_SCALE * 65536);
   previousT = currentT;
 
   // Initialization
   for (axis = 0; axis < 3; axis++) {
-    deltaGyroAngle[axis] = imu.gyroADC[axis]  * scale; // radian
+    // unit: radian scaled by 2^16
+    // imu.gyroADC[axis] is 14 bit long, the scale factor ensure deltaGyroAngle16[axis] is still 14 bit long
+    deltaGyroAngle16[axis] = imu.gyroADC[axis]  * scale;
     // valid as long as LPF_FACTOR is less than 15
     imu.accSmooth[axis]  = LPFAcc.A[axis]>>ACC_LPF_FACTOR;
     LPFAcc.A[axis]      += imu.accADC[axis] - imu.accSmooth[axis];
@@ -198,9 +206,9 @@ void getEstimatedAttitude(){
   // we rotate the intermediate 32 bit vector with the radian vector (deltaGyroAngle16), scaled by 2^16
   // however, only the first 16 MSB of the 32 bit vector is used to compute the result
   // it is ok to use this approximation as the 16 LSB are used only for the complementary filter part
-  rotateV(&LPFA.V,deltaGyroAngle);
+  rotateV32(&LPFA.V,deltaGyroAngle16);
   #if MAG
-    rotateV(&LPFM.V,deltaGyroAngle);
+    rotateV32(&LPFM.V,deltaGyroAngle16);
   #endif
 
   accMag = accMag*100/((int32_t)ACC_1G*ACC_1G);
