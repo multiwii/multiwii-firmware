@@ -217,7 +217,6 @@ void getEstimatedAttitude(){
   float invG; // 1/|G|
   static int16_t accZoffset = 0;
   int32_t accZ_tmp=0;
-  uint8_t validAcc;
   static uint16_t previousT;
   uint16_t currentT = micros();
 
@@ -246,14 +245,12 @@ void getEstimatedAttitude(){
     rotateV32(&LPFM.V,deltaGyroAngle16);
   #endif
 
-  accMag = accMag*100/((int32_t)ACC_1G*ACC_1G);
-  validAcc = 72 < (uint16_t)accMag && (uint16_t)accMag < 133;
   // Apply complimentary filter (Gyro drift correction)
   // If accel magnitude >1.15G or <0.85G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
   // To do that, we just skip filter, as EstV already rotated by Gyro
   for (axis = 0; axis < 3; axis++) {
     EstG16.A[axis] = LPFA.A[axis]>>16;
-    if ( validAcc )
+    if ( (int16_t)(0.85*ACC_1G*ACC_1G/256) < (int16_t)(accMag>>8) && (int16_t)(accMag>>8) < (int16_t)(1.15*ACC_1G*ACC_1G/256) )
       LPFA.A[axis] += (int32_t)(imu.accSmooth[axis] - EstG16.A[axis])<<(16-GYR_CMPF_FACTOR);
     accZ_tmp += mul(imu.accSmooth[axis] , EstG16.A[axis]);
     #if MAG
