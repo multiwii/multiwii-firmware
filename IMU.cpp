@@ -11,8 +11,7 @@ void getEstimatedAttitude();
 void computeIMU () {
   uint8_t axis;
   static int16_t gyroADCprevious[3] = {0,0,0};
-  int16_t gyroADCp[3];
-  int16_t gyroADCinter[3];
+  static int16_t gyroADCinter[3];
 
   //we separate the 2 situations because reading gyro values with a gyro only setup can be acchieved at a higher rate
   //gyro+nunchuk: we must wait for a quite high delay betwwen 2 reads to get both WM+ and Nunchuk data. It works with 3ms
@@ -45,7 +44,7 @@ void computeIMU () {
       Gyro_getADC();
     #endif
     for (axis = 0; axis < 3; axis++)
-      gyroADCp[axis] =  imu.gyroADC[axis];
+      gyroADCinter[axis] =  imu.gyroADC[axis];
     timeInterleave=micros();
     annexCode();
     uint8_t t=0;
@@ -55,7 +54,7 @@ void computeIMU () {
       Gyro_getADC();
     #endif
     for (axis = 0; axis < 3; axis++) {
-      gyroADCinter[axis] =  imu.gyroADC[axis]+gyroADCp[axis];
+      gyroADCinter[axis] =  imu.gyroADC[axis]+gyroADCinter[axis];
       // empirical, we take a weighted value of the current and the previous values
       imu.gyroData[axis] = (gyroADCinter[axis]+gyroADCprevious[axis])/3;
       gyroADCprevious[axis] = gyroADCinter[axis]>>1;
