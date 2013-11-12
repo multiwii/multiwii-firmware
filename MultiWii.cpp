@@ -1219,33 +1219,33 @@ void loop () {
 
     ITerm = (errorGyroI[axis]>>7)*conf.pid[axis].I8>>6;                        // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
 
-    PTerm = (int32_t)rc*conf.pid[axis].P8>>6;
-
+    PTerm = mul(rc,conf.pid[axis].P8)>>6;
+    
     if (f.ANGLE_MODE || f.HORIZON_MODE) { // axis relying on ACC
       // 50 degrees max inclination
       errorAngle         = constrain(rc + GPS_angle[axis],-500,+500) - att.angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
       errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);                                                // WindUp     //16 bits is ok here
 
-      PTermACC           = ((int32_t)errorAngle*conf.pid[PIDLEVEL].P8)>>7; // 32 bits is needed for calculation: errorAngle*P8 could exceed 32768   16 bits is ok for result
-      
+      PTermACC           = mul(errorAngle,conf.pid[PIDLEVEL].P8)>>7; // 32 bits is needed for calculation: errorAngle*P8 could exceed 32768   16 bits is ok for result
+
       int16_t limit      = conf.pid[PIDLEVEL].D8*5;
       PTermACC           = constrain(PTermACC,-limit,+limit);
 
-      ITermACC           = ((int32_t)errorAngleI[axis]*conf.pid[PIDLEVEL].I8)>>12;   // 32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
+      ITermACC           = mul(errorAngleI[axis],conf.pid[PIDLEVEL].I8)>>12;   // 32 bits is needed for calculation:10000*I8 could exceed 32768   16 bits is ok for result
 
       ITerm              = ITermACC + ((ITerm-ITermACC)*prop>>9);
       PTerm              = PTermACC + ((PTerm-PTermACC)*prop>>9);
     }
 
-    PTerm -= ((int32_t)imu.gyroData[axis]*dynP8[axis])>>6; // 32 bits is needed for calculation   
-    
+    PTerm -= mul(imu.gyroData[axis],dynP8[axis])>>6; // 32 bits is needed for calculation   
+
     delta          = imu.gyroData[axis] - lastGyro[axis];  // 16 bits is ok here, the dif between 2 consecutive gyro reads is limited to 800
     lastGyro[axis] = imu.gyroData[axis];
     DTerm          = delta1[axis]+delta2[axis]+delta;
     delta2[axis]   = delta1[axis];
     delta1[axis]   = delta;
  
-    DTerm = ((int32_t)DTerm*dynD8[axis])>>5;        // 32 bits is needed for calculation
+    DTerm = mul(DTerm,dynD8[axis])>>5;        // 32 bits is needed for calculation
 
     axisPID[axis] =  PTerm + ITerm - DTerm;
   }
@@ -1254,14 +1254,14 @@ void loop () {
   #define GYRO_P_MAX 300
   #define GYRO_I_MAX 250
 
-  rc = (int32_t)rcCommand[YAW] * (2*conf.yawRate + 30)  >> 5;
+  rc = mul(rcCommand[YAW] , (2*conf.yawRate + 30))  >> 5;
 
   error = rc - imu.gyroData[YAW];
-  errorGyroI_YAW  += (int32_t)error*conf.pid[YAW].I8;
+  errorGyroI_YAW  += mul(error,conf.pid[YAW].I8);
   errorGyroI_YAW  = constrain(errorGyroI_YAW, 2-((int32_t)1<<28), -2+((int32_t)1<<28));
   if (abs(rc) > 50) errorGyroI_YAW = 0;
   
-  PTerm = (int32_t)error*conf.pid[YAW].P8>>6;
+  PTerm = mul(error,conf.pid[YAW].P8)>>6;
   #ifndef COPTER_WITH_SERVO
     int16_t limit = GYRO_P_MAX-conf.pid[YAW].D8;
     PTerm = constrain(PTerm,-limit,+limit);
