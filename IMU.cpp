@@ -327,7 +327,7 @@ uint8_t getEstimatedAltitude(){
 
   if(calibratingB > 0) {
     logBaroGroundPressureSum = log(baroPressureSum);
-    baroGroundTemperatureScale = (baroTemperature + 27315) *  29.271267f;
+    baroGroundTemperatureScale = ((int32_t)baroTemperature + 27315) *  29.271267f;
     calibratingB--;
   }
 

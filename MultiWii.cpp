@@ -323,7 +323,7 @@ conf_t conf;
  
 #if BARO
   int32_t baroPressure;
-  int32_t baroTemperature;
+  int16_t baroTemperature;
   int32_t baroPressureSum;
 #endif
 
