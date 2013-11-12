@@ -766,9 +766,8 @@ void loop () {
   int16_t deltaSum;
   int16_t AngleRateTmp, RateError;
 #endif
-  static uint32_t rcTime  = 0;
+  static uint16_t rcTime  = 0;
   static int16_t initialThrottleHold;
-  static uint32_t timestamp_fixated = 0;
   int16_t rc;
   int32_t prop = 0;
 
@@ -780,7 +779,7 @@ void loop () {
     Read_OpenLRS_RC();
   #endif 
 
-  if (currentTime > rcTime ) { // 50Hz
+  if ((int16_t)(currentTime-rcTime) >0 ) { // 50Hz
     rcTime = currentTime + 20000;
     computeRC();
     // Failsafe routine - added by MIS
