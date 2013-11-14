@@ -628,7 +628,7 @@ static struct {
   union {uint32_t val; uint8_t raw[4]; } ut; //uncompensated T
   union {uint32_t val; uint8_t raw[4]; } up; //uncompensated P
   uint8_t  state;
-  uint32_t deadline;
+  uint16_t deadline;
 } ms561101ba_ctx;
 
 void i2c_MS561101BA_reset(){
@@ -693,48 +693,43 @@ void i2c_MS561101BA_UT_Read() {
   ms561101ba_ctx.ut.raw[0] = i2c_readNak();
 }
 
+// use float approximation instead of int64_t intermediate values
+// does not use 2nd order compensation under -15 deg
 void i2c_MS561101BA_Calculate() {
-  int32_t off2,sens2,delt;
+  int32_t delt;
 
-  int64_t dT       = (int32_t)ms561101ba_ctx.ut.val - ((int32_t)ms561101ba_ctx.c[5] << 8);
-  baroTemperature  = 2000 + ((dT * ms561101ba_ctx.c[6])>>23);
-  int64_t off      = ((uint32_t)ms561101ba_ctx.c[2] <<16) + ((dT * ms561101ba_ctx.c[4]) >> 7);
-  int64_t sens     = ((uint32_t)ms561101ba_ctx.c[1] <<15) + ((dT * ms561101ba_ctx.c[3]) >> 8);
+  float dT       = (int32_t)ms561101ba_ctx.ut.val - ((uint32_t)ms561101ba_ctx.c[5] << 8);
+  float off      = ((uint32_t)ms561101ba_ctx.c[2] <<16) + ((dT * ms561101ba_ctx.c[4]) /((uint32_t)1<<7));
+  float sens     = ((uint32_t)ms561101ba_ctx.c[1] <<15) + ((dT * ms561101ba_ctx.c[3]) /((uint32_t)1<<8));
+  baroTemperature  = (dT * ms561101ba_ctx.c[6])/((uint32_t)1<<23);
 
-  if (baroTemperature < 2000) { // temperature lower than 20st.C 
-    delt = baroTemperature-2000;
+  if (baroTemperature < 0) { // temperature lower than 20st.C 
+    delt = baroTemperature;
     delt  = 5*delt*delt;
-    off2  = delt>>1;
-    sens2 = delt>>2;
-    if (baroTemperature < -1500) { // temperature lower than -15st.C
-      delt  = baroTemperature+1500;
-      delt  = delt*delt;
-      off2  += 7 * delt;
-      sens2 += (11 * delt)>>1;
-    }
-    off  -= off2; 
-    sens -= sens2;
+    off  -= delt>>1; 
+    sens -= delt>>2;
   }
 
-  baroPressure     = (( (ms561101ba_ctx.up.val * sens ) >> 21) - off) >> 15;
+  baroTemperature  += 2000;
+  baroPressure     = (( (ms561101ba_ctx.up.val * sens ) /((uint32_t)1<<21)) - off)/((uint32_t)1<<15);
 }
 
 //return 0: no data available, no computation ;  1: new value available  ; 2: no new value, but computation time
 uint8_t Baro_update() {                            // first UT conversion is started in init procedure
-  if (currentTime < ms561101ba_ctx.deadline) return 0; 
+  if ((int16_t)(currentTime - ms561101ba_ctx.deadline)<0) return 0;
   ms561101ba_ctx.deadline = currentTime+10000;  // UT and UP conversion take 8.5ms so we do next reading after 10ms 
   TWBR = ((F_CPU / 400000L) - 16) / 2;          // change the I2C clock rate to 400kHz, MS5611 is ok with this speed
   if (ms561101ba_ctx.state == 0) {
-    i2c_MS561101BA_UT_Read(); 
-    i2c_MS561101BA_UP_Start(); 
+    i2c_MS561101BA_UT_Read();
+    i2c_MS561101BA_UP_Start();
     Baro_Common();                              // moved here for less timecycle spike
     ms561101ba_ctx.state = 1;
     return 1;
   } else {
     i2c_MS561101BA_UP_Read();
-    i2c_MS561101BA_UT_Start(); 
+    i2c_MS561101BA_UT_Start();
     i2c_MS561101BA_Calculate();
-    ms561101ba_ctx.state = 0; 
+    ms561101ba_ctx.state = 0;
     return 2;
   }
 }
