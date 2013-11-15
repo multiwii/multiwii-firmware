@@ -714,7 +714,12 @@ void i2c_MS561101BA_Calculate() {
 }
 
 //return 0: no data available, no computation ;  1: new value available  ; 2: no new value, but computation time
-uint8_t Baro_update() {                            // first UT conversion is started in init procedure
+uint8_t Baro_update() {                          // first UT conversion is started in init procedure
+  if (ms561101ba_ctx.state == 2) {               // a third state is introduced here to isolate calculate() and smooth timecycle spike
+    ms561101ba_ctx.state = 0;
+    i2c_MS561101BA_Calculate();
+    return 2;
+  }
   if ((int16_t)(currentTime - ms561101ba_ctx.deadline)<0) return 0;
   ms561101ba_ctx.deadline = currentTime+10000;  // UT and UP conversion take 8.5ms so we do next reading after 10ms 
   if (ms561101ba_ctx.state == 0) {
@@ -726,8 +731,7 @@ uint8_t Baro_update() {                            // first UT conversion is sta
   } else {
     i2c_MS561101BA_UP_Read();
     i2c_MS561101BA_UT_Start();
-    i2c_MS561101BA_Calculate();
-    ms561101ba_ctx.state = 0;
+    ms561101ba_ctx.state = 2;
     return 2;
   }
 }
