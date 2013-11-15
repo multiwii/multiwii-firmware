@@ -71,7 +71,7 @@
        in some cases, this value must be lowered down to 900 for some specific ESCs, otherwise they failed to initiate */
     #define MINCOMMAND  1000
 
-  /**********************************    I2C speed   ************************************/
+  /**********************************  I2C speed for old WMP config (useless config for other sensors)  *************/
     #define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
     //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
 
