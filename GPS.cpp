@@ -366,7 +366,7 @@ void GPS_NewData(void) {
       }
       if (_i2c_gps_status & I2C_GPS_STATUS_NEW_DATA) {                                //Check about new data
         if (GPS_update) { GPS_update = 0;} else { GPS_update = 1;}                    //Fancy flash on GUI :D
-        if (!GPS_pids_initialized) {
+        if (!GPS_pids_initialized && f.I2C_INIT_DONE) {
           GPS_set_pids();
           GPS_pids_initialized = 1;
         } 
@@ -625,6 +625,7 @@ void GPS_set_pids(void) {
   #endif
 
   #if defined(I2C_GPS)
+    if (!f.I2C_INIT_DONE) return;
     i2c_rep_start(I2C_GPS_ADDRESS<<1);
       i2c_write(I2C_GPS_HOLD_P);
        i2c_write(conf.pid[PIDPOS].P8);
