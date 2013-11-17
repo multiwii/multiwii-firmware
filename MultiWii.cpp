@@ -1092,22 +1092,22 @@ void loop () {
       case 0:
         taskOrder++;
         #if MAG
-          if (Mag_getADC()) break; // max 350 µs (HMC5883) // only break when we actually did something
+          if (Mag_getADC() != 0 ) break; // 320 µs
         #endif
       case 1:
         taskOrder++;
         #if BARO
-          if (Baro_update() != 0 ) break;
+          if (Baro_update() != 0 ) break; // for MS baro: I2C set and get: 220 us  -  presure and temperature computation 160 us
         #endif
       case 2:
         taskOrder++;
         #if BARO
-          if (getEstimatedAltitude() !=0) break;
+          if (getEstimatedAltitude() !=0) break; // 280 us
         #endif    
       case 3:
         taskOrder++;
         #if GPS
-          if(GPS_Enable) GPS_NewData();
+          if(GPS_Enable) GPS_NewData();  // I2C GPS: 160 us with no new data / 1250us! with new data 
           break;
         #endif
       case 4:
