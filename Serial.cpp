@@ -149,6 +149,7 @@ void SerialEnd(uint8_t port) {
   }
 }
 
+// we don't care about ring buffer overflow (head->tail) to avoid a test condition : data is lost anyway if it happens 
 void store_uart_in_buf(uint8_t data, uint8_t portnum) {
   #if defined(SPEKTRUM)
     if (portnum == SPEK_SERIAL_PORT) {
@@ -168,9 +169,8 @@ void store_uart_in_buf(uint8_t data, uint8_t portnum) {
   #endif
 
   uint8_t h = serialHeadRX[portnum];
-  if (++h >= RX_BUFFER_SIZE) h = 0;
-  if (h == serialTailRX[portnum]) return; // we did not bite our own tail?
-  serialBufferRX[serialHeadRX[portnum]][portnum] = data;  
+  serialBufferRX[h++][portnum] = data;
+  if (h >= RX_BUFFER_SIZE) h = 0;
   serialHeadRX[portnum] = h;
 }
 
