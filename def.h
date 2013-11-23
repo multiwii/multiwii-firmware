@@ -1395,13 +1395,14 @@
   #undef INTERNAL_I2C_PULLUPS
   #define MINTHROTTLE 1050
   #define MAXTHROTTLE 2000
-  #define EXT_MOTOR_RANGE
+  #define EXT_MOTOR_32KHZ
   #define VBAT
   #define VBATSCALE       54
   #define VBATLEVEL_WARN1 10
   #define VBATLEVEL_WARN2 10
   #define VBATLEVEL_CRIT  10
   #define NO_VBAT         10
+  #define MOTOR_STOP
 #endif
 
 #if defined(MEGAWAP_V2_STD) 
