@@ -301,8 +301,8 @@ void configureReceiver() {
 void  readSBus(){
   #define SBUS_SYNCBYTE 0x0F // Not 100% sure: at the beginning of coding it was 0xF0 !!!
   static uint16_t sbus[25]={0};
-  while(SerialAvailable(1)){
-    int val = SerialRead(1);
+  while(SerialAvailable(SBUS_SERIAL_PORT)){
+    int val = SerialRead(SBUS_SERIAL_PORT);
     if(sbusIndex==0 && val != SBUS_SYNCBYTE)
       continue;
     sbus[sbusIndex++] = val;
