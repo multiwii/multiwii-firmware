@@ -909,6 +909,15 @@
     //#define EXT_MOTOR_32KHZ
     //#define EXT_MOTOR_4KHZ
     //#define EXT_MOTOR_1KHZ
+  
+    // for 32u4 proc
+    //#define EXT_MOTOR_64KHZ
+    //#define EXT_MOTOR_32KHZ
+    //#define EXT_MOTOR_16KHZ
+    //#define EXT_MOTOR_8KHZ
+    //#define EXT_MOTOR_4KHZ
+    //#define EXT_MOTOR_2KHZ
+    //#define EXT_MOTOR_1KHZ
 
   /**************************************************************************************/
   /***********************     motor, servo and other presets     ***********************/
