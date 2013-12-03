@@ -277,8 +277,7 @@ void writeMotors() { // [1000;2000] => [125;250]
 
   /******** Specific PWM Timers & Registers for the atmega32u4 (Promicro)   ************/
   #if defined(PROMICRO)
-    uint16_t Temp1,Temp2;
-    Temp1 = 1023 - (motor[2]-1000); 
+    uint16_t Temp2;
     Temp2 = motor[3] - 1000;
     #if (NUMBER_MOTOR > 0)
       #if defined(A32U4_4_HW_PWM_SERVOS)
@@ -290,24 +289,17 @@ void writeMotors() { // [1000;2000] => [125;250]
           TC4H = (((motor[0]-1000)<<1)+16)>>8; OCR4D = ((((motor[0]-1000)<<1)+16)&0xFF); //  pin 6
         #endif
       #else
-        // write motor0 to pin 9
         // Timer 1 A & B [1000:2000] => [8000:16000]
         #ifdef EXT_MOTOR_RANGE
           OCR1A = ((motor[0]<<4) - 16000) + 128;
         #elif defined(EXT_MOTOR_64KHZ)
-          OCR1A = (motor[0] - 1000) >> 3; // max = 127
+          OCR1A = (motor[0] - 1000) >> 2; // max = 255
         #elif defined(EXT_MOTOR_32KHZ)
-          OCR1A = (motor[0] - 1000) >> 2; // 1000..2000 -> 2..252, max = 255
+          OCR1A = (motor[0] - 1000) >> 1; // max = 511
         #elif defined(EXT_MOTOR_16KHZ)
-          OCR1A = (motor[0] - 1000) >> 1; // 1000..2000 -> 4..504, max = 511
+          OCR1A = motor[0] - 1000;        //  pin 9
         #elif defined(EXT_MOTOR_8KHZ)
-          OCR1A = motor[0]-1000;        //  pin 9
-        #elif defined(EXT_MOTOR_4KHZ)
-          OCR1A = (motor[0]-1000) << 1; //  pin 9
-        #elif defined(EXT_MOTOR_2KHZ)
-          OCR1A = (motor[0]-1000) << 2; //  pin 9
-        #elif defined(EXT_MOTOR_1KHZ)
-          OCR1A = (motor[0]-1000) << 3; //  pin 9
+          OCR1A = (motor[0]-1000) << 1;   //  pin 9
         #else
           OCR1A = motor[0]<<3; //  pin 9
         #endif
@@ -317,19 +309,13 @@ void writeMotors() { // [1000;2000] => [125;250]
       #ifdef EXT_MOTOR_RANGE 
         OCR1B = ((motor[1]<<4) - 16000) + 128;
       #elif defined(EXT_MOTOR_64KHZ)
-        OCR1B = (motor[1] - 1000) >> 3; // max = 127
+        OCR1B = (motor[1] - 1000) >> 2;
       #elif defined(EXT_MOTOR_32KHZ)
-        OCR1B = (motor[1] - 1000) >> 2; // 1000..2000 -> 2..252, max = 255
+        OCR1B = (motor[1] - 1000) >> 1;
       #elif defined(EXT_MOTOR_16KHZ)
-        OCR1B = (motor[1] - 1000) >> 1; // 1000..2000 -> 4..504, max = 511
+        OCR1B = motor[1] - 1000;        //  pin 10
       #elif defined(EXT_MOTOR_8KHZ)
-        OCR1B = motor[1]-1000;        //  pin 10
-      #elif defined(EXT_MOTOR_4KHZ)
-        OCR1B = (motor[1]-1000) << 1; //  pin 10
-      #elif defined(EXT_MOTOR_2KHZ)
-        OCR1B = (motor[1]-1000) << 2; //  pin 10
-      #elif defined(EXT_MOTOR_1KHZ)
-        OCR1B = (motor[1]-1000) << 3; //  pin 10
+        OCR1B = (motor[1]-1000) << 1;   //  pin 10
       #else
         OCR1B = motor[1]<<3; //  pin 10
       #endif
@@ -346,29 +332,13 @@ void writeMotors() { // [1000;2000] => [125;250]
         #ifdef EXT_MOTOR_RANGE 
           OCR3A = ((motor[2]<<4) - 16000) + 128;
         #elif defined(EXT_MOTOR_64KHZ)
-          Temp1 = Temp1 >> 3;
-          TC4H = Temp1 >> 8;
-          OCR4A = Temp1 & 0xFF;         //  pin 5
+          OCR3A = (motor[2] - 1000) >> 2;
         #elif defined(EXT_MOTOR_32KHZ)
-          Temp1 = Temp1 >> 2;
-          TC4H = Temp1 >> 8;
-          OCR4A = Temp1 & 0xFF;         //  pin 5
+          OCR3A = (motor[2] - 1000) >> 1;
         #elif defined(EXT_MOTOR_16KHZ)
-          Temp1 = Temp1 >> 1;
-          TC4H = Temp1 >> 8;
-          OCR4A = Temp1 & 0xFF;         //  pin 5
+          OCR3A = motor[2] - 1000;        //  pin 5
         #elif defined(EXT_MOTOR_8KHZ)
-          TC4H = Temp1 >> 8;
-          OCR4A = Temp1 & 0xFF;         //  pin 5
-        #elif defined(EXT_MOTOR_4KHZ)
-          TC4H = Temp1 >> 8;
-          OCR4A = Temp1 & 0xFF;         //  pin 5
-        #elif defined(EXT_MOTOR_2KHZ)
-          TC4H = Temp1 >> 8;
-          OCR4A = Temp1 & 0xFF;         //  pin 5
-        #elif defined(EXT_MOTOR_1KHZ)
-          TC4H = Temp1 >> 8;
-          OCR4A = Temp1 & 0xFF;         //  pin 5
+          OCR3A = (motor[2]-1000) << 1;   //  pin 5
         #else
           OCR3A = motor[2]<<3; //  pin 5
         #endif
@@ -378,29 +348,19 @@ void writeMotors() { // [1000;2000] => [125;250]
       #ifdef EXT_MOTOR_RANGE 
         TC4H = (((motor[3]-1000)<<1)+16)>>8; OCR4D = ((((motor[3]-1000)<<1)+16)&0xFF); //  pin 6
       #elif defined(EXT_MOTOR_64KHZ)
-        Temp2 = Temp2 >> 3;
-        TC4H = Temp2 >> 8;
-        OCR4D = Temp2 & 0xFF;         //  pin 6
-      #elif defined(EXT_MOTOR_32KHZ)
         Temp2 = Temp2 >> 2;
         TC4H = Temp2 >> 8;
-        OCR4D = Temp2 & 0xFF;         //  pin 6
-      #elif defined(EXT_MOTOR_16KHZ)
+        OCR4D = Temp2 & 0xFF;           //  pin 6
+      #elif defined(EXT_MOTOR_32KHZ)
         Temp2 = Temp2 >> 1;
         TC4H = Temp2 >> 8;
-        OCR4D = Temp2 & 0xFF;         //  pin 6
+        OCR4D = Temp2 & 0xFF;           //  pin 6
+      #elif defined(EXT_MOTOR_16KHZ)
+        TC4H = Temp2 >> 8;
+        OCR4D = Temp2 & 0xFF;           //  pin 6
       #elif defined(EXT_MOTOR_8KHZ)
         TC4H = Temp2 >> 8;
-        OCR4D = Temp2 & 0xFF;         //  pin 6
-      #elif defined(EXT_MOTOR_4KHZ)
-        TC4H = Temp2 >> 8;
-        OCR4D = Temp2 & 0xFF;         //  pin 6
-      #elif defined(EXT_MOTOR_2KHZ)
-        TC4H = Temp2 >> 8;
-        OCR4D = Temp2 & 0xFF;         //  pin 6
-      #elif defined(EXT_MOTOR_1KHZ)
-        TC4H = Temp2 >> 8;
-        OCR4D = Temp2 & 0xFF;         //  pin 6
+        OCR4D = Temp2 & 0xFF;           //  pin 6
       #else
         TC4H = motor[3]>>8; OCR4D = (motor[3]&0xFF); //  pin 6
       #endif
@@ -584,95 +544,89 @@ void initOutput() {
   
   /******** Specific PWM Timers & Registers for the atmega32u4 (Promicro)   ************/
   #if defined(PROMICRO)
-    #if (NUMBER_MOTOR > 0) && ( !defined(A32U4_4_HW_PWM_SERVOS) )
-      TCCR1A |= (1<<WGM11); // phase correct mode & no prescaler
-      TCCR1A &= ~(1<<WGM10);
-      TCCR1B &= ~(1<<WGM12) &  ~(1<<CS11) & ~(1<<CS12);
-      TCCR1B |= (1<<WGM13) | (1<<CS10); 
-      ICR1   |= 0x3FFF; // TOP to 16383;     
+    #if defined(EXT_MOTOR_64KHZ) || defined(EXT_MOTOR_32KHZ) || defined(EXT_MOTOR_16KHZ) || defined(EXT_MOTOR_8KHZ)
+      TCCR1A = (1<<WGM11);
+      TCCR1B = (1<<WGM13) | (1<<WGM12) | (1<<CS10);
+      TCCR3A = (1<<WGM31);
+      TCCR3B = (1<<WGM33) | (1<<WGM32) | (1<<CS30);
+      #if defined(EXT_MOTOR_64KHZ)
+        ICR1   = 0x00FF; // TOP to 255;
+        ICR3   = 0x00FF; // TOP to 255;
+        TC4H = 0x00;
+        OCR4C = 0xFF; // phase and frequency correct mode & top to 255
+        TCCR4B = (1<<CS40);             // prescaler to 1
+      #elif defined(EXT_MOTOR_32KHZ)
+        ICR1   = 0x01FF; // TOP to 511;
+        ICR3   = 0x01FF; // TOP to 511;
+        TC4H = 0x01;
+        OCR4C = 0xFF; // phase and frequency correct mode & top to 511
+        TCCR4B = (1<<CS40);             // prescaler to 1
+      #elif defined(EXT_MOTOR_16KHZ)
+        ICR1   = 0x03FF; // TOP to 1023;
+        ICR3   = 0x03FF; // TOP to 1023;
+        TC4H = 0x03;
+        OCR4C = 0xFF; // phase and frequency correct mode & top to 1023
+        TCCR4B = (1<<CS40);             // prescaler to 1
+      #elif defined(EXT_MOTOR_8KHZ)
+        ICR1   = 0x07FF; // TOP to 2046;
+        ICR3   = 0x07FF; // TOP to 2046;
+        TC4H = 0x3;
+        OCR4C = 0xFF; // phase and frequency correct mode
+        TCCR4B = (1<<CS41);             // prescaler to 2
+      #endif
       TCCR1A |= _BV(COM1A1); // connect pin 9 to timer 1 channel A
-    #endif
-    #if (NUMBER_MOTOR > 1)
       TCCR1A |= _BV(COM1B1); // connect pin 10 to timer 1 channel B
-    #endif
-    #if (NUMBER_MOTOR > 2)
-      #if !defined(HWPWM6) // timer 4A
-        TCCR4E |= (1<<ENHC4); // enhanced pwm mode
-        TCCR4B &= ~(1<<CS41); TCCR4B |= (1<<CS42)|(1<<CS40); // prescaler to 16
-        TCCR4D |= (1<<WGM40); TC4H = 0x3; OCR4C = 0xFF; // phase and frequency correct mode & top to 1023 but with enhanced pwm mode we have 2047
-        TCCR4A |= (1<<COM4A0)|(1<<PWM4A); // connect pin 5 to timer 4 channel A 
-      #else // timer 3A
-        TCCR3A |= (1<<WGM31); // phase correct mode & no prescaler
-        TCCR3A &= ~(1<<WGM30);
-        TCCR3B &= ~(1<<WGM32) &  ~(1<<CS31) & ~(1<<CS32);
-        TCCR3B |= (1<<WGM33) | (1<<CS30); 
-        ICR3   |= 0x3FFF; // TOP to 16383;     
-        TCCR3A |= _BV(COM3A1); // connect pin 5 to timer 3 channel A    
-      #endif 
-    #endif
-    #if (NUMBER_MOTOR > 3) || ( (NUMBER_MOTOR > 0) && defined(A32U4_4_HW_PWM_SERVOS) )
-      #if defined(HWPWM6) 
-        TCCR4E |= (1<<ENHC4); // enhanced pwm mode
-        TCCR4B &= ~(1<<CS41); TCCR4B |= (1<<CS42)|(1<<CS40); // prescaler to 16
-        TCCR4D |= (1<<WGM40); TC4H = 0x3; OCR4C = 0xFF; // phase and frequency correct mode & top to 1023 but with enhanced pwm mode we have 2047
-      #endif
+      TCCR3A |= _BV(COM3A1); // connect pin 5 to timer 3 channel A
+      TCCR4D = 0;
       TCCR4C |= (1<<COM4D1)|(1<<PWM4D); // connect pin 6 to timer 4 channel D
-    #endif
-    #if (NUMBER_MOTOR > 4)
-      #if defined(HWPWM6) 
-        TCCR1A |= _BV(COM1C1); // connect pin 11 to timer 1 channel C
-        TCCR4A |= (1<<COM4A1)|(1<<PWM4A); // connect pin 13 to timer 4 channel A 
-      #else
-        initializeSoftPWM();
+    #else
+      #if (NUMBER_MOTOR > 0) && ( !defined(A32U4_4_HW_PWM_SERVOS) )
+        TCCR1A |= (1<<WGM11); // phase correct mode & no prescaler
+        TCCR1A &= ~(1<<WGM10);
+        TCCR1B &= ~(1<<WGM12) &  ~(1<<CS11) & ~(1<<CS12);
+        TCCR1B |= (1<<WGM13) | (1<<CS10); 
+        ICR1   |= 0x3FFF; // TOP to 16383;     
+        TCCR1A |= _BV(COM1A1); // connect pin 9 to timer 1 channel A
       #endif
-    #endif
-    #if (NUMBER_MOTOR > 6)
-      #if defined(HWPWM6) 
-        initializeSoftPWM();
+      #if (NUMBER_MOTOR > 1)
+        TCCR1A |= _BV(COM1B1); // connect pin 10 to timer 1 channel B
       #endif
-    #endif
-    #if defined(EXT_MOTOR_64KHZ)
-      ICR1   = 0x007F; // TOP to 127;
-      TCCR4B &= ~(1<<CS42) & ~(1<<CS41); 
-      TCCR4B |= (1<<CS40);             // prescaler to 1
-      TC4H = 0x0; 
-      OCR4C = 0x7F; // phase and frequency correct mode & top to 127
-    #elif defined(EXT_MOTOR_32KHZ)
-      ICR1   = 0x00FF; // TOP to 255;
-      TCCR4B &= ~(1<<CS42) & ~(1<<CS41); 
-      TCCR4B |= (1<<CS40);             // prescaler to 1
-      TC4H = 0x0; 
-      OCR4C = 0xFF; // phase and frequency correct mode & top to 255
-    #elif defined(EXT_MOTOR_16KHZ)
-      ICR1   = 0x01FF; // TOP to 511;     
-      TCCR4B &= ~(1<<CS42) & ~(1<<CS41); 
-      TCCR4B |= (1<<CS40);             // prescaler to 1
-      TC4H = 0x1; 
-      OCR4C = 0xFF; // phase and frequency correct mode & top to 511
-    #elif defined(EXT_MOTOR_8KHZ)
-      ICR1   = 0x03FF; // TOP to 1023;     
-      TCCR4B &= ~(1<<CS42) & ~(1<<CS41); 
-      TCCR4B |= (1<<CS40);             // prescaler to 1
-      TC4H = 0x3;
-      OCR4C = 0xFF; // phase and frequency correct mode
-    #elif defined(EXT_MOTOR_4KHZ)
-      ICR1   = 0x07FE; // TOP to 2046;     
-      TCCR4B &= ~(1<<CS42) & ~(1<<CS40); 
-      TCCR4B |= (1<<CS41);             // prescaler to 2
-      TC4H = 0x3;
-      OCR4C = 0xFF; // phase and frequency correct mode
-    #elif defined(EXT_MOTOR_2KHZ)
-      ICR1   = 0x0FFC; // TOP to 4092;     
-      TCCR4B &= ~(1<<CS42); 
-      TCCR4B |= (1<<CS41) | (1<<CS40); // prescaler to 4
-      TC4H = 0x3;
-      OCR4C = 0xFF; // phase and frequency correct mode
-    #elif defined(EXT_MOTOR_1KHZ)
-      ICR1   = 0x1FF8; // TOP to 8184;     
-      TCCR4B &= ~(1<<CS40) & ~(1<<CS41); 
-      TCCR4B |= (1<<CS42); // prescaler to 8
-      TC4H = 0x3;
-      OCR4C = 0xFF; // phase and frequency correct mode
+      #if (NUMBER_MOTOR > 2)
+        #if !defined(HWPWM6) // timer 4A
+          TCCR4E |= (1<<ENHC4); // enhanced pwm mode
+          TCCR4B &= ~(1<<CS41); TCCR4B |= (1<<CS42)|(1<<CS40); // prescaler to 16
+          TCCR4D |= (1<<WGM40); TC4H = 0x3; OCR4C = 0xFF; // phase and frequency correct mode & top to 1023 but with enhanced pwm mode we have 2047
+          TCCR4A |= (1<<COM4A0)|(1<<PWM4A); // connect pin 5 to timer 4 channel A 
+        #else // timer 3A
+          TCCR3A |= (1<<WGM31); // phase correct mode & no prescaler
+          TCCR3A &= ~(1<<WGM30);
+          TCCR3B &= ~(1<<WGM32) &  ~(1<<CS31) & ~(1<<CS32);
+          TCCR3B |= (1<<WGM33) | (1<<CS30); 
+          ICR3   |= 0x3FFF; // TOP to 16383;     
+          TCCR3A |= _BV(COM3A1); // connect pin 5 to timer 3 channel A    
+        #endif 
+      #endif
+      #if (NUMBER_MOTOR > 3) || ( (NUMBER_MOTOR > 0) && defined(A32U4_4_HW_PWM_SERVOS) )
+        #if defined(HWPWM6) 
+          TCCR4E |= (1<<ENHC4); // enhanced pwm mode
+          TCCR4B &= ~(1<<CS41); TCCR4B |= (1<<CS42)|(1<<CS40); // prescaler to 16
+          TCCR4D |= (1<<WGM40); TC4H = 0x3; OCR4C = 0xFF; // phase and frequency correct mode & top to 1023 but with enhanced pwm mode we have 2047
+        #endif
+        TCCR4C |= (1<<COM4D1)|(1<<PWM4D); // connect pin 6 to timer 4 channel D
+      #endif
+      #if (NUMBER_MOTOR > 4)
+        #if defined(HWPWM6) 
+          TCCR1A |= _BV(COM1C1); // connect pin 11 to timer 1 channel C
+          TCCR4A |= (1<<COM4A1)|(1<<PWM4A); // connect pin 13 to timer 4 channel A 
+        #else
+          initializeSoftPWM();
+        #endif
+      #endif
+      #if (NUMBER_MOTOR > 6)
+        #if defined(HWPWM6) 
+          initializeSoftPWM();
+        #endif
+      #endif
     #endif
   #endif
   
