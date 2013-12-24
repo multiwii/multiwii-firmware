@@ -281,7 +281,7 @@ void getEstimatedAttitude(){
   #endif
 
   #if defined(THROTTLE_ANGLE_CORRECTION)
-    cosZ = EstG.V16.Z / (ACC_1G * 100.0f);                                                        // cos(angleZ) * 100 
+    cosZ = mul(EstG.V16.Z , 100) / ACC_1G ;                                                   // cos(angleZ) * 100 
     throttleAngleCorrection = THROTTLE_ANGLE_CORRECTION * constrain(100 - cosZ, 0, 100) >>3;  // 16 bit ok: 200*150 = 30000  
   #endif
 
