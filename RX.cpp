@@ -300,6 +300,7 @@ void configureReceiver() {
 #if defined(SBUS)
 void  readSBus(){
   #define SBUS_SYNCBYTE 0x0F // Not 100% sure: at the beginning of coding it was 0xF0 !!!
+  #define SBUS_ENDBYTE 0x00
   static uint16_t sbus[25]={0};
   while(SerialAvailable(SBUS_SERIAL_PORT)){
     int val = SerialRead(SBUS_SERIAL_PORT);
@@ -308,6 +309,8 @@ void  readSBus(){
     sbus[sbusIndex++] = val;
     if(sbusIndex==25){
       sbusIndex=0;
+      spekFrameFlags = 0x00;
+      if (sbus[24] != SBUS_ENDBYTE) continue; 
       rcValue[0]  = ((sbus[1]|sbus[2]<< 8) & 0x07FF)/2+SBUS_MID_OFFSET;
       rcValue[1]  = ((sbus[2]>>3|sbus[3]<<5) & 0x07FF)/2+SBUS_MID_OFFSET; 
       rcValue[2]  = ((sbus[3]>>6|sbus[4]<<2|sbus[5]<<10) & 0x07FF)/2+SBUS_MID_OFFSET; 
@@ -328,6 +331,7 @@ void  readSBus(){
       // now the two Digital-Channels
       if ((sbus[23]) & 0x0001)       rcValue[16] = 2000; else rcValue[16] = 1000;
       if ((sbus[23] >> 1) & 0x0001)  rcValue[17] = 2000; else rcValue[17] = 1000;
+      spekFrameDone = 0x01;
 
       // Failsafe: there is one Bit in the SBUS-protocol (Byte 25, Bit 4) whitch is the failsafe-indicator-bit
       #if defined(FAILSAFE)
@@ -369,6 +373,7 @@ void readSpektrum(void) {
         if (spekChannel < RC_CHANS) rcValue[spekChannel] = 988 + ((((uint16_t)(bh & SPEK_CHAN_MASK) << 8) + bl) SPEK_DATA_SHIFT);
       }
       spekFrameFlags = 0x00;
+      spekFrameDone = 0x01;
       #if defined(FAILSAFE)
         if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;   // Valid frame, clear FailSafe counter
       #endif
@@ -382,8 +387,7 @@ void readSpektrum(void) {
 
 uint16_t readRawRC(uint8_t chan) {
   uint16_t data;
-  #if defined(SPEKTRUM)
-    readSpektrum();
+  #if defined(SPEKTRUM) || defined(SBUS)
     if (chan < RC_CHANS) {
       data = rcValue[rcChannel[chan]];
     } else data = 1500;
@@ -404,9 +408,6 @@ void computeRC() {
   static uint8_t rc4ValuesIndex = 0;
   uint8_t chan,a;
   #if !defined(OPENLRSv2MULTI) // dont know if this is right here
-    #if defined(SBUS)
-      readSBus();
-    #endif
     rc4ValuesIndex++;
     if (rc4ValuesIndex == 4) rc4ValuesIndex = 0;
     for (chan = 0; chan < RC_CHANS; chan++) {
