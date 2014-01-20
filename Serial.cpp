@@ -151,13 +151,8 @@ void SerialEnd(uint8_t port) {
 
 // we don't care about ring buffer overflow (head->tail) to avoid a test condition : data is lost anyway if it happens 
 void store_uart_in_buf(uint8_t data, uint8_t portnum) {
-  #if defined(SPEKTRUM)
-    if (portnum == SPEK_SERIAL_PORT) {
-  #endif
-  #if defined(SBUS) 
-    if (portnum == SBUS_SERIAL_PORT) {
-  #endif
   #if defined(SPEKTRUM) || defined(SBUS)
+    if (portnum == RX_SERIAL_PORT) {
       if (!spekFrameFlags) { 
         sei();
         uint32_t spekTimeNow = (timer0_overflow_count << 8) * (64 / clockCyclesPerMicrosecond()); //Move timer0_overflow_count into registers so we don't touch a volatile twice

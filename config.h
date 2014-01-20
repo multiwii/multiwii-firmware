@@ -345,7 +345,7 @@
          For PROMINI, attach sat grey to RX0.  Attach sat black to ground. */
       //#define SPEKTRUM 1024
       //#define SPEKTRUM 2048
-      //#define SPEK_SERIAL_PORT 1    // Forced to 0 on Pro Mini and single serial boards; Set to your choice of 0, 1, or 2 on any Mega based board (defaults to 1 on Mega).
+      //#define RX_SERIAL_PORT 1    // Forced to 0 on Pro Mini and single serial boards; Set to your choice of 0, 1, or 2 on any Mega based board (defaults to 1 on Mega).
       //**************************
       // Defines that allow a "Bind" of a Spektrum or Compatible Remote Receiver (aka Satellite) via Configuration GUI.
       //   Bind mode will be same as declared above, if your TX is capable.
@@ -360,10 +360,10 @@
       //#define SPEK_BIND_DATA   6
 
     /*******************************    SBUS RECIVER    ************************************/
-      /* The following line apply only for Futaba S-Bus Receiver on MEGA boards at RX1 only (Serial 1) or PROMICRO boards.
+      /* The following line apply only for Futaba S-Bus Receiver on MEGA boards or PROMICRO boards.
          You have to invert the S-Bus-Serial Signal e.g. with a Hex-Inverter like IC SN74 LS 04 */
       //#define SBUS
-      #define SBUS_SERIAL_PORT 1
+      //#define RX_SERIAL_PORT 1
       #define SBUS_MID_OFFSET 988 //SBUS Mid-Point at 1500
 
 /*************************************************************************************************/

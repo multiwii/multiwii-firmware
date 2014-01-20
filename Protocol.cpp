@@ -173,16 +173,12 @@ void serialCom() {
         #define GPS_COND  && (GPS_SERIAL != CURRENTPORT)
       #endif      
     #endif
-    #define SPEK_COND
-    #if defined(SPEKTRUM) && (UART_NUMBER > 1)
-      #define SPEK_COND && (SPEK_SERIAL_PORT != CURRENTPORT)
-    #endif
-    #define SBUS_COND
-    #if defined(SBUS) && (UART_NUMBER > 1)
-      #define SBUS_COND && (SBUS_SERIAL_PORT != CURRENTPORT)
+    #define RX_COND
+    #if (defined(SPEKTRUM) || defined(SBUS)) && (UART_NUMBER > 1)
+      #define RX_COND && (RX_SERIAL_PORT != CURRENTPORT)
     #endif
     uint8_t cc = SerialAvailable(CURRENTPORT);
-    while (cc-- GPS_COND SPEK_COND SBUS_COND) {
+    while (cc-- GPS_COND RX_COND) {
       uint8_t bytesTXBuff = SerialUsedTXBuff(CURRENTPORT); // indicates the number of occupied bytes in TX buffer
       if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (50 bytes margin)
       c = SerialRead(CURRENTPORT);

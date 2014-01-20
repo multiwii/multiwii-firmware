@@ -90,17 +90,14 @@ void configureReceiver() {
     
   /*************************   Special RX Setup   ********************************/
   #endif
-  // Init PPM SUM RX
   #if defined(SERIAL_SUM_PPM)
     PPM_PIN_INTERRUPT; 
   #endif
-  // Init Sektrum Satellite RX
   #if defined (SPEKTRUM)
-    SerialOpen(SPEK_SERIAL_PORT,115200);
+    SerialOpen(RX_SERIAL_PORT,115200);
   #endif
-  // Init SBUS RX
   #if defined(SBUS)
-    SerialOpen(1,100000);
+    SerialOpen(RX_SERIAL_PORT,100000);
   #endif
 }
 
@@ -302,8 +299,8 @@ void  readSBus(){
   #define SBUS_SYNCBYTE 0x0F // Not 100% sure: at the beginning of coding it was 0xF0 !!!
   #define SBUS_ENDBYTE 0x00
   static uint16_t sbus[25]={0};
-  while(SerialAvailable(SBUS_SERIAL_PORT)){
-    int val = SerialRead(SBUS_SERIAL_PORT);
+  while(SerialAvailable(RX_SERIAL_PORT)){
+    int val = SerialRead(RX_SERIAL_PORT);
     if(sbusIndex==0 && val != SBUS_SYNCBYTE)
       continue;
     sbus[sbusIndex++] = val;
@@ -350,25 +347,25 @@ void  readSBus(){
 #if defined(SPEKTRUM)
 void readSpektrum(void) {
   if ((!f.ARMED) && 
-     #if defined(FAILSAFE) || (SPEK_SERIAL_PORT != 0) 
+     #if defined(FAILSAFE) || (RX_SERIAL_PORT != 0) 
         (failsafeCnt > 5) &&
      #endif
-      ( SerialPeek(SPEK_SERIAL_PORT) == '$')) {
-    while (SerialAvailable(SPEK_SERIAL_PORT)) {
+      ( SerialPeek(RX_SERIAL_PORT) == '$')) {
+    while (SerialAvailable(RX_SERIAL_PORT)) {
       serialCom();
       delay (10);
     }
     return;
   } //End of: Is it the GUI?
-  while (SerialAvailable(SPEK_SERIAL_PORT) > SPEK_FRAME_SIZE) { // More than a frame?  More bytes implies we weren't called for multiple frame times.  We do not want to process 'old' frames in the buffer.
-    for (uint8_t i = 0; i < SPEK_FRAME_SIZE; i++) {SerialRead(SPEK_SERIAL_PORT);}  //Toss one full frame of bytes.
+  while (SerialAvailable(RX_SERIAL_PORT) > SPEK_FRAME_SIZE) { // More than a frame?  More bytes implies we weren't called for multiple frame times.  We do not want to process 'old' frames in the buffer.
+    for (uint8_t i = 0; i < SPEK_FRAME_SIZE; i++) {SerialRead(RX_SERIAL_PORT);}  //Toss one full frame of bytes.
   }  
   if (spekFrameFlags == 0x01) {   //The interrupt handler saw at least one valid frame start since we were last here. 
-    if (SerialAvailable(SPEK_SERIAL_PORT) == SPEK_FRAME_SIZE) {  //A complete frame? If not, we'll catch it next time we are called. 
-      SerialRead(SPEK_SERIAL_PORT); SerialRead(SPEK_SERIAL_PORT);        //Eat the header bytes 
+    if (SerialAvailable(RX_SERIAL_PORT) == SPEK_FRAME_SIZE) {  //A complete frame? If not, we'll catch it next time we are called. 
+      SerialRead(RX_SERIAL_PORT); SerialRead(RX_SERIAL_PORT);        //Eat the header bytes 
       for (uint8_t b = 2; b < SPEK_FRAME_SIZE; b += 2) {
-        uint8_t bh = SerialRead(SPEK_SERIAL_PORT);
-        uint8_t bl = SerialRead(SPEK_SERIAL_PORT);
+        uint8_t bh = SerialRead(RX_SERIAL_PORT);
+        uint8_t bl = SerialRead(RX_SERIAL_PORT);
         uint8_t spekChannel = 0x0F & (bh >> SPEK_CHAN_SHIFT);
         if (spekChannel < RC_CHANS) rcValue[spekChannel] = 988 + ((((uint16_t)(bh & SPEK_CHAN_MASK) << 8) + bl) SPEK_DATA_SHIFT);
       }
