@@ -16,6 +16,10 @@
 #define MSP_VERSION              0
 
 //to multiwii developpers/committers : do not add new MSP messages without a proper argumentation/agreement on the forum
+//range id [50-99] won't be assigned and can therefore be used for any custom multiwii fork without further MSP id conflict
+
+#define MSP_PRIVATE              1     //in+out message      to be used for a generic framework : MSP + function code (LIST/GET/SET) + data. no code yet
+
 #define MSP_IDENT                100   //out message         multitype + multiwii version + protocol version + capability variable
 #define MSP_STATUS               101   //out message         cycletime & errors_count & sensor present & box activation & current setting number
 #define MSP_RAW_IMU              102   //out message         9 DOF
@@ -239,6 +243,9 @@ void evaluateCommand() {
   uint32_t tmp=0; 
 
   switch(cmdMSP[CURRENTPORT]) {
+   case MSP_PRIVATE:
+     headSerialError(0); // we don't have any custom msp currently, so tell the gui we do not use that
+     break;
    case MSP_SET_RAW_RC:
      s_struct_w((uint8_t*)&rcSerial,16);
      rcSerialCount = 50; // 1s transition 
