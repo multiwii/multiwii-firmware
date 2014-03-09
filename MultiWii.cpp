@@ -641,11 +641,12 @@ void setup() {
       LEDPIN_OFF
       delay(80);
     }
-    if(!GPS_Present){
-      SerialEnd(GPS_SERIAL);
-      SerialOpen(0,SERIAL0_COM_SPEED);
-    }
-    #if !defined(GPS_PROMINI)
+    #if defined(GPS_PROMINI)
+      if(!GPS_Present){
+        SerialEnd(GPS_SERIAL);
+        SerialOpen(0,SERIAL0_COM_SPEED);
+      }
+    #else
       GPS_Present = 1;
     #endif
     GPS_Enable = GPS_Present;    
