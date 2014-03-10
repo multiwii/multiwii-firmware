@@ -120,19 +120,20 @@ extern int16_t lookupThrottleRC[11];
   // **********************
   // GPS common variables
   // **********************
-  extern int16_t  GPS_angle[2];                      // the angles that must be applied for GPS correction
+  extern int16_t  GPS_angle[2];                  // the angles that must be applied for GPS correction
   extern int32_t  GPS_coord[2];
   extern int32_t  GPS_home[2];
   extern int32_t  GPS_hold[2];
   extern uint8_t  GPS_numSat;
-  extern uint16_t GPS_distanceToHome;                          // distance to home  - unit: meter
-  extern int16_t  GPS_directionToHome;                         // direction to home - unit: degree
-  extern uint16_t GPS_altitude;                                // GPS altitude      - unit: meter
-  extern uint16_t GPS_speed;                                   // GPS speed         - unit: cm/s
-  extern uint8_t  GPS_update;                              // a binary toogle to distinct a GPS position update
-  extern uint16_t GPS_ground_course;                       //                   - unit: degree*10
-  extern uint8_t  GPS_Present;                             // Checksum from Gps serial
+  extern uint16_t GPS_distanceToHome;            // distance to home  - unit: meter
+  extern int16_t  GPS_directionToHome;           // direction to home - unit: degree
+  extern uint16_t GPS_altitude;                  // GPS altitude      - unit: meter
+  extern uint16_t GPS_speed;                     // GPS speed         - unit: cm/s
+  extern uint8_t  GPS_update;                    // a binary toogle to distinct a GPS position update
+  extern uint16_t GPS_ground_course;             //                   - unit: degree*10
+  extern uint8_t  GPS_Present;                   // Checksum from Gps serial
   extern uint8_t  GPS_Enable;
+  extern uint8_t  GPS_Frame;                     // indicates if a frame is ready to be computed
 
   #define LAT  0
   #define LON  1

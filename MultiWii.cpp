@@ -312,6 +312,7 @@ conf_t conf;
   uint16_t GPS_ground_course = 0;                       //                   - unit: degree*10
   uint8_t  GPS_Present = 0;                             // Checksum from Gps serial
   uint8_t  GPS_Enable  = 0;
+  uint8_t  GPS_Frame   = 0;
 
   // The desired bank towards North (Positive) or South (Negative) : latitude
   // The desired bank towards East (Positive) or West (Negative)   : longitude
@@ -1103,23 +1104,25 @@ void loop () {
       case 0:
         taskOrder++;
         #if MAG
-          if (Mag_getADC() != 0 ) break; // 320 µs
+          if (Mag_getADC() != 0) break; // 320 µs
         #endif
       case 1:
         taskOrder++;
         #if BARO
-          if (Baro_update() != 0 ) break; // for MS baro: I2C set and get: 220 us  -  presure and temperature computation 160 us
+          if (Baro_update() != 0) break; // for MS baro: I2C set and get: 220 us  -  presure and temperature computation 160 us
         #endif
       case 2:
         taskOrder++;
         #if BARO
-          if (getEstimatedAltitude() !=0) break; // 280 us
+          if (getEstimatedAltitude() != 0) break; // 280 us
         #endif    
       case 3:
         taskOrder++;
         #if GPS
-          if(GPS_Enable) GPS_NewData();  // I2C GPS: 160 us with no new data / 1250us! with new data 
-          break;
+          if(GPS_Enable) {  
+            if (GPS_Compute() != 0) break;  // performs computation on new frame only if present
+            if (GPS_NewData() != 0) break;  // SERIAL: try to detect a new nav frame based on the current received buffer --- I2C: 160 us with no new data / 1250us! with new data 
+          }
         #endif
       case 4:
         taskOrder++;
