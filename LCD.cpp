@@ -1220,7 +1220,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
       &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX4,
     #endif
   #endif
-  #if MAG
+  #if MAG && defined(HEADFREE)
     &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX1,
     #ifndef SUPPRESS_LCD_CONF_AUX2
       &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX2,
@@ -1839,8 +1839,10 @@ static char checkboxitemNames[][4] = {
     #endif
     #if MAG
       "Mag",
-      "HFr",
-      "HAd",
+      #if defined(HEADFREE)
+        "HFr",
+        "HAd",
+      #endif
     #endif
     #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
       "CSt",

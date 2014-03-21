@@ -236,7 +236,7 @@ void  s_struct(uint8_t *cb,uint8_t siz) {
 }
 
 void s_struct_w(uint8_t *cb,uint8_t siz) {
- headSerialReply(0);
+  headSerialReply(0);
   while(siz--) *cb++ = read8();
 }
 
@@ -252,16 +252,22 @@ void evaluateCommand() {
      s_struct_w((uint8_t*)&rcSerial,16);
      rcSerialCount = 50; // 1s transition 
      break;
-   #if GPS
+   #if GPS && !defined(I2C_GPS)
    case MSP_SET_RAW_GPS:
-     f.GPS_FIX = read8();
-     GPS_numSat = read8();
-     GPS_coord[LAT] = read32();
-     GPS_coord[LON] = read32();
-     GPS_altitude = read16();
-     GPS_speed = read16();
+     struct {
+       uint8_t a,b;
+       int32_t c,d;
+       int16_t e;
+       uint16_t f;
+     } set_set_raw_gps;
+     s_struct_w((uint8_t*)&set_set_raw_gps,14);
+     f.GPS_FIX = set_set_raw_gps.a;
+     GPS_numSat = set_set_raw_gps.b;
+     GPS_coord[LAT] = set_set_raw_gps.c;
+     GPS_coord[LON] = set_set_raw_gps.d;
+     GPS_altitude = set_set_raw_gps.e;
+     GPS_speed = set_set_raw_gps.f;
      GPS_update |= 2;              // New data signalisation to GPS functions
-     headSerialReply(0);
      break;
    #endif
    case MSP_SET_PID:
@@ -386,8 +392,10 @@ void evaluateCommand() {
      #if MAG
        if(f.MAG_MODE) tmp |= 1<<BOXMAG;
        #if !defined(FIXEDWING)
-         if(f.HEADFREE_MODE)       tmp |= 1<<BOXHEADFREE;
-         if(rcOptions[BOXHEADADJ]) tmp |= 1<<BOXHEADADJ;
+         #if defined(HEADFREE)
+           if(f.HEADFREE_MODE)       tmp |= 1<<BOXHEADFREE;
+           if(rcOptions[BOXHEADADJ]) tmp |= 1<<BOXHEADADJ;
+         #endif
        #endif
      #endif
      #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
@@ -459,20 +467,31 @@ void evaluateCommand() {
      break;
    #if GPS
    case MSP_RAW_GPS:
-     headSerialReply(16);
-     serialize8(f.GPS_FIX);
-     serialize8(GPS_numSat);
-     serialize32(GPS_coord[LAT]);
-     serialize32(GPS_coord[LON]);
-     serialize16(GPS_altitude);
-     serialize16(GPS_speed);
-     serialize16(GPS_ground_course);        // added since r1172
+     struct {
+       uint8_t a,b;
+       int32_t c,d;
+       int16_t e;
+       uint16_t f,g;
+     } msp_raw_gps;
+     msp_raw_gps.a     = f.GPS_FIX;
+     msp_raw_gps.b     = GPS_numSat;
+     msp_raw_gps.c     = GPS_coord[LAT];
+     msp_raw_gps.d     = GPS_coord[LON];
+     msp_raw_gps.e     = GPS_altitude;
+     msp_raw_gps.f     = GPS_speed;
+     msp_raw_gps.g     = GPS_ground_course;
+     s_struct((uint8_t*)&msp_raw_gps,16);
      break;
    case MSP_COMP_GPS:
-     headSerialReply(5);
-     serialize16(GPS_distanceToHome);
-     serialize16(GPS_directionToHome);
-     serialize8(GPS_update & 1);
+     struct {
+       uint16_t a;
+       int16_t b;
+       uint8_t c;
+     } msp_comp_gps;
+     msp_comp_gps.a     = GPS_distanceToHome;
+     msp_comp_gps.b     = GPS_directionToHome;
+     msp_comp_gps.c     = GPS_update & 1;
+     s_struct((uint8_t*)&msp_comp_gps,5);
      break;
    #endif
    case MSP_ATTITUDE:
@@ -543,17 +562,15 @@ void evaluateCommand() {
        if (wp_no == 0) {
          GPS_home[LAT] = lat;
          GPS_home[LON] = lon;
-         f.GPS_HOME_MODE = 0;          // with this flag, GPS_set_next_wp will be called in the next loop -- OK with SERIAL GPS / OK with I2C GPS
+         f.GPS_HOME_MODE = 0;          // with this flag, GPS_set_next_wp will be called in the next loop
          f.GPS_FIX_HOME  = 1;
          if (alt != 0) AltHold = alt;  // temporary implementation to test feature with apps
-       } else if (wp_no == 16) {       // OK with SERIAL GPS  --  NOK for I2C GPS / needs more code dev in order to inject GPS coord inside I2C GPS
+       } else if (wp_no == 16) {
          GPS_hold[LAT] = lat;
          GPS_hold[LON] = lon;
          if (alt != 0) AltHold = alt;  // temporary implementation to test feature with apps
-         #if !defined(I2C_GPS)
-           nav_mode      = NAV_MODE_WP;
-           GPS_set_next_wp(&GPS_hold[LAT],&GPS_hold[LON]);
-         #endif
+         nav_mode      = NAV_MODE_WP;
+         GPS_set_next_wp(&GPS_hold[LAT],&GPS_hold[LON]);
        }
      }
      headSerialReply(0);

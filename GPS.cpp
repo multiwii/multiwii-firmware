@@ -45,8 +45,6 @@ int32_t wrap_36000(int32_t ang);
   #define SBAS_TEST_MODE          PSTR("$PMTK319,0*25\r\n")  //Enable test use of sbas satelite in test mode (usually PRN124 is in test mode)
 #endif
 
-#if defined(GPS_SERIAL) || defined(GPS_FROM_OSD)
-
 #if defined(GPS_LEAD_FILTER)
 // Set up gps lag
 #if defined(UBLOX)
@@ -209,30 +207,12 @@ LeadFilter yLeadFilter;      // Lat  GPS lag filter
   static int32_t GPS_filtered[2];
   static int32_t GPS_degree[2];    //the lat lon degree without any decimals (lat/10 000 000)
   static uint16_t fraction3[2];
-#endif
 
 // This is the angle from the copter to the "next_WP" location
 // with the addition of Crosstrack error in degrees * 100
 static int32_t nav_bearing;
 // saves the bearing at takeof (1deg = 1) used to rotate to takeoff direction when arrives at home
 static int16_t nav_takeoff_bearing;
-
-
-#if defined(I2C_GPS)
-  /////////////////////////////////////////////////////////////////////////////////////////
-  // I2C GPS helper functions
-  //
-  // Send a command to the I2C GPS module, first parameter command, second parameter wypoint number
-  void GPS_I2C_command(uint8_t command, uint8_t wp) {
-    uint8_t _cmd;
-      
-    _cmd = (wp << 4) + command;
-    
-    i2c_rep_start(I2C_GPS_ADDRESS<<1);
-    i2c_write(I2C_GPS_COMMAND);
-    i2c_write(_cmd);
-  }
-#endif 
 
 #if defined(GPS_SERIAL) 
  #if defined(INIT_MTK_GPS) || defined(UBLOX)
@@ -334,7 +314,6 @@ static int16_t nav_takeoff_bearing;
 uint8_t GPS_NewData(void) {
   uint8_t axis;
   #if defined(I2C_GPS)
-    static uint8_t GPS_pids_initialized;
     static uint8_t _i2c_gps_status;
 
     //Do not use i2c_writereg, since writing a register does not work if an i2c_stop command is issued at the end
@@ -357,41 +336,8 @@ uint8_t GPS_NewData(void) {
     if (_i2c_gps_status & I2C_GPS_STATUS_3DFIX) {                                     //Check is we have a good 3d fix (numsats>5)
       f.GPS_FIX = 1;
 
-      #if !defined(DONT_RESET_HOME_AT_ARM)
-        if (!f.ARMED) {f.GPS_FIX_HOME = 0;}                                           //Clear home position if disarmed
-      #endif
-
-      if (!f.GPS_FIX_HOME && f.ARMED) {        //if home is not set set home position to WP#0 and activate it
-         GPS_reset_home_position();
-      }
       if (_i2c_gps_status & I2C_GPS_STATUS_NEW_DATA) {                                //Check about new data
-        if (GPS_update) { GPS_update = 0;} else { GPS_update = 1;}                    //Fancy flash on GUI :D
-        if (!GPS_pids_initialized && f.I2C_INIT_DONE) {
-          GPS_set_pids();
-          GPS_pids_initialized = 1;
-        } 
-          
-        //Read GPS data for distance, heading and gps position 
-
-        i2c_rep_start(I2C_GPS_ADDRESS<<1);
-        i2c_write(I2C_GPS_NAV_BEARING);                                               //Start read from here 2x2 bytes distance and direction
-        i2c_rep_start((I2C_GPS_ADDRESS<<1)|1);
-
-        varptr = (uint8_t *)&nav_bearing;
-        *varptr++ = i2c_readAck();
-        *varptr   = i2c_readAck();
-
-        varptr = (uint8_t *)&GPS_directionToHome;
-        *varptr++ = i2c_readAck();
-        *varptr   = i2c_readAck();
-        GPS_directionToHome = GPS_directionToHome / 100;  // 1deg =1000 in the reg, downsize
-        GPS_directionToHome += 180; // fix (see http://www.multiwii.com/forum/viewtopic.php?f=8&t=2892)
-        if (GPS_directionToHome>180) GPS_directionToHome -= 360;
-
-        varptr = (uint8_t *)&GPS_distanceToHome;
-        *varptr++ = i2c_readAck();
-        *varptr   = i2c_readNak();
-        GPS_distanceToHome = GPS_distanceToHome / 100;      //register is in CM, we need in meter. max= 655 meters with this way
+        GPS_Frame = 1;
 
         i2c_rep_start(I2C_GPS_ADDRESS<<1);
         i2c_write(I2C_GPS_LOCATION);                //Start read from here 2x2 bytes distance and direction
@@ -407,16 +353,8 @@ uint8_t GPS_NewData(void) {
         *varptr++ = i2c_readAck();
         *varptr++ = i2c_readAck();
         *varptr++ = i2c_readAck();
-        *varptr   = i2c_readAck();
+        *varptr   = i2c_readNak();
 
-        varptr = (uint8_t *)&nav[LAT];
-        *varptr++ = i2c_readAck();
-        *varptr++ = i2c_readAck();
-
-        varptr = (uint8_t *)&nav[LON];
-        *varptr++ = i2c_readAck();
-        *varptr++ = i2c_readNak();
-          
         i2c_rep_start(I2C_GPS_ADDRESS<<1);
         i2c_write(I2C_GPS_GROUND_SPEED);          
         i2c_rep_start((I2C_GPS_ADDRESS<<1)|1);
@@ -429,39 +367,16 @@ uint8_t GPS_NewData(void) {
         *varptr++ = i2c_readAck();
         *varptr   = i2c_readAck();	
 
-        //GPS_ground_course
         varptr = (uint8_t *)&GPS_ground_course;
         *varptr++ = i2c_readAck();
         *varptr   = i2c_readNak();
 
-        if (!f.GPS_FIX_HOME) {     //If we don't have home set, do not display anything
-          GPS_distanceToHome = 0;
-          GPS_directionToHome = 0;
-        }
-
-        //Adjust heading when navigating
-        if (f.GPS_HOME_MODE) {  
-          if ( !(_i2c_gps_status & I2C_GPS_STATUS_WP_REACHED) ) {
-            //Tail control
-            if (NAV_CONTROLS_HEADING) {
-              if (NAV_TAIL_FIRST) {
-                magHold = nav_bearing/100-180;
-                if (magHold > 180)  magHold -= 360;
-                if (magHold < -180) magHold += 360;
-              } else {
-                magHold = nav_bearing/100;
-              }
-            }
-          } else {        //Home position reached
-            if (NAV_SET_TAKEOFF_HEADING) { magHold = nav_takeoff_bearing; }
-          }
-        }
+      } else {
+        return 0; 
       }
-    } else {                                                                          //We don't have a fix zero out distance and bearing (for safety reasons)
-      GPS_distanceToHome = 0;
-      GPS_directionToHome = 0;
-      GPS_numSat = 0;
+    } else {
       f.GPS_FIX = 0;
+      return 0;
     }
   #endif
 
@@ -485,112 +400,105 @@ uint8_t GPS_NewData(void) {
 
 uint8_t GPS_Compute(void) {
   if (GPS_Frame == 0) return 0; else GPS_Frame = 0;
-  
-  #if defined(GPS_SERIAL) || defined(GPS_FROM_OSD)
-    if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;
-    if (f.GPS_FIX && GPS_numSat >= 5) {
-      #if !defined(DONT_RESET_HOME_AT_ARM)
-         if (!f.ARMED) {f.GPS_FIX_HOME = 0;}
-      #endif
-      if (!f.GPS_FIX_HOME && f.ARMED) {
-        GPS_reset_home_position();
-      }
 
-      //Apply moving average filter to GPS data
-      #if defined(GPS_FILTERING)
-        GPS_filter_index = (GPS_filter_index+1) % GPS_FILTER_VECTOR_LENGTH;
-        for (axis = 0; axis< 2; axis++) {
-          GPS_read[axis] = GPS_coord[axis]; //latest unfiltered data is in GPS_latitude and GPS_longitude
-          GPS_degree[axis] = GPS_read[axis] / 10000000;  // get the degree to assure the sum fits to the int32_t
-      
-          // How close we are to a degree line ? its the first three digits from the fractions of degree
-          // later we use it to Check if we are close to a degree line, if yes, disable averaging,
-          fraction3[axis] = (GPS_read[axis]- GPS_degree[axis]*10000000) / 10000;
-      
-          GPS_filter_sum[axis] -= GPS_filter[axis][GPS_filter_index];
-          GPS_filter[axis][GPS_filter_index] = GPS_read[axis] - (GPS_degree[axis]*10000000); 
-          GPS_filter_sum[axis] += GPS_filter[axis][GPS_filter_index];
-          GPS_filtered[axis] = GPS_filter_sum[axis] / GPS_FILTER_VECTOR_LENGTH + (GPS_degree[axis]*10000000);
-          if ( nav_mode == NAV_MODE_POSHOLD) {      //we use gps averaging only in poshold mode...
-            if ( fraction3[axis]>1 && fraction3[axis]<999 ) GPS_coord[axis] = GPS_filtered[axis];
-          }
-        }
-      #endif
-
-      //dTnav calculation
-      //Time for calculating x,y speed and navigation pids
-      static uint32_t nav_loopTimer;
-      dTnav = (float)(millis() - nav_loopTimer)/ 1000.0;
-      nav_loopTimer = millis();
-      // prevent runup from bad GPS
-      dTnav = min(dTnav, 1.0);  
-
-      //calculate distance and bearings for gui and other stuff continously - From home to copter
-      uint32_t dist;
-      int32_t  dir;
-      GPS_distance_cm_bearing(&GPS_coord[LAT],&GPS_coord[LON],&GPS_home[LAT],&GPS_home[LON],&dist,&dir);
-      GPS_distanceToHome = dist/100;
-      GPS_directionToHome = dir/100;
-
-      if (!f.GPS_FIX_HOME) {     //If we don't have home set, do not display anything
-        GPS_distanceToHome = 0;
-        GPS_directionToHome = 0;
-      }
-
-      //calculate the current velocity based on gps coordinates continously to get a valid speed at the moment when we start navigating
-      GPS_calc_velocity();        
-
-      if (f.GPS_HOLD_MODE || f.GPS_HOME_MODE){    //ok we are navigating 
-        //do gps nav calculations here, these are common for nav and poshold  
-        #if defined(GPS_LEAD_FILTER)
-          GPS_distance_cm_bearing(&GPS_coord_lead[LAT],&GPS_coord_lead[LON],&GPS_WP[LAT],&GPS_WP[LON],&wp_distance,&target_bearing);
-          GPS_calc_location_error(&GPS_WP[LAT],&GPS_WP[LON],&GPS_coord_lead[LAT],&GPS_coord_lead[LON]);
-        #else
-          GPS_distance_cm_bearing(&GPS_coord[LAT],&GPS_coord[LON],&GPS_WP[LAT],&GPS_WP[LON],&wp_distance,&target_bearing);
-          GPS_calc_location_error(&GPS_WP[LAT],&GPS_WP[LON],&GPS_coord[LAT],&GPS_coord[LON]);
-        #endif
-        switch (nav_mode) {
-          case NAV_MODE_POSHOLD: 
-            //Desired output is in nav_lat and nav_lon where 1deg inclination is 100 
-            GPS_calc_poshold();
-            break;
-          case NAV_MODE_WP:
-            int16_t speed = GPS_calc_desired_speed(NAV_SPEED_MAX, NAV_SLOW_NAV);      //slow navigation 
-            // use error as the desired rate towards the target
-            //Desired output is in nav_lat and nav_lon where 1deg inclination is 100 
-            GPS_calc_nav_rate(speed);
-
-            //Tail control
-            if (NAV_CONTROLS_HEADING) {
-              if (NAV_TAIL_FIRST) {
-                magHold = wrap_18000(nav_bearing-18000)/100;
-              } else {
-                magHold = nav_bearing/100;
-              }
-            }
-            // Are we there yet ?(within 2 meters of the destination)
-            if ((wp_distance <= GPS_wp_radius) || check_missed_wp()){         //if yes switch to poshold mode
-              nav_mode = NAV_MODE_POSHOLD;
-              if (NAV_SET_TAKEOFF_HEADING) { magHold = nav_takeoff_bearing; }
-            } 
-            break;               
-        }
-      } //end of gps calcs  
+  if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;
+  if (f.GPS_FIX && GPS_numSat >= 5) {
+    #if !defined(DONT_RESET_HOME_AT_ARM)
+       if (!f.ARMED) {f.GPS_FIX_HOME = 0;}
+    #endif
+    if (!f.GPS_FIX_HOME && f.ARMED) {
+      GPS_reset_home_position();
     }
-  #endif
+
+    //Apply moving average filter to GPS data
+    #if defined(GPS_FILTERING)
+      GPS_filter_index = (GPS_filter_index+1) % GPS_FILTER_VECTOR_LENGTH;
+      for (axis = 0; axis< 2; axis++) {
+        GPS_read[axis] = GPS_coord[axis]; //latest unfiltered data is in GPS_latitude and GPS_longitude
+        GPS_degree[axis] = GPS_read[axis] / 10000000;  // get the degree to assure the sum fits to the int32_t
+    
+        // How close we are to a degree line ? its the first three digits from the fractions of degree
+        // later we use it to Check if we are close to a degree line, if yes, disable averaging,
+        fraction3[axis] = (GPS_read[axis]- GPS_degree[axis]*10000000) / 10000;
+    
+        GPS_filter_sum[axis] -= GPS_filter[axis][GPS_filter_index];
+        GPS_filter[axis][GPS_filter_index] = GPS_read[axis] - (GPS_degree[axis]*10000000); 
+        GPS_filter_sum[axis] += GPS_filter[axis][GPS_filter_index];
+        GPS_filtered[axis] = GPS_filter_sum[axis] / GPS_FILTER_VECTOR_LENGTH + (GPS_degree[axis]*10000000);
+        if ( nav_mode == NAV_MODE_POSHOLD) {      //we use gps averaging only in poshold mode...
+          if ( fraction3[axis]>1 && fraction3[axis]<999 ) GPS_coord[axis] = GPS_filtered[axis];
+        }
+      }
+    #endif
+
+    //dTnav calculation
+    //Time for calculating x,y speed and navigation pids
+    static uint32_t nav_loopTimer;
+    dTnav = (float)(millis() - nav_loopTimer)/ 1000.0;
+    nav_loopTimer = millis();
+    // prevent runup from bad GPS
+    dTnav = min(dTnav, 1.0);  
+
+    //calculate distance and bearings for gui and other stuff continously - From home to copter
+    uint32_t dist;
+    int32_t  dir;
+    GPS_distance_cm_bearing(&GPS_coord[LAT],&GPS_coord[LON],&GPS_home[LAT],&GPS_home[LON],&dist,&dir);
+    GPS_distanceToHome = dist/100;
+    GPS_directionToHome = dir/100;
+
+    if (!f.GPS_FIX_HOME) {     //If we don't have home set, do not display anything
+      GPS_distanceToHome = 0;
+      GPS_directionToHome = 0;
+    }
+
+    //calculate the current velocity based on gps coordinates continously to get a valid speed at the moment when we start navigating
+    GPS_calc_velocity();        
+
+    if (f.GPS_HOLD_MODE || f.GPS_HOME_MODE){    //ok we are navigating 
+      //do gps nav calculations here, these are common for nav and poshold  
+      #if defined(GPS_LEAD_FILTER)
+        GPS_distance_cm_bearing(&GPS_coord_lead[LAT],&GPS_coord_lead[LON],&GPS_WP[LAT],&GPS_WP[LON],&wp_distance,&target_bearing);
+        GPS_calc_location_error(&GPS_WP[LAT],&GPS_WP[LON],&GPS_coord_lead[LAT],&GPS_coord_lead[LON]);
+      #else
+        GPS_distance_cm_bearing(&GPS_coord[LAT],&GPS_coord[LON],&GPS_WP[LAT],&GPS_WP[LON],&wp_distance,&target_bearing);
+        GPS_calc_location_error(&GPS_WP[LAT],&GPS_WP[LON],&GPS_coord[LAT],&GPS_coord[LON]);
+      #endif
+      switch (nav_mode) {
+        case NAV_MODE_POSHOLD: 
+          //Desired output is in nav_lat and nav_lon where 1deg inclination is 100 
+          GPS_calc_poshold();
+          break;
+        case NAV_MODE_WP:
+          int16_t speed = GPS_calc_desired_speed(NAV_SPEED_MAX, NAV_SLOW_NAV);      //slow navigation 
+          // use error as the desired rate towards the target
+          //Desired output is in nav_lat and nav_lon where 1deg inclination is 100 
+          GPS_calc_nav_rate(speed);
+
+          //Tail control
+          if (NAV_CONTROLS_HEADING) {
+            if (NAV_TAIL_FIRST) {
+              magHold = wrap_18000(nav_bearing-18000)/100;
+            } else {
+              magHold = nav_bearing/100;
+            }
+          }
+          // Are we there yet ?(within 2 meters of the destination)
+          if ((wp_distance <= GPS_wp_radius) || check_missed_wp()){         //if yes switch to poshold mode
+            nav_mode = NAV_MODE_POSHOLD;
+            if (NAV_SET_TAKEOFF_HEADING) { magHold = nav_takeoff_bearing; }
+          } 
+          break;               
+      }
+    } //end of gps calcs  
+  }
 }
 
 
 void GPS_reset_home_position(void) {
   if (f.GPS_FIX && GPS_numSat >= 5) {
-    #if defined(I2C_GPS)
-      //set current position as home
-      GPS_I2C_command(I2C_GPS_COMMAND_SET_WP,0);  //WP0 is the home position
-    #else
-      GPS_home[LAT] = GPS_coord[LAT];
-      GPS_home[LON] = GPS_coord[LON];
-      GPS_calc_longitude_scaling(GPS_coord[LAT]);  //need an initial value for distance and bearing calc
-    #endif
+    GPS_home[LAT] = GPS_coord[LAT];
+    GPS_home[LON] = GPS_coord[LON];
+    GPS_calc_longitude_scaling(GPS_coord[LAT]);  //need an initial value for distance and bearing calc
     nav_takeoff_bearing = att.heading;             //save takeoff heading
     //Set ground altitude
     f.GPS_FIX_HOME = 1;
@@ -604,76 +512,31 @@ void GPS_reset_nav(void) {
   for(i=0;i<2;i++) {
     nav_rated[i] = 0;
     nav[i] = 0;
-    #if defined(I2C_GPS)
-      GPS_I2C_command(I2C_GPS_COMMAND_STOP_NAV,0);
-    #else
-      reset_PID(&posholdPID[i]);
-      reset_PID(&poshold_ratePID[i]);
-      reset_PID(&navPID[i]);
-      nav_mode = NAV_MODE_NONE;
-    #endif
+    reset_PID(&posholdPID[i]);
+    reset_PID(&poshold_ratePID[i]);
+    reset_PID(&navPID[i]);
+    nav_mode = NAV_MODE_NONE;
   }
 }
 
 //Get the relevant P I D values and set the PID controllers 
 void GPS_set_pids(void) {
-  #if defined(GPS_SERIAL)  || defined(GPS_FROM_OSD)
-    posholdPID_PARAM.kP   = (float)conf.pid[PIDPOS].P8/100.0;
-    posholdPID_PARAM.kI   = (float)conf.pid[PIDPOS].I8/100.0;
-    posholdPID_PARAM.Imax = POSHOLD_RATE_IMAX * 100;
-    
-    poshold_ratePID_PARAM.kP   = (float)conf.pid[PIDPOSR].P8/10.0;
-    poshold_ratePID_PARAM.kI   = (float)conf.pid[PIDPOSR].I8/100.0;
-    poshold_ratePID_PARAM.kD   = (float)conf.pid[PIDPOSR].D8/1000.0;
-    poshold_ratePID_PARAM.Imax = POSHOLD_RATE_IMAX * 100;
-    
-    navPID_PARAM.kP   = (float)conf.pid[PIDNAVR].P8/10.0;
-    navPID_PARAM.kI   = (float)conf.pid[PIDNAVR].I8/100.0;
-    navPID_PARAM.kD   = (float)conf.pid[PIDNAVR].D8/1000.0;
-    navPID_PARAM.Imax = POSHOLD_RATE_IMAX * 100;
-  #endif
-
-  #if defined(I2C_GPS)
-    if (!f.I2C_INIT_DONE) return;
-    i2c_rep_start(I2C_GPS_ADDRESS<<1);
-      i2c_write(I2C_GPS_HOLD_P);
-       i2c_write(conf.pid[PIDPOS].P8);
-       i2c_write(conf.pid[PIDPOS].I8);
-    
-    i2c_rep_start(I2C_GPS_ADDRESS<<1);
-      i2c_write(I2C_GPS_HOLD_RATE_P);
-       i2c_write(conf.pid[PIDPOSR].P8);
-       i2c_write(conf.pid[PIDPOSR].I8);
-       i2c_write(conf.pid[PIDPOSR].D8);
-    
-    i2c_rep_start(I2C_GPS_ADDRESS<<1);
-      i2c_write(I2C_GPS_NAV_P);
-       i2c_write(conf.pid[PIDNAVR].P8);
-       i2c_write(conf.pid[PIDNAVR].I8);
-       i2c_write(conf.pid[PIDNAVR].D8);
-    
-    GPS_I2C_command(I2C_GPS_COMMAND_UPDATE_PIDS,0);
-    
-    uint8_t nav_flags = 0;
-    #if defined(GPS_FILTERING)
-      nav_flags += I2C_NAV_FLAG_GPS_FILTER;
-    #endif 
-    #if defined(GPS_LOW_SPEED_D_FILTER)
-      nav_flags += I2C_NAV_FLAG_LOW_SPEED_D_FILTER; 
-    #endif
-    
-    i2c_rep_start(I2C_GPS_ADDRESS<<1);
-      i2c_write(I2C_GPS_NAV_FLAGS);
-      i2c_write(nav_flags);
-      
-    i2c_rep_start(I2C_GPS_ADDRESS<<1);
-      i2c_write(I2C_GPS_WP_RADIUS);
-      i2c_write(GPS_WP_RADIUS & 0x00FF); // lower eight bit   
-      i2c_write(GPS_WP_RADIUS >> 8); // upper eight bit
-  #endif
+  posholdPID_PARAM.kP   = (float)conf.pid[PIDPOS].P8/100.0;
+  posholdPID_PARAM.kI   = (float)conf.pid[PIDPOS].I8/100.0;
+  posholdPID_PARAM.Imax = POSHOLD_RATE_IMAX * 100;
+  
+  poshold_ratePID_PARAM.kP   = (float)conf.pid[PIDPOSR].P8/10.0;
+  poshold_ratePID_PARAM.kI   = (float)conf.pid[PIDPOSR].I8/100.0;
+  poshold_ratePID_PARAM.kD   = (float)conf.pid[PIDPOSR].D8/1000.0;
+  poshold_ratePID_PARAM.Imax = POSHOLD_RATE_IMAX * 100;
+  
+  navPID_PARAM.kP   = (float)conf.pid[PIDNAVR].P8/10.0;
+  navPID_PARAM.kI   = (float)conf.pid[PIDNAVR].I8/100.0;
+  navPID_PARAM.kD   = (float)conf.pid[PIDNAVR].D8/1000.0;
+  navPID_PARAM.Imax = POSHOLD_RATE_IMAX * 100;
 }
 
-//It was mobed here since even i2cgps code needs it
+//It was moved here since even i2cgps code needs it
 int32_t wrap_18000(int32_t ang) {
   if (ang > 18000)  ang -= 36000;
   if (ang < -18000) ang += 36000;
@@ -681,9 +544,7 @@ int32_t wrap_18000(int32_t ang) {
 }
 
 
-
-//OK here is the onboard GPS code
-#if defined(GPS_SERIAL) || defined(GPS_FROM_OSD)
+// here is the onboard GPS code
 
 ////////////////////////////////////////////////////////////////////////////////////
 //PID based GPS navigation functions
@@ -737,20 +598,6 @@ void GPS_distance_cm_bearing(int32_t* lat1, int32_t* lon1, int32_t* lat2, int32_
   *bearing = 9000.0f + atan2(-dLat, dLon) * 5729.57795f;      //Convert the output redians to 100xdeg
   if (*bearing < 0) *bearing += 36000;
 }
-
-#if defined(OBSOLATED)
-////////////////////////////////////////////////////////////////////////////////////
-// keep old calculation function for compatibility (could be removed later) distance in meters, bearing in degree 
-//
-void GPS_distance(int32_t lat1, int32_t lon1, int32_t lat2, int32_t lon2, uint16_t* dist, int16_t* bearing) {
-  uint32_t d1;
-  int32_t  d2;
-  GPS_distance_cm_bearing(&lat1,&lon1,&lat2,&lon2,&d1,&d2);
-  *dist = d1 / 100;          //convert to meters
-  *bearing = d2 /  100;      //convert to degrees
-}
-#endif
-
 
 //*******************************************************************************************************
 // calc_velocity_and_filtered_position - velocity in lon and lat directions calculated from GPS position
@@ -921,7 +768,7 @@ int32_t wrap_36000(int32_t ang) {
 // This code is used for parsing NMEA data
 #if defined(GPS_SERIAL)
 
-/* Alex optimization 
+/*
   The latitude or longitude is coded this way in NMEA frames
   dm.f   coded as degrees + minutes + minute decimal
   Where:
@@ -933,23 +780,6 @@ int32_t wrap_36000(int32_t ang) {
   EOS increased the precision here, even if we think that the gps is not precise enough, with 10e5 precision it has 76cm resolution
   with 10e7 it's around 1 cm now. Increasing it further is irrelevant, since even 1cm resolution is unrealistic, however increased 
   resolution also increased precision of nav calculations
-*/
-/* This calc adds approc 2km error to the gps coordinates reverted back to the original working one 
-uint32_t GPS_coord_to_degrees(char* s) {
-  char *p = s, *d = s;
-  uint8_t min, deg = 0;
-  uint16_t frac = 0, mult = 10000;
-  
-  while(*p) {                                   // parse the string until its end
-    if (d != s) {frac+=(*p-'0')*mult;mult/=10;} // calculate only fractional part on up to 5 digits  (d != s condition is true when the . is located)
-    if (*p == '.') d=p;                         // locate '.' char in the string
-    p++;
-  }
-  if (p==s) return 0;
-  while (s<d-2) {deg *= 10;deg += *(s++)-'0';}  // convert degrees : all chars before minutes ; for the first iteration, deg = 0
-  min = *(d-1)-'0' + (*(d-2)-'0')*10;           // convert minutes : 2 previous char before '.'
-  return deg * 10000000UL + (min * 100000UL + frac)*10UL / 6;
-}
 */
 
 #define DIGIT_TO_VAL(_x)        (_x - '0')
@@ -1440,6 +1270,5 @@ restart:
 
 
 #endif //SERIAL GPS
-#endif //ONBOARD GPS CALC
 
 #endif // GPS

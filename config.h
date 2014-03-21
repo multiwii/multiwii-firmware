@@ -536,6 +536,9 @@
 
   //#define THROTTLE_ANGLE_CORRECTION 40
   
+  /*** HEADFREE : the copter can be controled by an absolute stick orientation, whatever the yaw orientation ***/
+  //#define HEADFREE
+  
  /*************************        Advanced Headfree Mode             ********************/
  /* In Advanced Headfree mode when the copter is farther than ADV_HEADFREE_RANGE meters then 
     the  bearing between home and copter position will become the control direction 

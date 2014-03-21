@@ -57,8 +57,10 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
   #endif
   #if MAG
     "MAG;"
-    "HEADFREE;"
-    "HEADADJ;"  
+    #if defined(HEADFREE)
+      "HEADFREE;"
+      "HEADADJ;"
+    #endif
   #endif
   #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
     "CAMSTAB;"
@@ -108,8 +110,10 @@ const uint8_t boxids[] PROGMEM = {// permanent IDs associated to boxes. This way
   #endif
   #if MAG
     5, //"MAG;"
-    6, //"HEADFREE;"
-    7, //"HEADADJ;"  
+    #if defined(HEADFREE)
+      6, //"HEADFREE;"
+      7, //"HEADADJ;"
+    #endif
   #endif
   #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
     8, //"CAMSTAB;"
@@ -367,14 +371,16 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   tmp2 = tmp/256; // range [0;9]
   rcCommand[THROTTLE] = lookupThrottleRC[tmp2] + (tmp-tmp2*256) * (lookupThrottleRC[tmp2+1]-lookupThrottleRC[tmp2]) / 256; // [0;2559] -> expo -> [conf.minthrottle;MAXTHROTTLE]
 
-  if(f.HEADFREE_MODE) { //to optimize
-    float radDiff = (att.heading - headFreeModeHold) * 0.0174533f; // where PI/180 ~= 0.0174533
-    float cosDiff = cos(radDiff);
-    float sinDiff = sin(radDiff);
-    int16_t rcCommand_PITCH = rcCommand[PITCH]*cosDiff + rcCommand[ROLL]*sinDiff;
-    rcCommand[ROLL] =  rcCommand[ROLL]*cosDiff - rcCommand[PITCH]*sinDiff; 
-    rcCommand[PITCH] = rcCommand_PITCH;
-  }
+  #if defined(HEADFREE)
+    if(f.HEADFREE_MODE) { //to optimize
+      float radDiff = (att.heading - headFreeModeHold) * 0.0174533f; // where PI/180 ~= 0.0174533
+      float cosDiff = cos(radDiff);
+      float sinDiff = sin(radDiff);
+      int16_t rcCommand_PITCH = rcCommand[PITCH]*cosDiff + rcCommand[ROLL]*sinDiff;
+      rcCommand[ROLL] =  rcCommand[ROLL]*cosDiff - rcCommand[PITCH]*sinDiff; 
+      rcCommand[PITCH] = rcCommand_PITCH;
+    }
+  #endif
 
   // query at most one multiplexed analog channel per MWii cycle
   static uint8_t analogReader =0;
@@ -620,7 +626,7 @@ void setup() {
     initOpenLRS();
   #endif
   initSensors();
-  #if defined(I2C_GPS) || defined(GPS_SERIAL) || defined(GPS_FROM_OSD)
+  #if GPS
     GPS_set_pids();
   #endif
   previousTime = micros();
@@ -633,29 +639,28 @@ void setup() {
     for(uint8_t j=0; j<=PMOTOR_SUM; j++) pMeter[j]=0;
   #endif
   /************************************/
-  #if defined(GPS_SERIAL)
-    GPS_SerialInit();
-    for(uint8_t j=0;j<=5;j++){
-      GPS_NewData(); 
-      LEDPIN_ON
-      delay(20);
-      LEDPIN_OFF
-      delay(80);
-    }
-    #if defined(GPS_PROMINI)
-      if(!GPS_Present){
-        SerialEnd(GPS_SERIAL);
-        SerialOpen(0,SERIAL0_COM_SPEED);
+  #if GPS
+    #if defined(GPS_SERIAL)
+      GPS_SerialInit();
+      for(uint8_t j=0;j<=5;j++){
+        GPS_NewData(); 
+        LEDPIN_ON
+        delay(20);
+        LEDPIN_OFF
+        delay(80);
       }
+      #if defined(GPS_PROMINI)
+        if(!GPS_Present){
+          SerialEnd(GPS_SERIAL);
+          SerialOpen(0,SERIAL0_COM_SPEED);
+        }
+      #else
+        GPS_Present = 1;
+      #endif
+      GPS_Enable = GPS_Present;    
     #else
-      GPS_Present = 1;
+      GPS_Enable = 1;
     #endif
-    GPS_Enable = GPS_Present;    
-  #endif
-  /************************************/
- 
-  #if defined(I2C_GPS) || defined(GPS_FROM_OSD)
-   GPS_Enable = 1;
   #endif
   
   #if defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) || defined(OLED_DIGOLE) || defined(LCD_TELEMETRY_STEP)
@@ -705,7 +710,9 @@ void go_arm() {
     ) {
     if(!f.ARMED && !f.BARO_MODE) { // arm now!
       f.ARMED = 1;
-      headFreeModeHold = att.heading;
+      #if defined(HEADFREE)
+        headFreeModeHold = att.heading;
+      #endif
       magHold = att.heading;
       #if defined(VBAT)
         if (analog.vbat > NO_VBAT) vbatMin = analog.vbat;
@@ -1027,21 +1034,23 @@ void loop () {
       } else {
         f.MAG_MODE = 0;
       }
-      if (rcOptions[BOXHEADFREE]) {
-        if (!f.HEADFREE_MODE) {
-          f.HEADFREE_MODE = 1;
+      #if defined(HEADFREE)
+        if (rcOptions[BOXHEADFREE]) {
+          if (!f.HEADFREE_MODE) {
+            f.HEADFREE_MODE = 1;
+          }
+          #if defined(ADVANCED_HEADFREE)
+            if ((f.GPS_FIX && GPS_numSat >= 5) && (GPS_distanceToHome > ADV_HEADFREE_RANGE) ) {
+              if (GPS_directionToHome < 180)  {headFreeModeHold = GPS_directionToHome + 180;} else {headFreeModeHold = GPS_directionToHome - 180;}
+            }
+          #endif
+        } else {
+          f.HEADFREE_MODE = 0;
         }
-	  #if defined(ADVANCED_HEADFREE)
-		if ((f.GPS_FIX && GPS_numSat >= 5) && (GPS_distanceToHome > ADV_HEADFREE_RANGE) ) {
-            if (GPS_directionToHome < 180)  {headFreeModeHold = GPS_directionToHome + 180;} else {headFreeModeHold = GPS_directionToHome - 180;}
-         }
+        if (rcOptions[BOXHEADADJ]) {
+          headFreeModeHold = att.heading; // acquire new heading
+        }
       #endif
-      } else {
-        f.HEADFREE_MODE = 0;
-      }
-      if (rcOptions[BOXHEADADJ]) {
-        headFreeModeHold = att.heading; // acquire new heading
-      }
     #endif
     
     #if GPS
@@ -1052,12 +1061,8 @@ void loop () {
             f.GPS_HOME_MODE = 1;
             f.GPS_HOLD_MODE = 0;
             GPSNavReset = 0;
-            #if defined(I2C_GPS)
-              GPS_I2C_command(I2C_GPS_COMMAND_START_NAV,0);        //waypoint zero
-            #else // SERIAL
-              GPS_set_next_wp(&GPS_home[LAT],&GPS_home[LON]);
-              nav_mode    = NAV_MODE_WP;
-            #endif
+            GPS_set_next_wp(&GPS_home[LAT],&GPS_home[LON]);
+            nav_mode    = NAV_MODE_WP;
           }
         } else {
           f.GPS_HOME_MODE = 0;
@@ -1065,14 +1070,10 @@ void loop () {
             if (!f.GPS_HOLD_MODE) {
               f.GPS_HOLD_MODE = 1;
               GPSNavReset = 0;
-              #if defined(I2C_GPS)
-                GPS_I2C_command(I2C_GPS_COMMAND_POSHOLD,0);
-              #else
-                GPS_hold[LAT] = GPS_coord[LAT];
-                GPS_hold[LON] = GPS_coord[LON];
-                GPS_set_next_wp(&GPS_hold[LAT],&GPS_hold[LON]);
-                nav_mode = NAV_MODE_POSHOLD;
-              #endif
+              GPS_hold[LAT] = GPS_coord[LAT];
+              GPS_hold[LON] = GPS_coord[LON];
+              GPS_set_next_wp(&GPS_hold[LAT],&GPS_hold[LON]);
+              nav_mode = NAV_MODE_POSHOLD;
             }
           } else {
             f.GPS_HOLD_MODE = 0;
@@ -1086,9 +1087,7 @@ void loop () {
       } else {
         f.GPS_HOME_MODE = 0;
         f.GPS_HOLD_MODE = 0;
-        #if !defined(I2C_GPS)
-          nav_mode = NAV_MODE_NONE;
-        #endif
+        nav_mode = NAV_MODE_NONE;
       }
     #endif
     

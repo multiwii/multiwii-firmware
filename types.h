@@ -44,8 +44,10 @@ enum box {
   #endif
   #if MAG
     BOXMAG,
-    BOXHEADFREE,
-    BOXHEADADJ, // acquire heading for HEADFREE mode
+    #if defined(HEADFREE)
+      BOXHEADFREE,
+      BOXHEADADJ, // acquire heading for HEADFREE mode
+    #endif
   #endif
   #if defined(SERVO_TILT) || defined(GIMBAL)  || defined(SERVO_MIX_TILT)
     BOXCAMSTAB,
