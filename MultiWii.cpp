@@ -1098,7 +1098,6 @@ void loop () {
  
   } else { // not in rc loop
     static uint8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
-    if(taskOrder>4) taskOrder-=5;
     switch (taskOrder) {
       case 0:
         taskOrder++;
@@ -1124,7 +1123,7 @@ void loop () {
           }
         #endif
       case 4:
-        taskOrder++;
+        taskOrder=0;
         #if SONAR
           Sonar_update(); //debug[2] = sonarAlt;
         #endif
