@@ -1350,7 +1350,7 @@
   #define ACC_ORIENTATION(X, Y, Z) {imu.accADC[ROLL]  = -X; imu.accADC[PITCH]  = -Y; imu.accADC[YAW]  =  Z;} 
   #define GYRO_ORIENTATION(X, Y, Z){imu.gyroADC[ROLL] =  Y; imu.gyroADC[PITCH] = -X; imu.gyroADC[YAW] = -Z;} 
   #define MAG_ORIENTATION(X, Y, Z) {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  = -Z;} 
-  #define MPU6050_EN_I2C_BYPASS // MAG connected to the AUX I2C bus of MPU6050 
+  #define MPU6050_I2C_AUX_MASTER // MAG connected to the AUX I2C bus of MPU6050 
   #undef INTERNAL_I2C_PULLUPS 
 #endif
 
@@ -1422,7 +1422,7 @@
   #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = -X; imu.accADC[PITCH]  = -Y; imu.accADC[YAW]  =  Z;} 
   #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] =  Y; imu.gyroADC[PITCH] = -X; imu.gyroADC[YAW] = -Z;} 
   #define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  = -Z;} 
-  #define MPU6050_EN_I2C_BYPASS // MAG connected to the AUX I2C bus of MPU6050 
+  #define MPU6050_I2C_AUX_MASTER // MAG connected to the AUX I2C bus of MPU6050 
   #undef INTERNAL_I2C_PULLUPS 
 #endif
 
@@ -1498,7 +1498,7 @@
   #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = -X; imu.accADC[PITCH]  = -Y; imu.accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] =  Y; imu.gyroADC[PITCH] = -X; imu.gyroADC[YAW] = -Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  = -Z;}
-  #define MPU6050_EN_I2C_BYPASS // MAG connected to the AUX I2C bus of MPU6050
+  #define MPU6050_I2C_AUX_MASTER // MAG connected to the AUX I2C bus of MPU6050
   #undef INTERNAL_I2C_PULLUPS
 #endif
 
