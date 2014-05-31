@@ -152,7 +152,7 @@
       //#define FLYDU_ULTRA        // MEGA+10DOF+MT3339 FC
       //#define DIYFLYING_MAGE_V1  // diyflying 10DOF mega board with MPU6050 + HMC5883L + BMP085 http://www.indoor-flying.hk
       //#define MultiWii_32U4_SE         // Hextronik MultiWii_32U4_SE
-      //#define MultiWii_32U4_SE_no_baro // Hextronik MultiWii_32U4_SE without the MS561101BA for more free flash-memory
+      //#define MultiWii_32U4_SE_no_baro // Hextronik MultiWii_32U4_SE without the MS561101BA to free flash-memory for other functions
       //#define Flyduino9DOF       // Flyduino 9DOF IMU MPU6050+HMC5883l
       //#define Nano_Plane         // Multiwii Plane version with tail-front LSM330 sensor http://www.radiosait.ru/en/page_5324.html
       
@@ -873,7 +873,7 @@
     //#define VARIOMETER_SINGLE_TONE   // use only one tone (BEL); neccessary for non-patched vt100 terminals
 
   /********************************************************************/
-  /****           baord naming                                     ****/
+  /****           board naming                                     ****/
   /********************************************************************/
 
     /*
