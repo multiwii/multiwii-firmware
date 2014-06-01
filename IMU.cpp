@@ -244,9 +244,7 @@ void getEstimatedAttitude(){
   // however, only the first 16 MSB of the 32 bit vector is used to compute the result
   // it is ok to use this approximation as the 16 LSB are used only for the complementary filter part
   rotateV32(&EstG,deltaGyroAngle16);
-  #if MAG
-    rotateV32(&EstM,deltaGyroAngle16);
-  #endif
+  rotateV32(&EstM,deltaGyroAngle16);
 
   // Apply complimentary filter (Gyro drift correction)
   // If accel magnitude >1.15G or <0.85G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
@@ -257,6 +255,8 @@ void getEstimatedAttitude(){
     accZ_tmp += mul(imu.accSmooth[axis] , EstG.A16[2*axis+1]);
     #if MAG
       EstM.A32[axis]  += (int32_t)(imu.magADC[axis] - EstM.A16[2*axis+1])<<(16-GYR_CMPFM_FACTOR);
+    #else
+      EstM.A32[axis]  += (int32_t)(deltaGyroAngle16);
     #endif
   }
   
@@ -271,14 +271,14 @@ void getEstimatedAttitude(){
   att.angle[ROLL]  = _atan2(EstG.V16.X , EstG.V16.Z);
   att.angle[PITCH] = _atan2(EstG.V16.Y , InvSqrt(sqGX_sqGZ)*sqGX_sqGZ);
 
-  #if MAG
     //note on the second term: mathematically there is a risk of overflow (16*16*16=48 bits). assumed to be null with real values
     att.heading = _atan2(
       mul(EstM.V16.Z , EstG.V16.X) - mul(EstM.V16.X , EstG.V16.Z),
       (EstM.V16.Y * sqGX_sqGZ  - (mul(EstM.V16.X , EstG.V16.X) + mul(EstM.V16.Z , EstG.V16.Z)) * EstG.V16.Y)*invG );
-    att.heading += conf.mag_declination; // Set from GUI
+      #if (MAG)
+        att.heading += conf.mag_declination; // Set from GUI
+      #endif
     att.heading /= 10;
-  #endif
 
   #if defined(THROTTLE_ANGLE_CORRECTION)
     cosZ = mul(EstG.V16.Z , 100) / ACC_1G ;                                                   // cos(angleZ) * 100 

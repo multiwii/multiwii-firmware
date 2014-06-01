@@ -57,10 +57,12 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
   #endif
   #if MAG
     "MAG;"
-    #if defined(HEADFREE)
-      "HEADFREE;"
-      "HEADADJ;"
-    #endif
+  #else
+    "HEADHOLD;"
+  #endif
+  #if defined(HEADFREE)
+    "HEADFREE;"
+    "HEADADJ;"
   #endif
   #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
     "CAMSTAB;"
@@ -110,10 +112,12 @@ const uint8_t boxids[] PROGMEM = {// permanent IDs associated to boxes. This way
   #endif
   #if MAG
     5, //"MAG;"
-    #if defined(HEADFREE)
-      6, //"HEADFREE;"
-      7, //"HEADADJ;"
-    #endif
+  #else
+    5, //"HEADHOLD"
+  #endif
+  #if defined(HEADFREE)
+    6, //"HEADFREE;"
+    7, //"HEADADJ;"
   #endif
   #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
     8, //"CAMSTAB;"
@@ -1034,6 +1038,13 @@ void loop () {
       } else {
         f.MAG_MODE = 0;
       }
+    #else
+      if (rcOptions[BOXHEADHOLD]) {
+        if (!f.MAG_MODE) {
+          f.MAG_MODE = 1;
+          magHold = att.heading;}
+      } else {f.MAG_MODE = 0;}
+    #endif
       #if defined(HEADFREE)
         if (rcOptions[BOXHEADFREE]) {
           if (!f.HEADFREE_MODE) {
@@ -1051,7 +1062,6 @@ void loop () {
           headFreeModeHold = att.heading; // acquire new heading
         }
       #endif
-    #endif
     
     #if GPS
       static uint8_t GPSNavReset = 1;
@@ -1161,14 +1171,12 @@ void loop () {
 
  //*********************************** 
  
-  #if MAG
     if (abs(rcCommand[YAW]) <70 && f.MAG_MODE) {
       int16_t dif = att.heading - magHold;
       if (dif <= - 180) dif += 360;
       if (dif >= + 180) dif -= 360;
       if ( f.SMALL_ANGLES_25 ) rcCommand[YAW] -= dif*conf.pid[PIDMAG].P8>>5;
     } else magHold = att.heading;
-  #endif
 
   #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
     /* Smooth alt change routine , for slow auto and aerophoto modes (in general solution from alexmos). It's slowly increase/decrease 
