@@ -156,8 +156,8 @@ float InvSqrt (float x){
     float   f; 
   } conv; 
   conv.f = x; 
-  conv.i = 0x5f3759df - (conv.i >> 1); 
-  return 0.5f * (conv.f * (3.0f - x * conv.f * conv.f));
+  conv.i = 0x5f1ffff9 - (conv.i >> 1); 
+  return conv.f * (1.68191409f - 0.703952253f * x * conv.f * conv.f);
 }
 
 // signed16 * signed16
