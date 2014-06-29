@@ -192,6 +192,9 @@ flags_struct_t f;
   int32_t  BAROaltMax;             // maximum value
   uint16_t GPS_speedMax = 0;       // maximum speed from gps
   uint16_t powerValueMaxMAH = 0;
+  #if defined(WATTS)
+    uint16_t wattsMax = 0;
+  #endif
 #endif
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
   uint32_t armedTime = 0;
@@ -403,7 +406,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       p = psum / PSENSOR_SMOOTH;
     #endif
     powerValue = ( conf.psensornull > p ? conf.psensornull - p : p - conf.psensornull); // do not use abs(), it would induce implicit cast to uint and overrun
-    analog.amperage = powerValue * conf.pint2ma;
+    analog.amperage = ((uint32_t)powerValue * conf.pint2ma) / 100; // [100mA]    //old (will overflow for 65A: powerValue * conf.pint2ma; // [1mA]
     pMeter[PMOTOR_SUM] += ((currentTime-lastRead) * (uint32_t)((uint32_t)powerValue*conf.pint2ma))/100000; // [10 mA * msec]
     lastRead = currentTime;
     break;
@@ -455,6 +458,13 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   }
   #endif
   } // end of switch()
+
+#if defined(WATTS)
+  analog.watts = (analog.amperage * analog.vbat) / 100; // [0.1A] * [0.1V] / 100 = [Watt]
+  #if defined(LOG_VALUES) || defined(LCD_TELEMETRY)
+    if (analog.watts > wattsMax) wattsMax = analog.watts;
+  #endif
+#endif
 
   #if defined(BUZZER)
     alarmHandler(); // external buzzer routine that handles buzzer events globally now
@@ -726,6 +736,9 @@ void go_arm() {
         #endif
         #ifdef POWERMETER_HARD
           powerValueMaxMAH = 0;
+        #endif
+        #ifdef WATTS
+          wattsMax = 0;
         #endif
       #endif
       #ifdef LOG_PERMANENT

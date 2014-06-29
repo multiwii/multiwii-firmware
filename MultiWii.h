@@ -111,6 +111,7 @@ extern int16_t lookupThrottleRC[11];
   extern int32_t  BAROaltMax;         // maximum value
   extern uint16_t GPS_speedMax;       // maximum speed from gps
   extern uint16_t powerValueMaxMAH;
+  extern uint16_t wattsMax;
 #endif
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
   extern uint32_t armedTime;

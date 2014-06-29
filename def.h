@@ -2018,6 +2018,10 @@
         #error "to use powermeter, you must also define and configure VBAT"
 #endif
 
+#if defined(WATTS) && !(defined(POWERMETER_HARD)) && !(defined(VBAT))
+        #error "to compute WATTS, you must also define and configure both POWERMETER_HARD and VBAT"
+#endif
+
 #if defined(LCD_TELEMETRY_AUTO) && !(defined(LCD_TELEMETRY))
         #error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
 #endif

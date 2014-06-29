@@ -1710,18 +1710,32 @@ void fill_line1_deg() {
 }
 #ifdef POWERMETER_HARD
 void fill_line2_AmaxA() {
-  uint16_t unit;
+  //uint16_t unit;
   strcpy_P(line2,PSTR("---,-A max---,-A"));
-  unit = ((uint32_t)powerValue * conf.pint2ma) / 100;
-  line2[0] = digit1000(unit);
-  line2[1] = digit100(unit);
-  line2[2] = digit10(unit);
-  line2[4] = digit1(unit);
-  if (unit > powerValueMaxMAH) powerValueMaxMAH = unit;
+  //unit = analog.amperage; //((uint32_t)powerValue * conf.pint2ma) / 100;
+  line2[0] = digit1000(analog.amperage);
+  line2[1] = digit100(analog.amperage);
+  line2[2] = digit10(analog.amperage);
+  line2[4] = digit1(analog.amperage);
+  if (analog.amperage > powerValueMaxMAH) powerValueMaxMAH = analog.amperage;
   line2[10] = digit1000(powerValueMaxMAH);
   line2[11] = digit100(powerValueMaxMAH);
   line2[12] = digit10(powerValueMaxMAH);
   line2[14] = digit1(powerValueMaxMAH);
+}
+#endif
+#ifdef WATTS
+void fill_line2_WmaxW() {
+  //                   0123456789.12345
+  strcpy_P(line2,PSTR("----W   max----W"));
+  line2[0] = digit1000(analog.watts);
+  line2[1] = digit100(analog.watts);
+  line2[2] = digit10(analog.watts);
+  line2[3] = digit1(analog.watts);
+  line2[11] = digit1000(wattsMax);
+  line2[12] = digit100(wattsMax);
+  line2[13] = digit10(wattsMax);
+  line2[14] = digit1(wattsMax);
 }
 #endif
 
@@ -2177,7 +2191,7 @@ void lcd_telemetry() {
     case '1':
     {
       static uint8_t index = 0;
-      linenr = (index++ % 8) + 1;
+      linenr = (index++ % 9) + 1;
       LCDsetLine(linenr);
       switch (linenr + POSSIBLE_OFFSET) { // not really linenumbers
         case 1:// V
@@ -2219,7 +2233,7 @@ void lcd_telemetry() {
             }
           #endif
           break;
-        case 8:// uptime, eeprom set#
+        case 9:// uptime, eeprom set#
           strcpy_P(line1,PSTR("Up ")); LCDprintChar(line1); print_uptime(millis() / 1000 );
           strcpy_P(line1,PSTR("  Cset -")); line1[7] = digit1(global_conf.currentSet); LCDprintChar(line1);
           break;
@@ -2229,6 +2243,12 @@ void lcd_telemetry() {
         case 7:// A, maxA
           #ifdef POWERMETER_HARD
             fill_line2_AmaxA();
+            LCDprintChar(line2);
+          #endif
+          break;
+        case 8:// W, maxW
+          #ifdef WATTS
+            fill_line2_WmaxW();
             LCDprintChar(line2);
           #endif
           break;

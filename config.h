@@ -167,7 +167,7 @@
       //#define LSM330        //combo + ACC
       
       /* I2C accelerometer */
-      //#define NUNCHUCK  // if you want to use the nunckuk connected to a WMP
+      // nodefine NUNCHUCK  // DEPRECATED - see Section8! if you want to use the nunckuk connected to a WMP
       //#define MMA7455
       //#define ADXL345
       //#define BMA020
@@ -837,6 +837,7 @@
     #define PINT2mA 132     /* (*) hard: one integer step on arduino analog translates to mA (example 4.9 / 37 * 1000) ;
                                    soft: use fictional value, start with 100.
                                    for hard and soft: larger PINT2mA will get you larger value for power (mAh equivalent) */
+    //#define WATTS // compute and display the actual watts (=Volt*Ampere) consumed - requires both POWERMETER_HARD and VBAT
 
   /********************************************************************/
   /****           altitude hold                                    ****/
@@ -1102,6 +1103,7 @@
   /* disable use of the POWER PIN (allready done if the option RCAUXPIN12 is selected) */
   #define DISABLE_POWER_PIN
 
+  //#define NUNCHUCK  // if you want to use the nunckuk connected to a WMP
 
 /*************************************************************************************************/
 /****           END OF CONFIGURABLE PARAMETERS                                                ****/
