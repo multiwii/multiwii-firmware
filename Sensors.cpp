@@ -397,7 +397,7 @@ void ACC_Common() {
     if (calibratingA == 1) {
       global_conf.accZero[ROLL]  = (a[ROLL]+256)>>9;
       global_conf.accZero[PITCH] = (a[PITCH]+256)>>9;
-      global_conf.accZero[YAW]   = ((a[YAW]+256)>>9)-ACC_1G; // for nunchuk 200=1G
+      global_conf.accZero[YAW]   = ((a[YAW]+256)>>9)-ACC_1G;
       conf.angleTrim[ROLL]   = 0;
       conf.angleTrim[PITCH]  = 0;
       writeGlobalSet(1); // write accZero in EEPROM
@@ -447,7 +447,7 @@ void ACC_Common() {
         AccInflightCalibrationSavetoEEProm = 0;
         global_conf.accZero[ROLL]  = b[ROLL]/50;
         global_conf.accZero[PITCH] = b[PITCH]/50;
-        global_conf.accZero[YAW]   = b[YAW]/50-ACC_1G; // for nunchuk 200=1G
+        global_conf.accZero[YAW]   = b[YAW]/50-ACC_1G;
         conf.angleTrim[ROLL]   = 0;
         conf.angleTrim[PITCH]  = 0;
         writeGlobalSet(1); // write accZero in EEPROM
@@ -926,30 +926,6 @@ void ACC_getADC(){
   ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>6 ,
                    ((rawADC[3]<<8) | rawADC[2])>>6 ,
                    ((rawADC[5]<<8) | rawADC[4])>>6 );
-  ACC_Common();
-}
-#endif
-
-// ************************************************************************************************************
-// standalone I2C Nunchuk
-// ************************************************************************************************************
-#if defined(NUNCHACK)
-#define NUNCHACK_ADDRESS 0x52
-
-void ACC_init() {
-  i2c_writeReg(NUNCHACK_ADDRESS ,0xF0 ,0x55 );
-  i2c_writeReg(NUNCHACK_ADDRESS ,0xFB ,0x00 );
-  delay(250);
-}
-
-void ACC_getADC() {
-  TWBR = ((F_CPU / I2C_SPEED) - 16) / 2; // change the I2C clock rate. !! you must check if the nunchuk is ok with this freq
-  i2c_getSixRawADC(NUNCHACK_ADDRESS,0x00);
-  TWBR = ((F_CPU / 400000) - 16) / 2; // change the I2C clock rate. !! you must check if the nunchuk is ok with this freq
-
-  ACC_ORIENTATION(  ( (rawADC[3]<<2)        + ((rawADC[5]>>4)&0x2) ) ,
-                  - ( (rawADC[2]<<2)        + ((rawADC[5]>>3)&0x2) ) ,
-                    ( ((rawADC[4]&0xFE)<<2) + ((rawADC[5]>>5)&0x6) ));
   ACC_Common();
 }
 #endif
@@ -1510,9 +1486,9 @@ void Gyro_getADC () {
 #endif
 
 
-#if defined(WMP) || defined(NUNCHUCK)
+#if defined(WMP)
 // ************************************************************************************************************
-// I2C Wii Motion Plus + optional Nunchuk
+// I2C Wii Motion Plus
 // ************************************************************************************************************
 // I2C adress 1: 0x53 (7bit)
 // I2C adress 2: 0x52 (7bit)
@@ -1532,12 +1508,11 @@ void Gyro_getADC() {
   uint8_t axis;
   TWBR = ((F_CPU / I2C_SPEED) - 16) / 2; // change the I2C clock rate
   i2c_getSixRawADC(WMP_ADDRESS_2,0x00);
-  TWBR = ((F_CPU / 400000) - 16) / 2; // change the I2C clock rate. !! you must check if the nunchuk is ok with this freq
+  TWBR = ((F_CPU / 400000) - 16) / 2; // change the I2C clock rate.
 
   if (micros() < (neutralizeTime + NEUTRALIZE_DELAY)) {//we neutralize data in case of blocking+hard reset state
     for (axis = 0; axis < 3; axis++) {imu.gyroADC[axis]=0;imu.accADC[axis]=0;}
     imu.accADC[YAW] = ACC_1G;
-    f.NUNCHUKDATA = 0;
   } 
 
   // Wii Motion Plus Data
@@ -1551,28 +1526,8 @@ void Gyro_getADC() {
     imu.gyroADC[ROLL]  = (rawADC[3]&0x01)     ? imu.gyroADC[ROLL]/5  : imu.gyroADC[ROLL];  //the ratio 1/5 is not exactly the IDG600 or ISZ650 specification 
     imu.gyroADC[PITCH] = (rawADC[4]&0x02)>>1  ? imu.gyroADC[PITCH]/5 : imu.gyroADC[PITCH]; //we detect here the slow of fast mode WMP gyros values (see wiibrew for more details)
     imu.gyroADC[YAW]   = (rawADC[3]&0x02)>>1  ? imu.gyroADC[YAW]/5   : imu.gyroADC[YAW];   // this step must be done after zero compensation    
-    f.NUNCHUKDATA = 0;
-  #if defined(NUNCHUCK)
-    } else if ( (rawADC[5]&0x03) == 0x00 ) { // Nunchuk Data
-      ACC_ORIENTATION(  ( (rawADC[3]<<2)      | ((rawADC[5]>>4)&0x02) ) ,
-                      - ( (rawADC[2]<<2)      | ((rawADC[5]>>3)&0x02) ) ,
-                        ( ((rawADC[4]>>1)<<3) | ((rawADC[5]>>5)&0x06) ) );
-      ACC_Common();
-      f.NUNCHUKDATA = 1;
-  #endif
   }
 }
-
-#if defined(NUNCHUCK)
-  void ACC_init () {
-    // We need to set ACC_1G for the Nunchuk beforehand -> moved in def.h
-    // If a different accelerometer is used, it will be overwritten by its ACC_init() later.
-  }
-  void ACC_getADC () { // it's done ine the WMP gyro part
-    Gyro_getADC();
-  }
-#endif
-
 #endif
 
 // ************************************************************************************************************

@@ -13,54 +13,31 @@ void computeIMU () {
   static int16_t gyroADCprevious[3] = {0,0,0};
   static int16_t gyroADCinter[3];
 
-  //we separate the 2 situations because reading gyro values with a gyro only setup can be acchieved at a higher rate
-  //gyro+nunchuk: we must wait for a quite high delay betwwen 2 reads to get both WM+ and Nunchuk data. It works with 3ms
-  //gyro only: the delay to read 2 consecutive values can be reduced to only 0.65ms
-  #if defined(NUNCHUCK)
-    static uint32_t timeInterleave = 0;
-    annexCode();
-    while((uint16_t)(micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
-    timeInterleave=micros();
+  uint16_t timeInterleave = 0;
+  #if ACC
     ACC_getADC();
-    getEstimatedAttitude(); // computation time must last less than one interleaving delay
-    while((uint16_t)(micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
-    timeInterleave=micros();
-    f.NUNCHUKDATA = 1;
-    while(f.NUNCHUKDATA) ACC_getADC(); // For this interleaving reading, we must have a gyro update at this point (less delay)
-
-    for (axis = 0; axis < 3; axis++) {
-      // empirical, we take a weighted value of the current and the previous values
-      // /4 is to average 4 values, note: overflow is not possible for WMP gyro here
-      imu.gyroData[axis] = (imu.gyroADC[axis]*3+gyroADCprevious[axis])>>2;
-      gyroADCprevious[axis] = imu.gyroADC[axis];
-    }
-  #else
-    uint16_t timeInterleave = 0;
-    #if ACC
-      ACC_getADC();
-      getEstimatedAttitude();
-    #endif
-    #if GYRO
-      Gyro_getADC();
-    #endif
-    for (axis = 0; axis < 3; axis++)
-      gyroADCinter[axis] =  imu.gyroADC[axis];
-    timeInterleave=micros();
-    annexCode();
-    uint8_t t=0;
-    while((int16_t)(micros()-timeInterleave)<650) t=1; //empirical, interleaving delay between 2 consecutive reads
-    if (!t) annex650_overrun_count++;
-    #if GYRO
-      Gyro_getADC();
-    #endif
-    for (axis = 0; axis < 3; axis++) {
-      gyroADCinter[axis] =  imu.gyroADC[axis]+gyroADCinter[axis];
-      // empirical, we take a weighted value of the current and the previous values
-      imu.gyroData[axis] = (gyroADCinter[axis]+gyroADCprevious[axis])/3;
-      gyroADCprevious[axis] = gyroADCinter[axis]>>1;
-      if (!ACC) imu.accADC[axis]=0;
-    }
+    getEstimatedAttitude();
   #endif
+  #if GYRO
+    Gyro_getADC();
+  #endif
+  for (axis = 0; axis < 3; axis++)
+    gyroADCinter[axis] =  imu.gyroADC[axis];
+  timeInterleave=micros();
+  annexCode();
+  uint8_t t=0;
+  while((int16_t)(micros()-timeInterleave)<650) t=1; //empirical, interleaving delay between 2 consecutive reads
+  if (!t) annex650_overrun_count++;
+  #if GYRO
+    Gyro_getADC();
+  #endif
+  for (axis = 0; axis < 3; axis++) {
+    gyroADCinter[axis] =  imu.gyroADC[axis]+gyroADCinter[axis];
+    // empirical, we take a weighted value of the current and the previous values
+    imu.gyroData[axis] = (gyroADCinter[axis]+gyroADCprevious[axis])/3;
+    gyroADCprevious[axis] = gyroADCinter[axis]>>1;
+    if (!ACC) imu.accADC[axis]=0;
+  }
   #if defined(GYRO_SMOOTHING)
     static int16_t gyroSmooth[3] = {0,0,0};
     for (axis = 0; axis < 3; axis++) {

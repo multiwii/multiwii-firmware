@@ -167,13 +167,11 @@
       //#define LSM330        //combo + ACC
       
       /* I2C accelerometer */
-      // nodefine NUNCHUCK  // DEPRECATED - see Section8! if you want to use the nunckuk connected to a WMP
       //#define MMA7455
       //#define ADXL345
       //#define BMA020
       //#define BMA180
       //#define BMA280
-      //#define NUNCHACK  // if you want to use the nunckuk as a standalone I2C ACC without WMP
       //#define LIS3LV02
       //#define LSM303DLx_ACC
       //#define MMA8451Q
@@ -568,7 +566,7 @@
 
   /********                          Failsafe settings                 ********************/
     /* Failsafe check pulses on four main control channels CH1-CH4. If the pulse is missing or bellow 985us (on any of these four channels) 
-       the failsafe procedure is initiated. After FAILSAFE_DELAY time from failsafe detection, the level mode is on (if ACC or nunchuk is avaliable),
+       the failsafe procedure is initiated. After FAILSAFE_DELAY time from failsafe detection, the level mode is on (if ACC is avaliable),
        PITCH, ROLL and YAW is centered and THROTTLE is set to FAILSAFE_THROTTLE value. You must set this value to descending about 1m/s or so
        for best results. This value is depended from your configuration, AUW and some other params.  Next, after FAILSAFE_OFF_DELAY the copter is disarmed, 
        and motors is stopped. If RC pulse coming back before reached FAILSAFE_OFF_DELAY time, after the small quard time the RC control is returned to normal. */
@@ -1102,8 +1100,6 @@
   //#define D12_POWER      // Use D12 on PROMINI to power sensors. Will disable servo[4] on D12
   /* disable use of the POWER PIN (allready done if the option RCAUXPIN12 is selected) */
   #define DISABLE_POWER_PIN
-
-  //#define NUNCHUCK  // if you want to use the nunckuk connected to a WMP
 
 /*************************************************************************************************/
 /****           END OF CONFIGURABLE PARAMETERS                                                ****/
