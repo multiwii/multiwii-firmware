@@ -962,9 +962,7 @@ const char PROGMEM lcd_param_text16 [] = "Vel      D";
 const char PROGMEM lcd_param_text17 [] = "Ang/Hor  P";
 const char PROGMEM lcd_param_text18 [] = "Ang/Hor  I";
 const char PROGMEM lcd_param_text188[] = "Ang/Hor  D";
-#if MAG
 const char PROGMEM lcd_param_text19 [] = "Mag      P";
-#endif
 const char PROGMEM lcd_param_text20 [] = "RC Rate   ";
 const char PROGMEM lcd_param_text21 [] = "RC Expo   ";
 const char PROGMEM lcd_param_text20t [] = "Thrott Mid";
@@ -1109,9 +1107,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text17, &conf.pid[PIDLEVEL].P8, &__P,
   &lcd_param_text18, &conf.pid[PIDLEVEL].I8, &__I,
   &lcd_param_text188, &conf.pid[PIDLEVEL].D8, &__D,
-#if MAG
   &lcd_param_text19, &conf.pid[PIDMAG].P8, &__P,
-#endif
   &lcd_param_text20t, &conf.thrMid8, &__RC,
   &lcd_param_text21t, &conf.thrExpo8, &__RC,
   &lcd_param_text20, &conf.rcRate8, &__RC,
@@ -1156,15 +1152,13 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
       &lcd_param_text43, &conf.activate[BOXBARO], &__AUX4,
     #endif
   #endif
-  #if MAG
-    &lcd_param_text44, &conf.activate[BOXMAG], &__AUX1,
-    #ifndef SUPPRESS_LCD_CONF_AUX2
-      &lcd_param_text44, &conf.activate[BOXMAG], &__AUX2,
-    #endif
-    #ifndef SUPPRESS_LCD_CONF_AUX34
-      &lcd_param_text44, &conf.activate[BOXMAG], &__AUX3,
-      &lcd_param_text44, &conf.activate[BOXMAG], &__AUX4,
-    #endif
+  &lcd_param_text44, &conf.activate[BOXMAG], &__AUX1,
+  #ifndef SUPPRESS_LCD_CONF_AUX2
+    &lcd_param_text44, &conf.activate[BOXMAG], &__AUX2,
+  #endif
+  #ifndef SUPPRESS_LCD_CONF_AUX34
+    &lcd_param_text44, &conf.activate[BOXMAG], &__AUX3,
+    &lcd_param_text44, &conf.activate[BOXMAG], &__AUX4,
   #endif
   #ifdef GIMBAL
     &lcd_param_text45, &conf.activate[BOXCAMSTAB], &__AUX1,
@@ -1220,7 +1214,7 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
       &lcd_param_text50, &conf.activate[BOXPASSTHRU],&__AUX4,
     #endif
   #endif
-  #if MAG && defined(HEADFREE)
+  #if defined(HEADFREE)
     &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX1,
     #ifndef SUPPRESS_LCD_CONF_AUX2
       &lcd_param_text51, &conf.activate[BOXHEADFREE],&__AUX2,
@@ -1851,12 +1845,10 @@ static char checkboxitemNames[][4] = {
     #ifdef VARIOMETER
       "Var",
     #endif
-    #if MAG
-      "Mag",
-      #if defined(HEADFREE)
-        "HFr",
-        "HAd",
-      #endif
+    "Mag",
+    #if defined(HEADFREE)
+      "HFr",
+      "HAd",
     #endif
     #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
       "CSt",

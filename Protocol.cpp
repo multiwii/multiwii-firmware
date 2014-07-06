@@ -389,13 +389,11 @@ void evaluateCommand() {
      #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
        if(f.BARO_MODE) tmp |= 1<<BOXBARO;
      #endif
-     #if MAG
-       if(f.MAG_MODE) tmp |= 1<<BOXMAG;
-       #if !defined(FIXEDWING)
-         #if defined(HEADFREE)
-           if(f.HEADFREE_MODE)       tmp |= 1<<BOXHEADFREE;
-           if(rcOptions[BOXHEADADJ]) tmp |= 1<<BOXHEADADJ;
-         #endif
+     if(f.MAG_MODE) tmp |= 1<<BOXMAG;
+     #if !defined(FIXEDWING)
+       #if defined(HEADFREE)
+         if(f.HEADFREE_MODE)       tmp |= 1<<BOXHEADFREE;
+         if(rcOptions[BOXHEADADJ]) tmp |= 1<<BOXHEADADJ;
        #endif
      #endif
      #if defined(SERVO_TILT) || defined(GIMBAL)|| defined(SERVO_MIX_TILT)
