@@ -228,7 +228,7 @@ static int16_t nav_takeoff_bearing;
   }
  #endif
  #if defined(UBLOX)
-   prog_char UBLOX_INIT[] PROGMEM = {                          // PROGMEM array must be outside any function !!!
+   const prog_char UBLOX_INIT[] PROGMEM = {                          // PROGMEM array must be outside any function !!!
      0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x05,0x00,0xFF,0x19,                            //disable all default NMEA messages
      0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x03,0x00,0xFD,0x15,
      0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x01,0x00,0xFB,0x11,
@@ -413,7 +413,7 @@ uint8_t GPS_Compute(void) {
     //Apply moving average filter to GPS data
     #if defined(GPS_FILTERING)
       GPS_filter_index = (GPS_filter_index+1) % GPS_FILTER_VECTOR_LENGTH;
-      for (axis = 0; axis< 2; axis++) {
+      for (uint8_t axis = 0; axis< 2; axis++) {
         GPS_read[axis] = GPS_coord[axis]; //latest unfiltered data is in GPS_latitude and GPS_longitude
         GPS_degree[axis] = GPS_read[axis] / 10000000;  // get the degree to assure the sum fits to the int32_t
     
