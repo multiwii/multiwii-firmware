@@ -345,6 +345,16 @@ void  readSBus(){
       if (!((sbus[23] >> 3) & 0x0001))
         {if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;}   // clear FailSafe counter
       #endif
+
+      // For some reason the SBUS data provides only about 75% of the actual RX output pulse width
+      // Adjust the actual value by +/-25%.  Sign determined by pulse width above or below center
+      uint8_t adj_index;
+      for(adj_index=0; adj_index<16; adj_index++) {
+        if (rcValue[adj_index] < MIDRC)
+          rcValue[adj_index] -= (MIDRC - rcValue[adj_index]) >> 2;		
+        else	
+          rcValue[adj_index] += (rcValue[adj_index] - MIDRC) >> 2;
+      }
     }
   }        
 }
