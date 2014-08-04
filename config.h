@@ -696,6 +696,7 @@
     #define GPS_WP_RADIUS              200       // if we are within this distance to a waypoint then we consider it reached (distance is in cm)
     #define NAV_SLEW_RATE              30        // Adds a rate control to nav output, will smoothen out nav angle spikes
 
+    //#define ONLY_ALLOW_ARM_WITH_GPS_3DFIX      // Only allow FC arming if GPS has a 3D fix.
 
   /**************************************************************************************/
   /***********************        LCD/OLED - display settings       *********************/

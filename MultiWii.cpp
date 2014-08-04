@@ -713,7 +713,7 @@ void go_arm() {
   #if defined(FAILSAFE)
     && failsafeCnt < 2
   #endif
-  #if GPS
+  #if GPS && defined(ONLY_ALLOW_ARM_WITH_GPS_3DFIX)
     && (f.GPS_FIX && GPS_numSat >= 5)
   #endif
     ) {
