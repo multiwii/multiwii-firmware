@@ -361,40 +361,40 @@ void  readSBus(){
 #endif
 
 /**************************************************************************************/
-/***************                    SUMD                           ********************/
+/*************** SUMD ********************/
 /**************************************************************************************/
 
 #if defined(SUMD)
-#define SUMD_SYNCBYTE 0xA8 
+#define SUMD_SYNCBYTE 0xA8
 #define SUMD_MAXCHAN 8
 #define SUMD_BUFFSIZE SUMD_MAXCHAN*2 + 5 // 6 channels + 5 -> 17 bytes for 6 channels
 static uint8_t sumdIndex=0;
 static uint8_t sumdSize=0;
-static uint8_t sumd[SUMD_BUFFSIZE]={0}; 
-
+static uint8_t sumd[SUMD_BUFFSIZE]={0};
+ 	
 void readSumD(void) {
   while (SerialAvailable(RX_SERIAL_PORT)) {
     int val = SerialRead(RX_SERIAL_PORT);
-    if(sumdIndex == 0 && val != SUMD_SYNCBYTE) continue; 
+    if(sumdIndex == 0 && val != SUMD_SYNCBYTE) continue;
     if(sumdIndex == 2) sumdSize = val;
     if(sumdIndex < SUMD_BUFFSIZE) sumd[sumdIndex] = val;
     sumdIndex++;
-    
-    if(sumdIndex == sumdSize*2+5) 
+
+	if(sumdIndex == sumdSize*2+5)
     {
       sumdIndex = 0;
       spekFrameFlags = 0x00;
       debug[1] = sumd[1];
-      if (sumdSize > SUMD_MAXCHAN) sumdSize = SUMD_MAXCHAN; 
-      for (uint8_t b = 0; b < sumdSize; b++) 
+      if (sumdSize > SUMD_MAXCHAN) sumdSize = SUMD_MAXCHAN;
+      for (uint8_t b = 0; b < sumdSize; b++)
         rcValue[b] = ((sumd[2*b+3]<<8) | sumd[2*b+4])>>3;
       spekFrameDone = 0x01; // havent checked crc at all
 
       #if defined(FAILSAFE)
       if (sumd[1] == 0x01)
-        {if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;}   // clear FailSafe counter
+        {if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;} // clear FailSafe counter
       #endif
-     }
+ 	}
   }
 }
 #endif
@@ -442,7 +442,7 @@ void readSpektrum(void) {
 
 uint16_t readRawRC(uint8_t chan) {
   uint16_t data;
-  #if defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)
+#if defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)
     if (chan < RC_CHANS) {
       data = rcValue[rcChannel[chan]];
     } else data = 1500;

@@ -238,6 +238,12 @@
      * http://www.multiwii.com/wiki/index.php?title=Config.h#Servos_configuration
      */
 
+    /* Do not move servos if copter is unarmed
+     * It is a quick hack to overcome feedback tail wigglight when copter has a flexibile
+     * landing gear
+    */
+    //#define DISABLE_SERVOS_WHEN_UNARMED
+
 
     /* if you want to preset min/middle/max values for servos right after flashing, because of limited physical
      * room for servo travel, then you must enable and set all three following options */
@@ -322,6 +328,23 @@
 
   /* note: no need to uncomment something in this section if you use a standard receiver */
 
+/****************************    EXTENDED AUX STATES    ***********************************/
+/* If you uncomment this line, you can use six states for each of the aux channels (AUX1-AUX4)
+to control your copter.
+Channel values
+1000-1230
+1231-1360
+1361-1490
+1491-1620
+1621-1749
+1750-
+
+At this moment you can use this function only with WinGUI 2.3 release. MultiWiiConf does not support it yet
+*/
+
+//#define EXTENDED_AUX_STATES
+
+
   /**************************************************************************************/
   /********                       special receiver types             ********************/
   /**************************************************************************************/
@@ -366,10 +389,10 @@
       //#define RX_SERIAL_PORT 1
       #define SBUS_MID_OFFSET 988 //SBUS Mid-Point at 1500
 
-    /*******************************    HOTT RECIVER    ************************************/
-      /* Graupner Hott  HD */
-      //#define SUMD PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4
-      //#define RX_SERIAL_PORT 1
+    /******************************* HOTT RECIVER ************************************/
+    /* Graupner Hott HD */
+    //#define SUMD PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4
+    //#define RX_SERIAL_PORT 1
 
 /*************************************************************************************************/
 /*****************                                                                 ***************/
@@ -560,8 +583,9 @@
     //#define GYROCALIBRATIONFAILSAFE
 
   /************************        AP FlightMode        **********************************/
+/*** FUNCTIONALITY TEMPORARY REMOVED
     /* Temporarily Disables GPS_HOLD_MODE to be able to make it possible to adjust the Hold-position when moving the sticks.*/
-    #define AP_MODE 40  // Create a deadspan for GPS.
+    //#define AP_MODE 40  // Create a deadspan for GPS.
         
   /************************   Assisted AcroTrainer    ************************************/
     /* Train Acro with auto recovery. Value set the point where ANGLE_MODE takes over.
@@ -636,6 +660,9 @@
   /***********************                  GPS                **************************/
   /**************************************************************************************/
 
+    /* ENable this for using GPS simulator (NMEA only)*/
+    //#define GPS_SIMULATOR
+
     /* GPS using a SERIAL port
        if enabled, define here the Arduino Serial port number and the UART speed
        note: only the RX PIN is used in case of NMEA mode, the GPS is not configured by multiwii
@@ -661,7 +688,8 @@
     //#define MTK_BINARY19
     //#define INIT_MTK_GPS        // initialize MTK GPS for using selected speed, 5Hz update rate and GGA & RMC sentence or binary settings
 
-    
+
+//**!*!*!*!*!*!*!*!*!*!* I2C GPS code is NOT finished in this version, please DON'T USE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     /* I2C GPS device made with an independant arduino + GPS device
        including some navigation functions
        contribution from EOSBandi   http://code.google.com/p/i2c-gps-nav/ 
@@ -670,37 +698,79 @@
     // If your I2C GPS board has Sonar support enabled
     //#define I2C_GPS_SONAR
 
-    /* GPS data readed from Misio-OSD - GPS module connected to OSD, and MultiWii read GPS data from OSD - tested and working OK ! */
-    //#define GPS_FROM_OSD
-
     /* indicate a valid GPS fix with at least 5 satellites by flashing the LED  - Modified by MIS - Using stable LED (YELLOW on CRIUS AIO) led work as sat number indicator 
       - No GPS FIX -> LED blink at speed of incoming GPS frames
       - Fix and sat no. bellow 5 -> LED off
       - Fix and sat no. >= 5 -> LED blinks, one blink for 5 sat, two blinks for 6 sat, three for 7 ... */
     #define GPS_LED_INDICATOR
 
-    //#define USE_MSP_WP                        //Enables the MSP_WP command, which is used by WinGUI to display and log Home and Poshold positions
+   //Enables the MSP_WP command set , which is used by WinGUI for displaying an setting up navigation
+   //#define USE_MSP_WP                       
 
-    //#define DONT_RESET_HOME_AT_ARM             // HOME position is reset at every arm, uncomment it to prohibit it (you can set home position with GyroCalibration)
+   // HOME position is reset at every arm, uncomment it to prohibit it (you can set home position with GyroCalibration)    
+   //#define DONT_RESET_HOME_AT_ARM             
 
-    /* GPS navigation can control the heading */
-    
-    #define NAV_CONTROLS_HEADING       true      // copter faces toward the navigation point, maghold must be enabled for it
-    #define NAV_TAIL_FIRST             false     // true - copter comes in with tail first 
-    #define NAV_SET_TAKEOFF_HEADING    true      // true - when copter arrives to home position it rotates it's head to takeoff direction
-    
-    
-    /* Get your magnetic declination from here : http://magnetic-declination.com/
-       Convert the degree+minutes into decimal degree by ==> degree+minutes*(1/60)
-       Note the sign on declination it could be negative or positive (WEST or EAST) */
-    //#define MAG_DECLINATION  3.96f              //For Budapest Hungary.
-    #define MAG_DECLINATION  0.0f   //(**)
+/* GPS navigation can control the heading */
 
-    #define GPS_LEAD_FILTER                      // Adds a forward predictive filterig to compensate gps lag. Code based on Jason Short's lead filter implementation
-    
-    //#define GPS_FILTERING                        // add a 5 element moving average filter to GPS coordinates, helps eliminate gps noise but adds latency comment out to disable
-    #define GPS_WP_RADIUS              200       // if we are within this distance to a waypoint then we consider it reached (distance is in cm)
-    #define NAV_SLEW_RATE              30        // Adds a rate control to nav output, will smoothen out nav angle spikes
+// copter faces toward the navigation point, maghold must be enabled for it
+#define NAV_CONTROLS_HEADING       1    //(**)
+// true - copter comes in with tail first 
+#define NAV_TAIL_FIRST             0    //(**)
+// true - when copter arrives to home position it rotates it's head to takeoff direction
+#define NAV_SET_TAKEOFF_HEADING    1    //(**)  
+
+/* Get your magnetic declination from here : http://magnetic-declination.com/
+Convert the degree+minutes into decimal degree by ==> degree+minutes*(1/60)
+Note the sign on declination it could be negative or positive (WEST or EAST)
+Also note, that maqgnetic declination changes with time, so recheck your value every 3-6 months */
+#define MAG_DECLINATION  4.02f   //(**)
+
+// Adds a forward predictive filterig to compensate gps lag. Code based on Jason Short's lead filter implementation
+#define GPS_LEAD_FILTER               //(**)       
+
+// add a 5 element moving average filter to GPS coordinates, helps eliminate gps noise but adds latency comment out to disable
+// use it with NMEA gps only 
+//#define GPS_FILTERING                 //(**)     
+
+// if we are within this distance to a waypoint then we consider it reached (distance is in cm)
+#define GPS_WP_RADIUS              100      //(**) 
+
+// Safe WP distance, do not start mission if the first wp distance is larger than this number (in meters)
+// Also aborts mission if the next waypoint distance is more than this number
+#define SAFE_WP_DISTANCE	       500      //(**)
+
+//Maximu allowable navigation altitude (in meters) automatic altitude control will not go above this height
+#define MAX_NAV_ALTITUDE		   100     //(**)
+
+// minimum speed when approach waypoint
+#define NAV_SPEED_MIN              100    // cm/sec			//(**)
+// maximum speed to reach between waypoints
+#define NAV_SPEED_MAX              400    // cm/sec			//(**)
+// Slow down to zero when reaching waypoint (same as NAV_SPEED_MIN = 0)
+#define NAV_SLOW_NAV               0						//(**)
+// Weight factor of the crosstrack error in navigation calculations (do not touch)
+#define CROSSTRACK_GAIN            .4						//(**)
+// Maximum allowable banking than navigation outputs 
+#define NAV_BANK_MAX 3000									//(**)
+
+//Defines the RTH altitude. 0 means keep current alt during RTH (in meters)
+#define RTH_ALTITUDE		15								//(**)
+//Wait	to reach RTH alt before start moving to home (0-no, 1-yes)
+#define WAIT_FOR_RTH_ALT	1								//(**)
+
+//Navigation engine will takeover BARO mode control 
+#define NAV_TAKEOVER_BARO   1								//(**)
+
+//Throttle stick input will be ignored  (only in BARO)
+#define IGNORE_THROTTLE      1                               //(**)
+
+//If FENCE DISTANCE is larger than 0 then copter will switch to RTH when it farther from home
+//than the defined number in meters
+#define FENCE_DISTANCE      600
+
+//This governs the descent speed during landing. 100 is equals approc 50cm/sec
+#define LAND_SPEED          100
+
 
     //#define ONLY_ALLOW_ARM_WITH_GPS_3DFIX      // Only allow FC arming if GPS has a 3D fix.
 

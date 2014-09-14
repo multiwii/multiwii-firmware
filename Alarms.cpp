@@ -80,7 +80,7 @@ void alarmHandler(void){
   #endif
   
   #if GPS
-    if ((f.GPS_HOME_MODE || f.GPS_HOLD_MODE) && !f.GPS_FIX) alarmArray[2] = 2;
+    if ((f.GPS_mode != GPS_MODE_NONE) && !f.GPS_FIX) alarmArray[2] = 2;
     else if (!f.GPS_FIX)alarmArray[2] = 1;
     else alarmArray[2] = 0;
   #endif
@@ -151,7 +151,7 @@ void alarmPatternComposer(){
       resource = 3; 
       #if GPS
         if (alarmArray[2]==1) patternDecode(resource,100,100,100,100,100);                      // blue fast blink -->no gps fix
-        else if (f.GPS_HOME_MODE || f.GPS_HOLD_MODE) patternDecode(resource,100,100,100,100,1000); //blue slow blink --> gps active
+		else if (f.GPS_mode != GPS_MODE_NONE) patternDecode(resource,100,100,100,100,1000); //blue slow blink --> gps active
         else setTiming(resource,100,1000);                                                        //blue short blink -->gps fix ok
       #else
         turnOff(resource);
@@ -403,10 +403,10 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
       if(!(f.ANGLE_MODE||f.HORIZON_MODE)){ //ACRO
         b[0]= 'x';
       }
-      else if(f.GPS_HOME_MODE){ //RTH
+	  else if(f.GPS_mode == GPS_MODE_RTH){ //RTH
         b[0]= 'w';
       }   
-      else if(f.GPS_HOLD_MODE){//Position Hold
+	  else if(f.GPS_mode == GPS_MODE_HOLD){//Position Hold
         b[0]= 'v';
       } 
       else if(f.HORIZON_MODE){ //HORIZON mode

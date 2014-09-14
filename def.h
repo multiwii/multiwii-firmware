@@ -1633,10 +1633,16 @@
   #define GPS_PROMINI
 #endif
 
-#if defined(GPS_SERIAL)  || defined(I2C_GPS) || defined(GPS_FROM_OSD)
+#if defined(GPS_SERIAL)  || defined(I2C_GPS)
   #define GPS 1
 #else
   #define GPS 0
+#endif
+
+#if defined(GPS_SERIAL)
+  #define NAVCAP 1
+#else
+  #define NAVCAP 0
 #endif
 
 #if defined(SRF02) || defined(SRF08) || defined(SRF10) || defined(SRC235) || defined(I2C_GPS_SONAR)
@@ -1644,6 +1650,13 @@
 #else
   #define SONAR 0
 #endif
+
+#if defined(EXTENDED_AUX_STATES)
+  #define EXTAUX 1
+#else
+  #define EXTAUX 0
+#endif
+
 
 
 /**************************************************************************************/
@@ -1690,7 +1703,7 @@
 #elif defined(HEX6H)
   #define MULTITYPE 18
 #elif defined(SINGLECOPTER)
-  #define MULTITYPE 20
+  #define MULTITYPE 21
   #define SERVO_RATES      {30,30,100,0,1,0,1,100}
 #elif defined(DUALCOPTER)
   #define MULTITYPE 20
