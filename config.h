@@ -366,6 +366,11 @@
       //#define RX_SERIAL_PORT 1
       #define SBUS_MID_OFFSET 988 //SBUS Mid-Point at 1500
 
+    /*******************************    HOTT RECIVER    ************************************/
+      /* Graupner Hott  HD */
+      //#define SUMD PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4
+      //#define RX_SERIAL_PORT 1
+
 /*************************************************************************************************/
 /*****************                                                                 ***************/
 /****************  SECTION  4 - ALTERNATE CPUs & BOARDS                                    *******/

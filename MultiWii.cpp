@@ -268,7 +268,7 @@ uint8_t rcSerialCount = 0;   // a counter to select legacy RX when there is no m
 int16_t lookupPitchRollRC[5];// lookup table for expo & RC rate PITCH+ROLL
 int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 
-#if defined(SPEKTRUM) || defined(SBUS)
+#if defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)
   volatile uint8_t  spekFrameFlags;
   volatile uint32_t spekTimeLast;
   uint8_t  spekFrameDone;
@@ -796,16 +796,17 @@ void loop () {
   #if defined(SPEKTRUM)
     if (spekFrameFlags == 0x01) readSpektrum();
   #endif
-
   #if defined(SBUS)
     if (spekFrameFlags == 0x01) readSBus();
   #endif
-
+  #if defined(SUMD)
+    if (spekFrameFlags == 0x01) readSumD();
+  #endif
   #if defined(OPENLRSv2MULTI) 
     Read_OpenLRS_RC();
   #endif 
 
-  #if defined(SPEKTRUM) || defined(SBUS)
+  #if defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)
   if ((spekFrameDone == 0x01) || ((int16_t)(currentTime-rcTime) >0 )) { 
     spekFrameDone = 0x00;
   #else
