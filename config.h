@@ -864,6 +864,11 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
     //#define SUPPRESS_TELEMETRY_PAGE_9
     //#define SUPPRESS_TELEMETRY_PAGE_R
 
+    /* optional override default items for some telemetry pages - for complete list of usable functions see LCD.h */
+    //#define LCD_TELEMETRY_PAGE1 { output_V, output_mAh, }
+    //#define LCD_TELEMETRY_PAGE2 { output_gyroX, output_gyroY, output_accZ, }
+    //#define LCD_TELEMETRY_PAGE9 { output_fails, output_annex, output_debug0, output_debug3, }
+
   /********************************************************************/
   /****                             RSSI                           ****/
   /********************************************************************/

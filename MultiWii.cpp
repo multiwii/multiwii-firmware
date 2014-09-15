@@ -491,6 +491,9 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   }
   #endif
   } // end of switch()
+#ifdef POWERMETER_HARD
+  if (analog.amperage > powerValueMaxMAH) powerValueMaxMAH = analog.amperage;
+#endif
 
 #if defined(WATTS)
   analog.watts = (analog.amperage * analog.vbat) / 100; // [0.1A] * [0.1V] / 100 = [Watt]
