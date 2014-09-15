@@ -442,7 +442,7 @@ void readSpektrum(void) {
 
 uint16_t readRawRC(uint8_t chan) {
   uint16_t data;
-#if defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)
+  #if defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)
     if (chan < RC_CHANS) {
       data = rcValue[rcChannel[chan]];
     } else data = 1500;

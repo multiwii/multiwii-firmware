@@ -184,7 +184,7 @@ void serialCom() {
       #endif      
     #endif
     #define RX_COND
-    #if (defined(SPEKTRUM) || defined(SBUS)) && (UART_NUMBER > 1)
+    #if (defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)) && (UART_NUMBER > 1)
       #define RX_COND && (RX_SERIAL_PORT != CURRENTPORT)
     #endif
     uint8_t cc = SerialAvailable(CURRENTPORT);
