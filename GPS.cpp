@@ -303,40 +303,36 @@ typedef struct PID_PARAM_ {
 
 //Main GPS nav loop. Called by the task scheduler
 uint8_t GPS_NewData(void) {
-      uint8_t c = SerialAvailable(GPS_SERIAL);
-	  if (c==0) return 0;							//if we don't have char's to read, so return with a zero
-      	  while (c--) {
-		   if (GPS_newFrame(SerialRead(GPS_SERIAL))) {
-			  //We had a valid GPS data frame, so signal task scheduler to switch to compute
-			  if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;
-			  GPS_last_frame_seen = millis();
-			  GPS_Frame = 1;
-		   }
-	      }
-	  // Check for stalled GPS, if no frames seen for 1.2sec then consider it LOST
-	  if ((millis() - GPS_last_frame_seen) > 1200)
-	  {
-		  //No update since 1200ms clear fix...
-		  f.GPS_FIX = 0;
-		  GPS_numSat = 0;
-	  }
-	  return 0;
+  uint8_t c = SerialAvailable(GPS_SERIAL);
+  if (c==0) return 0;  //if we don't have char's to read, so return with a zero
+  while (c--) {
+    if (GPS_newFrame(SerialRead(GPS_SERIAL))) {
+      //We had a valid GPS data frame, so signal task scheduler to switch to compute
+      if (GPS_update == 1) GPS_update = 0; else GPS_update = 1; //Blink GPS update
+      GPS_last_frame_seen = millis();
+      GPS_Frame = 1;
+    }
+  }
+  // Check for stalled GPS, if no frames seen for 1.2sec then consider it LOST
+  if ((millis() - GPS_last_frame_seen) > 1200) {
+    //No update since 1200ms clear fix...
+    f.GPS_FIX = 0;
+    GPS_numSat = 0;
+  }
+  return 1;
 }
 
 
 //Main navigation processor and state engine
 // TODO: add proceesing states to ease processing burden 
-uint8_t GPS_Compute(void) 
-{
-	unsigned char axis;
-	uint32_t dist;        //temp variable to store dist to copter
-	int32_t  dir;         //temp variable to store dir to copter
-	static uint32_t nav_loopTimer;
+uint8_t GPS_Compute(void) {
+  unsigned char axis;
+  uint32_t dist;        //temp variable to store dist to copter
+  int32_t  dir;         //temp variable to store dir to copter
+  static uint32_t nav_loopTimer;
 
-	//check that we have a valid frame, if not then return immediatly
+    //check that we have a valid frame, if not then return immediatly
     if (GPS_Frame == 0) return 0; else GPS_Frame = 0;
-
-    if (GPS_update == 1) GPS_update = 0; else GPS_update = 1;	//Blink GPS update
   
     //check home position and set it if it was not set
     if (f.GPS_FIX && GPS_numSat >= 5) {
@@ -657,8 +653,8 @@ uint8_t GPS_Compute(void)
         }
       } //end of gps calcs ###0002 
     }
-
-  } // End of GPS_compute
+  return 1;
+} // End of GPS_compute
 
   
   

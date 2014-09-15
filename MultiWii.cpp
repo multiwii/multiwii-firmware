@@ -92,7 +92,7 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
 #ifdef OSD_SWITCH
   "OSD SW;"
 #endif
-#ifdef GPS
+#if GPS
   "MISSION;"
   "LAND;"
 #endif
@@ -147,7 +147,7 @@ const uint8_t boxids[] PROGMEM = {// permanent IDs associated to boxes. This way
 #ifdef OSD_SWITCH
   19, //"OSD_SWITCH;"
 #endif
-#ifdef GPS
+#if GPS
   20, //"MISSION;"
   21, //"LAND;"
 #endif
