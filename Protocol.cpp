@@ -157,78 +157,77 @@ void serializeNames(PGM_P s) {
   }
 }
 
+enum MSP_protocol_bytes {
+  IDLE,
+  HEADER_START,
+  HEADER_M,
+  HEADER_ARROW,
+  HEADER_SIZE,
+  HEADER_CMD
+};
+
 void serialCom() {
-  uint8_t c,n;  
+  uint8_t c,cc,port,state,bytesTXBuff;
   static uint8_t offset[UART_NUMBER];
   static uint8_t dataSize[UART_NUMBER];
-  static enum _serial_state {
-    IDLE,
-    HEADER_START,
-    HEADER_M,
-    HEADER_ARROW,
-    HEADER_SIZE,
-    HEADER_CMD,
-  } c_state[UART_NUMBER];// = IDLE;
+  static uint8_t c_state[UART_NUMBER];
 
-  for(n=0;n<UART_NUMBER;n++) {
-    #if !defined(PROMINI)
-      CURRENTPORT=n;
-    #endif
+  for(port=0;port<UART_NUMBER;port++) {
+    CURRENTPORT=port;
     #define GPS_COND
-    #if defined(GPS_SERIAL)
-      #if defined(GPS_PROMINI)
-        #define GPS_COND       
-      #else
-        #undef GPS_COND
-        #define GPS_COND  && (GPS_SERIAL != CURRENTPORT)
-      #endif      
+    #if defined(GPS_SERIAL) && (UART_NUMBER > 1)
+      #define GPS_COND  && (GPS_SERIAL != port)
     #endif
     #define RX_COND
     #if (defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)) && (UART_NUMBER > 1)
-      #define RX_COND && (RX_SERIAL_PORT != CURRENTPORT)
+      #define RX_COND && (RX_SERIAL_PORT != port)
     #endif
-    uint8_t cc = SerialAvailable(CURRENTPORT);
+    cc = SerialAvailable(port);
     while (cc-- GPS_COND RX_COND) {
-      uint8_t bytesTXBuff = SerialUsedTXBuff(CURRENTPORT); // indicates the number of occupied bytes in TX buffer
+      bytesTXBuff = SerialUsedTXBuff(port); // indicates the number of occupied bytes in TX buffer
       if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (50 bytes margin)
-      c = SerialRead(CURRENTPORT);
+      c = SerialRead(port);
       #ifdef SUPPRESS_ALL_SERIAL_MSP
         // no MSP handling, so go directly
         evaluateOtherData(c);
       #else
+        state = c_state[port];
         // regular data handling to detect and handle MSP and other data
-        if (c_state[CURRENTPORT] == IDLE) {
-          c_state[CURRENTPORT] = (c=='$') ? HEADER_START : IDLE;
-          if (c_state[CURRENTPORT] == IDLE) evaluateOtherData(c); // evaluate all other incoming serial data
-        } else if (c_state[CURRENTPORT] == HEADER_START) {
-          c_state[CURRENTPORT] = (c=='M') ? HEADER_M : IDLE;
-        } else if (c_state[CURRENTPORT] == HEADER_M) {
-          c_state[CURRENTPORT] = (c=='<') ? HEADER_ARROW : IDLE;
-        } else if (c_state[CURRENTPORT] == HEADER_ARROW) {
+        if (state == IDLE) {
+          if (c=='$') state = HEADER_START;
+          else evaluateOtherData(c); // evaluate all other incoming serial data
+        } else if (state == HEADER_START) {
+          state = (c=='M') ? HEADER_M : IDLE;
+        } else if (state == HEADER_M) {
+          state = (c=='<') ? HEADER_ARROW : IDLE;
+        } else if (state == HEADER_ARROW) {
           if (c > INBUF_SIZE) {  // now we are expecting the payload size
-            c_state[CURRENTPORT] = IDLE;
+            state = IDLE;
             continue;
           }
-          dataSize[CURRENTPORT] = c;
-          offset[CURRENTPORT] = 0;
-          checksum[CURRENTPORT] = 0;
-          indRX[CURRENTPORT] = 0;
-          checksum[CURRENTPORT] ^= c;
-          c_state[CURRENTPORT] = HEADER_SIZE;  // the command is to follow
-        } else if (c_state[CURRENTPORT] == HEADER_SIZE) {
-          cmdMSP[CURRENTPORT] = c;
-          checksum[CURRENTPORT] ^= c;
-          c_state[CURRENTPORT] = HEADER_CMD;
-        } else if (c_state[CURRENTPORT] == HEADER_CMD && offset[CURRENTPORT] < dataSize[CURRENTPORT]) {
-          checksum[CURRENTPORT] ^= c;
-          inBuf[offset[CURRENTPORT]++][CURRENTPORT] = c;
-        } else if (c_state[CURRENTPORT] == HEADER_CMD && offset[CURRENTPORT] >= dataSize[CURRENTPORT]) {
-          if (checksum[CURRENTPORT] == c) {  // compare calculated and transferred checksum
-            evaluateCommand();  // we got a valid packet, evaluate it
+          dataSize[port] = c;
+          offset[port] = 0;
+          checksum[port] = 0;
+          indRX[port] = 0;
+          checksum[port] ^= c;
+          state = HEADER_SIZE;  // the command is to follow
+        } else if (state == HEADER_SIZE) {
+          cmdMSP[port] = c;
+          checksum[port] ^= c;
+          state = HEADER_CMD;
+        } else if (state == HEADER_CMD) {
+          if (offset[port] < dataSize[port]) {
+            checksum[port] ^= c;
+            inBuf[offset[port]++][port] = c;
+          } else {
+            if (checksum[port] == c) {  // compare calculated and transferred checksum
+              evaluateCommand();  // we got a valid packet, evaluate it
+            }
+            state = IDLE;
+            cc = 0; // no more than one MSP per port and per cycle
           }
-          c_state[CURRENTPORT] = IDLE;
-          cc = 0; // no more than one MSP per port and per cycle
         }
+        c_state[port] = state;
       #endif // SUPPRESS_ALL_SERIAL_MSP
     }
   }
