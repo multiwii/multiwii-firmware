@@ -475,8 +475,16 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   case 2:
   {
     static uint8_t ind = 0;
-    static uint16_t rvec[RSSI_SMOOTH], rsum;
-    uint16_t r = analogRead(RX_RSSI_PIN);
+    static uint16_t rvec[RSSI_SMOOTH], rsum, r;
+	
+	// http://www.multiwii.com/forum/viewtopic.php?f=8&t=5530
+	#if defined(RX_RSSI_CHAN) 
+      uint16_t rssi_Input = constrain(rcData[RX_RSSI_CHAN],1000,2000);
+      r = map((uint16_t)rssi_Input , 1000, 2000, 0, 1023);
+    #else
+      r = analogRead(RX_RSSI_PIN);
+    #endif 
+	
     #if RSSI_SMOOTH == 1
       analog.rssi = r;
     #else
@@ -487,6 +495,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       r = rsum / RSSI_SMOOTH;
       analog.rssi = r;
     #endif
+    //debug[0]=analog.rssi;
     break;
   }
   #endif

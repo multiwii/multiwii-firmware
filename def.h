@@ -1657,7 +1657,9 @@
   #define EXTAUX 0
 #endif
 
-
+#if defined(RX_RSSI_CHAN)
+  #define RX_RSSI
+#endif
 
 /**************************************************************************************/
 /***************      Multitype decleration for the GUI's          ********************/
