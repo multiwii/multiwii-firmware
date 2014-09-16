@@ -14,19 +14,7 @@
 #if GPS
 
 //Function prototypes for GPS frame parsing
-bool GPS_newFrame(char c);
-
-#if defined(NMEA)
-  bool GPS_NMEA_newFrame(char c);
-#endif
-#if defined(UBLOX)
-  bool GPS_UBLOX_newFrame(uint8_t data);
-  bool UBLOX_parse_gps(void);
-#endif
-#if defined(MTK_BINARY16) || defined(MTK_BINARY19)
-  bool GPS_MTK_newFrame(uint8_t data);
-#endif
-
+bool GPS_newFrame(uint8_t c);
 
 //Function prototypes for other GPS functions
 //These perhaps could go to the gps.h file, however these are local to the gps.cpp  
@@ -168,6 +156,7 @@ typedef struct PID_PARAM_ {
   uint8_t land_detect;							//Detect land (extern)
   static uint32_t land_settle_timer;
   static uint32_t GPS_last_frame_seen; //Last gps frame seen at this time, used to detect stalled gps communication
+  static uint8_t GPS_Frame;            // a valid GPS_Frame was detected, and data is ready for nav computation
 
   static float  dTnav;            // Delta Time in milliseconds for navigation computations, updated with every good GPS read
   static int16_t actual_speed[2] = {0,0};
@@ -311,6 +300,7 @@ uint8_t GPS_NewData(void) {
       if (GPS_update == 1) GPS_update = 0; else GPS_update = 1; //Blink GPS update
       GPS_last_frame_seen = millis();
       GPS_Frame = 1;
+      GPS_Present = 1;
     }
   }
   // Check for stalled GPS, if no frames seen for 1.2sec then consider it LOST
@@ -1080,18 +1070,6 @@ int32_t wrap_36000(int32_t ang) {
 }
 
 
-bool GPS_newFrame(char c) {
-#if defined(NMEA)
-  return GPS_NMEA_newFrame(c);
-#endif
-#if defined(UBLOX)
-  return GPS_UBLOX_newFrame(c);
-#endif
-#if defined(MTK_BINARY16) || defined(MTK_BINARY19)
-  return GPS_MTK_newFrame(c);
-#endif
-  }
-
 /*
  * EOS increased the precision here, even if we think that the gps is not precise enough, with 10e5 precision it has 76cm resolution
  * with 10e7 it's around 1 cm now. Increasing it further is irrelevant, since even 1cm resolution is unrealistic, however increased 
@@ -1175,7 +1153,7 @@ uint8_t hex_c(uint8_t n) {    // convert '0'..'9','A'..'F' to 0..15
   #define FRAME_GGA  1
   #define FRAME_RMC  2
   
-  bool GPS_NMEA_newFrame(char c) {
+  bool GPS_newFrame(uint8_t c) {
     uint8_t frameOK = 0;
     static uint8_t param = 0, offset = 0, parity = 0;
     static char string[15];
@@ -1216,7 +1194,6 @@ uint8_t hex_c(uint8_t n) {    // convert '0'..'9','A'..'F' to 0..15
        if (offset < 15) string[offset++] = c;
        if (!checksum_param) parity ^= c;
     }
-    if (frame) GPS_Present = 1;
     return frameOK && (frame==FRAME_GGA);
   }
 #endif //NMEA
@@ -1298,124 +1275,71 @@ uint8_t hex_c(uint8_t n) {    // convert '0'..'9','A'..'F' to 0..15
     NAV_STATUS_FIX_VALID = 1
   };
   
-  // Packet checksum accumulators
-  static uint8_t _ck_a;
-  static uint8_t _ck_b;
-  
-  // State machine state
-  static uint8_t _step;
-  static uint8_t _msg_id;
-  static uint16_t _payload_length;
-  static uint16_t _payload_counter;
-  
-//  static bool next_fix;
-  static uint8_t _class;
-
-  static uint8_t _disable_counter;
-  static uint8_t _fix_ok;
-  
   // Receive buffer
   static union {
     ubx_nav_posllh posllh;
-//    ubx_nav_status status;
     ubx_nav_solution solution;
     ubx_nav_velned velned;
     uint8_t bytes[];
    } _buffer;
-  
-  void _update_checksum(uint8_t *data, uint8_t len, uint8_t &ck_a, uint8_t &ck_b) {
-    while (len--) {
-      ck_a += *data;
-      ck_b += ck_a;
-      data++;
-    }
-  }
-  
-  bool GPS_UBLOX_newFrame(uint8_t data){
-    bool parsed = false;
 
-    switch(_step) {
-      case 1:
-        if (PREAMBLE2 == data) {
-          _step++;
-          break;
-        }
-        _step = 0;
-      case 0:
-        if(PREAMBLE1 == data) _step++;
-        break;
-      case 2:
-        _step++;
-        _class = data;
-        _ck_b = _ck_a = data;  // reset the checksum accumulators
-        break;
-      case 3:
-        _step++;
-        _ck_b += (_ck_a += data);  // checksum byte
+  bool GPS_newFrame(uint8_t data){
+    static uint8_t  _step = 0; // State machine state
+    static uint8_t  _msg_id;
+    static uint16_t _payload_length;
+    static uint16_t _payload_counter;
+    static uint8_t  _ck_a; // Packet checksum accumulators
+    static uint8_t  _ck_b;
+  
+    uint8_t st  = _step+1;
+    bool    ret = false;
+    
+    if (st == 2)
+      if (PREAMBLE2 != data) st--; // in case of faillure of the 2nd header byte, still test the first byte
+    if (st == 1) {
+      if(PREAMBLE1 != data) st--;
+    } else if (st == 3) { // CLASS byte, not used, assume it is CLASS_NAV
+      _ck_b = _ck_a = data;  // reset the checksum accumulators
+    } else if (st > 3 && st < 8) {
+      _ck_b += (_ck_a += data);  // checksum byte
+      if (st == 4) {
         _msg_id = data;
-        break;
-      case 4:
-        _step++;
-        _ck_b += (_ck_a += data);  // checksum byte
-        _payload_length = data;  // payload length low byte
-        break;
-      case 5:
-        _step++;
-        _ck_b += (_ck_a += data);  // checksum byte
+      } else if (st == 5) {
+        _payload_length = data; // payload length low byte
+      } else if (st == 6) {
         _payload_length += (uint16_t)(data<<8);
-        if (_payload_length > 512) {
-          _payload_length = 0;
-          _step = 0;
-        }
+        if (_payload_length > 512) st = 0;
         _payload_counter = 0;  // prepare to receive payload
-      break;
-      case 6:
-        _ck_b += (_ck_a += data);  // checksum byte
-        if (_payload_counter < sizeof(_buffer)) {
-          _buffer.bytes[_payload_counter] = data;
+      } else {
+        if (_payload_counter+1 < _payload_length) st--; // stay in the same state while data inside the frame
+        if (_payload_counter < sizeof(_buffer)) _buffer.bytes[_payload_counter] = data;  
+        _payload_counter++;
+      }
+    } else if (st == 8) {
+      if (_ck_a != data) st = 0;  // bad checksum
+    } else if (st == 9) {
+      st = 0;
+      if (_ck_b == data) { // good checksum
+        if (_msg_id == MSG_POSLLH) {
+          if(f.GPS_FIX) {
+            GPS_coord[LON] = _buffer.posllh.longitude;
+            GPS_coord[LAT] = _buffer.posllh.latitude;
+            GPS_altitude   = _buffer.posllh.altitude_msl / 1000; //alt in m
+            //GPS_time       = _buffer.posllh.time; //not used for the moment
+          }
+          ret= true;        // POSLLH message received, allow blink GUI icon and LED, frame available for nav computation
+        } else if (_msg_id ==  MSG_SOL) {
+          f.GPS_FIX = 0;
+          if((_buffer.solution.fix_status & NAV_STATUS_FIX_VALID) && (_buffer.solution.fix_type == FIX_3D || _buffer.solution.fix_type == FIX_2D)) f.GPS_FIX = 1;
+          GPS_numSat = _buffer.solution.satellites;
+        } else if (_msg_id ==  MSG_VELNED) {
+          GPS_speed         = _buffer.velned.speed_2d;  // cm/s
+          GPS_ground_course = (uint16_t)(_buffer.velned.heading_2d / 10000);  // Heading 2D deg * 100000 rescaled to deg * 10 //not used for the moment
         }
-        if (++_payload_counter == _payload_length)
-          _step++;
-        break;
-      case 7:
-        _step++;
-        if (_ck_a != data) _step = 0;  // bad checksum
-      break;
-      case 8:
-        _step = 0;
-        if (_ck_b != data)  break;  // bad checksum
-        GPS_Present = 1;
-        if (UBLOX_parse_gps())  { parsed = true; }
-    } //end switch
-    return parsed;
-  }
-
-  bool UBLOX_parse_gps(void) {
-    switch (_msg_id) {
-    case MSG_POSLLH:
-      //i2c_dataset.time                = _buffer.posllh.time;
-      if(_fix_ok) {
-        GPS_coord[LON] = _buffer.posllh.longitude;
-        GPS_coord[LAT] = _buffer.posllh.latitude;
-        GPS_altitude   = _buffer.posllh.altitude_msl / 1000;      //alt in m
-        //GPS_time       = _buffer.posllh.time;
-        }
-      f.GPS_FIX = _fix_ok;
-      return true;        // POSLLH message received, allow blink GUI icon and LED
-      break;
-    case MSG_SOL:
-      _fix_ok = 0;
-      if((_buffer.solution.fix_status & NAV_STATUS_FIX_VALID) && (_buffer.solution.fix_type == FIX_3D || _buffer.solution.fix_type == FIX_2D)) _fix_ok = 1;
-      GPS_numSat = _buffer.solution.satellites;
-      break;
-    case MSG_VELNED:
-      GPS_speed         = _buffer.velned.speed_2d;  // cm/s
-      GPS_ground_course = (uint16_t)(_buffer.velned.heading_2d / 10000);  // Heading 2D deg * 100000 rescaled to deg * 10
-      break;
-    default:
-      break;
+      }
     }
-    return false;
+    _step = st;
+    return ret;
   }
 #endif //UBLOX
 
@@ -1490,7 +1414,7 @@ inline long _swapl(const void *bytes)
     return(u.v);
 }
 
-bool GPS_MTK_newFrame(uint8_t data)
+bool GPS_newFrame(uint8_t data)
 {
        bool parsed = false;
 
@@ -1568,7 +1492,6 @@ restart:
       //GPS_time                    = _buffer.msg.utc_time;
       //GPS_hdop                  = _buffer.msg.hdop;
       parsed = true;
-      GPS_Present = 1;
     }
   return parsed;
   }

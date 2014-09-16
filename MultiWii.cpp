@@ -329,7 +329,6 @@ conf_t conf;
   uint16_t GPS_ground_course = 0;                       //                   - unit: degree*10
   uint8_t  GPS_Present = 0;                             // Checksum from Gps serial
   uint8_t  GPS_Enable  = 0;
-  uint8_t  GPS_Frame   = 0;
 
   //uint8_t GPS_mode  = GPS_MODE_NONE;	// contains the current selected gps flight mode --> moved to the f. structure
   uint8_t NAV_state = 0; // NAV_STATE_NONE;  /// State of the nav engine

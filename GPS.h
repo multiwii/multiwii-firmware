@@ -1,10 +1,3 @@
-/*
- * GPS.h
- *
- *  Created on: 20 juin 2013
- *      Author: WEYEE
- */
-
 #ifndef GPS_H_
 #define GPS_H_
 
@@ -17,7 +10,6 @@ uint8_t GPS_Compute(void);
 void GPS_reset_home_position(void);
 void GPS_set_next_wp(int32_t* lat_to, int32_t* lon_to, int32_t* lat_from, int32_t* lon_from);
 void GPS_reset_nav(void);
-//void GPS_Process_data(void);
 
 int32_t get_altitude_error();
 void clear_new_altitude();
@@ -35,5 +27,4 @@ void check_land(void);
 //#else
 extern uint32_t wp_distance;
 extern int32_t target_bearing;
-extern uint8_t GPS_Frame;
 #endif /* GPS_H_ */
