@@ -36,6 +36,7 @@
   #define SPEKTRUM 2048
   #define LED_RING
   #define GPS_SERIAL 2
+  #define NMEA
   #define LOG_VALUES 2
   #define LOG_PERMANENT
   #define LOG_PERMANENT_SERVICE_LIFETIME 36000
@@ -2058,6 +2059,10 @@
 
 #if defined(A32U4_4_HW_PWM_SERVOS) && !(defined(HELI_120_CCPM))
   #error "for your protection: A32U4_4_HW_PWM_SERVOS was not tested with your coptertype"
+#endif
+
+#if GPS && !defined(NMEA) && !defined(UBLOX) && !defined(MTK_BINARY16) && !defined(MTK_BINARY19) && !defined(INIT_MTK_GPS)
+  #error "when using GPS you must specify the protocol NMEA, UBLOX..."
 #endif
 
 #endif /* DEF_H_ */
