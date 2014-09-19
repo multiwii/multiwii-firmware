@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{DF441D72-567F-4E2E-9ED4-BF62B9EA625F}</ProjectGuid>
+    <RootNamespace>MultiWii</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Arduino\hardware\arduino\cores\arduino;C:\Program Files (x86)\Arduino\hardware\arduino\variants\micro;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\arduino\libraries;C:\Program Files (x86)\Visual Micro\Visual Micro for Arduino\Micro Platforms\default\debuggers;C:\Users\Dominic\Documents\Arduino\libraries;c:\program files (x86)\arduino\hardware\tools\avr\avr\include\;c:\program files (x86)\arduino\hardware\tools\avr\avr\include\avr\;c:\program files (x86)\arduino\hardware\tools\avr\avr\;c:\program files (x86)\arduino\hardware\tools\avr\lib\gcc\avr\4.3.2\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>C:\Users\Dominic\Documents\GitHub\Lanteigne\multiwii-firmware\Visual Micro\.multiwii-firmware.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <PreprocessorDefinitions>__AVR_ATmega32u4__;__AVR_ATmega32U4__;ARDUINO=105;ARDUINO_MAIN;__AVR__;__avr__;F_CPU=16000000L;__cplusplus;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="..\README.txt" />
+    <None Include="MultiWii.ino">
+      <FileType>CppCode</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Alarms.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="config.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="def.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="EEPROM.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="GPS.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="IMU.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="LCD.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="MultiWii.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="Output.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="Protocol.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="RX.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="Sensors.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="Serial.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="types.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="Visual Micro\.Firmware.vsarduino.h" />
+    <ClInclude Include="Visual Micro\.multiwii-firmware.vsarduino.h" />
+    <ClInclude Include="Visual Micro\.MultiWii.vsarduino.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Alarms.cpp" />
+    <ClCompile Include="EEPROM.cpp" />
+    <ClCompile Include="GPS.cpp" />
+    <ClCompile Include="IMU.cpp" />
+    <ClCompile Include="LCD.cpp" />
+    <ClCompile Include="MultiWii.cpp" />
+    <ClCompile Include="Output.cpp" />
+    <ClCompile Include="Protocol.cpp" />
+    <ClCompile Include="RX.cpp" />
+    <ClCompile Include="Sensors.cpp" />
+    <ClCompile Include="Serial.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties arduino.upload.port="COM3" arduino.board.name="micro" arduino.board.desc="Arduino Micro" arduino.board.property_bag="name=Arduino Micro&#xD;&#xA;upload.protocol=avr109&#xD;&#xA;upload.maximum_size=28672&#xD;&#xA;upload.speed=57600&#xD;&#xA;upload.disable_flushing=true&#xD;&#xA;bootloader.low_fuses=0xff&#xD;&#xA;bootloader.high_fuses=0xd8&#xD;&#xA;bootloader.extended_fuses=0xcb&#xD;&#xA;bootloader.path=caterina&#xD;&#xA;bootloader.file=Caterina-Micro.hex&#xD;&#xA;bootloader.unlock_bits=0x3F&#xD;&#xA;bootloader.lock_bits=0x2F&#xD;&#xA;build.mcu=atmega32u4&#xD;&#xA;build.f_cpu=16000000L&#xD;&#xA;build.vid=0x2341&#xD;&#xA;build.pid=0x8037&#xD;&#xA;build.core=arduino&#xD;&#xA;build.variant=micro&#xD;&#xA;runtime.ide.path=C:\Program Files (x86)\Arduino&#xD;&#xA;build.system.path=C:\Program Files (x86)\Arduino\hardware\arduino\system&#xD;&#xA;runtime.ide.version=105&#xD;&#xA;originalid=micro&#xD;&#xA;vm.platform.root.path=C:\Program Files (x86)\Visual Micro\Visual Micro for Arduino\Micro Platforms\arduino10x&#xD;&#xA;vm.core.include=arduino.h&#xD;&#xA;ide.hint=Arduino 0023 and 1.0.x Ide&#xD;&#xA;ide.location.key=Arduino&#xD;&#xA;ide.location.ide.winreg=Arduino 1.0.x Application&#xD;&#xA;ide.location.sketchbook.winreg=Arduino 1.0.x Sketchbook&#xD;&#xA;ide.location.sketchbook.preferences=sketchbook.path&#xD;&#xA;ide.location.sketchbook.default=%MYDOCUMENTS%\arduino&#xD;&#xA;ide.location.preferences=%VM_APPDATA_ROAMING%\arduino\preferences.txt&#xD;&#xA;ide.default.package=arduino&#xD;&#xA;ide.default.platform=avr&#xD;&#xA;ide.multiplatform=true&#xD;&#xA;ide.includes=arduino.h&#xD;&#xA;ide.platformswithoutpackage=true&#xD;&#xA;ide.includes.fallback=wprogram.h&#xD;&#xA;ide.extension=ino&#xD;&#xA;ide.extension.fallback=pde&#xD;&#xA;ide.versionLTEQ=149&#xD;&#xA;ide.exe=arduino.exe&#xD;&#xA;ide.hosts=atmel&#xD;&#xA;ide.url=http://arduino.cc/en/Main/Software&#xD;&#xA;vm.debug=true&#xD;&#xA;software=ARDUINO&#xD;&#xA;ide.appid=arduino10x&#xD;&#xA;location.sketchbook=C:\Users\Dominic\Documents\Arduino&#xD;&#xA;build.board=AVR_MICRO&#xD;&#xA;vm.boardsource.path=C:\Program Files (x86)\Arduino\hardware\arduino&#xD;&#xA;vm.platformname.name=avr&#xD;&#xA;build.arch=AVR&#xD;&#xA;" arduino.build.mcu="atmega32u4" arduino.build.f_cpu="16000000L" arduino.build.core="arduino" arduino.upload.protocol="avr109" arduino.upload.speed="57600" arduino.upload.maximum_size="28672" visualmicro.application.name="arduino10x" visualmicro.package.name="arduino" visualmicro.platform.name="avr" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

@@ -57,7 +57,7 @@ enum box {
     BOXGPSHOME,
     BOXGPSHOLD,
   #endif
-  #if defined(FIXEDWING) || defined(HELICOPTER)
+  #if defined(FIXEDWING) || defined(HELICOPTER) || defined(BLIMP)
     BOXPASSTHRU,
   #endif
   #if defined(BUZZER)

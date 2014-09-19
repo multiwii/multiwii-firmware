@@ -423,7 +423,7 @@ void evaluateCommand() {
 		   }
 
      #endif
-     #if defined(FIXEDWING) || defined(HELICOPTER)
+     #if defined(FIXEDWING) || defined(HELICOPTER) || defined(BLIMP)
        if(f.PASSTHRU_MODE) tmp |= 1<<BOXPASSTHRU;
      #endif
      #if defined(BUZZER)

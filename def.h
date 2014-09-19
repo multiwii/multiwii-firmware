@@ -142,7 +142,7 @@
   #define HELICOPTER
 #endif
 
-#if defined(BI) || defined(TRI) || defined(FIXEDWING) || defined(HELICOPTER) || defined(SINGLECOPTER)|| defined(DUALCOPTER)
+#if defined(BI) || defined(TRI) || defined(FIXEDWING) || defined(HELICOPTER) || defined(SINGLECOPTER)|| defined(DUALCOPTER) || defined(BLIMP)
   #define COPTER_WITH_SERVO
 #endif
 
@@ -167,7 +167,11 @@
   #define TRI_SERVO  6
 #endif
 
-#if defined(GIMBAL)
+#if defined(BLIMP) //With this config (on nanowii), connect 3 trust motors to pins 5, 9, and 10. Then connect TILT servo to pin 13, and YAW servo to pin 11.
+  #define NUMBER_MOTOR	   3
+  #define PRI_SERVO_FROM   3
+  #define PRI_SERVO_TO     4  
+#elif defined(GIMBAL)
   #define NUMBER_MOTOR     0
   #define PRI_SERVO_FROM   1 // use servo from 1 to 2
   #define PRI_SERVO_TO     2
@@ -1715,7 +1719,7 @@
 /***************          Some unsorted "chain" defines            ********************/
 /**************************************************************************************/
 
-#if defined (AIRPLANE) || defined(HELICOPTER)|| defined(SINGLECOPTER)|| defined(DUALCOPTER) && defined(PROMINI) 
+#if defined(BLIMP) || defined (AIRPLANE) || defined(HELICOPTER)|| defined(SINGLECOPTER)|| defined(DUALCOPTER) && defined(PROMINI) 
   #if defined(D12_POWER)
     #define SERVO_4_PINMODE            ;  // D12
     #define SERVO_4_PIN_HIGH           ;

@@ -1249,7 +1249,7 @@ void loop () {
 
 
     
-    #if defined(FIXEDWING) || defined(HELICOPTER)
+    #if defined(FIXEDWING) || defined(HELICOPTER) || defined(BLIMP)
       if (rcOptions[BOXPASSTHRU]) {f.PASSTHRU_MODE = 1;}
       else {f.PASSTHRU_MODE = 0;}
     #endif
