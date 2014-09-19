@@ -583,7 +583,7 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
     //#define GYROCALIBRATIONFAILSAFE
 
   /************************        AP FlightMode        **********************************/
-/*** FUNCTIONALITY TEMPORARY REMOVED
+  /*** FUNCTIONALITY TEMPORARY REMOVED ***/
     /* Temporarily Disables GPS_HOLD_MODE to be able to make it possible to adjust the Hold-position when moving the sticks.*/
     //#define AP_MODE 40  // Create a deadspan for GPS.
         
