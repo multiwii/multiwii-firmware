@@ -202,12 +202,12 @@ void LoadDefaults() {
       conf.servoConf[i].rate = sr[i];
     }
   #else                   //if no servo defined then zero out the config variables to prevent passing false data to the gui.
-    for(i=0;i<8;i++) {
-        conf.servoConf[i].min = 0;
-        conf.servoConf[i].max = 0;
-        conf.servoConf[i].middle = 0;
-        conf.servoConf[i].rate = 0;
-      }
+//    for(i=0;i<8;i++) {
+//        conf.servoConf[i].min = 0;
+//        conf.servoConf[i].max = 0;
+//        conf.servoConf[i].middle = 0;
+//        conf.servoConf[i].rate = 0;
+//      }
   #endif
   #ifdef FIXEDWING
     conf.dynThrPID = 50;
