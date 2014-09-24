@@ -1227,27 +1227,15 @@ void mixTable() {
     motor[3] = PIDMIX(+1, -1, -0); //FRONT_L
   #elif defined( BLIMP )
 	/*****************************             BLIMP                      **************************************/
-	if (!f.ARMED) {
-	  motor[0] = MINCOMMAND; // Kill throttle when disarmed
-	  motor[1] = MINCOMMAND;
-	  motor[2] = MINCOMMAND;
-	} else {
-	  motor[0] = constrain(rcCommand[THROTTLE], conf.minthrottle, MAXTHROTTLE);
-	  motor[1] = constrain(rcCommand[THROTTLE], conf.minthrottle, MAXTHROTTLE);
-	  motor[2] = constrain(rcCommand[THROTTLE], conf.minthrottle, MAXTHROTTLE);
-	}
+	
+	servo[2] = rcSerial[ROLL]; //D13
+	servo[3] = rcSerial[PITCH]; //D11
+	servo[4] = rcSerial[YAW]; //D5
+	//servo[5] = rcSerial[0]; //D6 has some glitches but works
+	servo[6] = rcSerial[THROTTLE]; //D10
+	servo[7] = rcSerial[THROTTLE]; //D9
+	
 
-	//For now activate passthru mode by default
-	f.PASSTHRU_MODE = 1;
-	if (f.PASSTHRU_MODE) {    // do not use sensors for correction, simple 2 channel mixing
-      servo[2] = (SERVODIR(2,1) * rcCommand[PITCH]) + (SERVODIR(2,2) * rcCommand[ROLL]);
-      servo[3] = (SERVODIR(3,1) * rcCommand[PITCH]) + (SERVODIR(3,2) * rcCommand[ROLL]);
-    } else {                  // use sensors to correct (gyro only or gyro+acc according to aux1/aux2 configuration
-      servo[2] = (SERVODIR(2,1) * axisPID[PITCH])   + (SERVODIR(2,2) * axisPID[ROLL]);
-      servo[3] = (SERVODIR(3,1) * axisPID[PITCH])   + (SERVODIR(3,2) * axisPID[ROLL]);
-    }
-    servo[2] += get_middle(2);
-    servo[3] += get_middle(3);
   #elif defined( FLYING_WING )
     /*****************************             FLYING WING                **************************************/
     if (!f.ARMED) {

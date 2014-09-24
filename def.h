@@ -167,10 +167,10 @@
   #define TRI_SERVO  6
 #endif
 
-#if defined(BLIMP) //With this config (on nanowii), connect 3 trust motors to pins 5, 9, and 10. Then connect TILT servo to pin 13, and YAW servo to pin 11.
-  #define NUMBER_MOTOR	   3
+#if defined(BLIMP) //With this config (on nanowii).
+  #define NUMBER_MOTOR	 0
   #define PRI_SERVO_FROM   3
-  #define PRI_SERVO_TO     4  
+  #define PRI_SERVO_TO     8 
 #elif defined(GIMBAL)
   #define NUMBER_MOTOR     0
   #define PRI_SERVO_FROM   1 // use servo from 1 to 2
@@ -1668,7 +1668,7 @@
 /**************************************************************************************/
 /***************      Multitype decleration for the GUI's          ********************/
 /**************************************************************************************/
-#if defined(TRI)
+#if defined(TRI) || defined(BLIMP)
   #define MULTITYPE 1
 #elif defined(QUADP)
   #define MULTITYPE 2
