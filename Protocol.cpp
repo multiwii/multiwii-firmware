@@ -42,8 +42,10 @@
 #define MSP_BOXIDS               119   //out message         get the permanent IDs associated to BOXes
 #define MSP_SERVO_CONF           120   //out message         Servo settings
 
-#define MSP_NAV_STATUS           121   //out message	     Returns navigation status
-#define MSP_NAV_CONFIG           122   //out message		 Returns navigation parameters
+#define MSP_NAV_STATUS           121   //out message	       Returns navigation status
+#define MSP_NAV_CONFIG           122   //out message		     Returns navigation parameters
+
+#define MSP_CELLS                130   //out message         FRSKY Battery Cell Voltages
 
 #define MSP_SET_RAW_RC           200   //in message          8 rc chan
 #define MSP_SET_RAW_GPS          201   //in message          fix, numsat, lat, lon, alt, speed
@@ -59,7 +61,7 @@
 #define MSP_SET_HEAD             211   //in message          define a new heading hold direction
 #define MSP_SET_SERVO_CONF       212   //in message          Servo settings
 #define MSP_SET_MOTOR            214   //in message          PropBalance function
-#define MSP_SET_NAV_CONFIG       215   //in message			 Sets nav config parameters - write to the eeprom  
+#define MSP_SET_NAV_CONFIG       215   //in message			     Sets nav config parameters - write to the eeprom  
 
 #define MSP_SET_ACC_TRIM         239   //in message          set acc angle trim values
 #define MSP_ACC_TRIM             240   //out message         get acc angle trim values
