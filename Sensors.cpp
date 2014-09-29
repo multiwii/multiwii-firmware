@@ -9,21 +9,10 @@
 #include "LCD.h"
 #include "Sensors.h"
 
-
-void i2c_BMP085_UT_Start(void);
-
-void waitTransmissionI2C();
-void i2c_MS561101BA_UT_Start();
-#if BARO
-void Baro_Common();
-#endif
-void Device_Mag_getADC();
-#if defined(HMC5843) || defined(HMC5883)
-void getADC();
-#endif
-void Baro_init();
-void Mag_init();
-void ACC_init();
+static void Device_Mag_getADC();
+static void Baro_init();
+static void Mag_init();
+static void ACC_init();
 
 // ************************************************************************************************************
 // board orientation and setup
@@ -177,7 +166,7 @@ void ACC_init();
     #define MPU3050_DLPF_CFG   0
 #endif
 
-uint8_t rawADC[6];
+static uint8_t rawADC[6];
 static uint32_t neutralizeTime = 0;
   
 // ************************************************************************************************************
@@ -193,6 +182,19 @@ void i2c_init(void) {
   TWSR = 0;                                    // no prescaler => prescaler = 1
   TWBR = ((F_CPU / 400000) - 16) / 2;          // set the I2C clock rate to 400kHz
   TWCR = 1<<TWEN;                              // enable twi module, no interrupt
+}
+
+void waitTransmissionI2C() {
+  uint16_t count = 255;
+  while (!(TWCR & (1<<TWINT))) {
+    count--;
+    if (count==0) {              //we are in a blocking state => we don't insist
+      TWCR = 0;                  //and we force a reset on TWINT register
+      neutralizeTime = micros(); //we take a timestamp here to neutralize the value during a short delay
+      i2c_errors_count++;
+      break;
+    }
+  }
 }
 
 void i2c_rep_start(uint8_t address) {
@@ -228,19 +230,6 @@ uint8_t i2c_readAck() {
 
 uint8_t i2c_readNak(void) {
   return i2c_read(0);
-}
-
-void waitTransmissionI2C() {
-  uint16_t count = 255;
-  while (!(TWCR & (1<<TWINT))) {
-    count--;
-    if (count==0) {              //we are in a blocking state => we don't insist
-      TWCR = 0;                  //and we force a reset on TWINT register
-      neutralizeTime = micros(); //we take a timestamp here to neutralize the value during a short delay
-      i2c_errors_count++;
-      break;
-    }
-  }
 }
 
 void i2c_read_reg_to_buf(uint8_t add, uint8_t reg, uint8_t *buf, uint8_t size) {
@@ -469,6 +458,22 @@ void ACC_Common() {
   #endif
 }
 
+// ************************************************************************************************************
+// BARO section
+// ************************************************************************************************************
+#if BARO
+static void Baro_Common() {
+  static int32_t baroHistTab[BARO_TAB_SIZE];
+  static uint8_t baroHistIdx;
+
+  uint8_t indexplus1 = (baroHistIdx + 1);
+  if (indexplus1 == BARO_TAB_SIZE) indexplus1 = 0;
+  baroHistTab[baroHistIdx] = baroPressure;
+  baroPressureSum += baroHistTab[baroHistIdx];
+  baroPressureSum -= baroHistTab[indexplus1];
+  baroHistIdx = indexplus1;  
+}
+#endif
 
 // ************************************************************************************************************
 // I2C Barometer BOSCH BMP085
@@ -507,14 +512,6 @@ void i2c_BMP085_readCalibration(){
   for (p = &bmp085_ctx.ac1; p <= &bmp085_ctx.md; p++) {
     swap_endianness(p, sizeof(*p));
   }
-}
-
-void  Baro_init() {
-  delay(10);
-  i2c_BMP085_readCalibration();
-  delay(5);
-  i2c_BMP085_UT_Start(); 
-  bmp085_ctx.deadline = currentTime+5000;
 }
 
 // read uncompensated temperature value: send command first
@@ -578,6 +575,14 @@ void i2c_BMP085_Calculate() {
   baroPressure = p + ((x1 + x2 + 3791) >> 4);
 }
 
+void  Baro_init() {
+  delay(10);
+  i2c_BMP085_readCalibration();
+  delay(5);
+  i2c_BMP085_UT_Start(); 
+  bmp085_ctx.deadline = currentTime+5000;
+}
+
 //return 0: no data available, no computation ;  1: new value available  ; 2: no new value, but computation time
 uint8_t Baro_update() {                   // first UT conversion is started in init procedure
   if (currentTime < bmp085_ctx.deadline) return 0; 
@@ -630,11 +635,11 @@ static struct {
   uint16_t deadline;
 } ms561101ba_ctx;
 
-void i2c_MS561101BA_reset(){
+static void i2c_MS561101BA_reset(){
   i2c_writeReg(MS561101BA_ADDRESS, MS561101BA_RESET, 0);
 }
 
-void i2c_MS561101BA_readCalibration(){
+static void i2c_MS561101BA_readCalibration(){
   union {uint16_t val; uint8_t raw[2]; } data;
   for(uint8_t i=0;i<6;i++) {
     i2c_rep_start(MS561101BA_ADDRESS<<1);
@@ -648,32 +653,22 @@ void i2c_MS561101BA_readCalibration(){
   }
 }
 
-void  Baro_init() {
-  delay(10);
-  i2c_MS561101BA_reset();
-  delay(100);
-  i2c_MS561101BA_readCalibration();
-  delay(10);
-  i2c_MS561101BA_UT_Start(); 
-  ms561101ba_ctx.deadline = currentTime+10000; 
-}
-
 // read uncompensated temperature value: send command first
-void i2c_MS561101BA_UT_Start() {
+static void i2c_MS561101BA_UT_Start() {
   i2c_rep_start(MS561101BA_ADDRESS<<1);      // I2C write direction
   i2c_write(MS561101BA_TEMPERATURE + OSR);  // register selection
   i2c_stop();
 }
 
 // read uncompensated pressure value: send command first
-void i2c_MS561101BA_UP_Start () {
+static void i2c_MS561101BA_UP_Start () {
   i2c_rep_start(MS561101BA_ADDRESS<<1);      // I2C write direction
   i2c_write(MS561101BA_PRESSURE + OSR);     // register selection
   i2c_stop();
 }
 
 // read uncompensated pressure value: read result bytes
-void i2c_MS561101BA_UP_Read () {
+static void i2c_MS561101BA_UP_Read () {
   i2c_rep_start(MS561101BA_ADDRESS<<1);
   i2c_write(0);
   i2c_rep_start((MS561101BA_ADDRESS<<1) | 1);
@@ -683,7 +678,7 @@ void i2c_MS561101BA_UP_Read () {
 }
 
 // read uncompensated temperature value: read result bytes
-void i2c_MS561101BA_UT_Read() {
+static void i2c_MS561101BA_UT_Read() {
   i2c_rep_start(MS561101BA_ADDRESS<<1);
   i2c_write(0);
   i2c_rep_start((MS561101BA_ADDRESS<<1) | 1);
@@ -692,9 +687,19 @@ void i2c_MS561101BA_UT_Read() {
   ms561101ba_ctx.ut.raw[0] = i2c_readNak();
 }
 
+static void Baro_init() {
+  delay(10);
+  i2c_MS561101BA_reset();
+  delay(100);
+  i2c_MS561101BA_readCalibration();
+  delay(10);
+  i2c_MS561101BA_UT_Start(); 
+  ms561101ba_ctx.deadline = currentTime+10000; 
+}
+
 // use float approximation instead of int64_t intermediate values
 // does not use 2nd order compensation under -15 deg
-void i2c_MS561101BA_Calculate() {
+static void i2c_MS561101BA_Calculate() {
   int32_t delt;
 
   float dT        = (int32_t)ms561101ba_ctx.ut.val - (int32_t)((uint32_t)ms561101ba_ctx.c[5] << 8);
@@ -733,21 +738,6 @@ uint8_t Baro_update() {                          // first UT conversion is start
   }
 }
 #endif
-
-#if BARO
-  void Baro_Common() {
-    static int32_t baroHistTab[BARO_TAB_SIZE];
-    static uint8_t baroHistIdx;
-  
-    uint8_t indexplus1 = (baroHistIdx + 1);
-    if (indexplus1 == BARO_TAB_SIZE) indexplus1 = 0;
-    baroHistTab[baroHistIdx] = baroPressure;
-    baroPressureSum += baroHistTab[baroHistIdx];
-    baroPressureSum -= baroHistTab[indexplus1];
-    baroHistIdx = indexplus1;  
-  }
-#endif
-
 
 // ************************************************************************************************************
 // I2C Accelerometer MMA7455 
@@ -1115,29 +1105,31 @@ uint8_t Mag_getADC() { // return 1 when news values are available, 0 otherwise
 // I2C adress: 0x0E (7bit)
 // ************************************************************************************************************
 #if defined(MAG3110)
-  #define MAG_ADDRESS 0x0E
-  #define MAG_DATA_REGISTER 0x01
-  #define MAG_CTRL_REG1 0x10
-  #define MAG_CTRL_REG2 0x11
-  
-  void Mag_init() {
-    delay(100);
-    i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG2,0x80);  //Automatic Magnetic Sensor Reset
-    delay(100);
-    i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG1,0x11); // DR = 20Hz ; OS ratio = 64 ; mode = Active
-    delay(100);
-    magInit = 1;
+#define MAG_ADDRESS 0x0E
+#define MAG_DATA_REGISTER 0x01
+#define MAG_CTRL_REG1 0x10
+#define MAG_CTRL_REG2 0x11
+
+void Mag_init() {
+  delay(100);
+  i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG2,0x80);  //Automatic Magnetic Sensor Reset
+  delay(100);
+  i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG1,0x11); // DR = 20Hz ; OS ratio = 64 ; mode = Active
+  delay(100);
+  magInit = 1;
+}
+
+#if !defined(MPU6050_I2C_AUX_MASTER)
+  void Device_Mag_getADC() {
+    i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
+    MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,          
+                     ((rawADC[2]<<8) | rawADC[3]) ,     
+                     ((rawADC[4]<<8) | rawADC[5]) );
   }
-  
-  #if !defined(MPU6050_I2C_AUX_MASTER)
-    void Device_Mag_getADC() {
-      i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
-      MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,          
-                       ((rawADC[2]<<8) | rawADC[3]) ,     
-                       ((rawADC[4]<<8) | rawADC[5]) );
-    }
-  #endif
 #endif
+#endif
+
+
 // ************************************************************************************************************
 // I2C Compass HMC5883
 // ************************************************************************************************************
@@ -1160,7 +1152,14 @@ uint8_t Mag_getADC() { // return 1 when news values are available, 0 otherwise
 #define MAG_ADDRESS 0x1E
 #define MAG_DATA_REGISTER 0x03
 
-void Mag_init() {
+static void getADC() {
+  i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
+  MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
+                   ((rawADC[4]<<8) | rawADC[5]) ,
+                   ((rawADC[2]<<8) | rawADC[3]) );
+}
+  
+static void Mag_init() {
   int32_t xyz_total[3]={0,0,0};  // 32 bit totals so they won't overflow.
   bool bret=true;                // Error indicator
 
@@ -1228,6 +1227,12 @@ void Mag_init() {
     magGain[2] = 1.0;
   }
 } //  Mag_init().
+
+#if !defined(MPU6050_I2C_AUX_MASTER)
+static void Device_Mag_getADC() {
+  getADC();
+}
+#endif
 #endif
 
 // ************************************************************************************************************
@@ -1236,51 +1241,41 @@ void Mag_init() {
 // I2C adress: 0x3C (8bit)   0x1E (7bit)
 // ************************************************************************************************************
 #if defined(HMC5843)
+#define MAG_ADDRESS 0x1E
+#define MAG_DATA_REGISTER 0x03
 
-  #define MAG_ADDRESS 0x1E
-  #define MAG_DATA_REGISTER 0x03
-  
-  void Mag_init() { 
-    delay(100);
-    // force positiveBias
-    i2c_writeReg(MAG_ADDRESS ,0x00 ,0x71 ); //Configuration Register A  -- 0 11 100 01  num samples: 8 ; output rate: 15Hz ; positive bias
-    delay(50);
-    // set gains for calibration
-    i2c_writeReg(MAG_ADDRESS ,0x01 ,0x60 ); //Configuration Register B  -- 011 00000    configuration gain 2.5Ga
-    i2c_writeReg(MAG_ADDRESS ,0x02 ,0x01 ); //Mode register             -- 000000 01    single Conversion Mode
-
-    // read values from the compass -  self test operation
-    // by placing the mode register into single-measurement mode (0x01), two data acquisition cycles will be made on each magnetic vector.
-    // The first acquisition values will be subtracted from the second acquisition, and the net measurement will be placed into the data output registers
-    delay(100);
-      getADC();
-    delay(10);
-      magGain[ROLL]  =  1000.0 / abs(imu.magADC[ROLL]);
-      magGain[PITCH] =  1000.0 / abs(imu.magADC[PITCH]);
-      magGain[YAW]   =  1000.0 / abs(imu.magADC[YAW]);
-
-    // leave test mode
-    i2c_writeReg(MAG_ADDRESS ,0x00 ,0x70 ); //Configuration Register A  -- 0 11 100 00  num samples: 8 ; output rate: 15Hz ; normal measurement mode
-    i2c_writeReg(MAG_ADDRESS ,0x01 ,0x20 ); //Configuration Register B  -- 001 00000    configuration gain 1.3Ga
-    i2c_writeReg(MAG_ADDRESS ,0x02 ,0x00 ); //Mode register             -- 000000 00    continuous Conversion Mode
-
-    magInit = 1;
-  }
-#endif
-  
-#if defined(HMC5843) || defined(HMC5883)
 void getADC() {
   i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
-  #if defined(HMC5843)
-    MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
-                     ((rawADC[2]<<8) | rawADC[3]) ,
-                     ((rawADC[4]<<8) | rawADC[5]) );
-  #endif
-  #if defined (HMC5883)  
-    MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
-                     ((rawADC[4]<<8) | rawADC[5]) ,
-                     ((rawADC[2]<<8) | rawADC[3]) );
-  #endif
+  MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
+                   ((rawADC[2]<<8) | rawADC[3]) ,
+                   ((rawADC[4]<<8) | rawADC[5]) );
+}
+ 
+void Mag_init() { 
+  delay(100);
+  // force positiveBias
+  i2c_writeReg(MAG_ADDRESS ,0x00 ,0x71 ); //Configuration Register A  -- 0 11 100 01  num samples: 8 ; output rate: 15Hz ; positive bias
+  delay(50);
+  // set gains for calibration
+  i2c_writeReg(MAG_ADDRESS ,0x01 ,0x60 ); //Configuration Register B  -- 011 00000    configuration gain 2.5Ga
+  i2c_writeReg(MAG_ADDRESS ,0x02 ,0x01 ); //Mode register             -- 000000 01    single Conversion Mode
+
+  // read values from the compass -  self test operation
+  // by placing the mode register into single-measurement mode (0x01), two data acquisition cycles will be made on each magnetic vector.
+  // The first acquisition values will be subtracted from the second acquisition, and the net measurement will be placed into the data output registers
+  delay(100);
+    getADC();
+  delay(10);
+    magGain[ROLL]  =  1000.0 / abs(imu.magADC[ROLL]);
+    magGain[PITCH] =  1000.0 / abs(imu.magADC[PITCH]);
+    magGain[YAW]   =  1000.0 / abs(imu.magADC[YAW]);
+
+  // leave test mode
+  i2c_writeReg(MAG_ADDRESS ,0x00 ,0x70 ); //Configuration Register A  -- 0 11 100 00  num samples: 8 ; output rate: 15Hz ; normal measurement mode
+  i2c_writeReg(MAG_ADDRESS ,0x01 ,0x20 ); //Configuration Register B  -- 001 00000    configuration gain 1.3Ga
+  i2c_writeReg(MAG_ADDRESS ,0x02 ,0x00 ); //Mode register             -- 000000 00    continuous Conversion Mode
+
+  magInit = 1;
 }
 
 #if !defined(MPU6050_I2C_AUX_MASTER)
@@ -1288,8 +1283,8 @@ void Device_Mag_getADC() {
   getADC();
 }
 #endif
-
 #endif
+  
 
 // ************************************************************************************************************
 // I2C Compass AK8975
@@ -1322,7 +1317,7 @@ void Device_Mag_getADC() {
 // ************************************************************************************************************
 #if defined(MPU6050)
 
-void Gyro_init() {
+static void Gyro_init() {
   i2c_writeReg(MPU6050_ADDRESS, 0x6B, 0x80);             //PWR_MGMT_1    -- DEVICE_RESET 1
   delay(5);
   i2c_writeReg(MPU6050_ADDRESS, 0x6B, 0x03);             //PWR_MGMT_1    -- SLEEP 0; CYCLE 0; TEMP_DIS 0; CLKSEL 3 (PLL with Z Gyro reference)
@@ -1342,7 +1337,7 @@ void Gyro_getADC () {
   GYRO_Common();
 }
 
-void ACC_init () {
+static void ACC_init () {
   i2c_writeReg(MPU6050_ADDRESS, 0x1C, 0x10);             //ACCEL_CONFIG  -- AFS_SEL=2 (Full Scale = +/-8G)  ; ACCELL_HPF=0   //note something is wrong in the spec.
   //note: something seems to be wrong in the spec here. With AFS=2 1G = 4096 but according to my measurement: 1G=2048 (and 2048/8 = 256)
   //confirmed here: http://www.multiwii.com/forum/viewtopic.php?f=8&t=1080&start=10#p7480
@@ -1369,7 +1364,7 @@ void ACC_getADC () {
 
 //The MAG acquisition function must be replaced because we now talk to the MPU device
   #if defined(MPU6050_I2C_AUX_MASTER)
-    void Device_Mag_getADC() {
+    static void Device_Mag_getADC() {
       i2c_getSixRawADC(MPU6050_ADDRESS, 0x49);               //0x49 is the first memory room for EXT_SENS_DATA
       #if defined(HMC5843)
         MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
