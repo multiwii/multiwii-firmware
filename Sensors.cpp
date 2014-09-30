@@ -285,41 +285,33 @@ void GYRO_Common() {
   static int32_t g[3];
   uint8_t axis, tilt=0;
 
-#if defined MMGYRO       
-  // Moving Average Gyros by Magnetron1
-  //---------------------------------------------------
-  static int16_t mediaMobileGyroADC[3][MMGYROVECTORLENGTH];
-  static int32_t mediaMobileGyroADCSum[3];
-  static uint8_t mediaMobileGyroIDX;
-  //---------------------------------------------------
-#endif
+  #if defined MMGYRO       
+    // Moving Average Gyros by Magnetron1
+    //---------------------------------------------------
+    static int16_t mediaMobileGyroADC[3][MMGYROVECTORLENGTH];
+    static int32_t mediaMobileGyroADCSum[3];
+    static uint8_t mediaMobileGyroIDX;
+    //---------------------------------------------------
+  #endif
 
   if (calibratingG>0) {
     for (axis = 0; axis < 3; axis++) {
-      // Reset g[axis] at start of calibration
-      if (calibratingG == 512) {
+      if (calibratingG == 512) { // Reset g[axis] at start of calibration
         g[axis]=0;
-        
-        #if defined(GYROCALIBRATIONFAILSAFE)
-            previousGyroADC[axis] = imu.gyroADC[axis];
-          }
-          if (calibratingG % 10 == 0) {
-            if(abs(imu.gyroADC[axis] - previousGyroADC[axis]) > 8) tilt=1;
-            previousGyroADC[axis] = imu.gyroADC[axis];
-       #endif
+    #if defined(GYROCALIBRATIONFAILSAFE)
+        previousGyroADC[axis] = imu.gyroADC[axis];
       }
-      // Sum up 512 readings
-      g[axis] +=imu.gyroADC[axis];
-      // Clear global variables for next reading
-      imu.gyroADC[axis]=0;
-      gyroZero[axis]=0;
+      if (calibratingG % 10 == 0) {
+        if(abs(imu.gyroADC[axis] - previousGyroADC[axis]) > 8) tilt=1;
+        previousGyroADC[axis] = imu.gyroADC[axis];
+    #endif
+      }
+      g[axis] +=imu.gyroADC[axis]; // Sum up 512 readings
+      gyroZero[axis]=g[axis]>>9;
       if (calibratingG == 1) {
-        gyroZero[axis]=(g[axis]+256)>>9;
-      #if defined(BUZZER)
-        alarmArray[7] = 4;
-      #else
-        blinkLED(10,15,1); //the delay causes to beep the buzzer really long 
-      #endif
+        #if defined(BUZZER)
+          alarmArray[7] = 4;
+        #endif
       }
     }
     #if defined(GYROCALIBRATIONFAILSAFE)
@@ -334,10 +326,9 @@ void GYRO_Common() {
     #else
       calibratingG--;
     #endif
-    
   }
 
-#ifdef MMGYRO       
+  #ifdef MMGYRO       
   mediaMobileGyroIDX = ++mediaMobileGyroIDX % conf.mmgyro;
   for (axis = 0; axis < 3; axis++) {
     imu.gyroADC[axis]  -= gyroZero[axis];
@@ -346,12 +337,12 @@ void GYRO_Common() {
     mediaMobileGyroADC[axis][mediaMobileGyroIDX] = constrain(imu.gyroADC[axis],previousGyroADC[axis]-800,previousGyroADC[axis]+800);
     mediaMobileGyroADCSum[axis] += mediaMobileGyroADC[axis][mediaMobileGyroIDX];
     imu.gyroADC[axis] = mediaMobileGyroADCSum[axis] / conf.mmgyro;
-#else 
+  #else
   for (axis = 0; axis < 3; axis++) {
     imu.gyroADC[axis]  -= gyroZero[axis];
     //anti gyro glitch, limit the variation between two consecutive readings
     imu.gyroADC[axis] = constrain(imu.gyroADC[axis],previousGyroADC[axis]-800,previousGyroADC[axis]+800);
-#endif    
+  #endif    
     previousGyroADC[axis] = imu.gyroADC[axis];
   }
 
