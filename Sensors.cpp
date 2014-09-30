@@ -373,25 +373,18 @@ void GYRO_Common() {
 void ACC_Common() {
   static int32_t a[3];
   if (calibratingA>0) {
+    calibratingA--;
     for (uint8_t axis = 0; axis < 3; axis++) {
-      // Reset a[axis] at start of calibration
-      if (calibratingA == 512) a[axis]=0;
-      // Sum up 512 readings
-      a[axis] +=imu.accADC[axis];
-      // Clear global variables for next reading
-      imu.accADC[axis]=0;
-      global_conf.accZero[axis]=0;
+      if (calibratingA == 511) a[axis]=0;   // Reset a[axis] at start of calibration
+      a[axis] +=imu.accADC[axis];           // Sum up 512 readings
+      global_conf.accZero[axis] = a[axis]>>9; // Calculate average, only the last itteration where (calibratingA == 0) is relevant
     }
-    // Calculate average, shift Z down by ACC_1G and store values in EEPROM at end of calibration
-    if (calibratingA == 1) {
-      global_conf.accZero[ROLL]  = (a[ROLL]+256)>>9;
-      global_conf.accZero[PITCH] = (a[PITCH]+256)>>9;
-      global_conf.accZero[YAW]   = ((a[YAW]+256)>>9)-ACC_1G;
+    if (calibratingA == 0) {
+      global_conf.accZero[YAW] -= ACC_1G;   // shift Z down by ACC_1G and store values in EEPROM at end of calibration
       conf.angleTrim[ROLL]   = 0;
       conf.angleTrim[PITCH]  = 0;
       writeGlobalSet(1); // write accZero in EEPROM
     }
-    calibratingA--;
   }
   #if defined(INFLIGHT_ACC_CALIBRATION)
       static int32_t b[3];
