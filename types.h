@@ -115,7 +115,6 @@ typedef struct {
 typedef struct {
   uint8_t OK_TO_ARM :1 ;
   uint8_t ARMED :1 ;
-  uint8_t I2C_INIT_DONE :1 ; // For i2c gps we have to now when i2c init is done, so we can update parameters to the i2cgps from eeprom (at startup it is done in setup())
   uint8_t ACC_CALIBRATED :1 ;
   uint8_t ANGLE_MODE :1 ;
   uint8_t HORIZON_MODE :1 ;

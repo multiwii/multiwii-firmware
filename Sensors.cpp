@@ -185,7 +185,7 @@ void i2c_init(void) {
 }
 
 void waitTransmissionI2C() {
-  uint16_t count = 255;
+  uint8_t count = 255;
   while (!(TWCR & (1<<TWINT))) {
     count--;
     if (count==0) {              //we are in a blocking state => we don't insist
@@ -1025,46 +1025,37 @@ void Gyro_getADC () {
 // I2C Compass common function
 // ************************************************************************************************************
 #if MAG
-static float   magGain[3] = {1.0,1.0,1.0};  // gain for each axis, populated at sensor init
-static uint8_t magInit = 0;
+static float magGain[3] = {1.0,1.0,1.0};  // gain for each axis, populated at sensor init
 
 uint8_t Mag_getADC() { // return 1 when news values are available, 0 otherwise
   static uint32_t t,tCal = 0;
-  static int16_t magZeroTempMin[3];
-  static int16_t magZeroTempMax[3];
+  static int16_t magZeroTempMin[3],magZeroTempMax[3];
   uint8_t axis;
+
   if ( currentTime < t ) return 0; //each read is spaced by 100ms
   t = currentTime + 100000;
   Device_Mag_getADC();
-  imu.magADC[ROLL]  = imu.magADC[ROLL]  * magGain[ROLL];
-  imu.magADC[PITCH] = imu.magADC[PITCH] * magGain[PITCH];
-  imu.magADC[YAW]   = imu.magADC[YAW]   * magGain[YAW];
-  if (f.CALIBRATE_MAG) {
-    tCal = t;
-    for(axis=0;axis<3;axis++) {
+  for(axis=0;axis<3;axis++) {
+    imu.magADC[axis]  = imu.magADC[axis]  * magGain[axis];
+    if (f.CALIBRATE_MAG) {
+      tCal = t;
       global_conf.magZero[axis] = 0;
       magZeroTempMin[axis] = imu.magADC[axis];
       magZeroTempMax[axis] = imu.magADC[axis];
     }
-    f.CALIBRATE_MAG = 0;
+    imu.magADC[axis]  -= global_conf.magZero[axis];
   }
-  if (magInit) { // we apply offset only once mag calibration is done
-    imu.magADC[ROLL]  -= global_conf.magZero[ROLL];
-    imu.magADC[PITCH] -= global_conf.magZero[PITCH];
-    imu.magADC[YAW]   -= global_conf.magZero[YAW];
-  }
- 
   if (tCal != 0) {
+    f.CALIBRATE_MAG = 0;
     if ((t - tCal) < 30000000) { // 30s: you have 30s to turn the multi in all directions
       LEDPIN_TOGGLE;
       for(axis=0;axis<3;axis++) {
-        if (imu.magADC[axis] < magZeroTempMin[axis]) {magZeroTempMin[axis] = imu.magADC[axis]; alarmArray[0] = 1;};
-        if (imu.magADC[axis] > magZeroTempMax[axis]) {magZeroTempMax[axis] = imu.magADC[axis]; alarmArray[0] = 1;};
+        if (imu.magADC[axis] < magZeroTempMin[axis]) {magZeroTempMin[axis] = imu.magADC[axis]; alarmArray[0] = 1;}
+        if (imu.magADC[axis] > magZeroTempMax[axis]) {magZeroTempMax[axis] = imu.magADC[axis]; alarmArray[0] = 1;}
+        global_conf.magZero[axis] = (magZeroTempMin[axis] + magZeroTempMax[axis])>>1;
       }
     } else {
       tCal = 0;
-      for(axis=0;axis<3;axis++)
-        global_conf.magZero[axis] = (magZeroTempMin[axis] + magZeroTempMax[axis])>>1;
       writeGlobalSet(1);
     }
   } else {
@@ -1100,7 +1091,6 @@ void Mag_init() {
   delay(100);
   i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG1,0x11); // DR = 20Hz ; OS ratio = 64 ; mode = Active
   delay(100);
-  magInit = 1;
 }
 
 #if !defined(MPU6050_I2C_AUX_MASTER)
@@ -1136,15 +1126,29 @@ void Mag_init() {
 #define MAG_ADDRESS 0x1E
 #define MAG_DATA_REGISTER 0x03
 
+static int32_t xyz_total[3]={0,0,0};  // 32 bit totals so they won't overflow.
+
 static void getADC() {
   i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
   MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
                    ((rawADC[4]<<8) | rawADC[5]) ,
                    ((rawADC[2]<<8) | rawADC[3]) );
 }
-  
+
+static uint8_t bias_collect(int8_t sign) {
+  for (uint8_t i=0; i<10; i++) {                                          //Collect 10 samples
+    i2c_writeReg(MAG_ADDRESS,HMC58X3_R_MODE, 1);
+    delay(100);
+    getADC();                                                             // Get the raw values in case the scales have already been changed.
+    for (uint8_t axis=0; axis<3; axis++)
+      xyz_total[axis]+= sign*imu.magADC[axis];                            // Since the measurements are noisy, they should be averaged rather than taking the max.
+    if (-(1<<12) >= min(imu.magADC[0],min(imu.magADC[1],imu.magADC[2])))  // Detect saturation.
+      return false;                                                       // Breaks out of the for loop.  No sense in continuing if we saturated.
+  }
+  return true;
+}
+
 static void Mag_init() {
-  int32_t xyz_total[3]={0,0,0};  // 32 bit totals so they won't overflow.
   bool bret=true;                // Error indicator
 
   delay(50);  //Wait before start
@@ -1152,65 +1156,27 @@ static void Mag_init() {
 
   // Note that the  very first measurement after a gain change maintains the same gain as the previous setting. 
   // The new gain setting is effective from the second measurement and on.
-
   i2c_writeReg(MAG_ADDRESS, HMC58X3_R_CONFB, 2 << 5);  //Set the Gain
   i2c_writeReg(MAG_ADDRESS,HMC58X3_R_MODE, 1);
   delay(100);
   getADC();  //Get one sample, and discard it
 
-  for (uint8_t i=0; i<10; i++) { //Collect 10 samples
-    i2c_writeReg(MAG_ADDRESS,HMC58X3_R_MODE, 1);
-    delay(100);
-    getADC();   // Get the raw values in case the scales have already been changed.
-                
-    // Since the measurements are noisy, they should be averaged rather than taking the max.
-    xyz_total[0]+=imu.magADC[0];
-    xyz_total[1]+=imu.magADC[1];
-    xyz_total[2]+=imu.magADC[2];
-                
-    // Detect saturation.
-    if (-(1<<12) >= min(imu.magADC[0],min(imu.magADC[1],imu.magADC[2]))) {
-      bret=false;
-      break;  // Breaks out of the for loop.  No sense in continuing if we saturated.
-    }
-  }
+  bret = bias_collect(1); // with positive bias
 
   // Apply the negative bias. (Same gain)
   i2c_writeReg(MAG_ADDRESS,HMC58X3_R_CONFA, 0x010 + HMC_NEG_BIAS); // Reg A DOR=0x010 + MS1,MS0 set to negative bias.
-  for (uint8_t i=0; i<10; i++) { 
-    i2c_writeReg(MAG_ADDRESS,HMC58X3_R_MODE, 1);
-    delay(100);
-    getADC();  // Get the raw values in case the scales have already been changed.
-                
-    // Since the measurements are noisy, they should be averaged.
-    xyz_total[0]-=imu.magADC[0];
-    xyz_total[1]-=imu.magADC[1];
-    xyz_total[2]-=imu.magADC[2];
+  bret = bias_collect(-1);
 
-    // Detect saturation.
-    if (-(1<<12) >= min(imu.magADC[0],min(imu.magADC[1],imu.magADC[2]))) {
-      bret=false;
-      break;  // Breaks out of the for loop.  No sense in continuing if we saturated.
-    }
-  }
-
-  magGain[0]=fabs(820.0*HMC58X3_X_SELF_TEST_GAUSS*2.0*10.0/xyz_total[0]);
-  magGain[1]=fabs(820.0*HMC58X3_Y_SELF_TEST_GAUSS*2.0*10.0/xyz_total[1]);
-  magGain[2]=fabs(820.0*HMC58X3_Z_SELF_TEST_GAUSS*2.0*10.0/xyz_total[2]);
+  if (bret) // only if no saturation detected, compute the gain. otherwise, the default 1.0 is used
+    for (uint8_t axis=0; axis<3; axis++)
+      magGain[axis]=fabs(820.0*HMC58X3_X_SELF_TEST_GAUSS*2.0*10.0/xyz_total[axis]);
 
   // leave test mode
   i2c_writeReg(MAG_ADDRESS ,HMC58X3_R_CONFA ,0x70 ); //Configuration Register A  -- 0 11 100 00  num samples: 8 ; output rate: 15Hz ; normal measurement mode
   i2c_writeReg(MAG_ADDRESS ,HMC58X3_R_CONFB ,0x20 ); //Configuration Register B  -- 001 00000    configuration gain 1.3Ga
   i2c_writeReg(MAG_ADDRESS ,HMC58X3_R_MODE  ,0x00 ); //Mode register             -- 000000 00    continuous Conversion Mode
   delay(100);
-  magInit = 1;
-
-  if (!bret) { //Something went wrong so get a best guess
-    magGain[0] = 1.0;
-    magGain[1] = 1.0;
-    magGain[2] = 1.0;
-  }
-} //  Mag_init().
+}
 
 #if !defined(MPU6050_I2C_AUX_MASTER)
 static void Device_Mag_getADC() {
@@ -1248,18 +1214,16 @@ void Mag_init() {
   // by placing the mode register into single-measurement mode (0x01), two data acquisition cycles will be made on each magnetic vector.
   // The first acquisition values will be subtracted from the second acquisition, and the net measurement will be placed into the data output registers
   delay(100);
-    getADC();
+  getADC();
   delay(10);
-    magGain[ROLL]  =  1000.0 / abs(imu.magADC[ROLL]);
-    magGain[PITCH] =  1000.0 / abs(imu.magADC[PITCH]);
-    magGain[YAW]   =  1000.0 / abs(imu.magADC[YAW]);
+  magGain[ROLL]  =  1000.0 / abs(imu.magADC[ROLL]);
+  magGain[PITCH] =  1000.0 / abs(imu.magADC[PITCH]);
+  magGain[YAW]   =  1000.0 / abs(imu.magADC[YAW]);
 
   // leave test mode
   i2c_writeReg(MAG_ADDRESS ,0x00 ,0x70 ); //Configuration Register A  -- 0 11 100 00  num samples: 8 ; output rate: 15Hz ; normal measurement mode
   i2c_writeReg(MAG_ADDRESS ,0x01 ,0x20 ); //Configuration Register B  -- 001 00000    configuration gain 1.3Ga
   i2c_writeReg(MAG_ADDRESS ,0x02 ,0x00 ); //Mode register             -- 000000 00    continuous Conversion Mode
-
-  magInit = 1;
 }
 
 #if !defined(MPU6050_I2C_AUX_MASTER)
@@ -1283,7 +1247,6 @@ void Device_Mag_getADC() {
     delay(100);
     i2c_writeReg(MAG_ADDRESS,0x0a,0x01);  //Start the first conversion
     delay(100);
-    magInit = 1;
   }
 
   void Device_Mag_getADC() {
@@ -1707,5 +1670,4 @@ void initSensors() {
   if (MAG) Mag_init();
   if (ACC) ACC_init();
   if (SONAR) Sonar_init();
-  f.I2C_INIT_DONE = 1;
 }
