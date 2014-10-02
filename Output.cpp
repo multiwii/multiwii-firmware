@@ -1228,12 +1228,16 @@ void mixTable() {
   #elif defined( BLIMP )
 	/*****************************             BLIMP                      **************************************/
 	
-	servo[2] = rcSerial[ROLL]; //D13
-	servo[3] = rcSerial[PITCH]; //D11
-	servo[4] = rcSerial[YAW]; //D5
-	//servo[5] = rcSerial[0]; //D6 has some glitches but works
-	servo[6] = rcSerial[THROTTLE]; //D10
-	servo[7] = rcSerial[THROTTLE]; //D9
+	servo[2] = rcData[ROLL]-conf.pid[PIDROLL].P8; //Center compensation //D13
+	servo[3] = rcData[PITCH]; //D11
+	servo[4] = rcData[YAW]; //D5
+	//servo[5] = rcData[0]; //D6 has some glitches but works
+	servo[6] = rcData[THROTTLE]-500; //D10
+	servo[7] = rcData[THROTTLE]-500; //D9
+
+	for(i=2;i<8;i++){
+		servo[i] = constrain(servo[i], 1020, 2000);
+	}
 	
 
   #elif defined( FLYING_WING )
