@@ -86,10 +86,10 @@ void initializeServo();
       volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,5};
     #elif defined(BLIMP)
 	  // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
-      volatile uint8_t atomicServo[8] = {125,125,125,125,125,5,5,5};
+      volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
 	#else
       volatile uint8_t atomicServo[8] = {125,125,125,125,125,125,125,125};
-    #endif
+#endif
   #else
     #if defined(AIRPLANE)|| defined(HELICOPTER)
       // To prevent motor to start at reset. atomicServo[7]=5 or 249 if reversed servo
@@ -1228,12 +1228,12 @@ void mixTable() {
   #elif defined( BLIMP )
 	/*****************************             BLIMP                      **************************************/
 	
-	servo[2] = rcData[ROLL]-conf.pid[PIDROLL].P8; //Center compensation //D13
-	servo[3] = rcData[PITCH]; //D11
+	servo[2] = 0; //D13 Unassigned. Has some glitches at startup.
+	servo[3] = rcData[ROLL]-conf.pid[PIDROLL].P8; //D11
 	servo[4] = rcData[YAW]; //D5
-	//servo[5] = rcData[0]; //D6 has some glitches but works
-	servo[6] = rcData[THROTTLE]-500; //D10
-	servo[7] = rcData[THROTTLE]-500; //D9
+	servo[5] = rcData[PITCH]; //D6. Has minor sporadic glitches.
+	servo[6] = rcData[THROTTLE]-400+conf.pid[PIDROLL].I8; //D10
+	servo[7] = rcData[THROTTLE]-400+conf.pid[PIDROLL].D8; //D9
 
 	for(i=2;i<8;i++){
 		servo[i] = constrain(servo[i], 1020, 2000);
