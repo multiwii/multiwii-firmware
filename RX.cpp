@@ -351,8 +351,8 @@ void  readSBus(){
       uint8_t adj_index;
       for(adj_index=0; adj_index<16; adj_index++) {
         if (rcValue[adj_index] < MIDRC)
-          rcValue[adj_index] -= (MIDRC - rcValue[adj_index]) >> 2;		
-        else	
+          rcValue[adj_index] -= (MIDRC - rcValue[adj_index]) >> 2;
+        else
           rcValue[adj_index] += (rcValue[adj_index] - MIDRC) >> 2;
       }
     }
@@ -371,7 +371,7 @@ void  readSBus(){
 static uint8_t sumdIndex=0;
 static uint8_t sumdSize=0;
 static uint8_t sumd[SUMD_BUFFSIZE]={0};
- 	
+
 void readSumD(void) {
   while (SerialAvailable(RX_SERIAL_PORT)) {
     int val = SerialRead(RX_SERIAL_PORT);
@@ -380,8 +380,7 @@ void readSumD(void) {
     if(sumdIndex < SUMD_BUFFSIZE) sumd[sumdIndex] = val;
     sumdIndex++;
 
-	if(sumdIndex == sumdSize*2+5)
-    {
+    if(sumdIndex == sumdSize*2+5) {
       sumdIndex = 0;
       spekFrameFlags = 0x00;
       debug[1] = sumd[1];
@@ -394,7 +393,7 @@ void readSumD(void) {
       if (sumd[1] == 0x01)
         {if(failsafeCnt > 20) failsafeCnt -= 20; else failsafeCnt = 0;} // clear FailSafe counter
       #endif
- 	}
+    }
   }
 }
 #endif

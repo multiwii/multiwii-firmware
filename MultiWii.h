@@ -111,7 +111,7 @@ extern int32_t  GPS_home[2];
 extern int32_t  GPS_hold[2];
 extern int32_t  GPS_prev[2];
 extern int32_t  GPS_poi[2];             // Coordinates of the current poi
-extern int32_t  GPS_directionToPoi;     // direction to the actual poi (used to set heading to poi)	
+extern int32_t  GPS_directionToPoi;     // direction to the actual poi (used to set heading to poi)
 extern uint8_t  GPS_numSat;
 extern uint16_t GPS_distanceToHome;     // distance to home  - unit: meter
 extern int16_t  GPS_directionToHome;    // direction to home - unit: degree
@@ -123,7 +123,7 @@ extern uint8_t  GPS_Present;            // Checksum from Gps serial
 extern uint8_t  GPS_Enable;
 extern uint32_t GPS_time;
 
-extern uint8_t  GPS_mode;	// contains the current selected gps flight mode
+extern uint8_t  GPS_mode;               // contains the current selected gps flight mode
 
 extern uint8_t NAV_error;                 //Last error situation of the nav engine
 extern uint8_t NAV_state;                 //State of the nav engine
@@ -140,14 +140,14 @@ extern uint8_t next_step;                 //The mission step which is upcoming i
 #define REACHED_ALT         0
 
 // The orginal altitude used as base our new altitude during nav
-extern int32_t 	original_altitude;
+extern int32_t original_altitude;
 //This is the target what we want to reach 
-extern int32_t 	target_altitude;
+extern int32_t target_altitude;
 //This is the interim value which is feeded into the althold controller
-extern int32_t  alt_to_hold;
+extern int32_t alt_to_hold;
 
 extern uint32_t alt_change_timer;
-extern int8_t 	alt_change_flag;
+extern int8_t   alt_change_flag;
 extern uint32_t alt_change;
 extern int16_t  jump_times;             //How many loops do we have to do (alt/100 from mission step) -10 means not used jet, -1 unlimited
 extern uint8_t  land_detect;            //land detector variable

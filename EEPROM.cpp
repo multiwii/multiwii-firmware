@@ -58,7 +58,7 @@ bool readEEPROM() {
   #endif
   #if GPS
     GPS_set_pids();    // at this time we don't have info about GPS init done
-	recallGPSconf();   // Load gps parameters
+    recallGPSconf();   // Load gps parameters
   #endif
   #if defined(ARMEDTIMEWARNING)
     ArmedTimeWarningMicroSeconds = (conf.armedtimewarning *1000000);
@@ -86,8 +86,8 @@ void writeParams(uint8_t b) {
   eeprom_write_block((const void*)&conf, (void*)(global_conf.currentSet * sizeof(conf) + sizeof(global_conf)), sizeof(conf));
 
 #if GPS
-  writeGPSconf();		//Write GPS parameters
-  recallGPSconf();		//Read it to ensure correct eeprom content
+  writeGPSconf();  //Write GPS parameters
+  recallGPSconf(); //Read it to ensure correct eeprom content
 #endif
 
   readEEPROM();
@@ -141,8 +141,7 @@ void update_constants() {
   loadGPSdefaults();
 #endif
 
-	writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
-
+  writeParams(0); // this will also (p)reset checkNewConf with the current version number again.
 }
 
 void LoadDefaults() {
@@ -153,7 +152,7 @@ void LoadDefaults() {
     // #include MY_PRIVATE_DEFAULTS
     // do that at the last possible moment, so we can override virtually all defaults and constants
   #else
-	  #if PID_CONTROLLER == 1
+    #if PID_CONTROLLER == 1
       conf.pid[ROLL].P8     = 33;  conf.pid[ROLL].I8    = 30; conf.pid[ROLL].D8     = 23;
       conf.pid[PITCH].P8    = 33; conf.pid[PITCH].I8    = 30; conf.pid[PITCH].D8    = 23;
       conf.pid[PIDLEVEL].P8 = 90; conf.pid[PIDLEVEL].I8 = 10; conf.pid[PIDLEVEL].D8 = 100;
@@ -254,91 +253,81 @@ void writePLog(void) {
 //Store gps_config
 
 void writeGPSconf(void) {
-	GPS_conf.checksum = calculate_sum((uint8_t*)&GPS_conf, sizeof(GPS_conf));
-	eeprom_write_block( (void*)&GPS_conf, (void*) (PROFILES * sizeof(conf) + sizeof(global_conf)), sizeof(GPS_conf) );
-	}    
+  GPS_conf.checksum = calculate_sum((uint8_t*)&GPS_conf, sizeof(GPS_conf));
+  eeprom_write_block( (void*)&GPS_conf, (void*) (PROFILES * sizeof(conf) + sizeof(global_conf)), sizeof(GPS_conf) );
+}
 
 //Recall gps_configuration
 bool recallGPSconf(void) {
-	eeprom_read_block((void*)&GPS_conf, (void*)(PROFILES * sizeof(conf) + sizeof(global_conf)), sizeof(GPS_conf));
-	if(calculate_sum((uint8_t*)&GPS_conf, sizeof(GPS_conf)) != GPS_conf.checksum)
-		{
-		loadGPSdefaults();
-		return false;
-		}
-
-	return true;
-	}
+  eeprom_read_block((void*)&GPS_conf, (void*)(PROFILES * sizeof(conf) + sizeof(global_conf)), sizeof(GPS_conf));
+  if(calculate_sum((uint8_t*)&GPS_conf, sizeof(GPS_conf)) != GPS_conf.checksum) {
+    loadGPSdefaults();
+    return false;
+  }
+  return true;
+}
 
 //Load gps_config_defaults and writes back to EEPROM just to make it sure
 void loadGPSdefaults(void) {
-	//zero out the conf struct
-	uint8_t *ptr = (uint8_t *) &GPS_conf;
-	for (int i=0;i<sizeof(GPS_conf);i++) *ptr++ = 0;
+  //zero out the conf struct
+  uint8_t *ptr = (uint8_t *) &GPS_conf;
+  for (int i=0;i<sizeof(GPS_conf);i++) *ptr++ = 0;
 
 #if defined(GPS_FILTERING)
-	GPS_conf.filtering = 1;
+  GPS_conf.filtering = 1;
 #endif
 #if defined (GPS_LEAD_FILTER)
-	GPS_conf.lead_filter = 1;
+  GPS_conf.lead_filter = 1;
 #endif
 #if defined (DONT_RESET_HOME_AT_ARM)
-	GPS_conf.dont_reset_home_at_arm = 1;
+  GPS_conf.dont_reset_home_at_arm = 1;
 #endif
+  GPS_conf.nav_controls_heading = NAV_CONTROLS_HEADING;
+  GPS_conf.nav_tail_first       = NAV_TAIL_FIRST;
+  GPS_conf.nav_rth_takeoff_heading = NAV_SET_TAKEOFF_HEADING;
+  GPS_conf.slow_nav                = NAV_SLOW_NAV;
+  GPS_conf.wait_for_rth_alt        = WAIT_FOR_RTH_ALT;
 
-	GPS_conf.nav_controls_heading = NAV_CONTROLS_HEADING;
-	GPS_conf.nav_tail_first       = NAV_TAIL_FIRST;
-	GPS_conf.nav_rth_takeoff_heading = NAV_SET_TAKEOFF_HEADING;
-	GPS_conf.slow_nav                = NAV_SLOW_NAV;
-	GPS_conf.wait_for_rth_alt        = WAIT_FOR_RTH_ALT;
+  GPS_conf.ignore_throttle         = IGNORE_THROTTLE;
+  GPS_conf.takeover_baro           = NAV_TAKEOVER_BARO;
 
-	GPS_conf.ignore_throttle         = IGNORE_THROTTLE;
-	GPS_conf.takeover_baro           = NAV_TAKEOVER_BARO;
-
-
-	GPS_conf.wp_radius               = GPS_WP_RADIUS;
-	GPS_conf.safe_wp_distance        = SAFE_WP_DISTANCE;
-	GPS_conf.nav_max_altitude        = MAX_NAV_ALTITUDE;
-	GPS_conf.nav_speed_max           = NAV_SPEED_MAX;
-	GPS_conf.nav_speed_min           = NAV_SPEED_MIN;
-	GPS_conf.crosstrack_gain         = CROSSTRACK_GAIN * 100;
-	GPS_conf.nav_bank_max            = NAV_BANK_MAX;
-	GPS_conf.rth_altitude            = RTH_ALTITUDE;
-	GPS_conf.fence                   = FENCE_DISTANCE;
-	GPS_conf.land_speed              = LAND_SPEED;
-	GPS_conf.max_wp_number           = getMaxWPNumber();
-	writeGPSconf();
-
+  GPS_conf.wp_radius               = GPS_WP_RADIUS;
+  GPS_conf.safe_wp_distance        = SAFE_WP_DISTANCE;
+  GPS_conf.nav_max_altitude        = MAX_NAV_ALTITUDE;
+  GPS_conf.nav_speed_max           = NAV_SPEED_MAX;
+  GPS_conf.nav_speed_min           = NAV_SPEED_MIN;
+  GPS_conf.crosstrack_gain         = CROSSTRACK_GAIN * 100;
+  GPS_conf.nav_bank_max            = NAV_BANK_MAX;
+  GPS_conf.rth_altitude            = RTH_ALTITUDE;
+  GPS_conf.fence                   = FENCE_DISTANCE;
+  GPS_conf.land_speed              = LAND_SPEED;
+  GPS_conf.max_wp_number           = getMaxWPNumber();
+  writeGPSconf();
 }
 
 
 //Stores the WP data in the wp struct in the EEPROM
 void storeWP() {
-
-	if (mission_step.number >254) return;
-	mission_step.checksum = calculate_sum((uint8_t*)&mission_step, sizeof(mission_step));
-	eeprom_write_block((void*)&mission_step, (void*)(PROFILES * sizeof(conf) + sizeof(global_conf) + sizeof(GPS_conf) +(sizeof(mission_step)*mission_step.number)),sizeof(mission_step));
+  if (mission_step.number >254) return;
+  mission_step.checksum = calculate_sum((uint8_t*)&mission_step, sizeof(mission_step));
+  eeprom_write_block((void*)&mission_step, (void*)(PROFILES * sizeof(conf) + sizeof(global_conf) + sizeof(GPS_conf) +(sizeof(mission_step)*mission_step.number)),sizeof(mission_step));
 }
 
 // Read the given number of WP from the eeprom, supposedly we can use this during flight.
 // Returns true when reading is successfull and returns false if there were some error (for example checksum)
 bool recallWP(uint8_t wp_number) {
-	if (wp_number > 254) return false;
-
-	eeprom_read_block((void*)&mission_step, (void*)(PROFILES * sizeof(conf) + sizeof(global_conf)+sizeof(GPS_conf)+(sizeof(mission_step)*wp_number)), sizeof(mission_step));
-	if(calculate_sum((uint8_t*)&mission_step, sizeof(mission_step)) != mission_step.checksum) return false;
-
-	return true;
+  if (wp_number > 254) return false;
+  eeprom_read_block((void*)&mission_step, (void*)(PROFILES * sizeof(conf) + sizeof(global_conf)+sizeof(GPS_conf)+(sizeof(mission_step)*wp_number)), sizeof(mission_step));
+  if(calculate_sum((uint8_t*)&mission_step, sizeof(mission_step)) != mission_step.checksum) return false;
+  return true;
 }
 
 // Returns the maximum WP number that can be stored in the EEPROM, calculated from conf and plog sizes, and the eeprom size
 uint8_t getMaxWPNumber() {
-
-	uint16_t first_avail = PROFILES*sizeof(conf) + sizeof(global_conf)+sizeof(GPS_conf)+ 1; //Add one byte for addtnl separation
-	uint16_t last_avail  = E2END - PLOG_SIZE - 4;										  //keep the last 4 bytes intakt
-	uint16_t wp_num = (last_avail-first_avail)/sizeof(mission_step);
-	if (wp_num>254) wp_num = 254;
-	return wp_num;
+  uint16_t first_avail = PROFILES*sizeof(conf) + sizeof(global_conf)+sizeof(GPS_conf)+ 1; //Add one byte for addtnl separation
+  uint16_t last_avail  = E2END - PLOG_SIZE - 4; //keep the last 4 bytes intakt
+  uint16_t wp_num = (last_avail-first_avail)/sizeof(mission_step);
+  if (wp_num>254) wp_num = 254;
+  return wp_num;
 }
-
 #endif

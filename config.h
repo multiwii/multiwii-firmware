@@ -559,7 +559,7 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
 
   /************************        Angele throttle correction         ********************/
   /* Automatically increase throttle based on the angle of the copter
-     Original idea by Kraut Rob, first implementation HAdrian							*/
+     Original idea by Kraut Rob, first implementation HAdrian */
 
   //#define THROTTLE_ANGLE_CORRECTION 40
   
@@ -569,13 +569,13 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
  /*************************        Advanced Headfree Mode             ********************/
  /* In Advanced Headfree mode when the copter is farther than ADV_HEADFREE_RANGE meters then 
     the  bearing between home and copter position will become the control direction 
-	IF copter come closer than ADV_HEADFREE_RANGE meters, then the control direction freezed to the 
-	bearing between home and copter at the point where it crosses the ADV_HEADFREE_RANGE meter distance
-	first implementation by HAdrian, mods by EOSBandi
+    IF copter come closer than ADV_HEADFREE_RANGE meters, then the control direction freezed to the 
+    bearing between home and copter at the point where it crosses the ADV_HEADFREE_RANGE meter distance
+    first implementation by HAdrian, mods by EOSBandi
  */
 
-   //#define ADVANCED_HEADFREE									//Advanced headfree mode is enabled when this is uncommented
-   //#define ADV_HEADFREE_RANGE 15								//Range where advanced headfree mode activated
+   //#define ADVANCED_HEADFREE      //Advanced headfree mode is enabled when this is uncommented
+   //#define ADV_HEADFREE_RANGE 15  //Range where advanced headfree mode activated
 
 
   /************************        continuous gyro calibration        ********************/
@@ -737,32 +737,32 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
 
 // Safe WP distance, do not start mission if the first wp distance is larger than this number (in meters)
 // Also aborts mission if the next waypoint distance is more than this number
-#define SAFE_WP_DISTANCE	       500      //(**)
+#define SAFE_WP_DISTANCE           500      //(**)
 
 //Maximu allowable navigation altitude (in meters) automatic altitude control will not go above this height
-#define MAX_NAV_ALTITUDE		   100     //(**)
+#define MAX_NAV_ALTITUDE           100     //(**)
 
 // minimum speed when approach waypoint
-#define NAV_SPEED_MIN              100    // cm/sec			//(**)
+#define NAV_SPEED_MIN              100    // cm/sec //(**)
 // maximum speed to reach between waypoints
-#define NAV_SPEED_MAX              400    // cm/sec			//(**)
+#define NAV_SPEED_MAX              400    // cm/sec //(**)
 // Slow down to zero when reaching waypoint (same as NAV_SPEED_MIN = 0)
-#define NAV_SLOW_NAV               0						//(**)
+#define NAV_SLOW_NAV               0      //(**)
 // Weight factor of the crosstrack error in navigation calculations (do not touch)
-#define CROSSTRACK_GAIN            .4						//(**)
+#define CROSSTRACK_GAIN            .4     //(**)
 // Maximum allowable banking than navigation outputs 
-#define NAV_BANK_MAX 3000									//(**)
+#define NAV_BANK_MAX 3000                 //(**)
 
 //Defines the RTH altitude. 0 means keep current alt during RTH (in meters)
-#define RTH_ALTITUDE		15								//(**)
-//Wait	to reach RTH alt before start moving to home (0-no, 1-yes)
-#define WAIT_FOR_RTH_ALT	1								//(**)
+#define RTH_ALTITUDE               15        //(**)
+//Wait to reach RTH alt before start moving to home (0-no, 1-yes)
+#define WAIT_FOR_RTH_ALT           1         //(**)
 
 //Navigation engine will takeover BARO mode control 
-#define NAV_TAKEOVER_BARO   1								//(**)
+#define NAV_TAKEOVER_BARO          1         //(**)
 
 //Throttle stick input will be ignored  (only in BARO)
-#define IGNORE_THROTTLE      1                               //(**)
+#define IGNORE_THROTTLE            1         //(**)
 
 //If FENCE DISTANCE is larger than 0 then copter will switch to RTH when it farther from home
 //than the defined number in meters
@@ -1150,7 +1150,7 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
   /****           Dynamic Motor/Prop Balancing                     ****/
   /********************************************************************/
   /*                   !!! No Fly Mode !!!                            */ 
-		
+
     //#define DYNBALANCE   // (**) Dynamic balancing controlled from Gui
 
   /********************************************************************/

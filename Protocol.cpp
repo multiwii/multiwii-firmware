@@ -61,7 +61,7 @@
 #define MSP_SET_HEAD             211   //in message          define a new heading hold direction
 #define MSP_SET_SERVO_CONF       212   //in message          Servo settings
 #define MSP_SET_MOTOR            214   //in message          PropBalance function
-#define MSP_SET_NAV_CONFIG       215   //in message			     Sets nav config parameters - write to the eeprom  
+#define MSP_SET_NAV_CONFIG       215   //in message          Sets nav config parameters - write to the eeprom  
 
 #define MSP_SET_ACC_TRIM         239   //in message          set acc angle trim values
 #define MSP_ACC_TRIM             240   //out message         get acc angle trim values
@@ -361,7 +361,7 @@ void evaluateCommand() {
       id.v     = VERSION;
       id.t     = MULTITYPE;
       id.msp_v = MSP_VERSION;
-      id.cap   = capability|DYNBAL<<2|FLAP<<3|NAVCAP<<4|EXTAUX<<5|((uint32_t)NAVI_VERSION<<28);			//Navi version is stored in the upper four bits; 
+      id.cap   = capability|DYNBAL<<2|FLAP<<3|NAVCAP<<4|EXTAUX<<5|((uint32_t)NAVI_VERSION<<28); //Navi version is stored in the upper four bits; 
       s_struct((uint8_t*)&id,7);
       break;
     case MSP_STATUS:
@@ -540,7 +540,7 @@ void evaluateCommand() {
         serialize32(GPS_home[LON]);
         flag = MISSION_FLAG_HOME;
       }
-      if (wp_no == 255)	{ //Get poshold coordinates
+      if (wp_no == 255) { //Get poshold coordinates
         serialize8(wp_no);
         serialize8(mission_step.action);
         serialize32(GPS_hold[LAT]);
@@ -555,7 +555,7 @@ void evaluateCommand() {
           serialize32(mission_step.pos[LAT]);
           serialize32(mission_step.pos[LON]);
           if (success == true) flag = mission_step.flag;
-          else flag = MISSION_FLAG_CRC_ERROR;	//CRC error
+          else flag = MISSION_FLAG_CRC_ERROR; //CRC error
         } else {
           serialize8(wp_no);
           serialize8(0);
@@ -589,13 +589,13 @@ void evaluateCommand() {
         mission_step.parameter3 = read16();
         mission_step.flag     =  read8();
         if (mission_step.altitude != 0) set_new_altitude(mission_step.altitude);
-        GPS_set_next_wp(&mission_step.pos[LAT], &mission_step.pos[LON], &GPS_coord[LAT], &GPS_coord[LON]);	
+        GPS_set_next_wp(&mission_step.pos[LAT], &mission_step.pos[LON], &GPS_coord[LAT], &GPS_coord[LON]);
         if ((wp_distance/100) >= GPS_conf.safe_wp_distance) NAV_state = NAV_STATE_NONE;
-        else NAV_state = NAV_STATE_WP_ENROUTE;			
+        else NAV_state = NAV_STATE_WP_ENROUTE;
         break;
       }
       if (NAV_state == NAV_STATE_NONE) { // The Nav state is not zero, so navigation is in progress, silently ignore SET_WP command)
-        mission_step.number	   =    wp_no;
+        mission_step.number     =  wp_no;
         mission_step.action     =  read8();
         mission_step.pos[LAT]   =  read32();
         mission_step.pos[LON]   =  read32();
@@ -609,7 +609,7 @@ void evaluateCommand() {
         if (mission_step.number == 255) //Set up new hold position via mission planner, It must set the action to MISSION_HOLD_INFINIT 
         {
         if (mission_step.altitude !=0) set_new_altitude(mission_step.altitude); //Set the altitude
-        GPS_set_next_wp(&mission_step.pos[LAT], &mission_step.pos[LON], &GPS_coord[LAT], &GPS_coord[LON]);	
+        GPS_set_next_wp(&mission_step.pos[LAT], &mission_step.pos[LON], &GPS_coord[LAT], &GPS_coord[LON]);
         NAV_state = NAV_STATE_WP_ENROUTE; //Go to that position, then it will switch to poshold unlimited when reached
         }
         */
@@ -617,8 +617,8 @@ void evaluateCommand() {
           GPS_home[LAT] = mission_step.pos[LAT];
           GPS_home[LON] = mission_step.pos[LON];
         }
-        if (mission_step.number >0 && mission_step.number<255)			//Not home and not poshold, we are free to store it in the eprom
-          if (mission_step.number <= getMaxWPNumber())				    // Do not thrash the EEPROM with invalid wp number
+        if (mission_step.number >0 && mission_step.number<255)                      //Not home and not poshold, we are free to store it in the eprom
+          if (mission_step.number <= getMaxWPNumber())                              // Do not thrash the EEPROM with invalid wp number
             storeWP();
         //headSerialReply(0);tailSerialReply();
       }

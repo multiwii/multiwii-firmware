@@ -1469,7 +1469,7 @@
 #endif
 
 #if defined(FLYDU_ULTRA)
-  #define ITG3200	
+  #define ITG3200
   #define MMA8451Q
   #define MS561101BA
   #define MAG3110

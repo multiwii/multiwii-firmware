@@ -151,7 +151,7 @@ void alarmPatternComposer(){
       resource = 3; 
       #if GPS
         if (alarmArray[2]==1) patternDecode(resource,100,100,100,100,100);                      // blue fast blink -->no gps fix
-		else if (f.GPS_mode != GPS_MODE_NONE) patternDecode(resource,100,100,100,100,1000); //blue slow blink --> gps active
+        else if (f.GPS_mode != GPS_MODE_NONE) patternDecode(resource,100,100,100,100,1000);     //blue slow blink --> gps active
         else setTiming(resource,100,1000);                                                        //blue short blink -->gps fix ok
       #else
         turnOff(resource);
@@ -402,30 +402,24 @@ void blinkLED(uint8_t num, uint8_t ontime,uint8_t repeat) {
     if (f.ARMED) { // Motors running = flying
       if(!(f.ANGLE_MODE||f.HORIZON_MODE)){ //ACRO
         b[0]= 'x';
-      }
-	  else if(f.GPS_mode == GPS_MODE_RTH){ //RTH
+      } else if(f.GPS_mode == GPS_MODE_RTH){ //RTH
         b[0]= 'w';
-      }   
-	  else if(f.GPS_mode == GPS_MODE_HOLD){//Position Hold
+      } else if(f.GPS_mode == GPS_MODE_HOLD){//Position Hold
         b[0]= 'v';
-      } 
-      else if(f.HORIZON_MODE){ //HORIZON mode
+      } else if(f.HORIZON_MODE){ //HORIZON mode
         b[0]= 'y';
-      }   
-      else {
+      } else {
         b[0]= 'u'; // ANGLE mode
-      }  
+      }
       i2c_rep_start(LED_RING_ADDRESS);
       i2c_write(b[0]);
       i2c_stop();  
-    } 
-    else if (!f.ACC_CALIBRATED) { // Multiwii not stable or uncalibrated 
+    } else if (!f.ACC_CALIBRATED) { // Multiwii not stable or uncalibrated 
       b[0]= 't';
       i2c_rep_start(LED_RING_ADDRESS);
       i2c_write(b[0]);
       i2c_stop();   
-    }
-    else { // Motors not running = on the ground
+    } else { // Motors not running = on the ground
       b[0]= 's';
       if (f.ANGLE_MODE) b[1]=1; 
       else if (f.HORIZON_MODE) b[1]=2; 

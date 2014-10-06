@@ -79,10 +79,10 @@ enum box {
   #ifdef OSD_SWITCH
     BOXOSD,
   #endif
-#if GPS
-	BOXGPSNAV,
-	BOXLAND,
-#endif
+  #if GPS
+    BOXGPSNAV,
+    BOXLAND,
+  #endif
   CHECKBOXITEMS
 };
 
@@ -127,10 +127,10 @@ typedef struct {
   uint8_t SMALL_ANGLES_25 :1 ;
   uint8_t CALIBRATE_MAG :1 ;
   uint8_t VARIO_MODE :1;
-  uint8_t GPS_mode: 2;				// 0-3 NONE,HOLD, HOME, NAV (see GPS_MODE_* defines
-  uint8_t GPS_head_set: 1;			// it is 1 if the navigation engine got commands to control heading (SET_POI or SET_HEAD) CLEAR_HEAD will zero it
+  uint8_t GPS_mode: 2;               // 0-3 NONE,HOLD, HOME, NAV (see GPS_MODE_* defines
+  uint8_t GPS_head_set: 1;           // it is 1 if the navigation engine got commands to control heading (SET_POI or SET_HEAD) CLEAR_HEAD will zero it
   uint8_t THROTTLE_IGNORED : 1;      // If it is 1 then ignore throttle stick movements in baro mode;
-  uint8_t GPS_BARO_MODE : 1;        // This flag is used when GPS controls baro mode instead of user (it will replace rcOptions[BARO]
+  uint8_t GPS_BARO_MODE : 1;         // This flag is used when GPS controls baro mode instead of user (it will replace rcOptions[BARO]
   uint8_t LAND_COMPLETED: 1;
   uint8_t LAND_IN_PROGRESS: 1;
 } flags_struct_t;
@@ -166,8 +166,8 @@ typedef struct {
   uint8_t thrMid8;
   uint8_t thrExpo8;
   int16_t angleTrim[2]; 
-  #if defined(EXTENDED_AUX_STATES)				
-   uint32_t activate[CHECKBOXITEMS];				//Extended aux states define six different aux state for each aux channel
+  #if defined(EXTENDED_AUX_STATES)
+   uint32_t activate[CHECKBOXITEMS];  //Extended aux states define six different aux state for each aux channel
   #else
    uint16_t activate[CHECKBOXITEMS];
   #endif 
@@ -263,24 +263,22 @@ enum naverror {
   NAV_ERROR_GPS_FIX_LOST,        //Gps fix lost, aborting mission
   NAV_ERROR_DISARMED,            //NAV engine disabled due disarm
   NAV_ERROR_LANDING              //Landing
-  };
+};
 
 typedef struct {
-  uint8_t	number;		//Waypoint number
-  int32_t	pos[2];		//GPS position 
-  uint8_t	action;		//Action to follow
-  int16_t	parameter1;	//Parameter for the action
-  int16_t	parameter2;	//Parameter for the action
-  int16_t	parameter3;	//Parameter for the action
-  uint32_t	altitude;	//Altitude in cm (AGL)
-  uint8_t   flag;		//flags the last wp and other fancy things that are not yet defined
-  uint8_t	checksum;	//this must be at the last position
-  } mission_step_struct;
+  uint8_t  number;     //Waypoint number
+  int32_t  pos[2];     //GPS position 
+  uint8_t  action;     //Action to follow
+  int16_t  parameter1; //Parameter for the action
+  int16_t  parameter2; //Parameter for the action
+  int16_t  parameter3; //Parameter for the action
+  uint32_t altitude;   //Altitude in cm (AGL)
+  uint8_t  flag;       //flags the last wp and other fancy things that are not yet defined
+  uint8_t  checksum;   //this must be at the last position
+} mission_step_struct;
 
 
-typedef struct
-  {
-
+typedef struct {
   //Don't forget to change the reply size in GUI when change this struct;
 
   // on/off flags
@@ -294,27 +292,27 @@ typedef struct
   uint8_t slow_nav : 1;
   uint8_t wait_for_rth_alt : 1;
   // Second byte
-  uint8_t ignore_throttle: 1;						// Disable stick controls during mission and RTH
+  uint8_t ignore_throttle: 1; // Disable stick controls during mission and RTH
   uint8_t takeover_baro: 1;
 
 
 
 
-  uint16_t wp_radius;								// in cm
-  uint16_t safe_wp_distance;						// in meter
-  uint16_t nav_max_altitude;						// in meter
-  uint16_t nav_speed_max;							// in cm/s
-  uint16_t nav_speed_min;							// in cm/s
-  uint8_t  crosstrack_gain;						// * 100 (0-2.56)
-  uint16_t nav_bank_max;							// degree * 100; (3000 default)
-  uint16_t rth_altitude;							// in meter
-  uint8_t  land_speed;							// between 50 and 255 (100 approx = 50cm/sec)
-  uint16_t fence;                                 // fence control in meters
+  uint16_t wp_radius;           // in cm
+  uint16_t safe_wp_distance;    // in meter
+  uint16_t nav_max_altitude;    // in meter
+  uint16_t nav_speed_max;       // in cm/s
+  uint16_t nav_speed_min;       // in cm/s
+  uint8_t  crosstrack_gain;     // * 100 (0-2.56)
+  uint16_t nav_bank_max;        // degree * 100; (3000 default)
+  uint16_t rth_altitude;        // in meter
+  uint8_t  land_speed;          // between 50 and 255 (100 approx = 50cm/sec)
+  uint16_t fence;               // fence control in meters
 
   uint8_t  max_wp_number;
 
   uint8_t  checksum;
-  } gps_conf_struct;
+} gps_conf_struct;
 
 #endif
 
