@@ -1135,24 +1135,25 @@ static void getADC() {
                    ((rawADC[2]<<8) | rawADC[3]) );
 }
 
-static uint8_t bias_collect(int8_t sign) {
-  for (uint8_t i=0; i<10; i++) {                                          //Collect 10 samples
+static uint8_t bias_collect(uint8_t bias) {
+  int16_t abs_magADC;
+
+  i2c_writeReg(MAG_ADDRESS, HMC58X3_R_CONFA, bias);            // Reg A DOR=0x010 + MS1,MS0 set to pos or negative bias
+  for (uint8_t i=0; i<10; i++) {                               // Collect 10 samples
     i2c_writeReg(MAG_ADDRESS,HMC58X3_R_MODE, 1);
     delay(100);
-    getADC();                                                             // Get the raw values in case the scales have already been changed.
-    for (uint8_t axis=0; axis<3; axis++)
-      xyz_total[axis]+= sign*imu.magADC[axis];                            // Since the measurements are noisy, they should be averaged rather than taking the max.
-    if (-(1<<12) >= min(imu.magADC[0],min(imu.magADC[1],imu.magADC[2])))  // Detect saturation.
-      return false;                                                       // Breaks out of the for loop.  No sense in continuing if we saturated.
+    getADC();                                                  // Get the raw values in case the scales have already been changed.
+    for (uint8_t axis=0; axis<3; axis++) {
+      abs_magADC =  abs(imu.magADC[axis]);
+      xyz_total[axis]+= abs_magADC;                            // Since the measurements are noisy, they should be averaged rather than taking the max.
+      if ((int16_t)(1<<12) < abs_magADC) return false;         // Detect saturation.   if false Breaks out of the for loop.  No sense in continuing if we saturated.
+    }
   }
   return true;
 }
 
 static void Mag_init() {
   bool bret=true;                // Error indicator
-
-  delay(50);  //Wait before start
-  i2c_writeReg(MAG_ADDRESS, HMC58X3_R_CONFA, 0x010 + HMC_POS_BIAS); // Reg A DOR=0x010 + MS1,MS0 set to pos bias
 
   // Note that the  very first measurement after a gain change maintains the same gain as the previous setting. 
   // The new gain setting is effective from the second measurement and on.
@@ -1161,15 +1162,12 @@ static void Mag_init() {
   delay(100);
   getADC();  //Get one sample, and discard it
 
-  bret = bias_collect(1); // with positive bias
-
-  // Apply the negative bias. (Same gain)
-  i2c_writeReg(MAG_ADDRESS,HMC58X3_R_CONFA, 0x010 + HMC_NEG_BIAS); // Reg A DOR=0x010 + MS1,MS0 set to negative bias.
-  bret = bias_collect(-1);
+  if (!bias_collect(0x010 + HMC_POS_BIAS)) bret = false;
+  if (!bias_collect(0x010 + HMC_NEG_BIAS)) bret = false;
 
   if (bret) // only if no saturation detected, compute the gain. otherwise, the default 1.0 is used
     for (uint8_t axis=0; axis<3; axis++)
-      magGain[axis]=fabs(820.0*HMC58X3_X_SELF_TEST_GAUSS*2.0*10.0/xyz_total[axis]);
+      magGain[axis]=820.0*HMC58X3_X_SELF_TEST_GAUSS*2.0*10.0/xyz_total[axis];  // note: xyz_total[axis] is always positive
 
   // leave test mode
   i2c_writeReg(MAG_ADDRESS ,HMC58X3_R_CONFA ,0x70 ); //Configuration Register A  -- 0 11 100 00  num samples: 8 ; output rate: 15Hz ; normal measurement mode
