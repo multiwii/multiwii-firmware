@@ -167,8 +167,10 @@ static void ACC_init();
 #endif
 
 static uint8_t rawADC[6];
+#if defined(WMP)
 static uint32_t neutralizeTime = 0;
-  
+#endif
+
 // ************************************************************************************************************
 // I2C general functions
 // ************************************************************************************************************
@@ -184,13 +186,16 @@ void i2c_init(void) {
   TWCR = 1<<TWEN;                              // enable twi module, no interrupt
 }
 
-void waitTransmissionI2C() {
+void __attribute__ ((noinline)) waitTransmissionI2C(uint8_t twcr) {
+  TWCR = twcr;
   uint8_t count = 255;
   while (!(TWCR & (1<<TWINT))) {
     count--;
     if (count==0) {              //we are in a blocking state => we don't insist
       TWCR = 0;                  //and we force a reset on TWINT register
+      #if defined(WMP)
       neutralizeTime = micros(); //we take a timestamp here to neutralize the value during a short delay
+      #endif
       i2c_errors_count++;
       break;
     }
@@ -198,11 +203,9 @@ void waitTransmissionI2C() {
 }
 
 void i2c_rep_start(uint8_t address) {
-  TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN) ; // send REPEAT START condition
-  waitTransmissionI2C();                       // wait until transmission completed
-  TWDR = address;                              // send device address
-  TWCR = (1<<TWINT) | (1<<TWEN);
-  waitTransmissionI2C();                       // wail until transmission completed
+  waitTransmissionI2C((1<<TWINT) | (1<<TWSTA) | (1<<TWEN)); // send REPEAT START condition and wait until transmission completed
+  TWDR = address;                                           // send device address
+  waitTransmissionI2C((1<<TWINT) | (1<<TWEN));              // wail until transmission completed
 }
 
 void i2c_stop(void) {
@@ -212,24 +215,19 @@ void i2c_stop(void) {
 
 void i2c_write(uint8_t data ) {
   TWDR = data;                                 // send data to the previously addressed device
-  TWCR = (1<<TWINT) | (1<<TWEN);
-  waitTransmissionI2C();
-}
-
-uint8_t i2c_read(uint8_t ack) {
-  TWCR = (1<<TWINT) | (1<<TWEN) | (ack? (1<<TWEA) : 0);
-  waitTransmissionI2C();
-  uint8_t r = TWDR;
-  if (!ack) i2c_stop();
-  return r;
+  waitTransmissionI2C((1<<TWINT) | (1<<TWEN));
 }
 
 uint8_t i2c_readAck() {
-  return i2c_read(1);
+  waitTransmissionI2C((1<<TWINT) | (1<<TWEN) | (1<<TWEA));
+  return TWDR;
 }
 
-uint8_t i2c_readNak(void) {
-  return i2c_read(0);
+uint8_t i2c_readNak() {
+  waitTransmissionI2C((1<<TWINT) | (1<<TWEN));
+  uint8_t r = TWDR;
+  i2c_stop();
+  return r;
 }
 
 void i2c_read_reg_to_buf(uint8_t add, uint8_t reg, uint8_t *buf, uint8_t size) {
@@ -237,27 +235,8 @@ void i2c_read_reg_to_buf(uint8_t add, uint8_t reg, uint8_t *buf, uint8_t size) {
   i2c_write(reg);        // register selection
   i2c_rep_start((add<<1) | 1);  // I2C read direction
   uint8_t *b = buf;
-  while (size--) {
-    /* acknowledge all but the final byte */
-    *b++ = i2c_read(size > 0);
-  }
-}
-
-/* transform a series of bytes from big endian to little
-   endian and vice versa. */
-void swap_endianness(void *buf, size_t size) {
-  /* we swap in-place, so we only have to
-  * place _one_ element on a temporary tray
-  */
-  uint8_t tray;
-  uint8_t *from;
-  uint8_t *to;
-  /* keep swapping until the pointers have assed each other */
-  for (from = (uint8_t*)buf, to = &from[size-1]; from < to; from++, to--) {
-    tray = *from;
-    *from = *to;
-    *to = tray;
-  }
+  while (--size) *b++ = i2c_readAck(); // acknowledge all but the final byte
+  *b = i2c_readNak();
 }
 
 void i2c_getSixRawADC(uint8_t add, uint8_t reg) {
@@ -486,6 +465,23 @@ static struct {
 } bmp085_ctx;  
 #define OSS 3
 
+/* transform a series of bytes from big endian to little
+   endian and vice versa. */
+void swap_endianness(void *buf, size_t size) {
+  /* we swap in-place, so we only have to
+  * place _one_ element on a temporary tray
+  */
+  uint8_t tray;
+  uint8_t *from;
+  uint8_t *to;
+  /* keep swapping until the pointers have assed each other */
+  for (from = (uint8_t*)buf, to = &from[size-1]; from < to; from++, to--) {
+    tray = *from;
+    *from = *to;
+    *to = tray;
+  }
+}
+
 void i2c_BMP085_readCalibration(){
   delay(10);
   //read calibration data in one go
@@ -672,11 +668,9 @@ static void i2c_MS561101BA_UT_Read() {
 }
 
 static void Baro_init() {
-  delay(10);
   i2c_MS561101BA_reset();
   delay(100);
   i2c_MS561101BA_readCalibration();
-  delay(10);
   i2c_MS561101BA_UT_Start(); 
   ms561101ba_ctx.deadline = currentTime+10000; 
 }
@@ -1264,7 +1258,7 @@ void Device_Mag_getADC() {
 
 static void Gyro_init() {
   i2c_writeReg(MPU6050_ADDRESS, 0x6B, 0x80);             //PWR_MGMT_1    -- DEVICE_RESET 1
-  delay(5);
+  delay(50);
   i2c_writeReg(MPU6050_ADDRESS, 0x6B, 0x03);             //PWR_MGMT_1    -- SLEEP 0; CYCLE 0; TEMP_DIS 0; CLKSEL 3 (PLL with Z Gyro reference)
   i2c_writeReg(MPU6050_ADDRESS, 0x1A, MPU6050_DLPF_CFG); //CONFIG        -- EXT_SYNC_SET 0 (disable input pin for data sync) ; default DLPF_CFG = 0 => ACC bandwidth = 260Hz  GYRO bandwidth = 256Hz)
   i2c_writeReg(MPU6050_ADDRESS, 0x1B, 0x18);             //GYRO_CONFIG   -- FS_SEL = 3: Full scale set to 2000 deg/sec
@@ -1655,17 +1649,15 @@ inline void Sonar_init() {}
 void Sonar_update() {}
 #endif
 
-
-
 void initSensors() {
-  delay(200);
-  POWERPIN_ON;
-  delay(100);
+  #if !defined(DISABLE_POWER_PIN)
+    POWERPIN_ON;
+    delay(200);
+  #endif
   i2c_init();
-  delay(100);
-  if (GYRO) Gyro_init();
-  if (BARO) Baro_init();
-  if (MAG) Mag_init();
-  if (ACC) ACC_init();
+  if (GYRO)  Gyro_init();
+  if (BARO)  Baro_init();
+  if (MAG)   Mag_init();
+  if (ACC)   ACC_init();
   if (SONAR) Sonar_init();
 }

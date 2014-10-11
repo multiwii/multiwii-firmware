@@ -192,7 +192,7 @@ void getEstimatedAttitude(){
   int32_t accMag = 0;
   float scale;
   int16_t deltaGyroAngle16[3];
-  static t_int32_t_vector EstG;
+  static t_int32_t_vector EstG = {0,0,(int32_t)ACC_1G<<16};
   #if MAG
     static t_int32_t_vector EstM;
   #else
