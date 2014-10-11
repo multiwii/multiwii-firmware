@@ -1007,41 +1007,44 @@ uint8_t Mag_getADC() { // return 1 when news values are available, 0 otherwise
   if ( currentTime < t ) return 0; //each read is spaced by 100ms
   t = currentTime + 100000;
   Device_Mag_getADC();
+
   for(axis=0;axis<3;axis++) {
     imu.magADC[axis]  = imu.magADC[axis]  * magGain[axis];
-    if (f.CALIBRATE_MAG) {
-      tCal = t;
-      global_conf.magZero[axis] = 0;
-      magZeroTempMin[axis] = imu.magADC[axis];
-      magZeroTempMax[axis] = imu.magADC[axis];
-    }
-    imu.magADC[axis]  -= global_conf.magZero[axis];
+    if (!f.CALIBRATE_MAG) imu.magADC[axis]  -= global_conf.magZero[axis];
   }
-  if (tCal != 0) {
-    f.CALIBRATE_MAG = 0;
+  
+  if (f.CALIBRATE_MAG) {
+    if (tCal == 0) // init mag calibration
+      tCal = t;
     if ((t - tCal) < 30000000) { // 30s: you have 30s to turn the multi in all directions
       LEDPIN_TOGGLE;
       for(axis=0;axis<3;axis++) {
+        if(tCal == t) { // it happens only in the first step, initialize the zero
+          magZeroTempMin[axis] = imu.magADC[axis];
+          magZeroTempMax[axis] = imu.magADC[axis];
+        }
         if (imu.magADC[axis] < magZeroTempMin[axis]) {magZeroTempMin[axis] = imu.magADC[axis]; alarmArray[0] = 1;}
         if (imu.magADC[axis] > magZeroTempMax[axis]) {magZeroTempMax[axis] = imu.magADC[axis]; alarmArray[0] = 1;}
         global_conf.magZero[axis] = (magZeroTempMin[axis] + magZeroTempMax[axis])>>1;
       }
     } else {
+      f.CALIBRATE_MAG = 0;
       tCal = 0;
       writeGlobalSet(1);
     }
-  } else {
-    #if defined(SENSORS_TILT_45DEG_LEFT)
-      int16_t temp = ((imu.magADC[PITCH] - imu.magADC[ROLL] )*7)/10;
-      imu.magADC[ROLL] = ((imu.magADC[ROLL]  + imu.magADC[PITCH])*7)/10;
-      imu.magADC[PITCH] = temp;
-    #endif
-    #if defined(SENSORS_TILT_45DEG_RIGHT)
-      int16_t temp = ((imu.magADC[PITCH] + imu.magADC[ROLL] )*7)/10;
-      imu.magADC[ROLL] = ((imu.magADC[ROLL]  - imu.magADC[PITCH])*7)/10;
-      imu.magADC[PITCH] = temp;
-    #endif
   }
+
+  #if defined(SENSORS_TILT_45DEG_LEFT)
+    int16_t temp = ((imu.magADC[PITCH] - imu.magADC[ROLL] )*7)/10;
+    imu.magADC[ROLL] = ((imu.magADC[ROLL]  + imu.magADC[PITCH])*7)/10;
+    imu.magADC[PITCH] = temp;
+  #endif
+  #if defined(SENSORS_TILT_45DEG_RIGHT)
+    int16_t temp = ((imu.magADC[PITCH] + imu.magADC[ROLL] )*7)/10;
+    imu.magADC[ROLL] = ((imu.magADC[ROLL]  - imu.magADC[PITCH])*7)/10;
+    imu.magADC[PITCH] = temp;
+  #endif
+  
   return 1;
 }
 #endif
