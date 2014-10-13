@@ -184,19 +184,17 @@ void serialCom() {
   static uint8_t offset[UART_NUMBER];
   static uint8_t dataSize[UART_NUMBER];
   static uint8_t c_state[UART_NUMBER];
+  uint32_t timeMax; // limit max time in this function in case of GPS
 
+  timeMax = micros();
   for(port=0;port<UART_NUMBER;port++) {
     CURRENTPORT=port;
-    #define GPS_COND
-    #if defined(GPS_SERIAL) && (UART_NUMBER > 1)
-      #define GPS_COND  && (GPS_SERIAL != port)
-    #endif
     #define RX_COND
     #if (defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)) && (UART_NUMBER > 1)
       #define RX_COND && (RX_SERIAL_PORT != port)
     #endif
     cc = SerialAvailable(port);
-    while (cc-- GPS_COND RX_COND) {
+    while (cc-- RX_COND) {
       bytesTXBuff = SerialUsedTXBuff(port); // indicates the number of occupied bytes in TX buffer
       if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (50 bytes margin)
       c = SerialRead(port);
@@ -240,6 +238,28 @@ void serialCom() {
           }
         }
         c_state[port] = state;
+
+        // SERIAL: try to detect a new nav frame based on the current received buffer
+        #if defined(GPS_SERIAL)
+        if (GPS_SERIAL == port) {
+          static uint16_t GPS_last_frame_seen; //Last gps frame seen at this time, used to detect stalled gps communication
+  
+          if (GPS_newFrame(c)) {
+            //We had a valid GPS data frame, so signal task scheduler to switch to compute
+            if (GPS_update == 1) GPS_update = 0; else GPS_update = 1; //Blink GPS update
+            GPS_last_frame_seen = millis();
+            GPS_Frame = 1;
+          }
+  
+          // Check for stalled GPS, if no frames seen for 1.2sec then consider it LOST
+          if ((millis() - GPS_last_frame_seen) > 1200000) {
+            //No update since 1200ms clear fix...
+            f.GPS_FIX = 0;
+            GPS_numSat = 0;
+          }
+        }
+        if (micros()-timeMax>250) return;  // Limit the maximum execution time of serial decoding to avoid time spike
+        #endif
       #endif // SUPPRESS_ALL_SERIAL_MSP
     }
   }

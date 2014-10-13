@@ -119,8 +119,6 @@ extern uint16_t GPS_altitude;           // GPS altitude      - unit: meter
 extern uint16_t GPS_speed;              // GPS speed         - unit: cm/s
 extern uint8_t  GPS_update;             // a binary toogle to distinct a GPS position update
 extern uint16_t GPS_ground_course;      //                   - unit: degree*10
-extern uint8_t  GPS_Present;            // Checksum from Gps serial
-extern uint8_t  GPS_Enable;
 extern uint32_t GPS_time;
 
 extern uint8_t  GPS_mode;               // contains the current selected gps flight mode

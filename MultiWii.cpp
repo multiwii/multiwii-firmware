@@ -327,8 +327,6 @@ conf_t conf;
   uint16_t GPS_speed;                                   // GPS speed         - unit: cm/s
   uint8_t  GPS_update = 0;                              // a binary toogle to distinct a GPS position update
   uint16_t GPS_ground_course = 0;                       //                   - unit: degree*10
-  uint8_t  GPS_Present = 0;                             // Checksum from Gps serial
-  uint8_t  GPS_Enable  = 0;
 
   //uint8_t GPS_mode  = GPS_MODE_NONE; // contains the current selected gps flight mode --> moved to the f. structure
   uint8_t NAV_state = 0; // NAV_STATE_NONE;  /// State of the nav engine
@@ -428,8 +426,6 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     static uint8_t ind = 0;
     static uint16_t pvec[PSENSOR_SMOOTH], psum;
     uint16_t p =  analogRead(PSENSORPIN);
-    //LCDprintInt16(p); LCDcrlf();
-    //debug[0] = p;
     #if PSENSOR_SMOOTH != 1
       psum += p;
       psum -= pvec[ind];
@@ -451,7 +447,6 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       static uint8_t ind = 0;
       static uint16_t vvec[VBAT_SMOOTH], vsum;
       uint16_t v = analogRead(V_BATPIN);
-      //debug[1] = v;
       #if VBAT_SMOOTH == 1
         analog.vbat = (v<<4) / conf.vbatscale; // result is Vbatt in 0.1V steps
       #else
@@ -491,7 +486,6 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       r = rsum / RSSI_SMOOTH;
       analog.rssi = r;
     #endif
-    //debug[0]=analog.rssi;
     break;
   }
   #endif
@@ -543,11 +537,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   }
 
   #if !(defined(SPEKTRUM) && defined(PROMINI))  //Only one serial port on ProMini.  Skip serial com if Spektrum Sat in use. Note: Spek code will auto-call serialCom if GUI data detected on serial0.
-    #if defined(GPS_PROMINI)
-      if(GPS_Enable == 0) {serialCom();}
-    #else
-      serialCom();
-    #endif
+    serialCom();
   #endif
 
   #if defined(POWERMETER)
@@ -612,16 +602,14 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 }
 
 void setup() {
-  #if !defined(GPS_PROMINI)
-    SerialOpen(0,SERIAL0_COM_SPEED);
-    #if defined(PROMICRO)
-      SerialOpen(1,SERIAL1_COM_SPEED);
-    #endif
-    #if defined(MEGA)
-      SerialOpen(1,SERIAL1_COM_SPEED);
-      SerialOpen(2,SERIAL2_COM_SPEED);
-      SerialOpen(3,SERIAL3_COM_SPEED);
-    #endif
+  SerialOpen(0,SERIAL0_COM_SPEED);
+  #if defined(PROMICRO)
+    SerialOpen(1,SERIAL1_COM_SPEED);
+  #endif
+  #if defined(MEGA)
+    SerialOpen(1,SERIAL1_COM_SPEED);
+    SerialOpen(2,SERIAL2_COM_SPEED);
+    SerialOpen(3,SERIAL3_COM_SPEED);
   #endif
   LEDPIN_PINMODE;
   POWERPIN_PINMODE;
@@ -670,9 +658,9 @@ void setup() {
   readEEPROM();                                 // load setting data from last used profile
   blinkLED(2,40,global_conf.currentSet+1);          
 
-#if GPS
-  recallGPSconf();                              //Load GPS configuration parameteres
-#endif
+  #if GPS
+    recallGPSconf();                              //Load GPS configuration parameteres
+  #endif
 
   configureReceiver();
   #if defined (PILOTLAMP) 
@@ -698,27 +686,8 @@ void setup() {
   #if GPS
     #if defined(GPS_SERIAL)
       GPS_SerialInit();
-      for(uint8_t j=0;j<=5;j++){
-        GPS_NewData(); 
-        LEDPIN_ON
-        delay(20);
-        LEDPIN_OFF
-        delay(80);
-      }
-      #if defined(GPS_PROMINI)
-        if(!GPS_Present){
-          SerialEnd(GPS_SERIAL);
-          SerialOpen(0,SERIAL0_COM_SPEED);
-        }
-      #else
-        GPS_Present = 1;
-      #endif
-      GPS_Enable = GPS_Present;    
-    #else
-      //Assume i2c gps, and enables it
-      GPS_Enable = 1;
     #endif
-      GPS_conf.max_wp_number = getMaxWPNumber(); 
+    GPS_conf.max_wp_number = getMaxWPNumber(); 
   #endif
   
   #if defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) || defined(OLED_DIGOLE) || defined(LCD_TELEMETRY_STEP)
@@ -1252,10 +1221,7 @@ void loop () {
       case 3:
         taskOrder++;
         #if GPS
-          if(GPS_Enable) {  
-            if (GPS_Compute() != 0) break;  // performs computation on new frame only if present
-            if (GPS_NewData() != 0) break;  // SERIAL: try to detect a new nav frame based on the current received buffer --- I2C: 160 us with no new data / 1250us! with new data 
-          }
+          if (GPS_Compute() != 0) break;  // performs computation on new frame only if present
         #endif
       case 4:
         taskOrder=0;

@@ -1998,7 +1998,7 @@ void fill_line2_gps_lon(uint8_t status) {
   line2[0] = GPS_coord[LON]<0?'W':'E';
   if (status) {
     line2[13] = (GPS_update ? 'U' : '.');
-    line2[15] = (GPS_Present ? 'P' : '.');
+    line2[15] = (1 ? 'P' : '.');
   }
   line2[1]  = '0' + aGPS_longitude / 1000000000;
   line2[2]  = '0' + aGPS_longitude / 100000000 - (aGPS_longitude/1000000000) * 10;
@@ -2466,7 +2466,7 @@ void lcd_telemetry() {
           strcpy_P(line1,PSTR("Status "));
           //                   0123456789012345
           LCDprintChar(line1);
-          if (GPS_Present)
+          if (1)
             LCDprintChar("OK");
           else {
             LCDattributesReverse();

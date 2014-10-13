@@ -11,9 +11,6 @@
 
 #if GPS
 
-//Function prototypes for GPS frame parsing
-bool GPS_newFrame(uint8_t c);
-
 //Function prototypes for other GPS functions
 //These perhaps could go to the gps.h file, however these are local to the gps.cpp  
 void GPS_bearing(int32_t* lat1, int32_t* lon1, int32_t* lat2, int32_t* lon2, int32_t* bearing);
@@ -153,8 +150,7 @@ typedef struct PID_PARAM_ {
 
   uint8_t land_detect;                 //Detect land (extern)
   static uint32_t land_settle_timer;
-  static uint32_t GPS_last_frame_seen; //Last gps frame seen at this time, used to detect stalled gps communication
-  static uint8_t GPS_Frame;            // a valid GPS_Frame was detected, and data is ready for nav computation
+  uint8_t GPS_Frame;            // a valid GPS_Frame was detected, and data is ready for nav computation
 
   static float  dTnav;            // Delta Time in milliseconds for navigation computations, updated with every good GPS read
   static int16_t actual_speed[2] = {0,0};
@@ -287,29 +283,6 @@ typedef struct PID_PARAM_ {
     #endif  //elif init_mtk_gps
   }
 #endif 
-
-//Main GPS nav loop. Called by the task scheduler
-uint8_t GPS_NewData(void) {
-  uint8_t c = SerialAvailable(GPS_SERIAL);
-  if (c==0) return 0;  //if we don't have char's to read, so return with a zero
-  while (c--) {
-    if (GPS_newFrame(SerialRead(GPS_SERIAL))) {
-      //We had a valid GPS data frame, so signal task scheduler to switch to compute
-      if (GPS_update == 1) GPS_update = 0; else GPS_update = 1; //Blink GPS update
-      GPS_last_frame_seen = millis();
-      GPS_Frame = 1;
-      GPS_Present = 1;
-    }
-  }
-  // Check for stalled GPS, if no frames seen for 1.2sec then consider it LOST
-  if ((millis() - GPS_last_frame_seen) > 1200) {
-    //No update since 1200ms clear fix...
-    f.GPS_FIX = 0;
-    GPS_numSat = 0;
-  }
-  return 1;
-}
-
 
 //Main navigation processor and state engine
 // TODO: add proceesing states to ease processing burden 

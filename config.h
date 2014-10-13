@@ -670,10 +670,11 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
        at least 5Hz update rate. uncomment the first line to select the GPS serial port of the arduino */
        
     //#define GPS_SERIAL 2         // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
-    //#define GPS_PROMINI_SERIAL   // Will Autosense if GPS is connected when ardu boots.
+                                   // must be 0 for PRO_MINI (ex GPS_PRO_MINI)
+                                   // note: Now a GPS can share MSP on the same port. The only constrain is to not use it simultaneously, and use the same port speed.
 
     // avoid using 115200 baud because with 16MHz arduino the 115200 baudrate have more than 2% speed error (57600 have 0.8% error)
-    #define GPS_BAUD   57600
+    #define GPS_BAUD   57600       // GPS_BAUD will override SERIALx_COM_SPEED for the selected port
 
    /* GPS protocol 
        NMEA  - Standard NMEA protocol GGA, GSA and RMC  sentences are needed
@@ -705,19 +706,19 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
     #define GPS_LED_INDICATOR
 
    //Enables the MSP_WP command set , which is used by WinGUI for displaying an setting up navigation
-   //#define USE_MSP_WP                       
+   //#define USE_MSP_WP
 
    // HOME position is reset at every arm, uncomment it to prohibit it (you can set home position with GyroCalibration)    
-   //#define DONT_RESET_HOME_AT_ARM             
+   //#define DONT_RESET_HOME_AT_ARM
 
 /* GPS navigation can control the heading */
 
 // copter faces toward the navigation point, maghold must be enabled for it
 #define NAV_CONTROLS_HEADING       1    //(**)
-// true - copter comes in with tail first 
+// true - copter comes in with tail first
 #define NAV_TAIL_FIRST             0    //(**)
 // true - when copter arrives to home position it rotates it's head to takeoff direction
-#define NAV_SET_TAKEOFF_HEADING    1    //(**)  
+#define NAV_SET_TAKEOFF_HEADING    1    //(**)
 
 /* Get your magnetic declination from here : http://magnetic-declination.com/
 Convert the degree+minutes into decimal degree by ==> degree+minutes*(1/60)
@@ -726,14 +727,14 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
 #define MAG_DECLINATION  4.02f   //(**)
 
 // Adds a forward predictive filterig to compensate gps lag. Code based on Jason Short's lead filter implementation
-#define GPS_LEAD_FILTER               //(**)       
+#define GPS_LEAD_FILTER               //(**)
 
 // add a 5 element moving average filter to GPS coordinates, helps eliminate gps noise but adds latency comment out to disable
 // use it with NMEA gps only 
-//#define GPS_FILTERING                 //(**)     
+//#define GPS_FILTERING                 //(**)
 
 // if we are within this distance to a waypoint then we consider it reached (distance is in cm)
-#define GPS_WP_RADIUS              100      //(**) 
+#define GPS_WP_RADIUS              100      //(**)
 
 // Safe WP distance, do not start mission if the first wp distance is larger than this number (in meters)
 // Also aborts mission if the next waypoint distance is more than this number
@@ -750,7 +751,7 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
 #define NAV_SLOW_NAV               0      //(**)
 // Weight factor of the crosstrack error in navigation calculations (do not touch)
 #define CROSSTRACK_GAIN            .4     //(**)
-// Maximum allowable banking than navigation outputs 
+// Maximum allowable banking than navigation outputs
 #define NAV_BANK_MAX 3000                 //(**)
 
 //Defines the RTH altitude. 0 means keep current alt during RTH (in meters)
@@ -758,7 +759,7 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
 //Wait to reach RTH alt before start moving to home (0-no, 1-yes)
 #define WAIT_FOR_RTH_ALT           1         //(**)
 
-//Navigation engine will takeover BARO mode control 
+//Navigation engine will takeover BARO mode control
 #define NAV_TAKEOVER_BARO          1         //(**)
 
 //Throttle stick input will be ignored  (only in BARO)

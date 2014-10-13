@@ -1629,11 +1629,6 @@
   #define BARO 0
 #endif
 
-#if defined(GPS_PROMINI_SERIAL) && defined(PROMINI)
-  #define GPS_SERIAL 0
-  #define GPS_PROMINI
-#endif
-
 #if defined(GPS_SERIAL)  || defined(I2C_GPS)
   #define GPS 1
 #else
