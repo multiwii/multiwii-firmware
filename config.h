@@ -690,12 +690,14 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
     //#define INIT_MTK_GPS        // initialize MTK GPS for using selected speed, 5Hz update rate and GGA & RMC sentence or binary settings
 
 
-//**!*!*!*!*!*!*!*!*!*!* I2C GPS code is NOT finished in this version, please DON'T USE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     /* I2C GPS device made with an independant arduino + GPS device
        including some navigation functions
        contribution from EOSBandi   http://code.google.com/p/i2c-gps-nav/ 
        You have to use at least I2CGpsNav code r33 */
+    /* all functionnalities allowed by SERIAL_GPS are now available for I2C_GPS: all relevant navigation computations are gathered in the main FC */
+
     //#define I2C_GPS
+
     // If your I2C GPS board has Sonar support enabled
     //#define I2C_GPS_SONAR
 

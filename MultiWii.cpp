@@ -1222,6 +1222,9 @@ void loop () {
         taskOrder++;
         #if GPS
           if (GPS_Compute() != 0) break;  // performs computation on new frame only if present
+          #if defined(I2C_GPS)
+          if (GPS_NewData() != 0) break;  // 160 us with no new data / much more with new data 
+          #endif
         #endif
       case 4:
         taskOrder=0;

@@ -35,6 +35,8 @@ uint8_t i2c_readReg(uint8_t add, uint8_t reg);
 uint8_t i2c_readAck();
 uint8_t i2c_readNak();
 
+void i2c_read_reg_to_buf(uint8_t add, uint8_t reg, uint8_t *buf, uint8_t size);
+
 #if defined(MMA7455)
   #define ACC_1G 64
 #endif

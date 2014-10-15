@@ -23,11 +23,11 @@ void abort_mission(unsigned char error_code);
 void GPS_adjust_heading();
 void init_RTH(void);
 void check_land(void);
-//#if defined(I2C_GPS)
-//  void GPS_I2C_command(uint8_t command, uint8_t wp);
-//  void GPS_Process_I2C(void);
-//  extern int16_t target_bearing;
-//#else
+
+#if defined(I2C_GPS)
+uint8_t GPS_NewData(void);
+#endif
+
 extern uint32_t wp_distance;
 extern int32_t target_bearing;
 #endif /* GPS_H_ */

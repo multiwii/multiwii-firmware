@@ -593,7 +593,6 @@ void evaluateCommand() {
       }
       break;
     case MSP_SET_WP: // to move to struct transmission
-      //TODO: add I2C_gps handling
       {
       uint8_t wp_no = read8(); //Get the step number
 
