@@ -28,142 +28,32 @@ static void ACC_init();
   #define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  = X; imu.magADC[PITCH]  = Y; imu.magADC[YAW]  = Z;}
 #endif
 
-/*** I2C address ***/
-#if !defined(MMA7455_ADDRESS)
-  #define MMA7455_ADDRESS 0x1D
-#endif
 
-#if !defined(ADXL345_ADDRESS) 
-  #define ADXL345_ADDRESS 0x1D
-  //#define ADXL345_ADDRESS 0x53   //WARNING: Conflicts with a Wii Motion plus!
-#endif
-
-#if !defined(BMA180_ADDRESS) 
-  #define BMA180_ADDRESS 0x40
-  //#define BMA180_ADDRESS 0x41
-#endif
-
-#if !defined(BMA280_ADDRESS) 
-  #define BMA280_ADDRESS 0x18 // SDO PIN on GND
-  //#define BMA280_ADDRESS 0x19  // SDO PIN on Vddio
-#endif
-
-#if !defined(ITG3200_ADDRESS) 
-  #define ITG3200_ADDRESS 0X68
-  //#define ITG3200_ADDRESS 0X69
-#endif
-
-#if !defined(MPU6050_ADDRESS)
-  #define MPU6050_ADDRESS     0x68 // address pin AD0 low (GND), default for FreeIMU v0.4 and InvenSense evaluation board
-  //#define MPU6050_ADDRESS     0x69 // address pin AD0 high (VCC)
-#endif
-
-#if !defined(LSM330_ACC_ADDRESS)
-  #define LSM330_ACC_ADDRESS     0x18 // 30 >> 1 = 18  -> address pin SDO_A low (GND)
-  //#define LSM330_ACC_ADDRESS     0x19 // 32 >> 1 = 19  -> address pin SDO_A high (VCC)
-#endif
-
-#if !defined(LSM330_GYRO_ADDRESS)
-  #define LSM330_GYRO_ADDRESS     0x6A // D4 >> 1 = 6A  -> address pin SDO_G low (GND)
-  //#define LSM330_GYRO_ADDRESS     0x6B // D6 >> 1 = 6B  -> address pin SDO_G high (VCC)
-#endif
-
-#if !defined(MPU3050_ADDRESS)
-  #define MPU3050_ADDRESS     0x68 // Switch in "ON" position
-  //#define MPU3050_ADDRESS     0x69 // Switch in "1" position
-#endif
-
-#if !defined(MS561101BA_ADDRESS) 
-  #define MS561101BA_ADDRESS 0x77 //CBR=0 0xEE I2C address when pin CSB is connected to LOW (GND)
-  //#define MS561101BA_ADDRESS 0x76 //CBR=1 0xEC I2C address when pin CSB is connected to HIGH (VCC)
-#endif
-
-//ITG3200 and ITG3205 Gyro LPF setting
-#if defined(ITG3200_LPF_256HZ) || defined(ITG3200_LPF_188HZ) || defined(ITG3200_LPF_98HZ) || defined(ITG3200_LPF_42HZ) || defined(ITG3200_LPF_20HZ) || defined(ITG3200_LPF_10HZ)
-  #if defined(ITG3200_LPF_256HZ)
-    #define ITG3200_SMPLRT_DIV 0  //8000Hz
-    #define ITG3200_DLPF_CFG   0
+//ITG3200 / ITG3205 / ITG3050 / MPU6050 / MPU3050 Gyro LPF setting
+#if defined(GYRO_LPF_256HZ) || defined(GYRO_LPF_188HZ) || defined(GYRO_LPF_98HZ) || defined(GYRO_LPF_42HZ) || defined(GYRO_LPF_20HZ) || defined(GYRO_LPF_10HZ) || defined(GYRO_LPF_5HZ)
+  #if defined(GYRO_LPF_256HZ)
+    #define GYRO_DLPF_CFG   0
   #endif
-  #if defined(ITG3200_LPF_188HZ)
-    #define ITG3200_SMPLRT_DIV 0  //1000Hz
-    #define ITG3200_DLPF_CFG   1
+  #if defined(GYRO_LPF_188HZ)
+    #define GYRO_DLPF_CFG   1
   #endif
-  #if defined(ITG3200_LPF_98HZ)
-    #define ITG3200_SMPLRT_DIV 0
-    #define ITG3200_DLPF_CFG   2
+  #if defined(GYRO_LPF_98HZ)
+    #define GYRO_DLPF_CFG   2
   #endif
-  #if defined(ITG3200_LPF_42HZ)
-    #define ITG3200_SMPLRT_DIV 0
-    #define ITG3200_DLPF_CFG   3
+  #if defined(GYRO_LPF_42HZ)
+    #define GYRO_DLPF_CFG   3
   #endif
-  #if defined(ITG3200_LPF_20HZ)
-    #define ITG3200_SMPLRT_DIV 0
-    #define ITG3200_DLPF_CFG   4
+  #if defined(GYRO_LPF_20HZ)
+    #define GYRO_DLPF_CFG   4
   #endif
-  #if defined(ITG3200_LPF_10HZ)
-    #define ITG3200_SMPLRT_DIV 0
-    #define ITG3200_DLPF_CFG   5
+  #if defined(GYRO_LPF_10HZ)
+    #define GYRO_DLPF_CFG   5
+  #endif
+  #if defined(GYRO_LPF_5HZ)
+    #define GYRO_DLPF_CFG   6
   #endif
 #else
-    //Default settings LPF 256Hz/8000Hz sample
-    #define ITG3200_SMPLRT_DIV 0  //8000Hz
-    #define ITG3200_DLPF_CFG   0
-#endif
-
-//MPU6050 Gyro LPF setting
-#if defined(MPU6050_LPF_256HZ) || defined(MPU6050_LPF_188HZ) || defined(MPU6050_LPF_98HZ) || defined(MPU6050_LPF_42HZ) || defined(MPU6050_LPF_20HZ) || defined(MPU6050_LPF_10HZ) || defined(MPU6050_LPF_5HZ)
-  #if defined(MPU6050_LPF_256HZ)
-    #define MPU6050_DLPF_CFG   0
-  #endif
-  #if defined(MPU6050_LPF_188HZ)
-    #define MPU6050_DLPF_CFG   1
-  #endif
-  #if defined(MPU6050_LPF_98HZ)
-    #define MPU6050_DLPF_CFG   2
-  #endif
-  #if defined(MPU6050_LPF_42HZ)
-    #define MPU6050_DLPF_CFG   3
-  #endif
-  #if defined(MPU6050_LPF_20HZ)
-    #define MPU6050_DLPF_CFG   4
-  #endif
-  #if defined(MPU6050_LPF_10HZ)
-    #define MPU6050_DLPF_CFG   5
-  #endif
-  #if defined(MPU6050_LPF_5HZ)
-    #define MPU6050_DLPF_CFG   6
-  #endif
-#else
-    //Default settings LPF 256Hz/8000Hz sample
-    #define MPU6050_DLPF_CFG   0
-#endif
-
-//MPU3050 Gyro LPF setting
-#if defined(MPU3050_LPF_256HZ) || defined(MPU3050_LPF_188HZ) || defined(MPU3050_LPF_98HZ) || defined(MPU3050_LPF_42HZ) || defined(MPU3050_LPF_20HZ) || defined(MPU3050_LPF_10HZ) || defined(MPU3050_LPF_5HZ)
-  #if defined(MPU3050_LPF_256HZ)
-    #define MPU3050_DLPF_CFG   0
-  #endif
-  #if defined(MPU3050_LPF_188HZ)
-    #define MPU3050_DLPF_CFG   1
-  #endif
-  #if defined(MPU3050_LPF_98HZ)
-    #define MPU3050_DLPF_CFG   2
-  #endif
-  #if defined(MPU3050_LPF_42HZ)
-    #define MPU3050_DLPF_CFG   3
-  #endif
-  #if defined(MPU3050_LPF_20HZ)
-    #define MPU3050_DLPF_CFG   4
-  #endif
-  #if defined(MPU3050_LPF_10HZ)
-    #define MPU3050_DLPF_CFG   5
-  #endif
-  #if defined(MPU3050_LPF_5HZ)
-    #define MPU3050_DLPF_CFG   6
-  #endif
-#else
-    //Default settings LPF 256Hz/8000Hz sample
-    #define MPU3050_DLPF_CFG   0
+    #define GYRO_DLPF_CFG   0 //Default settings LPF 256Hz/8000Hz sample
 #endif
 
 static uint8_t rawADC[6];
@@ -591,6 +481,10 @@ uint8_t Baro_update() {                   // first UT conversion is started in i
 // specs are here: http://www.meas-spec.com/downloads/MS5611-01BA03.pdf
 // useful info on pages 7 -> 12
 #if defined(MS561101BA)
+#if !defined(MS561101BA_ADDRESS) 
+  #define MS561101BA_ADDRESS 0x77 //CBR=0 0xEE I2C address when pin CSB is connected to LOW (GND)
+  //#define MS561101BA_ADDRESS 0x76 //CBR=1 0xEC I2C address when pin CSB is connected to HIGH (VCC)
+#endif
 
 // registers of the device
 #define MS561101BA_PRESSURE    0x40
@@ -699,6 +593,10 @@ uint8_t Baro_update() {                          // first UT conversion is start
 // I2C Accelerometer MMA7455 
 // ************************************************************************************************************
 #if defined(MMA7455)
+#if !defined(MMA7455_ADDRESS)
+  #define MMA7455_ADDRESS 0x1D
+#endif
+
 void ACC_init () {
   delay(10);
   i2c_writeReg(MMA7455_ADDRESS,0x16,0x21);
@@ -753,6 +651,11 @@ void ACC_getADC () {
 //  4) bits b00001011 must be set on register 0x31 to select the data format (only once at the initialization)
 // ************************************************************************************************************
 #if defined(ADXL345)
+#if !defined(ADXL345_ADDRESS) 
+  #define ADXL345_ADDRESS 0x1D
+  //#define ADXL345_ADDRESS 0x53   //WARNING: Conflicts with a Wii Motion plus!
+#endif
+
 void ACC_init () {
   delay(10);
   i2c_writeReg(ADXL345_ADDRESS,0x2D,1<<3); //  register: Power CTRL  -- value: Set measure bit 3 on
@@ -787,6 +690,11 @@ void ACC_getADC () {
 //                      |          xxxxxxxxxxxxx              |                    8G:   101       | xxxxxxxx |
 // ************************************************************************************************************
 #if defined(BMA180)
+#if !defined(BMA180_ADDRESS) 
+  #define BMA180_ADDRESS 0x40
+  //#define BMA180_ADDRESS 0x41
+#endif
+
 void ACC_init () {
   delay(10);
   //default range 2G: 1G = 4096 unit.
@@ -824,6 +732,11 @@ void ACC_getADC () {
 // I2C Accelerometer BMA280
 // ************************************************************************************************************
 #if defined(BMA280)
+#if !defined(BMA280_ADDRESS) 
+  #define BMA280_ADDRESS 0x18 // SDO PIN on GND
+  //#define BMA280_ADDRESS 0x19  // SDO PIN on Vddio
+#endif
+
 void ACC_init () {
   delay(10);
   i2c_writeReg(BMA280_ADDRESS, 0x10, 0x09); //set BW to 15,63Hz
@@ -960,7 +873,7 @@ void Gyro_getADC () {
 #endif
 
 // ************************************************************************************************************
-// I2C Gyroscope ITG3200 
+// I2C Gyroscope ITG3200 / ITG3205 / ITG3050 / MPU3050
 // ************************************************************************************************************
 // I2C adress: 0xD2 (8bit)   0x69 (7bit)
 // I2C adress: 0xD0 (8bit)   0x68 (7bit)
@@ -970,21 +883,23 @@ void Gyro_getADC () {
 // or 2) I2C adress is set to 0x68 (AD0 PIN connected to GND)
 // 3) sample rate = 1000Hz ( 1kHz/(div+1) )
 // ************************************************************************************************************
-#if defined(ITG3200)
+#if defined(ITG3200) || defined(ITG3050) || defined(MPU3050)
+#if !defined(GYRO_ADDRESS)
+  #define GYRO_ADDRESS 0X68
+  //#define GYRO_ADDRESS 0X69
+#endif
+
 void Gyro_init() {
-  delay(100);
-  i2c_writeReg(ITG3200_ADDRESS, 0x3E, 0x80); //register: Power Management  --  value: reset device
-//  delay(5);
-//  i2c_writeReg(ITG3200_ADDRESS, 0x15, ITG3200_SMPLRT_DIV); //register: Sample Rate Divider  -- default value = 0: OK
+  i2c_writeReg(GYRO_ADDRESS, 0x3E, 0x80);                 //PWR_MGMT_1    -- DEVICE_RESET 1
   delay(5);
-  i2c_writeReg(ITG3200_ADDRESS, 0x16, 0x18 + ITG3200_DLPF_CFG); //register: DLPF_CFG - low pass filter configuration
+  i2c_writeReg(GYRO_ADDRESS, 0x16, 0x18 + GYRO_DLPF_CFG); //Gyro CONFIG   -- EXT_SYNC_SET 0 (disable input pin for data sync) ; DLPF_CFG = GYRO_DLPF_CFG ; -- FS_SEL = 3: Full scale set to 2000 deg/sec
   delay(5);
-  i2c_writeReg(ITG3200_ADDRESS, 0x3E, 0x03); //register: Power Management  --  value: PLL with Z Gyro reference
+  i2c_writeReg(GYRO_ADDRESS, 0x3E, 0x03);                 //PWR_MGMT_1    -- SLEEP 0; CYCLE 0; TEMP_DIS 0; CLKSEL 3 (PLL with Z Gyro reference)
   delay(100);
 }
 
 void Gyro_getADC () {
-  i2c_getSixRawADC(ITG3200_ADDRESS,0X1D);
+  i2c_getSixRawADC(GYRO_ADDRESS,0X1D);
   GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])>>2 , // range: +/- 8192; +/- 2000 deg/sec
                     ((rawADC[2]<<8) | rawADC[3])>>2 ,
                     ((rawADC[4]<<8) | rawADC[5])>>2 );
@@ -1236,12 +1151,16 @@ void Device_Mag_getADC() {
 // I2C Gyroscope and Accelerometer MPU6050
 // ************************************************************************************************************
 #if defined(MPU6050)
+#if !defined(MPU6050_ADDRESS)
+  #define MPU6050_ADDRESS     0x68 // address pin AD0 low (GND), default for FreeIMU v0.4 and InvenSense evaluation board
+  //#define MPU6050_ADDRESS     0x69 // address pin AD0 high (VCC)
+#endif
 
 static void Gyro_init() {
   i2c_writeReg(MPU6050_ADDRESS, 0x6B, 0x80);             //PWR_MGMT_1    -- DEVICE_RESET 1
   delay(50);
   i2c_writeReg(MPU6050_ADDRESS, 0x6B, 0x03);             //PWR_MGMT_1    -- SLEEP 0; CYCLE 0; TEMP_DIS 0; CLKSEL 3 (PLL with Z Gyro reference)
-  i2c_writeReg(MPU6050_ADDRESS, 0x1A, MPU6050_DLPF_CFG); //CONFIG        -- EXT_SYNC_SET 0 (disable input pin for data sync) ; default DLPF_CFG = 0 => ACC bandwidth = 260Hz  GYRO bandwidth = 256Hz)
+  i2c_writeReg(MPU6050_ADDRESS, 0x1A, GYRO_DLPF_CFG);    //CONFIG        -- EXT_SYNC_SET 0 (disable input pin for data sync) ; default DLPF_CFG = 0 => ACC bandwidth = 260Hz  GYRO bandwidth = 256Hz)
   i2c_writeReg(MPU6050_ADDRESS, 0x1B, 0x18);             //GYRO_CONFIG   -- FS_SEL = 3: Full scale set to 2000 deg/sec
   // enable I2C bypass for AUX I2C
   #if defined(MAG)
@@ -1309,6 +1228,15 @@ void ACC_getADC () {
 // Start Of I2C Gyroscope and Accelerometer LSM330
 // ************************************************************************************************************
 #if defined(LSM330)
+#if !defined(LSM330_ACC_ADDRESS)
+  #define LSM330_ACC_ADDRESS     0x18 // 30 >> 1 = 18  -> address pin SDO_A low (GND)
+  //#define LSM330_ACC_ADDRESS     0x19 // 32 >> 1 = 19  -> address pin SDO_A high (VCC)
+#endif
+#if !defined(LSM330_GYRO_ADDRESS)
+  #define LSM330_GYRO_ADDRESS     0x6A // D4 >> 1 = 6A  -> address pin SDO_G low (GND)
+  //#define LSM330_GYRO_ADDRESS     0x6B // D6 >> 1 = 6B  -> address pin SDO_G high (VCC)
+#endif
+
 ////////////////////////////////////
 //           ACC start            //
 ////////////////////////////////////
@@ -1357,7 +1285,7 @@ void Gyro_init() {
   delay(5);
   i2c_writeReg(LSM330_GYRO_ADDRESS ,0x24 ,0x02 ); // CTRL_REG5   low pass filter enable
   delay(5);
-  i2c_writeReg(LSM330_GYRO_ADDRESS ,0x23 ,0x30); // CTRL_REG4 Select 2000dps
+  i2c_writeReg(LSM330_GYRO_ADDRESS ,0x23 ,0x30);  // CTRL_REG4 Select 2000dps
 }
 
 void Gyro_getADC () {
@@ -1377,28 +1305,6 @@ void Gyro_getADC () {
 // ************************************************************************************************************
 // End Of I2C Gyroscope and Accelerometer LSM330
 // ************************************************************************************************************
-
-// ************************************************************************************************************
-// I2C Gyroscope MPU3050
-// ************************************************************************************************************
-#if defined(MPU3050)
-
-void Gyro_init() {
-  i2c_writeReg(MPU3050_ADDRESS, 0x3E, 0x80);             //PWR_MGMT_1    -- DEVICE_RESET 1
-  delay(5);
-  i2c_writeReg(MPU3050_ADDRESS, 0x3E, 0x03);             //PWR_MGMT_1    -- SLEEP 0; CYCLE 0; TEMP_DIS 0; CLKSEL 3 (PLL with Z Gyro reference)
-  i2c_writeReg(MPU3050_ADDRESS, 0x16, MPU3050_DLPF_CFG + 0x18); // Gyro CONFIG   -- EXT_SYNC_SET 0 (disable input pin for data sync) ; default DLPF_CFG = 0 => GYRO bandwidth = 256Hz); -- FS_SEL = 3: Full scale set to 2000 deg/sec
-}
-
-void Gyro_getADC () {
-  i2c_getSixRawADC(MPU3050_ADDRESS, 0x1D);
-  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])>>2 , // range: +/- 8192; +/- 2000 deg/sec
-                    ((rawADC[2]<<8) | rawADC[3])>>2 ,
-                    ((rawADC[4]<<8) | rawADC[5])>>2 );
-  GYRO_Common();
-}
-
-#endif
 
 
 #if defined(WMP)

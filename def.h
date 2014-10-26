@@ -1021,7 +1021,7 @@
   #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  =  X; imu.accADC[PITCH]  = -Y; imu.accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] =  X; imu.gyroADC[PITCH] =  Y; imu.gyroADC[YAW] = -Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  = -Z;}
-  #define ITG3200_ADDRESS 0X69
+  #define GYRO_ADDRESS 0X69
 #endif
 
 #if defined(ATAVRSBIN1)
@@ -1083,7 +1083,7 @@
 #endif
 
 #if defined(SIRIUS_MEGAv5_OSD)
-  #define ITG3200 // in fact a ITG3050
+  #define ITG3050
   #define BMA280
   #define MS561101BA
   #define HMC5883
@@ -1125,7 +1125,7 @@
   #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = -X; imu.accADC[PITCH]  = -Y; imu.accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] =  Y; imu.gyroADC[PITCH] = -X; imu.gyroADC[YAW] = -Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  = -Z;}
-  #define ITG3200_ADDRESS 0X69
+  #define GYRO_ADDRESS 0X69
   #if defined(DROTEK_10DOF_MS)
     #define MS561101BA
   #elif defined(DROTEK_10DOF)
@@ -1138,7 +1138,7 @@
   #define BMA180
   #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = -Y; imu.accADC[PITCH]  =  X; imu.accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] = -X; imu.gyroADC[PITCH] = -Y; imu.gyroADC[YAW] = -Z;}
-  #define ITG3200_ADDRESS 0X69
+  #define GYRO_ADDRESS 0X69
 #endif
 
 #if defined(DROTEK_6DOF_MPU)
@@ -1617,7 +1617,7 @@
   #define MAG 0
 #endif
 
-#if defined(ITG3200) || defined(L3G4200D) || defined(MPU6050) || defined(LSM330) || defined(MPU3050) || defined(WMP)
+#if defined(ITG3200) || defined(ITG3050) || defined(L3G4200D) || defined(MPU6050) || defined(LSM330) || defined(MPU3050) || defined(WMP)
   #define GYRO 1
 #else
   #define GYRO 0

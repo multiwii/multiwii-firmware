@@ -161,6 +161,7 @@
       /* leave it commented if you already checked a specific board above */
       /* I2C gyroscope */
       //#define WMP
+      //#define ITG3050
       //#define ITG3200
       //#define MPU3050
       //#define L3G4200D
@@ -513,26 +514,15 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
          to decrease the LPF frequency, only one step per try. As soon as twitching gone, stick with that setting.
          It will not help on feedback wobbles, so change only when copter is randomly twiching and all dampening and
          balancing options ran out. Uncomment only one option!
-         IMPORTANT! Change low pass filter setting changes PID behaviour, so retune your PID's after changing LPF.*/
-      //#define ITG3200_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
-      //#define ITG3200_LPF_188HZ
-      //#define ITG3200_LPF_98HZ
-      //#define ITG3200_LPF_42HZ
-      //#define ITG3200_LPF_20HZ
-      //#define ITG3200_LPF_10HZ      // Use this only in extreme cases, rather change motors and/or props
-
-      /* MPU6050 Low pass filter setting. In case you cannot eliminate all vibrations to the Gyro, you can try
-         to decrease the LPF frequency, only one step per try. As soon as twitching gone, stick with that setting.
-         It will not help on feedback wobbles, so change only when copter is randomly twiching and all dampening and
-         balancing options ran out. Uncomment only one option!
-         IMPORTANT! Change low pass filter setting changes PID behaviour, so retune your PID's after changing LPF.*/
-      //#define MPU6050_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
-      //#define MPU6050_LPF_188HZ
-      //#define MPU6050_LPF_98HZ
-      //#define MPU6050_LPF_42HZ
-      //#define MPU6050_LPF_20HZ
-      //#define MPU6050_LPF_10HZ
-      //#define MPU6050_LPF_5HZ       // Use this only in extreme cases, rather change motors and/or props
+         IMPORTANT! Change low pass filter setting changes PID behaviour, so retune your PID's after changing LPF.
+         available for ITG3050, ITG3200, MPU3050, MPU6050*/
+      //#define GYRO_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
+      //#define GYRO_LPF_188HZ
+      //#define GYRO_LPF_98HZ
+      //#define GYRO_LPF_42HZ
+      //#define GYRO_LPF_20HZ
+      //#define GYRO_LPF_10HZ
+      //#define GYRO_LPF_5HZ       // Use this only in extreme cases, rather change motors and/or props -- setting not available on ITG3200
 
     /******                Gyro smoothing    **********************************/
       /* GYRO_SMOOTHING. In case you cannot reduce vibrations _and_ _after_ you have tried the low pass filter options, you
