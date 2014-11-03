@@ -74,6 +74,7 @@ void i2c_init(void) {
   TWSR = 0;                                    // no prescaler => prescaler = 1
   TWBR = ((F_CPU / 400000) - 16) / 2;          // set the I2C clock rate to 400kHz
   TWCR = 1<<TWEN;                              // enable twi module, no interrupt
+  i2c_errors_count = 0;
 }
 
 void __attribute__ ((noinline)) waitTransmissionI2C(uint8_t twcr) {
@@ -1536,15 +1537,25 @@ inline void Sonar_init() {}
 void Sonar_update() {}
 #endif
 
-void initSensors() {
-  #if !defined(DISABLE_POWER_PIN)
-    POWERPIN_ON;
-    delay(200);
-  #endif
+
+void initS() {
   i2c_init();
   if (GYRO)  Gyro_init();
   if (BARO)  Baro_init();
   if (MAG)   Mag_init();
   if (ACC)   ACC_init();
   if (SONAR) Sonar_init();
+}
+
+void initSensors() {
+  uint8_t c = 5;
+  #if !defined(DISABLE_POWER_PIN)
+    POWERPIN_ON;
+    delay(200);
+  #endif
+  while(c) { // We try several times to init all sensors without any i2c errors. An I2C error at this stage might results in a wrong sensor settings
+    c--;
+    initS();
+    if (i2c_errors_count == 0) break; // no error during init => init ok
+  }
 }

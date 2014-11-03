@@ -205,7 +205,6 @@ flags_struct_t f;
 #endif
 
 int16_t  i2c_errors_count = 0;
-int16_t  annex650_overrun_count = 0;
 
 
 
@@ -244,6 +243,7 @@ uint16_t intPowerTrigger1;
 #if defined(LCD_TELEMETRY)
   uint8_t telemetry = 0;
   uint8_t telemetry_auto = 0;
+  int16_t annex650_overrun_count = 0;
 #endif
 #ifdef LCD_TELEMETRY_STEP
   char telemetryStepSequence []  = LCD_TELEMETRY_STEP;

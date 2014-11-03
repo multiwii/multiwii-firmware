@@ -27,7 +27,9 @@ void computeIMU () {
   annexCode();
   uint8_t t=0;
   while((int16_t)(micros()-timeInterleave)<650) t=1; //empirical, interleaving delay between 2 consecutive reads
-  if (!t) annex650_overrun_count++;
+  #ifdef LCD_TELEMETRY
+    if (!t) annex650_overrun_count++;
+  #endif
   #if GYRO
     Gyro_getADC();
   #endif
