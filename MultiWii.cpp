@@ -276,7 +276,7 @@ uint8_t rcSerialCount = 0;   // a counter to select legacy RX when there is no m
 int16_t lookupPitchRollRC[5];// lookup table for expo & RC rate PITCH+ROLL
 int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 
-#if defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)
+#if defined(SERIAL_RX)
   volatile uint8_t  spekFrameFlags;
   volatile uint32_t spekTimeLast;
   uint8_t  spekFrameDone;
@@ -536,7 +536,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     }
   }
 
-  #if !(defined(SPEKTRUM) && defined(PROMINI))  //Only one serial port on ProMini.  Skip serial com if Spektrum Sat in use. Note: Spek code will auto-call serialCom if GUI data detected on serial0.
+  #if !(defined(SERIAL_RX) && defined(PROMINI))  //Only one serial port on ProMini.  Skip serial com if SERIAL RX in use. Note: Spek code will auto-call serialCom if GUI data detected on serial0.
     serialCom();
   #endif
 
@@ -815,21 +815,14 @@ void loop () {
   int16_t rc;
   int32_t prop = 0;
 
-  #if defined(SPEKTRUM)
-    if (spekFrameFlags == 0x01) readSpektrum();
-  #endif
-
-  #if defined(SBUS)
-    if (spekFrameFlags == 0x01) readSBus();
-  #endif
-  #if defined(SUMD)
-    if (spekFrameFlags == 0x01) readSumD();
+  #if defined(SERIAL_RX)
+    if (spekFrameFlags == 0x01) readSerial_RX();
   #endif
   #if defined(OPENLRSv2MULTI) 
     Read_OpenLRS_RC();
   #endif 
 
-#if defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)
+  #if defined(SERIAL_RX)
   if ((spekFrameDone == 0x01) || ((int16_t)(currentTime-rcTime) >0 )) { 
     spekFrameDone = 0x00;
   #else

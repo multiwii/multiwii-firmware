@@ -190,7 +190,7 @@ void serialCom() {
   for(port=0;port<UART_NUMBER;port++) {
     CURRENTPORT=port;
     #define RX_COND
-    #if (defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)) && (UART_NUMBER > 1)
+    #if defined(SERIAL_RX) && (UART_NUMBER > 1)
       #define RX_COND && (RX_SERIAL_PORT != port)
     #endif
     cc = SerialAvailable(port);

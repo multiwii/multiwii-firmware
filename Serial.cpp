@@ -151,7 +151,7 @@ void SerialEnd(uint8_t port) {
 
 // we don't care about ring buffer overflow (head->tail) to avoid a test condition : data is lost anyway if it happens 
 void store_uart_in_buf(uint8_t data, uint8_t portnum) {
-  #if defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)
+  #if defined(SERIAL_RX)
     if (portnum == RX_SERIAL_PORT) {
       if (!spekFrameFlags) { 
         sei();
@@ -207,7 +207,7 @@ uint8_t SerialRead(uint8_t port) {
   return c;
 }
 
-#if defined(SPEKTRUM)
+#if defined(SERIAL_RX)
   uint8_t SerialPeek(uint8_t port) {
     uint8_t c = serialBufferRX[serialTailRX[port]][port];
     if ((serialHeadRX[port] != serialTailRX[port])) return c; else return 0;

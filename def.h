@@ -1760,6 +1760,10 @@
   #define STANDARD_RX
 #endif
 
+#if defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)
+  #define SERIAL_RX
+#endif
+
 // Spektrum Satellite
 #if defined(SPEKTRUM)
   #define SPEK_FRAME_SIZE 16

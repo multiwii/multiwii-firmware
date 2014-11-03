@@ -309,7 +309,7 @@ void configureReceiver() {
 static uint16_t sbusIndex=0;
 static uint16_t sbus[25]={0};
 
-void  readSBus(){
+void readSerial_RX(){
   while(SerialAvailable(RX_SERIAL_PORT)){
     int val = SerialRead(RX_SERIAL_PORT);
     if(sbusIndex==0 && val != SBUS_SYNCBYTE)
@@ -372,7 +372,7 @@ static uint8_t sumdIndex=0;
 static uint8_t sumdSize=0;
 static uint8_t sumd[SUMD_BUFFSIZE]={0};
 
-void readSumD(void) {
+void readSerial_RX(void) {
   while (SerialAvailable(RX_SERIAL_PORT)) {
     int val = SerialRead(RX_SERIAL_PORT);
     if(sumdIndex == 0 && val != SUMD_SYNCBYTE) continue;
@@ -402,7 +402,7 @@ void readSumD(void) {
 /***************          combine and sort the RX Datas            ********************/
 /**************************************************************************************/
 #if defined(SPEKTRUM)
-void readSpektrum(void) {
+void readSerial_RX(void) {
   if ((!f.ARMED) && 
      #if defined(FAILSAFE) || (RX_SERIAL_PORT != 0) 
         (failsafeCnt > 5) &&
