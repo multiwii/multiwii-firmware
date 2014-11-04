@@ -1765,6 +1765,7 @@
 #endif
 
 // Spektrum Satellite
+#define BIND_CAPABLE 0  //Used for Spektrum today; can be used in the future for any RX type that needs a bind and has a MultiWii module. 
 #if defined(SPEKTRUM)
   #define SPEK_FRAME_SIZE 16
   #if (SPEKTRUM == 1024)
@@ -1780,6 +1781,7 @@
     #define SPEK_BIND_PULSES 5
   #endif
   #if defined(SPEK_BIND)
+    #define BIND_CAPABLE 1
     #if !defined(SPEK_BIND_GROUND)
       #define SPEK_BIND_GROUND 4
     #endif  

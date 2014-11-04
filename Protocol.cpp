@@ -90,17 +90,7 @@ static uint8_t indRX[UART_NUMBER];
 static uint8_t cmdMSP[UART_NUMBER];
 
 void evaluateOtherData(uint8_t sr);
-#ifndef SUPPRESS_ALL_SERIAL_MSP
-void evaluateCommand();
-#endif
-
-#define BIND_CAPABLE 0;  //Used for Spektrum today; can be used in the future for any RX type that needs a bind and has a MultiWii module. 
-#if defined(SPEK_BIND)
-  #define BIND_CAPABLE 1;
-#endif
-// Capability is bit flags; next defines should be 2, 4, 8...
-
-const uint32_t capability = 0+BIND_CAPABLE;
+void evaluateCommand(uint8_t c);
 
 static uint8_t read8()  {
   return inBuf[indRX[CURRENTPORT]++][CURRENTPORT]&0xff;
@@ -165,8 +155,11 @@ static void s_struct(uint8_t *cb,uint8_t siz) {
   tailSerialReply();
 }
 
+static void mspAck() {
+  headSerialReply(0);tailSerialReply();
+}
+
 static void __attribute__ ((noinline)) s_struct_w(uint8_t *cb,uint8_t siz) {
-  //headSerialReply(0);tailSerialReply(); // no ack
   while(siz--) *cb++ = read8();
 }
 
@@ -199,8 +192,7 @@ void serialCom() {
       if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (50 bytes margin)
       c = SerialRead(port);
       #ifdef SUPPRESS_ALL_SERIAL_MSP
-        // no MSP handling, so go directly
-        evaluateOtherData(c);
+        evaluateOtherData(c); // no MSP handling, so go directly
       #else
         state = c_state[port];
         // regular data handling to detect and handle MSP and other data
@@ -217,10 +209,9 @@ void serialCom() {
             continue;
           }
           dataSize[port] = c;
+          checksum[port] = c;
           offset[port] = 0;
-          checksum[port] = 0;
           indRX[port] = 0;
-          checksum[port] ^= c;
           state = HEADER_SIZE;  // the command is to follow
         } else if (state == HEADER_SIZE) {
           cmdMSP[port] = c;
@@ -232,7 +223,7 @@ void serialCom() {
             inBuf[offset[port]++][port] = c;
           } else {
             if (checksum[port] == c) // compare calculated and transferred checksum
-              evaluateCommand(); // we got a valid packet, evaluate it
+              evaluateCommand(cmdMSP[port]); // we got a valid packet, evaluate it
             state = IDLE;
             cc = 0; // no more than one MSP per port and per cycle
           }
@@ -265,11 +256,10 @@ void serialCom() {
   }
 }
 
-#ifndef SUPPRESS_ALL_SERIAL_MSP
-void evaluateCommand() {
+void evaluateCommand(uint8_t c) {
   uint32_t tmp=0; 
 
-  switch(cmdMSP[CURRENTPORT]) {
+  switch(c) {
     case MSP_PRIVATE:
       //headSerialError();tailSerialReply(); // we don't have any custom msp currently, so tell the gui we do not use that
       break;
@@ -278,9 +268,11 @@ void evaluateCommand() {
       rcSerialCount = 50; // 1s transition 
       break;
     case MSP_SET_PID:
+      mspAck();
       s_struct_w((uint8_t*)&conf.pid[0].P8,3*PIDITEMS);
       break;
     case MSP_SET_BOX:
+      mspAck();
       #if EXTAUX
         s_struct_w((uint8_t*)&conf.activate[0],CHECKBOXITEMS*4);
       #else
@@ -288,6 +280,7 @@ void evaluateCommand() {
       #endif
       break;
     case MSP_SET_RC_TUNING:
+      mspAck();
       s_struct_w((uint8_t*)&conf.rcRate8,7);
       break;
     #if !defined(DISABLE_SETTINGS_TAB)
@@ -298,6 +291,7 @@ void evaluateCommand() {
         uint16_t h;
         uint8_t  i,j,k,l;
       } set_misc;
+      mspAck();
       s_struct_w((uint8_t*)&set_misc,22);
       #if defined(POWERMETER)
         conf.powerTrigger1 = set_misc.a / PLEVELSCALE;
@@ -356,6 +350,7 @@ void evaluateCommand() {
     #endif
     #if defined (DYNBALANCE)
     case MSP_SET_MOTOR:
+      mspAck();
       s_struct_w((uint8_t*)&motor,16);
     break;
     #endif
@@ -367,10 +362,11 @@ void evaluateCommand() {
         writeGlobalSet(0);
         readEEPROM();
       }
-      //headSerialReply(0);tailSerialReply();
+      mspAck();
       break;
     #endif
     case MSP_SET_HEAD:
+      mspAck();
       s_struct_w((uint8_t*)&magHold,2);
       break;
     case MSP_IDENT:
@@ -381,7 +377,7 @@ void evaluateCommand() {
       id.v     = VERSION;
       id.t     = MULTITYPE;
       id.msp_v = MSP_VERSION;
-      id.cap   = capability|DYNBAL<<2|FLAP<<3|NAVCAP<<4|EXTAUX<<5|((uint32_t)NAVI_VERSION<<28); //Navi version is stored in the upper four bits; 
+      id.cap   = (0+BIND_CAPABLE)|DYNBAL<<2|FLAP<<3|NAVCAP<<4|EXTAUX<<5|((uint32_t)NAVI_VERSION<<28); //Navi version is stored in the upper four bits; 
       s_struct((uint8_t*)&id,7);
       break;
     case MSP_STATUS:
@@ -469,6 +465,7 @@ void evaluateCommand() {
       s_struct((uint8_t*)&conf.servoConf[0].min,56); // struct servo_conf_ is 7 bytes length: min:2 / max:2 / middle:2 / rate:1    ----     8 servo =>  8x7 = 56
       break;
     case MSP_SET_SERVO_CONF:
+      mspAck();
       s_struct_w((uint8_t*)&conf.servoConf[0].min,56);
       break;
     case MSP_MOTOR:
@@ -478,6 +475,7 @@ void evaluateCommand() {
       s_struct((uint8_t*)&conf.angleTrim[0],4);
       break;
     case MSP_SET_ACC_TRIM:
+      mspAck();
       s_struct_w((uint8_t*)&conf.angleTrim[0],4);
       break;
     case MSP_RC:
@@ -491,6 +489,7 @@ void evaluateCommand() {
         int16_t e;
         uint16_t f;
       } set_set_raw_gps;
+      mspAck();
       s_struct_w((uint8_t*)&set_set_raw_gps,14);
       f.GPS_FIX = set_set_raw_gps.a;
       GPS_numSat = set_set_raw_gps.b;
@@ -529,6 +528,7 @@ void evaluateCommand() {
       break;
     #if defined(USE_MSP_WP)
     case MSP_SET_NAV_CONFIG:
+      mspAck();
       s_struct_w((uint8_t*)&GPS_conf,sizeof(GPS_conf));
       break;
     case MSP_NAV_CONFIG:
@@ -639,7 +639,7 @@ void evaluateCommand() {
         if (mission_step.number >0 && mission_step.number<255)                      //Not home and not poshold, we are free to store it in the eprom
           if (mission_step.number <= getMaxWPNumber())                              // Do not thrash the EEPROM with invalid wp number
             storeWP();
-        //headSerialReply(0);tailSerialReply();
+        mspAck();
       }
       }
       break;
@@ -684,25 +684,25 @@ void evaluateCommand() {
       break;
     case MSP_RESET_CONF:
       if(!f.ARMED) LoadDefaults();
-      //headSerialReply(0);tailSerialReply();
+      mspAck();
       break;
     case MSP_ACC_CALIBRATION:
       if(!f.ARMED) calibratingA=512;
-      //headSerialReply(0);tailSerialReply();
+      mspAck();
       break;
     case MSP_MAG_CALIBRATION:
       if(!f.ARMED) f.CALIBRATE_MAG = 1;
-      //headSerialReply(0);tailSerialReply();
+      mspAck();
       break;
     #if defined(SPEK_BIND)
     case MSP_BIND:
       spekBind();
-      //headSerialReply(0);tailSerialReply();
+      mspAck();
       break;
     #endif
     case MSP_EEPROM_WRITE:
       writeParams(0);
-      //headSerialReply(0);tailSerialReply();
+      mspAck();
       break;
     case MSP_DEBUG:
       s_struct((uint8_t*)&debug,8);
@@ -723,7 +723,6 @@ void evaluateCommand() {
       break;
   }
 }
-#endif // SUPPRESS_ALL_SERIAL_MSP
 
 // evaluate all other incoming serial data
 void evaluateOtherData(uint8_t sr) {
