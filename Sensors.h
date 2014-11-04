@@ -51,7 +51,10 @@ void i2c_read_reg_to_buf(uint8_t add, uint8_t reg, uint8_t *buf, uint8_t size);
 #define ACC_VelScale (9.80665f / 10000.0f / ACC_1G)
 
 // GYRO SCALE: we ignore the last 2 bits and convert it for rad/s
-#if defined(ITG3050) || defined(MPU6050) || defined(MPU3050)
+#if defined(ITG3050)
+  #define GYRO_SCALE (4 / 16.0 * PI / 180.0 / 1000000.0) //16.4 LSB = 1 deg/s  -- 16.0 apparently gives beter results than 16.4 (empirical)
+#endif
+#if defined(MPU6050) || defined(MPU3050)
   #define GYRO_SCALE (4 / 16.4 * PI / 180.0 / 1000000.0) //16.4 LSB = 1 deg/s
 #endif
 #if defined(ITG3200)
