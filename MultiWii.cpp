@@ -274,7 +274,7 @@ int16_t rcSerial[8];         // interval [1000;2000] - is rcData coming from MSP
 int16_t rcCommand[4];        // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW
 uint8_t rcSerialCount = 0;   // a counter to select legacy RX when there is no more MSP rc serial data
 int16_t lookupPitchRollRC[5];// lookup table for expo & RC rate PITCH+ROLL
-int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
+uint16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 
 #if defined(SERIAL_RX)
   volatile uint8_t  spekFrameFlags;
@@ -403,7 +403,6 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   tmp = (uint32_t)(tmp-MINCHECK)*2559/(2000-MINCHECK); // [MINCHECK;2000] -> [0;2559]
   tmp2 = tmp/256; // range [0;9]
   rcCommand[THROTTLE] = lookupThrottleRC[tmp2] + (tmp-tmp2*256) * (lookupThrottleRC[tmp2+1]-lookupThrottleRC[tmp2]) / 256; // [0;2559] -> expo -> [conf.minthrottle;MAXTHROTTLE]
-
   #if defined(HEADFREE)
     if(f.HEADFREE_MODE) { //to optimize
       float radDiff = (att.heading - headFreeModeHold) * 0.0174533f; // where PI/180 ~= 0.0174533

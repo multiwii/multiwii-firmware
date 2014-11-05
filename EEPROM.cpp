@@ -26,6 +26,9 @@ void readGlobalSet() {
  
 bool readEEPROM() {
   uint8_t i;
+  int8_t tmp;
+  uint8_t y;
+
   #ifdef MULTIPLE_CONFIGURATION_PROFILES
     if(global_conf.currentSet>2) global_conf.currentSet=0;
   #else
@@ -45,14 +48,12 @@ bool readEEPROM() {
     lookupPitchRollRC[i] = (1526+conf.rcExpo8*(i*i-15))*i*(int32_t)conf.rcRate8/1192;
   }
   for(i=0;i<11;i++) {
-    int16_t tmp = 10*i-conf.thrMid8;
-    uint8_t y = 1;
-    if (tmp>0) y = 100-conf.thrMid8;
-    if (tmp<0) y = conf.thrMid8;
-    lookupThrottleRC[i] = 10*conf.thrMid8 + tmp*( 100-conf.thrExpo8+(int32_t)conf.thrExpo8*(tmp*tmp)/(y*y) )/10; // [0;1000]
-    lookupThrottleRC[i] = conf.minthrottle + (int32_t)(MAXTHROTTLE-conf.minthrottle)* lookupThrottleRC[i]/1000;  // [0;1000] -> [conf.minthrottle;MAXTHROTTLE]
+    tmp = 10*i-conf.thrMid8;
+    y = conf.thrMid8;
+    if (tmp>0) y = 100-y;
+    lookupThrottleRC[i] = 100*conf.thrMid8 + tmp*( (int32_t)conf.thrExpo8*(tmp*tmp)/((uint16_t)y*y)+100-conf.thrExpo8 );       // [0;10000]
+    lookupThrottleRC[i] = conf.minthrottle + (uint32_t)((uint16_t)(MAXTHROTTLE-conf.minthrottle))* lookupThrottleRC[i]/10000;  // [0;10000] -> [conf.minthrottle;MAXTHROTTLE]
   }
-
   #if defined(POWERMETER)
     pAlarm = (uint32_t) conf.powerTrigger1 * (uint32_t) PLEVELSCALE * (uint32_t) PLEVELDIV; // need to cast before multiplying
   #endif
