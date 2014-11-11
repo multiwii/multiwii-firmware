@@ -1095,7 +1095,9 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text07, &conf.pid[PITCH].D8, &__D,
   &lcd_param_text08, &conf.pid[YAW].P8, &__P,
   &lcd_param_text09, &conf.pid[YAW].I8, &__I,
+#if (!(PID_CONTROLLER == 1)) || (!defined(COPTER_WITH_SERVO))
   &lcd_param_text10, &conf.pid[YAW].D8, &__D,
+#endif
 #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
   &lcd_param_text11, &conf.pid[PIDALT].P8, &__P,
   &lcd_param_text12, &conf.pid[PIDALT].I8, &__I,
@@ -2435,6 +2437,41 @@ void lcd_telemetry() {
     }
 #endif // page 5
 
+#ifndef SUPPRESS_TELEMETRY_PAGE_6
+  #if defined(VBAT_CELLS)
+    #ifdef DISPLAY_FONT_DSIZE
+    case '^':
+      { offset = 4; }
+      // no break !!
+    #endif
+    case 6: // alarms states
+    case '6':
+      {
+        i = linenr++ % VBAT_CELLS_NUM; // VBAT_CELLS_NUM cells
+        LCDsetLine((i - POSSIBLE_OFFSET)% VBAT_CELLS_NUM + 1);
+        strcpy_P(line1,PSTR("_:-.-V __._V"));
+        //                   0123456789.12345
+        line1[0] = digit1(i+1);
+        uint16_t v = analog.vbatcells[i];
+        if (i>0) v = (analog.vbatcells[i] > analog.vbatcells[i-1] ? analog.vbatcells[i] - analog.vbatcells[i-1] : 0);
+        line1[2] = digit10(v);
+        line1[4] =  digit1(v);
+        line1[7] = digit100(analog.vbatcells[i]);
+        line1[8] =  digit10(analog.vbatcells[i]);
+        line1[10] =   digit1(analog.vbatcells[i]);
+        //      #ifndef OLED_I2C_128x64
+        //        if (analog.vbat < conf.vbatlevel_warn1) { LCDattributesReverse(); }
+        //      #endif
+        if (v > VBATNOMINAL/VBAT_CELLS_NUM) v = VBATNOMINAL/VBAT_CELLS_NUM;
+        LCDbar(DISPLAY_COLUMNS-12, (v*100*VBAT_CELLS_NUM)/VBATNOMINAL );
+        //      LCDattributesOff(); // turn Reverse off for rest of display
+        LCDprintChar(line1);
+        LCDcrlf();
+        break;
+      }
+  #endif // vbat.cells
+#endif // page 6
+
 #ifndef SUPPRESS_TELEMETRY_PAGE_7
   #if GPS
     #ifdef DISPLAY_FONT_DSIZE
@@ -2496,6 +2533,37 @@ void lcd_telemetry() {
     break;
   #endif // gps
 #endif // page 7
+
+#ifndef SUPPRESS_TELEMETRY_PAGE_8
+  #ifdef DISPLAY_FONT_DSIZE
+      case '*':
+      { offset = 5; }
+      // no break !!
+  #endif
+    case 8: // alarms states
+    case '8':
+    //   123456789.1234567890
+    static char alarmsNames[][12] = {
+        "0: toggle  ",
+        "1: failsafe",
+        "2: noGPS   ",
+        "3: beeperOn",
+        "4: pMeter  ",
+        "5: runtime ",
+        "6: vBat    ",
+        "7: confirma",
+        "8: Acc     ",
+        "9: I2Cerror" };
+    linenr++;
+    linenr %= min(MULTILINE_PRE+MULTILINE_POST, 10 - POSSIBLE_OFFSET);
+    LCDsetLine(linenr+1);
+    // [linenr + POSSIBLE_OFFSET]
+    LCDprintChar( alarmsNames[linenr + POSSIBLE_OFFSET] );
+    LCDprint(' ');
+    LCDprint( digit1( alarmArray[linenr + POSSIBLE_OFFSET] ) );
+    LCDcrlf();
+    break;
+#endif // page 8
 
 #ifndef SUPPRESS_TELEMETRY_PAGE_9
   #ifdef DISPLAY_FONT_DSIZE

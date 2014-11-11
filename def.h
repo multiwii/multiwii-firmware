@@ -1932,19 +1932,19 @@
 #endif
 
 #if defined(POWERMETER_SOFT) && !(defined(VBAT))
-        #error "to use powermeter, you must also define and configure VBAT"
+  #error "to use powermeter, you must also define and configure VBAT"
 #endif
 
 #if defined(WATTS) && !(defined(POWERMETER_HARD)) && !(defined(VBAT))
-        #error "to compute WATTS, you must also define and configure both POWERMETER_HARD and VBAT"
+  #error "to compute WATTS, you must also define and configure both POWERMETER_HARD and VBAT"
 #endif
 
 #if defined(LCD_TELEMETRY_AUTO) && !(defined(LCD_TELEMETRY))
-        #error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
+  #error "to use automatic telemetry, you MUST also define and configure LCD_TELEMETRY"
 #endif
 
 #if defined(LCD_TELEMETRY_STEP) && !(defined(LCD_TELEMETRY))
-        #error "to use single step telemetry, you MUST also define and configure LCD_TELEMETRY"
+  #error "to use single step telemetry, you MUST also define and configure LCD_TELEMETRY"
 #endif
 
 #if defined(A32U4_4_HW_PWM_SERVOS) && !(defined(HELI_120_CCPM))
@@ -1953,6 +1953,14 @@
 
 #if GPS && !defined(NMEA) && !defined(UBLOX) && !defined(MTK_BINARY16) && !defined(MTK_BINARY19) && !defined(INIT_MTK_GPS) && !defined(I2C_GPS)
   #error "when using GPS you must specify the protocol NMEA, UBLOX..."
+#endif
+
+#if defined(NUNCHUK) || \
+    defined( MPU6050_LPF_256HZ) || defined(MPU6050_LPF_188HZ)  || defined( MPU6050_LPF_98HZ) || defined( MPU6050_LPF_42HZ) || \
+    defined( MPU6050_LPF_20HZ)  || defined( MPU6050_LPF_10HZ)  || defined( MPU6050_LPF_5HZ)  || \
+    defined( ITG3200_LPF_256HZ) || defined( ITG3200_LPF_188HZ) || defined( ITG3200_LPF_98HZ) || defined( ITG3200_LPF_42HZ) || \
+    defined( ITG3200_LPF_20HZ)  || defined( ITG3200_LPF_10HZ)
+  #error "you use one feature that is no longer supported or has undergone a name change"
 #endif
 
 #endif /* DEF_H_ */

@@ -110,7 +110,9 @@ void alarmHandler(void){
   
   if (i2c_errors_count > i2c_errors_count_old+100 || i2c_errors_count < -1) alarmArray[9] = 1;
   else alarmArray[9] = 0;
-   
+  #if defined(LCD_TELEMETRY) && !defined(SUPPRESS_TELEMETRY_PAGE_8)
+    if (telemetry == 8) lcd_telemetry(); // must output the alarms states now because alarmPatternComposer() will reset alarmArray[]
+  #endif
   alarmPatternComposer();
 }
 

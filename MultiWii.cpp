@@ -416,65 +416,69 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 
   // query at most one multiplexed analog channel per MWii cycle
   static uint8_t analogReader =0;
-  switch (analogReader++%3) {
-  #if defined(POWERMETER_HARD)
+  switch (analogReader++ % (3+VBAT_CELLS_NUM)) {
   case 0:
   {
-    uint16_t pMeterRaw; // used for current reading
-    static uint32_t lastRead = currentTime;
-    static uint8_t ind = 0;
-    static uint16_t pvec[PSENSOR_SMOOTH], psum;
-    uint16_t p =  analogRead(PSENSORPIN);
-    #if PSENSOR_SMOOTH != 1
-      psum += p;
-      psum -= pvec[ind];
-      pvec[ind++] = p;
-      ind %= PSENSOR_SMOOTH;
-      p = psum / PSENSOR_SMOOTH;
-    #endif
-    powerValue = ( conf.psensornull > p ? conf.psensornull - p : p - conf.psensornull); // do not use abs(), it would induce implicit cast to uint and overrun
-    analog.amperage = ((uint32_t)powerValue * conf.pint2ma) / 100; // [100mA]    //old (will overflow for 65A: powerValue * conf.pint2ma; // [1mA]
-    pMeter[PMOTOR_SUM] += ((currentTime-lastRead) * (uint32_t)((uint32_t)powerValue*conf.pint2ma))/100000; // [10 mA * msec]
-    lastRead = currentTime;
+    #if defined(POWERMETER_HARD)
+      static uint32_t lastRead = currentTime;
+      static uint8_t ind = 0;
+      static uint16_t pvec[PSENSOR_SMOOTH], psum;
+      uint16_t p =  analogRead(PSENSORPIN);
+      //LCDprintInt16(p); LCDcrlf();
+      //debug[0] = p;
+      #if PSENSOR_SMOOTH != 1
+        psum += p;
+        psum -= pvec[ind];
+        pvec[ind++] = p;
+        ind %= PSENSOR_SMOOTH;
+        p = psum / PSENSOR_SMOOTH;
+      #endif
+      powerValue = ( conf.psensornull > p ? conf.psensornull - p : p - conf.psensornull); // do not use abs(), it would induce implicit cast to uint and overrun
+      analog.amperage = ((uint32_t)powerValue * conf.pint2ma) / 100; // [100mA]    //old (will overflow for 65A: powerValue * conf.pint2ma; // [1mA]
+      pMeter[PMOTOR_SUM] += ((currentTime-lastRead) * (uint32_t)((uint32_t)powerValue*conf.pint2ma))/100000; // [10 mA * msec]
+      lastRead = currentTime;
+    #endif // POWERMETER_HARD
     break;
   }
-  #endif // POWERMETER_HARD
 
-  #if defined(VBAT)
   case 1:
   {
+    #if defined(VBAT) && !defined(VBAT_CELLS)
       static uint8_t ind = 0;
       static uint16_t vvec[VBAT_SMOOTH], vsum;
       uint16_t v = analogRead(V_BATPIN);
       #if VBAT_SMOOTH == 1
-        analog.vbat = (v<<4) / conf.vbatscale; // result is Vbatt in 0.1V steps
+        analog.vbat = (v<<4) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
       #else
         vsum += v;
         vsum -= vvec[ind];
         vvec[ind++] = v;
         ind %= VBAT_SMOOTH;
         #if VBAT_SMOOTH == 16
-          analog.vbat = vsum / conf.vbatscale; // result is Vbatt in 0.1V steps
+          analog.vbat = vsum / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
         #elif VBAT_SMOOTH < 16
-          analog.vbat = (vsum * (16/VBAT_SMOOTH)) / conf.vbatscale; // result is Vbatt in 0.1V steps
+          analog.vbat = (vsum * (16/VBAT_SMOOTH)) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
         #else
-          analog.vbat = ((vsum /VBAT_SMOOTH) * 16) / conf.vbatscale; // result is Vbatt in 0.1V steps
+          analog.vbat = ((vsum /VBAT_SMOOTH) * 16) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
         #endif
       #endif
-      break;
+    #endif // VBAT
+    break;
   }
-  #endif // VBAT
-  #if defined(RX_RSSI)
   case 2:
   {
+  #if defined(RX_RSSI)
     static uint8_t ind = 0;
     static uint16_t rvec[RSSI_SMOOTH], rsum, r;
-    #if defined(RX_RSSI_CHAN) 
+
+    // http://www.multiwii.com/forum/viewtopic.php?f=8&t=5530
+    #if defined(RX_RSSI_CHAN)
       uint16_t rssi_Input = constrain(rcData[RX_RSSI_CHAN],1000,2000);
       r = map((uint16_t)rssi_Input , 1000, 2000, 0, 1023);
     #else
       r = analogRead(RX_RSSI_PIN);
     #endif 
+
     #if RSSI_SMOOTH == 1
       analog.rssi = r;
     #else
@@ -485,10 +489,25 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       r = rsum / RSSI_SMOOTH;
       analog.rssi = r;
     #endif
-    break;
+   #endif // RX RSSI
+   break;
   }
-  #endif
+  default: // here analogReader >=4, because of ++ in switch()
+  {
+    #if defined(VBAT) && defined(VBAT_CELLS)
+      if ( (analogReader<4) || (analogReader>4+VBAT_CELLS_NUM-1) ) break;
+      uint8_t ind = analogReader-4;
+      static uint16_t vbatcells_pins[VBAT_CELLS_NUM] = VBAT_CELLS_PINS;
+      static uint8_t  vbatcells_offset[VBAT_CELLS_NUM] = VBAT_CELLS_OFFSETS;
+      static uint8_t  vbatcells_div[VBAT_CELLS_NUM] = VBAT_CELLS_DIVS;
+      uint16_t v = analogRead(vbatcells_pins[ind]);
+      analog.vbatcells[ind] = vbatcells_offset[ind] + (v << 2) / vbatcells_div[ind]; // result is Vbatt in 0.1V steps
+      if (ind == VBAT_CELLS_NUM -1) analog.vbat = analog.vbatcells[ind];
+    #endif // VBAT) && defined(VBAT_CELLS)
+    break;
+  } // end default
   } // end of switch()
+
 #ifdef POWERMETER_HARD
   if (analog.amperage > powerValueMaxMAH) powerValueMaxMAH = analog.amperage;
 #endif

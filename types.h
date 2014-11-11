@@ -100,6 +100,7 @@ typedef struct {
   uint16_t rssi;              // range: [0;1023]
   uint16_t amperage;          // 1unit == 100mA
   uint16_t watts;             // 1unit == 1W
+  uint16_t vbatcells[VBAT_CELLS_NUM];
 } analog_t;
 
 typedef struct {
@@ -120,19 +121,31 @@ typedef struct {
   uint8_t HORIZON_MODE :1 ;
   uint8_t MAG_MODE :1 ;
   uint8_t BARO_MODE :1 ;
+#ifdef HEADFREE
   uint8_t HEADFREE_MODE :1 ;
+#endif
+#if defined(FIXEDWING) || defined(HELICOPTER)
   uint8_t PASSTHRU_MODE :1 ;
+#endif
+  uint8_t SMALL_ANGLES_25 :1 ;
+#if MAG
+  uint8_t CALIBRATE_MAG :1 ;
+#endif
+#ifdef VARIOMETER
+  uint8_t VARIO_MODE :1;
+#endif
+  uint8_t GPS_mode: 2;               // 0-3 NONE,HOLD, HOME, NAV (see GPS_MODE_* defines
+#if BARO
+  uint8_t THROTTLE_IGNORED : 1;      // If it is 1 then ignore throttle stick movements in baro mode;
+#endif
+#if GPS
   uint8_t GPS_FIX :1 ;
   uint8_t GPS_FIX_HOME :1 ;
-  uint8_t SMALL_ANGLES_25 :1 ;
-  uint8_t CALIBRATE_MAG :1 ;
-  uint8_t VARIO_MODE :1;
-  uint8_t GPS_mode: 2;               // 0-3 NONE,HOLD, HOME, NAV (see GPS_MODE_* defines
-  uint8_t GPS_head_set: 1;           // it is 1 if the navigation engine got commands to control heading (SET_POI or SET_HEAD) CLEAR_HEAD will zero it
-  uint8_t THROTTLE_IGNORED : 1;      // If it is 1 then ignore throttle stick movements in baro mode;
   uint8_t GPS_BARO_MODE : 1;         // This flag is used when GPS controls baro mode instead of user (it will replace rcOptions[BARO]
+  uint8_t GPS_head_set: 1;           // it is 1 if the navigation engine got commands to control heading (SET_POI or SET_HEAD) CLEAR_HEAD will zero it
   uint8_t LAND_COMPLETED: 1;
   uint8_t LAND_IN_PROGRESS: 1;
+#endif
 } flags_struct_t;
 
 typedef struct {

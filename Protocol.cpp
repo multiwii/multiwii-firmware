@@ -690,10 +690,12 @@ void evaluateCommand(uint8_t c) {
       if(!f.ARMED) calibratingA=512;
       mspAck();
       break;
-    case MSP_MAG_CALIBRATION:
+    #if MAG
+      case MSP_MAG_CALIBRATION:
       if(!f.ARMED) f.CALIBRATE_MAG = 1;
       mspAck();
       break;
+    #endif
     #if defined(SPEK_BIND)
     case MSP_BIND:
       spekBind();

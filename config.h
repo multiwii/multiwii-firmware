@@ -847,15 +847,15 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
 
     /* optional exclude some functionality - uncomment to suppress some unwanted telemetry pages */
     //#define SUPPRESS_TELEMETRY_PAGE_1
-    //#define SUPPRESS_TELEMETRY_PAGE_2
-    //#define SUPPRESS_TELEMETRY_PAGE_3
-    //#define SUPPRESS_TELEMETRY_PAGE_4
-    //#define SUPPRESS_TELEMETRY_PAGE_5
-    //#define SUPPRESS_TELEMETRY_PAGE_6
-    //#define SUPPRESS_TELEMETRY_PAGE_7
-    //#define SUPPRESS_TELEMETRY_PAGE_8
-    //#define SUPPRESS_TELEMETRY_PAGE_9
-    //#define SUPPRESS_TELEMETRY_PAGE_R
+    //#define SUPPRESS_TELEMETRY_PAGE_2 // sensor readings
+    //#define SUPPRESS_TELEMETRY_PAGE_3 // checkboxitems
+    //#define SUPPRESS_TELEMETRY_PAGE_4 // rx inputs
+    //#define SUPPRESS_TELEMETRY_PAGE_5 // servo&motor outputs
+    //#define SUPPRESS_TELEMETRY_PAGE_6 // cells voltages
+    //#define SUPPRESS_TELEMETRY_PAGE_7 // gps
+    //#define SUPPRESS_TELEMETRY_PAGE_8 // alarms states
+    //#define SUPPRESS_TELEMETRY_PAGE_9 // cycle & fails
+    //#define SUPPRESS_TELEMETRY_PAGE_R // reset
 
     /* optional override default items for some telemetry pages - for complete list of usable functions see LCD.h */
     //#define LCD_TELEMETRY_PAGE1 { output_V, output_mAh, }
@@ -892,7 +892,16 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
     #define VBATLEVEL_WARN2  99 // (*) (**) 9.9V
     #define VBATLEVEL_CRIT   93 // (*) (**) 9.3V - critical condition: if vbat ever goes below this value, permanent alarm is triggered
     #define NO_VBAT          16 // Avoid beeping without any battery
+    #define VBAT_OFFSET       0 // offset in 0.1Volts, gets added to voltage value  - useful for zener diodes
 
+    /* for V BAT monitoring of individual cells
+     * enable both VBAT and VBAT_CELLS
+     */
+    //#define VBAT_CELLS
+    #define VBAT_CELLS_NUM 0 // set this to the number of cells you monitor via analog pins
+    #define VBAT_CELLS_PINS {A0, A1, A2, A3, A4, A5 } // set this to the sequence of analog pins
+    #define VBAT_CELLS_OFFSETS {0, 50, 83, 121, 149, 177 } // in 0.1 volts, gets added to voltage value  - useful for zener diodes
+    #define VBAT_CELLS_DIVS { 75, 122,  98, 18, 30, 37 } // divisor for proportional part according to resistors - larger value here gives smaller voltage
 
   /********************************************************************/
   /****           powermeter (battery capacity monitoring)         ****/
@@ -1180,6 +1189,5 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
 /*************************************************************************************************/
 /****           END OF CONFIGURABLE PARAMETERS                                                ****/
 /*************************************************************************************************/
-
 #endif /* CONFIG_H_ */
 
