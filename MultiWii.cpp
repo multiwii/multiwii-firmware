@@ -371,11 +371,16 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   uint16_t tmp,tmp2;
   uint8_t axis,prop1,prop2;
 
-  // PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value
+  // PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value (or collective.pitch value for heli)
+  #ifdef HELICOPTER
+    #define DYN_THR_PID_CHANNEL COLLECTIVE_PITCH
+  #else
+    #define DYN_THR_PID_CHANNEL THROTTLE
+  #endif
   prop2 = 128; // prop2 was 100, is 128 now
-  if (rcData[THROTTLE]>1500) { // breakpoint is fix: 1500
-    if (rcData[THROTTLE]<2000) {
-      prop2 -=  ((uint16_t)conf.dynThrPID*(rcData[THROTTLE]-1500)>>9); //  /512 instead of /500
+  if (rcData[DYN_THR_PID_CHANNEL]>1500) { // breakpoint is fix: 1500
+    if (rcData[DYN_THR_PID_CHANNEL]<2000) {
+      prop2 -=  ((uint16_t)conf.dynThrPID*(rcData[DYN_THR_PID_CHANNEL]-1500)>>9); //  /512 instead of /500
     } else {
       prop2 -=  conf.dynThrPID;
     }

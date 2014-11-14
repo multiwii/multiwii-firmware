@@ -2001,7 +2001,7 @@ void fill_line2_gps_lon(uint8_t status) {
   line2[0] = GPS_coord[LON]<0?'W':'E';
   if (status) {
     line2[13] = (GPS_update ? 'U' : '.');
-    line2[15] = (1 ? 'P' : '.');
+    //line2[15] = (1 ? 'P' : '.');
   }
   line2[1]  = '0' + aGPS_longitude / 1000000000;
   line2[2]  = '0' + aGPS_longitude / 100000000 - (aGPS_longitude/1000000000) * 10;
@@ -2050,7 +2050,7 @@ void output_debug3() { LCDprintChar("D4 "); LCDprintInt16(debug[3]); }
 #if defined(DEBUG) || defined(DEBUG_FREE)
   #define PRINT_FREE_RAM  { \
     extern unsigned int __bss_end; \
-    extern unsigned int __heap_start; \
+    /*extern unsigned int __heap_start;*/ \
     extern void *__brkval; \
     int free_memory; \
     if((int)__brkval == 0) \
@@ -2500,18 +2500,18 @@ void lcd_telemetry() {
           line1[1] = digit1(GPS_numSat);
           LCDprintChar(line1);
           break;
-        case 3: //
-          strcpy_P(line1,PSTR("Status "));
-          //                   0123456789012345
-          LCDprintChar(line1);
-          if (1)
-            LCDprintChar("OK");
-          else {
-            LCDattributesReverse();
-            LCDprintChar("KO");
-            LCDattributesOff();
-          }
-        break;
+//        case 3: //
+//          strcpy_P(line1,PSTR("Status "));
+//          //                   0123456789012345
+//          LCDprintChar(line1);
+//          if (1)
+//            LCDprintChar("OK");
+//          else {
+//            LCDattributesReverse();
+//            LCDprintChar("KO");
+//            LCDattributesOff();
+//          }
+//        break;
         case 4: // gps speed
         {
           uint8_t v = (GPS_speed * 0.036f);

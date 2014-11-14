@@ -933,6 +933,12 @@
   #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] = -X; imu.gyroADC[PITCH] = -Y; imu.gyroADC[YAW] = -Z;}
   #undef INTERNAL_I2C_PULLUPS
   // move motor 7 & 8 to pin 4 & A2
+  #undef SOFT_PWM_3_PIN_HIGH
+  #undef SOFT_PWM_3_PIN_LOW
+  #undef SOFT_PWM_4_PIN_HIGH
+  #undef SOFT_PWM_4_PIN_LOW
+  #undef SW_PWM_P3
+  #undef SW_PWM_P4
   #define SOFT_PWM_3_PIN_HIGH        PORTD |= 1<<4;
   #define SOFT_PWM_3_PIN_LOW         PORTD &= ~(1<<4);
   #define SOFT_PWM_4_PIN_HIGH        PORTF |= 1<<5;
@@ -941,6 +947,12 @@
   #define SW_PWM_P4                  A2
   #define HWPWM6
   // move servo 3 & 4 to pin 13 & 11
+  #undef SERVO_3_PINMODE
+  #undef SERVO_3_PIN_HIGH
+  #undef SERVO_3_PIN_LOW
+  #undef SERVO_4_PINMODE
+  #undef SERVO_4_PIN_HIGH
+  #undef SERVO_4_PIN_LOW
   #define SERVO_3_PINMODE   DDRC |= (1<<7); // 13
   #define SERVO_3_PIN_HIGH  PORTC |= 1<<7;
   #define SERVO_3_PIN_LOW   PORTC &= ~(1<<7);
@@ -949,6 +961,10 @@
   #define SERVO_4_PIN_LOW   PORTB &= ~(1<<7);
   // use pin 4 as status LED output if we have no octo
   #if !defined(OCTOX8) && !defined(OCTOFLATP) && !defined(OCTOFLATX)
+    #undef LEDPIN_PINMODE
+    #undef LEDPIN_TOGGLE
+    #undef LEDPIN_OFF
+    #undef LEDPIN_ON
     #define LEDPIN_PINMODE             DDRD |= (1<<4);            //D4 to output
     #define LEDPIN_TOGGLE              PIND |= (1<<5)|(1<<4);     //switch LEDPIN state (Port D5) & pin D4
     #define LEDPIN_OFF                 PORTD |= (1<<5); PORTD &= ~(1<<4);
