@@ -218,6 +218,10 @@ typedef struct {
    int16_t governorP;
    int16_t governorD;
   #endif
+  #ifdef YAW_COLL_PRECOMP
+   uint8_t yawCollPrecomp;
+   uint16_t yawCollPrecompDeadband;
+  #endif
   uint8_t  checksum;      // MUST BE ON LAST POSITION OF CONF STRUCTURE !
 } conf_t;
 

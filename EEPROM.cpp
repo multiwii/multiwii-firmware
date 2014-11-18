@@ -134,6 +134,10 @@ void update_constants() {
     conf.governorP = GOVERNOR_P;
     conf.governorD = GOVERNOR_D;
   #endif
+  #ifdef YAW_COLL_PRECOMP
+    conf.yawCollPrecomp = YAW_COLL_PRECOMP;
+    conf.yawCollPrecompDeadband = YAW_COLL_PRECOMP_DEADBAND;
+  #endif
   #if defined(MY_PRIVATE_DEFAULTS)
     #include MY_PRIVATE_DEFAULTS
   #endif

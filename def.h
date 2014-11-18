@@ -63,6 +63,8 @@
   #define LOG_PERMANENT_SERVICE_LIFETIME 36000
   #define GOVERNOR_P 0
   #define GOVERNOR_D 10
+  #define YAW_COLL_PRECOMP 15
+  #define YAW_COLL_PRECOMP_DEADBAND 130
   #define VOLTAGEDROP_COMPENSATION
 #elif COPTERTEST == 6
   #define HEX6H
@@ -82,6 +84,8 @@
   #define LCD_CONF
 #elif COPTERTEST == 7
   #define HELI_120_CCPM
+  #define YAW_COLL_PRECOMP 15
+  #define YAW_COLL_PRECOMP_DEADBAND 130
   #define NANOWII
   #define FORCE_ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = X; imu.accADC[PITCH]  =  Y; imu.accADC[YAW]  =  Z;}
   #define FORCE_GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] = -Y; imu.gyroADC[PITCH] = X; imu.gyroADC[YAW] = -Z;}

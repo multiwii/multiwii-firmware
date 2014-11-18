@@ -1083,7 +1083,11 @@ const char PROGMEM lcd_param_text135 [] = "GovernRpm";
 const char PROGMEM lcd_param_text150 [] = "writeCset";
 #endif
 const char PROGMEM lcd_param_text151 [] = "Reset (7)";
-//                                         0123456789
+#ifdef YAW_COLL_PRECOMP
+const char PROGMEM lcd_param_text155 [] = "yawPrcomp";
+const char PROGMEM lcd_param_text156 [] = "yawPrDead";
+#endif
+//                                         012345678
 
 PROGMEM const void * const lcd_param_ptr_table [] = {
   &lcd_param_text01, &conf.pid[ROLL].P8, &__P,
@@ -1335,6 +1339,10 @@ PROGMEM const void * const lcd_param_ptr_table [] = {
 #ifdef GOVERNOR_P
   &lcd_param_text133, &conf.governorP, &__D,
   &lcd_param_text134, &conf.governorD, &__D,
+#endif
+#ifdef YAW_COLL_PRECOMP
+  &lcd_param_text155, &conf.yawCollPrecomp, &__PT,
+  &lcd_param_text156, &conf.yawCollPrecompDeadband, &__SE,
 #endif
 #ifdef GYRO_SMOOTHING
   &lcd_param_text80, &conf.Smoothing[0], &__D,
@@ -1600,8 +1608,11 @@ void configurationLoop() {
   #endif
   LCDclear();
   LCDsetLine(1);
-  if (LCD == 0) {
+  if (LCD == 0) { //     0123456789
     strcpy_P(line1,PSTR("Saving..."));
+    #ifdef MULTIPLE_CONFIGURATION_PROFILES
+      line1[7] = digit1(global_conf.currentSet);
+    #endif
     LCDprintChar(line1);
     #ifdef MULTIPLE_CONFIGURATION_PROFILES
       writeGlobalSet(0);
@@ -1828,7 +1839,9 @@ void output_altitude() {
 }
 void output_uptime_cset() {
   strcpy_P(line1,PSTR("Up ")); LCDprintChar(line1); print_uptime(millis() / 1000 );
-  strcpy_P(line1,PSTR("  Cset -")); line1[7] = digit1(global_conf.currentSet); LCDprintChar(line1);
+  #ifdef MULTIPLE_CONFIGURATION_PROFILES
+    strcpy_P(line1,PSTR("  Cset -")); line1[7] = digit1(global_conf.currentSet); LCDprintChar(line1);
+  #endif
 }
 void output_cycle() {
   strcpy_P(line1,PSTR("Cycle    -----us")); //uin16_t cycleTime
