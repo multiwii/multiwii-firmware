@@ -79,6 +79,9 @@
     /* enable internal I2C pull ups (in most cases it is better to use external pullups) */
     //#define INTERNAL_I2C_PULLUPS
 
+  /**********************************  constant loop time  ******************************/
+    #define LOOP_TIME 2800
+
   /**************************************************************************************/
   /*****************          boards and sensor definitions            ******************/
   /**************************************************************************************/
@@ -499,15 +502,9 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
     #define SERIAL2_COM_SPEED 115200
     #define SERIAL3_COM_SPEED 115200
 
-    /* interleaving delay in micro seconds between 2 readings WMP/NK in a WMP+NK config
-       if the ACC calibration time is very long (20 or 30s), try to increase this delay up to 4000
-       it is relevent only for a conf with NK */
-    #define INTERLEAVING_DELAY 3000
-
     /* when there is an error on I2C bus, we neutralize the values during a short time. expressed in microseconds
        it is relevent only for a conf with at least a WMP */
     #define NEUTRALIZE_DELAY 100000
-
 
   /**************************************************************************************/
   /********                              Gyro filters                ********************/

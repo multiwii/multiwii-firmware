@@ -1258,11 +1258,18 @@ void loop () {
     }
   }
  
-  computeIMU();
-  // Measure loop rate just afer reading the sensors
-  currentTime = micros();
-  cycleTime = currentTime - previousTime;
+  while(1) {
+    currentTime = micros();
+    cycleTime = currentTime - previousTime;
+    #if defined(LOOP_TIME)
+      if (cycleTime >= LOOP_TIME) break;
+    #else
+      break;  
+    #endif
+  }
   previousTime = currentTime;
+
+  computeIMU();
 
   //***********************************
   //**** Experimental FlightModes *****
