@@ -770,9 +770,7 @@ void lcdprint_uint32(uint32_t v) {
 
 void initLCD() {
   blinkLED(20,30,1);
-  #if defined(BUZZER)
-    alarmArray[7] = 1;
-  #endif
+  SET_ALARM_BUZZER(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_1);
   #if defined(LCD_SERIAL3W)
     SerialEnd(0);
     //init LCD
@@ -1476,9 +1474,7 @@ static uint8_t lcdStickState[4];
 #ifdef DISPLAY_2LINES
 void ConfigRefresh(uint8_t p) {
   blinkLED(10,20,1);
-  #if defined(BUZZER)
-    alarmArray[0] = 1;
-  #endif
+  SET_ALARM_BUZZER(ALRM_FAC_TOGGLE, ALRM_LVL_TOGGLE_1);
   strcpy_P(line1,PSTR("                "));
   strcpy(line2,line1);
   strcpy_P(line1, (char*)pgm_read_word(&(lcd_param_ptr_table[p * 3])));
@@ -1497,9 +1493,7 @@ void ConfigRefresh(uint8_t p) {
   int8_t pp = (int8_t)p;
   #ifndef OLED_I2C_128x64
    blinkLED(2,4,1);
-   #if defined(BUZZER)
-     alarmArray[0] = 1;
-   #endif
+   SET_ALARM_BUZZER(ALRM_FAC_TOGGLE, ALRM_LVL_TOGGLE_1);
    LCDclear();
   #else
    delay(60);
@@ -1603,9 +1597,7 @@ void configurationLoop() {
     #endif
   } // while (LCD == 1)
   blinkLED(20,30,1);
-  #if defined(BUZZER)
-    alarmArray[7] = 1;
-  #endif
+  SET_ALARM_BUZZER(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_1);
   LCDclear();
   LCDsetLine(1);
   if (LCD == 0) { //     0123456789
@@ -2707,7 +2699,7 @@ void toggle_telemetry(uint8_t t) {
         blinkLED(5,200,5);
         delay(5000);
       }
-      alarmArray[7] = 3;
+      SET_ALARM(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_ELSE);
     }
   }
   #endif // LOG_PERMANENT_SERVICE_LIFETIME

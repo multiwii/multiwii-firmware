@@ -680,9 +680,7 @@ void initOutput() {
     while (1) {
       delay(5000);
       blinkLED(4,20, 2);
-    #if defined(BUZZER)
-      alarmArray[7] = 2;
-    #endif
+      SET_ALARM_BUZZER(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_2);
     }
     exit; // statement never reached
   #endif

@@ -179,9 +179,7 @@ void GYRO_Common() {
       g[axis] +=imu.gyroADC[axis]; // Sum up 512 readings
       gyroZero[axis]=g[axis]>>9;
       if (calibratingG == 1) {
-        #if defined(BUZZER)
-          alarmArray[7] = 4;
-        #endif
+        SET_ALARM_BUZZER(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_ELSE);
       }
     }
     #if defined(GYROCALIBRATIONFAILSAFE)
@@ -273,9 +271,7 @@ void ACC_Common() {
         if (InflightcalibratingA == 1) {
           AccInflightCalibrationActive = 0;
           AccInflightCalibrationMeasurementDone = 1;
-          #if defined(BUZZER)
-            alarmArray[7] = 1;      //buzzer for indicatiing the end of calibration
-          #endif
+          SET_ALARM_BUZZER(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_1);     //buzzer for indicatiing the end of calibration
           // recover saved values to maintain current flight behavior until new values are transferred
           global_conf.accZero[ROLL]  = accZero_saved[ROLL] ;
           global_conf.accZero[PITCH] = accZero_saved[PITCH];
@@ -939,8 +935,8 @@ uint8_t Mag_getADC() { // return 1 when news values are available, 0 otherwise
           magZeroTempMin[axis] = imu.magADC[axis];
           magZeroTempMax[axis] = imu.magADC[axis];
         }
-        if (imu.magADC[axis] < magZeroTempMin[axis]) {magZeroTempMin[axis] = imu.magADC[axis]; alarmArray[0] = 1;}
-        if (imu.magADC[axis] > magZeroTempMax[axis]) {magZeroTempMax[axis] = imu.magADC[axis]; alarmArray[0] = 1;}
+        if (imu.magADC[axis] < magZeroTempMin[axis]) {magZeroTempMin[axis] = imu.magADC[axis]; SET_ALARM(ALRM_FAC_TOGGLE, ALRM_LVL_TOGGLE_1);}
+        if (imu.magADC[axis] > magZeroTempMax[axis]) {magZeroTempMax[axis] = imu.magADC[axis]; SET_ALARM(ALRM_FAC_TOGGLE, ALRM_LVL_TOGGLE_1);}
         global_conf.magZero[axis] = (magZeroTempMin[axis] + magZeroTempMax[axis])>>1;
       }
     } else {
@@ -1448,9 +1444,7 @@ void i2c_srf08_change_addr(int8_t current, int8_t moveto) {
   i2c_writeReg(current, SRF08_REV_COMMAND, 0xA5);  delay(30);
   i2c_writeReg(current, SRF08_REV_COMMAND, moveto);  delay(30); // now change i2c address
   blinkLED(5,1,2);
-  #if defined(BUZZER)
-   alarmArray[7] = 2;
-  #endif
+  SET_ALARM_BUZZER(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_2);
 }
 
 // discover previously known sensors and any new sensor (move new sensors to assigned area)

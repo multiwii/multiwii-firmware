@@ -4,6 +4,7 @@
 #define  VERSION        231
 #define  NAVI_VERSION   7     //This allow sync with GUI
 #include "types.h"
+#include "Alarms.h"
 
 #define MINCHECK 1100
 #define MAXCHECK 1900
@@ -29,7 +30,7 @@ extern int16_t  BaroPID;
 extern int16_t  errorAltitudeI;
 
 extern int16_t  i2c_errors_count;
-extern uint8_t alarmArray[16];
+extern uint8_t alarmArray[ALRM_FAC_SIZE];
 extern global_conf_t global_conf;
 
 extern imu_t imu;

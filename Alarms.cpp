@@ -58,58 +58,58 @@ void alarmHandler(void){
   #if defined(RCOPTIONSBEEP)
     static uint8_t i = 0,firstrun = 1, last_rcOptions[CHECKBOXITEMS];
                   
-    if (last_rcOptions[i] != rcOptions[i]) alarmArray[0] = 1;
+    if (last_rcOptions[i] != rcOptions[i])   alarmArray[ALRM_FAC_TOGGLE] = ALRM_LVL_TOGGLE_1;
       last_rcOptions[i] = rcOptions[i]; 
       i++;
     if(i >= CHECKBOXITEMS)i=0;
     
-    if(firstrun == 1 && alarmArray[7] == 0) {
-      alarmArray[0] = 0;    //only enable options beep AFTER gyro init
-      alarmArray[3] = 0;
+    if(firstrun == 1 && alarmArray[ALRM_FAC_CONFIRM] == ALRM_LVL_OFF) {
+      alarmArray[ALRM_FAC_TOGGLE] = ALRM_LVL_OFF;    //only enable options beep AFTER gyro init
+      alarmArray[ALRM_FAC_BEEPERON] = ALRM_LVL_OFF;
     }        
     else firstrun = 0;
   #endif  
      
   #if defined(FAILSAFE)
     if ( failsafeCnt > (5*FAILSAFE_DELAY) && f.ARMED) {
-      alarmArray[1] = 1;                                                                   //set failsafe warning level to 1 while landing
-      if (failsafeCnt > 5*(FAILSAFE_DELAY+FAILSAFE_OFF_DELAY)) alarmArray[1] = 2;          //start "find me" signal after landing   
+      alarmArray[ALRM_FAC_FAILSAFE] = ALRM_LVL_FAILSAFE_PANIC;                                                                   //set failsafe warning level to 1 while landing
+      if (failsafeCnt > 5*(FAILSAFE_DELAY+FAILSAFE_OFF_DELAY)) alarmArray[ALRM_FAC_FAILSAFE] = ALRM_LVL_FAILSAFE_FINDME;          //start "find me" signal after landing
     }
-    if ( failsafeCnt > (5*FAILSAFE_DELAY) && !f.ARMED) alarmArray[1] = 2;                  // tx turned off while motors are off: start "find me" signal
-    if ( failsafeCnt == 0) alarmArray[1] = 0;                                              // turn off alarm if TX is okay
+    if ( failsafeCnt > (5*FAILSAFE_DELAY) && !f.ARMED) alarmArray[ALRM_FAC_FAILSAFE] = ALRM_LVL_FAILSAFE_FINDME;                  // tx turned off while motors are off: start "find me" signal
+    if ( failsafeCnt == 0) alarmArray[ALRM_FAC_FAILSAFE] = ALRM_LVL_OFF;                                              // turn off alarm if TX is okay
   #endif
   
   #if GPS
-    if ((f.GPS_mode != GPS_MODE_NONE) && !f.GPS_FIX) alarmArray[2] = 2;
-    else if (!f.GPS_FIX)alarmArray[2] = 1;
-    else alarmArray[2] = 0;
+    if ((f.GPS_mode != GPS_MODE_NONE) && !f.GPS_FIX) alarmArray[ALRM_FAC_GPS] = ALRM_LVL_GPS_NOFIX;
+    else if (!f.GPS_FIX) alarmArray[ALRM_FAC_GPS] = ALRM_LVL_ON;
+    else alarmArray[ALRM_FAC_GPS] = ALRM_LVL_OFF;
   #endif
   
   #if defined(BUZZER)
-    if ( rcOptions[BOXBEEPERON] )alarmArray[3] = 1;
-    else alarmArray[3] = 0;
+    if ( rcOptions[BOXBEEPERON] ) alarmArray[ALRM_FAC_BEEPERON] = ALRM_LVL_ON;
+    else alarmArray[ALRM_FAC_BEEPERON] = ALRM_LVL_OFF;
   #endif
 
   #if defined(POWERMETER)
-    if ( (pMeter[PMOTOR_SUM] < pAlarm) || (pAlarm == 0) || !f.ARMED) alarmArray[4] = 0;
-    else if (pMeter[PMOTOR_SUM] > pAlarm) alarmArray[4] = 1;                  
+    if ( (pMeter[PMOTOR_SUM] < pAlarm) || (pAlarm == 0) || !f.ARMED) alarmArray[ALRM_FAC_PMETER] = ALRM_LVL_OFF;
+    else if (pMeter[PMOTOR_SUM] > pAlarm) alarmArray[ALRM_FAC_PMETER] = ALRM_LVL_ON;
   #endif 
   
   #if defined(ARMEDTIMEWARNING)
-    if (ArmedTimeWarningMicroSeconds > 0 && armedTime >= ArmedTimeWarningMicroSeconds && f.ARMED) alarmArray[5] = 1;
-    else alarmArray[5] = 0;
+    if (ArmedTimeWarningMicroSeconds > 0 && armedTime >= ArmedTimeWarningMicroSeconds && f.ARMED) alarmArray[ALRM_FAC_RUNTIME] = ALRM_LVL_ON;
+    else alarmArray[ALRM_FAC_RUNTIME] = ALRM_LVL_OFF;
   #endif
   
   #if defined(VBAT)
-    if (vbatMin < conf.vbatlevel_crit) alarmArray[6] = 4;
-    else if ( (analog.vbat > conf.vbatlevel_warn1)  || (NO_VBAT > analog.vbat)) alarmArray[6] = 0;
-    else if (analog.vbat > conf.vbatlevel_warn2) alarmArray[6] = 1;
-    else if (analog.vbat > conf.vbatlevel_crit) alarmArray[6] = 2;
+    if (vbatMin < conf.vbatlevel_crit) alarmArray[ALRM_FAC_VBAT] = ALRM_LVL_VBAT_CRIT;
+    else if ( (analog.vbat > conf.vbatlevel_warn1)  || (NO_VBAT > analog.vbat)) alarmArray[ALRM_FAC_VBAT] = ALRM_LVL_OFF;
+    else if (analog.vbat > conf.vbatlevel_warn2) alarmArray[ALRM_FAC_VBAT] = ALRM_LVL_VBAT_INFO;
+    else if (analog.vbat > conf.vbatlevel_crit) alarmArray[ALRM_FAC_VBAT] = ALRM_LVL_VBAT_WARN;
     //else alarmArray[6] = 4;
   #endif
   
-  if (i2c_errors_count > i2c_errors_count_old+100 || i2c_errors_count < -1) alarmArray[9] = 1;
-  else alarmArray[9] = 0;
+  if (i2c_errors_count > i2c_errors_count_old+100 || i2c_errors_count < -1) alarmArray[ALRM_FAC_I2CERROR] = ALRM_LVL_ON;
+  else alarmArray[ALRM_FAC_I2CERROR] = ALRM_LVL_OFF;
   #if defined(LCD_TELEMETRY) && !defined(SUPPRESS_TELEMETRY_PAGE_8)
     if (telemetry == 8) lcd_telemetry(); // must output the alarms states now because alarmPatternComposer() will reset alarmArray[]
   #endif
@@ -121,29 +121,36 @@ void alarmPatternComposer(){
   // patternDecode(length1,length2,length3,beeppause,endpause,loop)
   #if defined(BUZZER)
     resource = 1;                                                                                  //buzzer selected
-    if (alarmArray[1] == 2)       patternDecode(resource,200,0,0,50,2000);                       //failsafe "find me" signal
-    else if (alarmArray[1] == 1 || alarmArray[8] == 1) patternDecode(resource,50,200,200,50,50); //failsafe "panic"  or Acc not calibrated                     
-    else if (alarmArray[0] == 1)  patternDecode(resource,50,0,0,50,0);                           //toggle 1
-    else if (alarmArray[0] == 2)  patternDecode(resource,50,50,0,50,0);                          //toggle 2       
-    else if (alarmArray[0] > 2)   patternDecode(resource,50,50,50,50,0);                         //toggle else         
-    else if (alarmArray[2] == 2)  patternDecode(resource,50,50,0,50,50);                         //gps installed but no fix    
-    else if (alarmArray[3] == 1)  patternDecode(resource,50,50,50,50,50);                        //BeeperOn
-    else if (alarmArray[4] == 1)  patternDecode(resource,50,50,0,50,120);                        //pMeter Warning
-    else if (alarmArray[5] == 1)  patternDecode(resource,50,50,50,50,0);                         //Runtime warning      
-    else if (alarmArray[6] == 4)  patternDecode(resource,50,50,200,50,2000);                     //vbat critical
-    else if (alarmArray[6] == 2)  patternDecode(resource,50,200,0,50,2000);                      //vbat warning      
-    else if (alarmArray[6] == 1)  patternDecode(resource,200,0,0,50,2000);                       //vbat info
-    else if (alarmArray[7] == 1)  patternDecode(resource,200,0,0,50,200);                        //confirmation indicator 1x
-    else if (alarmArray[7] == 2)  patternDecode(resource,200,200,0,50,200);                      //confirmation indicator 2x 
-    else if (alarmArray[7] > 2)   patternDecode(resource,200,200,200,50,200);                    //confirmation indicator 3x
+    if      ( IS_ALARM_SET(ALRM_FAC_FAILSAFE , ALRM_LVL_FAILSAFE_FINDME) )       patternDecode(resource,200,0,0,50,2000);                       //failsafe "find me" signal
+    else if ( IS_ALARM_SET(ALRM_FAC_FAILSAFE , ALRM_LVL_FAILSAFE_PANIC) ||
+                IS_ALARM_SET(ALRM_FAC_ACC , ALRM_LVL_ON) ) patternDecode(resource,50,200,200,50,50); //failsafe "panic"  or Acc not calibrated
+    else if ( IS_ALARM_SET(ALRM_FAC_TOGGLE , ALRM_LVL_TOGGLE_1) ) patternDecode(resource,50,0,0,50,0);           //toggle 1
+    else if ( IS_ALARM_SET(ALRM_FAC_TOGGLE , ALRM_LVL_TOGGLE_2) ) patternDecode(resource,50,50,0,50,0);          //toggle 2
+    else if ( IS_ALARM_SET(ALRM_FAC_TOGGLE , ALRM_LVL_TOGGLE_ELSE) )  patternDecode(resource,50,50,50,50,0);     //toggle else
+    #if GPS
+      else if ( IS_ALARM_SET(ALRM_FAC_GPS , ALRM_LVL_GPS_NOFIX) ) patternDecode(resource,50,50,0,50,50);         //gps installed but no fix
+    #endif
+    else if ( IS_ALARM_SET(ALRM_FAC_BEEPERON , ALRM_LVL_ON) )  patternDecode(resource,50,50,50,50,50);           //BeeperOn
+    #ifdef POWERMETER
+      else if ( IS_ALARM_SET(ALRM_FAC_PMETER , ALRM_LVL_ON) ) patternDecode(resource,50,50,0,50,120);              //pMeter Warning
+    #endif
+    else if ( IS_ALARM_SET(ALRM_FAC_RUNTIME , ALRM_LVL_ON) ) patternDecode(resource,50,50,50,50,0);              //Runtime warning
+    #ifdef VBAT
+      else if ( IS_ALARM_SET(ALRM_FAC_VBAT , ALRM_LVL_VBAT_CRIT) ) patternDecode(resource,50,50,200,50,2000);      //vbat critical
+      else if ( IS_ALARM_SET(ALRM_FAC_VBAT , ALRM_LVL_VBAT_WARN) ) patternDecode(resource,50,200,0,50,2000);       //vbat warning
+      else if ( IS_ALARM_SET(ALRM_FAC_VBAT , ALRM_LVL_VBAT_INFO) ) patternDecode(resource,200,0,0,50,2000);        //vbat info
+    #endif
+    else if ( IS_ALARM_SET(ALRM_FAC_CONFIRM , ALRM_LVL_CONFIRM_1) ) patternDecode(resource,200,0,0,50,200);      //confirmation indicator 1x
+    else if ( IS_ALARM_SET(ALRM_FAC_CONFIRM , ALRM_LVL_CONFIRM_2) ) patternDecode(resource,200,200,0,50,200);    //confirmation indicator 2x
+    else if ( IS_ALARM_SET(ALRM_FAC_CONFIRM , ALRM_LVL_CONFIRM_ELSE) ) patternDecode(resource,200,200,200,50,200); //confirmation indicator 3x
     else if (SequenceActive[(uint8_t)resource] == 1) patternDecode(resource,0,0,0,0,0);                   // finish last sequence if not finished yet
     else turnOff(resource);                                                                        // turn off the resource 
-    alarmArray[8] = 0;                                                                             //reset acc not calibrated
+    alarmArray[ALRM_FAC_ACC] = ALRM_LVL_OFF;                                                                             //reset acc not calibrated
     
   #endif
   #if defined(PILOTLAMP)
-    if (alarmArray[9] == 1)   PilotLampSequence(100,B000111,2);                                   //I2C Error
-    else if (alarmArray[3] == 1)  PilotLampSequence(100,B0101<<8|B00010001,4);                    //BeeperOn
+    if ( IS_ALARM_SET(ALRM_FAC_I2CERROR , ALRM_LVL_ON) ) PilotLampSequence(100,B000111,2);                                   //I2C Error
+    else if ( IS_ALARM_SET(ALRM_FAC_BEEPERON , ALRM_LVL_ON) ) PilotLampSequence(100,B0101<<8|B00010001,4);                    //BeeperOn
     else{        
       resource = 2; 
       if (f.ARMED && f.ANGLE_MODE) patternDecode(resource,100,100,100,100,1000);                //Green Slow Blink-->angle
@@ -152,15 +159,15 @@ void alarmPatternComposer(){
       else turnOff(resource);                                                               //switch off
       resource = 3; 
       #if GPS
-        if (alarmArray[2]==1) patternDecode(resource,100,100,100,100,100);                      // blue fast blink -->no gps fix
-        else if (f.GPS_mode != GPS_MODE_NONE) patternDecode(resource,100,100,100,100,1000);     //blue slow blink --> gps active
-        else setTiming(resource,100,1000);                                                        //blue short blink -->gps fix ok
+        if (  IS_ALARM_SET(ALRM_FAC_GPS , ALRM_LVL_ON) ) patternDecode(resource,100,100,100,100,100); // blue fast blink -->no gps fix
+        else if (f.GPS_mode != GPS_MODE_NONE) patternDecode(resource,100,100,100,100,1000);           //blue slow blink --> gps active
+        else setTiming(resource,100,1000);                                                            //blue short blink -->gps fix ok
       #else
         turnOff(resource);
       #endif   
       resource = 4; 
-      if (alarmArray[1] == 1)       setTiming(resource,100,100);                                  //Red fast blink--> failsafe panic
-      else if (alarmArray[1] == 2)  patternDecode(resource,1000,0,0,0,2000);                    //red slow blink--> failsafe find me
+      if ( IS_ALARM_SET(ALRM_FAC_FAILSAFE , ALRM_LVL_FAILSAFE_PANIC) ) setTiming(resource,100,100);                   //Red fast blink--> failsafe panic
+      else if ( IS_ALARM_SET(ALRM_FAC_FAILSAFE , ALRM_LVL_FAILSAFE_FINDME) ) patternDecode(resource,1000,0,0,0,2000); //red slow blink--> failsafe find me
       else turnOff(resource); 
     }
   #endif 
@@ -186,8 +193,8 @@ void patternDecode(uint8_t resource,uint16_t first,uint16_t second,uint16_t thir
   else if (LastToggleTime[resource] < (millis()-pattern[resource][3]))  {  //sequence is over: reset everything
     icnt[resource]=0;
     SequenceActive[resource] = 0;                               //sequence is now done, cycleDone sequence may begin
-    alarmArray[0] = 0;                                //reset toggle bit
-    alarmArray[7] = 0;                                //reset confirmation bit
+    alarmArray[ALRM_FAC_TOGGLE] = ALRM_LVL_OFF;                                //reset toggle bit
+    alarmArray[ALRM_FAC_CONFIRM] = ALRM_LVL_OFF;                                //reset confirmation bit
     turnOff(resource);   
     return;
   }

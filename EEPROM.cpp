@@ -37,9 +37,7 @@ bool readEEPROM() {
   eeprom_read_block((void*)&conf, (void*)(global_conf.currentSet * sizeof(conf) + sizeof(global_conf)), sizeof(conf));
   if(calculate_sum((uint8_t*)&conf, sizeof(conf)) != conf.checksum) {
     blinkLED(6,100,3);    
-    #if defined(BUZZER)
-      alarmArray[7] = 3;
-    #endif
+    SET_ALARM_BUZZER(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_ELSE);
     LoadDefaults();                 // force load defaults 
     return false;                   // defaults loaded, don't reload constants (EEPROM life saving)
   }
@@ -71,9 +69,7 @@ void writeGlobalSet(uint8_t b) {
   global_conf.checksum = calculate_sum((uint8_t*)&global_conf, sizeof(global_conf));
   eeprom_write_block((const void*)&global_conf, (void*)0, sizeof(global_conf));
   if (b == 1) blinkLED(15,20,1);
-  #if defined(BUZZER)
-    alarmArray[7] = 1; 
-  #endif
+  SET_ALARM_BUZZER(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_1);
 
 }
  
@@ -93,9 +89,7 @@ void writeParams(uint8_t b) {
 
   readEEPROM();
   if (b == 1) blinkLED(15,20,1);
-  #if defined(BUZZER)
-    alarmArray[7] = 1; //beep if loaded from gui or android
-  #endif
+  SET_ALARM_BUZZER(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_1);
 }
 
 void update_constants() { 
@@ -225,9 +219,7 @@ void readPLog(void) {
   eeprom_read_block((void*)&plog, (void*)(E2END - 4 - sizeof(plog)), sizeof(plog));
   if(calculate_sum((uint8_t*)&plog, sizeof(plog)) != plog.checksum) {
     blinkLED(9,100,3);
-    #if defined(BUZZER)
-      alarmArray[7] = 3;
-    #endif
+    SET_ALARM_BUZZER(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_ELSE);
     // force load defaults
     plog.arm = plog.disarm = plog.start = plog.failsafe = plog.i2c = 0;
     plog.running = 1;

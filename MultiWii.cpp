@@ -358,7 +358,7 @@ conf_t conf;
   int8_t alt_change_flag;
   uint32_t alt_change;
 
-uint8_t alarmArray[16];           // array
+uint8_t alarmArray[ALRM_FAC_SIZE];           // array
 
 #if BARO
   int32_t baroPressure;
@@ -794,7 +794,7 @@ void go_arm() {
     }
   } else if(!f.ARMED) { 
     blinkLED(2,255,1);
-    alarmArray[8] = 1;
+    SET_ALARM(ALRM_FAC_ACC, ALRM_LVL_ON);
   }
 }
 void go_disarm() {
@@ -927,7 +927,8 @@ void loop () {
             }else{ 
               AccInflightCalibrationArmed = !AccInflightCalibrationArmed; 
               #if defined(BUZZER)
-               if (AccInflightCalibrationArmed) alarmArray[0]=2; else   alarmArray[0]=3;
+               if (AccInflightCalibrationArmed) SET_ALARM_BUZZER(ALRM_FAC_TOGGLE, ALRM_LVL_TOGGLE_2);
+               else     SET_ALARM_BUZZER(ALRM_FAC_TOGGLE, ALRM_LVL_TOGGLE_ELSE);
               #endif
             }
          } 
@@ -941,7 +942,7 @@ void loop () {
             writeGlobalSet(0);
             readEEPROM();
             blinkLED(2,40,i);
-            alarmArray[0] = i;
+            SET_ALARM(ALRM_FAC_TOGGLE, i);
           }
         #endif
         if (rcSticks == THR_LO + YAW_HI + PIT_HI + ROL_CE) {            // Enter LCD config
