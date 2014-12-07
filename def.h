@@ -114,6 +114,17 @@
   #define ITG3200
   #define PID_CONTROLLER 2
   #define ESC_CALIB_CANNOT_FLY
+#elif COPTERTEST == 9
+  #define AIRPLANE
+  #define FREEIMUv035
+  #define POWERMETER_HARD
+  #define WATTS
+  #define VBAT
+  #define VBAT_CELLS
+  #define VBAT_CELLS_NUM 3
+  #define VBAT_CELLS_PINS {A0, A1, A2 }
+  #define VBAT_CELLS_OFFSETS {0, 50, 83 }
+  #define VBAT_CELLS_DIVS { 75, 122,  98 }
 #elif defined(COPTERTEST)
   #error "*** this test is not yet defined"
 #endif

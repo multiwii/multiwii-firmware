@@ -195,7 +195,9 @@ flags_struct_t f;
   uint16_t cycleTimeMin = 65535;   // lowest ever cycle timen
   int32_t  BAROaltMax;             // maximum value
   uint16_t GPS_speedMax = 0;       // maximum speed from gps
-  uint16_t powerValueMaxMAH = 0;
+  #ifdef POWERMETER_HARD
+    uint16_t powerValueMaxMAH = 0;
+  #endif
   #if defined(WATTS)
     uint16_t wattsMax = 0;
   #endif
@@ -205,7 +207,6 @@ flags_struct_t f;
 #endif
 
 int16_t  i2c_errors_count = 0;
-
 
 
 #if defined(THROTTLE_ANGLE_CORRECTION)
@@ -513,7 +514,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   } // end default
   } // end of switch()
 
-#ifdef POWERMETER_HARD
+#if defined( POWERMETER_HARD ) && (defined(LOG_VALUES) || defined(LCD_TELEMETRY))
   if (analog.amperage > powerValueMaxMAH) powerValueMaxMAH = analog.amperage;
 #endif
 
@@ -778,7 +779,7 @@ void go_arm() {
         #if GPS
           GPS_speedMax = 0;
         #endif
-        #ifdef POWERMETER_HARD
+        #if defined( POWERMETER_HARD ) && (defined(LOG_VALUES) || defined(LCD_TELEMETRY))
           powerValueMaxMAH = 0;
         #endif
         #ifdef WATTS

@@ -1551,6 +1551,7 @@ void configurationLoop() {
       refreshLCD = 0;
     }
     #if defined(SERIAL_RX)
+      delay(10); // may help with timing for some serial receivers -1/100 second seems non-critical here?
       if (spekFrameFlags == 0x01) readSerial_RX();
       delay(44); // For digital receivers , to ensure that an "old" frame does not cause immediate exit at startup. 
     #endif

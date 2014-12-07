@@ -76,7 +76,7 @@ enum alrm_lvl_toggle {
 };
 #if GPS
   enum alrm_lvl_gps {
-   ALRM_LVL_GPS_NOFIX  = 1,
+   ALRM_LVL_GPS_NOFIX  = 2,
   };
 #endif
 #ifdef VBAT
