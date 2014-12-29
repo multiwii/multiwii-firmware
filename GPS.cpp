@@ -465,8 +465,6 @@ uint8_t GPS_Compute(void) {
   return 1;
 } // End of GPS_compute
 
-  
-  
 // Abort current mission with the given error code (switch to poshold_infinit)
 void abort_mission(unsigned char error_code) {
   GPS_set_next_wp(&GPS_coord[LAT], &GPS_coord[LON],&GPS_coord[LAT], &GPS_coord[LON]);
@@ -480,7 +478,7 @@ void GPS_adjust_heading() {
   //This controls the heading
   if (f.GPS_head_set) { // We have seen a SET_POI or a SET_HEADING command
     if (GPS_poi[LAT] == 0)
-      magHold = wrap_18000((GPS_directionToPoi*100)-18000)/100;
+      magHold = wrap_18000((GPS_directionToPoi*100))/100;
     else {
       GPS_bearing(&GPS_coord[LAT],&GPS_coord[LON],&GPS_poi[LAT],&GPS_poi[LON],&GPS_directionToPoi);
       GPS_distance_cm(&GPS_coord[LAT],&GPS_coord[LON],&GPS_poi[LAT],&GPS_poi[LON],&wp_distance);

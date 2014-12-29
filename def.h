@@ -1666,7 +1666,7 @@
   #define GPS 0
 #endif
 
-#if defined(GPS_SERIAL)
+#if defined(USE_MSP_WP)
   #define NAVCAP 1
 #else
   #define NAVCAP 0
