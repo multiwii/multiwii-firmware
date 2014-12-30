@@ -1409,7 +1409,7 @@
   #undef INTERNAL_I2C_PULLUPS 
 #endif
 
-#if defined(CRIUS_AIO_PRO_V1) 
+#if defined(CRIUS_AIO_PRO) 
   #define MPU6050 
   #define HMC5883 
   #define MS561101BA 
