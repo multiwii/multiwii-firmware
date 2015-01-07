@@ -772,6 +772,11 @@ void go_arm() {
       #if defined(VBAT)
         if (analog.vbat > NO_VBAT) vbatMin = analog.vbat;
       #endif
+      #ifdef ALTITUDE_RESET_ON_ARM
+        #if BARO
+          calibratingB = 10; // calibrate baro to new ground level (10 * 25 ms = ~250 ms non blocking)
+        #endif
+      #endif
       #ifdef LCD_TELEMETRY // reset some values when arming
         #if BARO
           BAROaltMax = alt.EstAlt;

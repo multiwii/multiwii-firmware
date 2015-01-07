@@ -548,6 +548,10 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
 /*****************                                                                 ***************/
 /*************************************************************************************************/
 
+  /************************        Reset Baro altitude on arm         ********************/
+  /* When unchecked a calibration of the baro altitude is preformed every time arming is activated */
+  //#define ALTITUDE_RESET_ON_ARM
+
   /************************        Angele throttle correction         ********************/
   /* Automatically increase throttle based on the angle of the copter
      Original idea by Kraut Rob, first implementation HAdrian */
