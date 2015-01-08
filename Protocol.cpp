@@ -193,7 +193,7 @@ void serialCom() {
       c = SerialRead(port);
       #ifdef SUPPRESS_ALL_SERIAL_MSP
         evaluateOtherData(c); // no MSP handling, so go directly
-      #else
+      #else //SUPPRESS_ALL_SERIAL_MSP
         state = c_state[port];
         // regular data handling to detect and handle MSP and other data
         if (state == IDLE) {
@@ -234,7 +234,6 @@ void serialCom() {
         #if defined(GPS_SERIAL)
         if (GPS_SERIAL == port) {
           static uint32_t GPS_last_frame_seen; //Last gps frame seen at this time, used to detect stalled gps communication
-  
           if (GPS_newFrame(c)) {
             //We had a valid GPS data frame, so signal task scheduler to switch to compute
             if (GPS_update == 1) GPS_update = 0; else GPS_update = 1; //Blink GPS update
@@ -252,8 +251,8 @@ void serialCom() {
         if (micros()-timeMax>250) return;  // Limit the maximum execution time of serial decoding to avoid time spike
         #endif
       #endif // SUPPRESS_ALL_SERIAL_MSP
-    }
-  }
+    } // while
+  } // for
 }
 
 void evaluateCommand(uint8_t c) {
@@ -730,6 +729,12 @@ void evaluateCommand(uint8_t c) {
 // evaluate all other incoming serial data
 void evaluateOtherData(uint8_t sr) {
   #ifndef SUPPRESS_OTHER_SERIAL_COMMANDS
+    #if GPS
+      // on the GPS port, we must avoid interpreting incoming values for other commands because there is no
+      // protocol protection as is with MSP commands
+      // doing so with single chars would be prone to error.
+      if (CURRENTPORT == GPS_SERIAL) return;
+    #endif
     switch (sr) {
     // Note: we may receive weird characters here which could trigger unwanted features during flight.
     //       this could lead to a crash easily.

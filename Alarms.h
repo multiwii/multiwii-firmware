@@ -92,11 +92,11 @@ enum alrm_lvl_confirm {
  ALRM_LVL_CONFIRM_ELSE ,
 };
 
-#define SET_ALARM(fac, level) { alarmArray[fac] = level; }
+#define SET_ALARM(fac, level) alarmArray[fac] = level
 #ifdef BUZZER
-  #define SET_ALARM_BUZZER(fac, level)    { SET_ALARM( fac, level); }
+  #define SET_ALARM_BUZZER(fac, level)    SET_ALARM( fac, level)
 #else
-  #define SET_ALARM_BUZZER(fac, level)    {}
+  #define SET_ALARM_BUZZER(fac, level)
 #endif
 
 #define IS_ALARM_SET(fac, level) ( alarmArray[fac] == level )

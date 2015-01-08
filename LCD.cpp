@@ -1981,7 +1981,7 @@ void print_uptime(uint16_t sec) {
 #if GPS
 void fill_line1_gps_lat(uint8_t sat) {
   int32_t aGPS_latitude = abs(GPS_coord[LAT]);
-  strcpy_P(line1,PSTR(".---.------- #  "));
+  strcpy_P(line1,PSTR(".---.------- #--"));
   //                   0123456789012345
   line1[0] = GPS_coord[LAT]<0?'S':'N';
   if (sat) {
