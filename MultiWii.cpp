@@ -1049,7 +1049,9 @@ void loop () {
           f.ANGLE_MODE = 1;
         }  
       } else {
-        // failsafe support
+        if(f.ANGLE_MODE){
+          errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0;
+        }
         f.ANGLE_MODE = 0;
       }
       if ( rcOptions[BOXHORIZON] ) {
@@ -1059,6 +1061,9 @@ void loop () {
           f.HORIZON_MODE = 1;
         }
       } else {
+        if(f.HORIZON_MODE){
+          errorGyroI[ROLL] = 0;errorGyroI[PITCH] = 0;
+        }
         f.HORIZON_MODE = 0;
       }
     #endif
