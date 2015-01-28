@@ -730,10 +730,12 @@ void evaluateCommand(uint8_t c) {
 void evaluateOtherData(uint8_t sr) {
   #ifndef SUPPRESS_OTHER_SERIAL_COMMANDS
     #if GPS
-      // on the GPS port, we must avoid interpreting incoming values for other commands because there is no
-      // protocol protection as is with MSP commands
-      // doing so with single chars would be prone to error.
-      if (CURRENTPORT == GPS_SERIAL) return;
+	  #if !defined(I2C_GPS)
+        // on the GPS port, we must avoid interpreting incoming values for other commands because there is no
+        // protocol protection as is with MSP commands
+        // doing so with single chars would be prone to error.
+        if (CURRENTPORT == GPS_SERIAL) return;
+      #endif
     #endif
     switch (sr) {
     // Note: we may receive weird characters here which could trigger unwanted features during flight.
