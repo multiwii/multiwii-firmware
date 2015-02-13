@@ -1025,12 +1025,13 @@ void loop () {
     #if defined(EXTENDED_AUX_STATES)
     uint32_t auxState = 0;
     for(i=0;i<4;i++)
-      auxState |= (rcData[AUX1+i]<1230)<<(6*i) | 
-      (1231<rcData[AUX1+i] && rcData[AUX1+i]<1360)<<(6*i+1) |
-      (1361<rcData[AUX1+i] && rcData[AUX1+i]<1490)<<(6*i+2) |
-      (1491<rcData[AUX1+i] && rcData[AUX1+i]<1620)<<(6*i+3) |
-      (1621<rcData[AUX1+i] && rcData[AUX1+i]<1749)<<(6*i+4) |
-      (rcData[AUX1+i]>1750)<<(6*i+5);
+      auxState |=
+      (uint32_t)(rcData[AUX1+i]<1230)<<(6*i) | 
+      (uint32_t)(1231<rcData[AUX1+i] && rcData[AUX1+i]<1360)<<(6*i+1) |
+      (uint32_t)(1361<rcData[AUX1+i] && rcData[AUX1+i]<1490)<<(6*i+2) |
+      (uint32_t)(1491<rcData[AUX1+i] && rcData[AUX1+i]<1620)<<(6*i+3) |
+      (uint32_t)(1621<rcData[AUX1+i] && rcData[AUX1+i]<1749)<<(6*i+4) |
+      (uint32_t)(rcData[AUX1+i]>1750)<<(6*i+5);
     #else
     uint16_t auxState = 0;
     for(i=0;i<4;i++)
