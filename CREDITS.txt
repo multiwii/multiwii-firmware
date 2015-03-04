@@ -301,3 +301,15 @@ D: adding OSD BOX
 N: Itai
 E:
 W:
+
+S: Heli tail precomp
+D: for large collective input, increase tail (yaw) signals
+N: sachiho
+E:
+W: http://www.multiwii.com/forum/viewtopic.php?f=8&t=1562&p=58400&hilit=piro+compensation#p57337
+
+S: LCD_LCD03S
+D: SERIAL LCD: LCD03 whit serial 9600 baud comunication enabled
+N: dibelardino 
+E: Marco
+W: http://www.multiwii.com/forum/viewtopic.php?f=8&t=6116&p=61369&hilit=LCD03#p61369

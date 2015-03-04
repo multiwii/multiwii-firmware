@@ -534,6 +534,33 @@ void i2c_LCD03_set_cursor (byte col, byte row) {
 }
 #endif // LCD_LCD03
 
+#if defined(LCD_LCD03S) // LCD_LCD03S
+// *********************
+// LCD03S serial primitives
+// *********************
+void serial_LCD03_init () {
+  SerialWrite(LCD_SERIAL_PORT, 0x00 );// Command register
+  SerialWrite(LCD_SERIAL_PORT, 04 );// Hide cursor
+  SerialWrite(LCD_SERIAL_PORT, 12 );// Clear screen
+  SerialWrite(LCD_SERIAL_PORT, 19 );// Backlight on
+}
+void serial_LCD03_send_cmd (byte c) {
+  SerialWrite(LCD_SERIAL_PORT, 0x00 );// Command register
+  SerialWrite(LCD_SERIAL_PORT, c );
+}
+void serial_LCD03_send_char (char c) {
+  SerialWrite(LCD_SERIAL_PORT, 0x00 );// Command register
+  SerialWrite(LCD_SERIAL_PORT, c );
+}
+void serial_LCD03_set_cursor (byte col, byte row) {
+  row = min(row,1);
+  col = min(col,15);
+  serial_LCD03_send_cmd(03); // set cursor (row, column)
+  serial_LCD03_send_char(row+1);
+  serial_LCD03_send_char(col+1);
+}
+#endif // LCD_LCD03S
+
 #if defined(OLED_DIGOLE) // OLED_DIGOLE
 #define OLED_DIGOLE_ADDRESS 0x27 // 7bit address
 // *********************
@@ -627,6 +654,8 @@ void LCDprint(uint8_t i) {
     i2c_ETPP_send_char(i);
   #elif defined(LCD_LCD03)
     i2c_LCD03_send_char(i);
+  #elif defined(LCD_LCD03S)
+    serial_LCD03_send_char(i);
   #elif defined(OLED_I2C_128x64)
     i2c_OLED_send_char(i);
   #elif defined(OLED_DIGOLE)
@@ -669,6 +698,8 @@ void LCDclear() {
     for (byte i = 0; i<80; i++) i2c_ETPP_send_char(' ');// Blanks for all 80 bytes of RAM in the controller, not just the 2x16 display
   #elif defined(LCD_LCD03)
     i2c_LCD03_send_cmd(12); // clear screen
+  #elif defined(LCD_LCD03S)
+    serial_LCD03_send_cmd(12); // clear screen
   #elif defined(OLED_I2C_128x64)
     i2c_clear_OLED();
   #elif defined(OLED_DIGOLE)
@@ -708,6 +739,8 @@ void LCDsetLine(byte line) { // Line = 1 or 2 - vt100 has lines 1-99
     i2c_ETPP_set_cursor(0,line-1);
   #elif defined(LCD_LCD03)
     i2c_LCD03_set_cursor(0,line-1);
+  #elif defined(LCD_LCD03S)
+    serial_LCD03_set_cursor(0,line-1);
   #elif defined(OLED_I2C_128x64)
   //  #ifndef DEBUG // sanity check for production only. Debug runs with all possible side effects
   //    if (line<1 || line>(MULTILINE_PRE+MULTILINE_POST)) line = 1;
@@ -791,6 +824,10 @@ void initLCD() {
     // LCD03 - I2C LCD
     // http://www.robot-electronics.co.uk/htm/Lcd03tech.htm
     i2c_LCD03_init();
+  #elif defined(LCD_LCD03S)
+    // LCD03 - SERIAL LCD
+    // http://www.robot-electronics.co.uk/htm/Lcd03tech.htm
+    serial_LCD03_init();
   #elif defined(OLED_I2C_128x64)
     i2c_OLED_init();
     #ifndef SUPPRESS_OLED_I2C_128x64LOGO
@@ -1630,7 +1667,7 @@ void configurationLoop() {
   LCDsetLine(2);
   strcpy_P(line1,PSTR("Exit"));
   LCDprintChar(line1);
-  #if defined(LCD_LCD03)
+  #if defined(LCD_LCD03) || defined(LCD_LCD03S)
     delay(2000); // wait for two seconds then clear screen and show initial message
     initLCD();
   #endif
@@ -1671,7 +1708,7 @@ void LCDbar(uint8_t n,uint8_t v) {
     for (i=j; i< n; i++) LCDprint( '.' );
   #elif defined(LCD_ETPP)
     ETPP_barGraph(n,v);
-  #elif defined(LCD_LCD03)
+  #elif defined(LCD_LCD03) || defined(LCD_LCD03S)
     for (uint8_t i=0; i< n; i++) LCDprint((i<n*v/100 ? '=' : '.'));
   #elif defined(OLED_I2C_128x64)
     uint8_t i, j = (n*v)/100;
