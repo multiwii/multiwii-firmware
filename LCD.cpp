@@ -549,7 +549,7 @@ void serial_LCD03_send_cmd (byte c) {
   SerialWrite(LCD_SERIAL_PORT, c );
 }
 void serial_LCD03_send_char (char c) {
-  SerialWrite(LCD_SERIAL_PORT, 0x00 );// Command register
+  //SerialWrite(LCD_SERIAL_PORT, 0x00 );// Command register
   SerialWrite(LCD_SERIAL_PORT, c );
 }
 void serial_LCD03_set_cursor (byte col, byte row) {

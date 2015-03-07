@@ -454,18 +454,18 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       static uint16_t vvec[VBAT_SMOOTH], vsum;
       uint16_t v = analogRead(V_BATPIN);
       #if VBAT_SMOOTH == 1
-        analog.vbat = (v<<4) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
+        analog.vbat = (v*VBAT_PRESCALER) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
       #else
         vsum += v;
         vsum -= vvec[ind];
         vvec[ind++] = v;
         ind %= VBAT_SMOOTH;
-        #if VBAT_SMOOTH == 16
+        #if VBAT_SMOOTH == VBAT_PRESCALER
           analog.vbat = vsum / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
-        #elif VBAT_SMOOTH < 16
-          analog.vbat = (vsum * (16/VBAT_SMOOTH)) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
+        #elif VBAT_SMOOTH < VBAT_PRESCALER
+          analog.vbat = (vsum * (VBAT_PRESCALER/VBAT_SMOOTH)) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
         #else
-          analog.vbat = ((vsum /VBAT_SMOOTH) * 16) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
+          analog.vbat = ((vsum /VBAT_SMOOTH) * VBAT_PRESCALER) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
         #endif
       #endif
     #endif // VBAT
