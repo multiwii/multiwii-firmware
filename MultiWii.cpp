@@ -1,5 +1,5 @@
 /*
-MultiWiiCopter by Alexandre Dubus
+MultiWiiCopter by Alexandre Dubus 
 www.multiwii.com
 March  2015     V2.4
  This program is free software: you can redistribute it and/or modify
@@ -25,6 +25,7 @@ March  2015     V2.4
 #include "Serial.h"
 #include "GPS.h"
 #include "Protocol.h"
+#include "Telemetry.h"
 
 #include <avr/pgmspace.h>
 
@@ -202,7 +203,7 @@ flags_struct_t f;
     uint16_t wattsMax = 0;
   #endif
 #endif
-#if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
+#if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT) || defined (TELEMETRY)
   uint32_t armedTime = 0;
 #endif
 
@@ -588,6 +589,10 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     }
   #endif
 
+  #ifdef TELEMETRY
+     run_telemetry();
+  #endif
+
   #if GPS & defined(GPS_LED_INDICATOR)       // modified by MIS to use STABLEPIN LED for number of sattelites indication
     static uint32_t GPSLEDTime;              // - No GPS FIX -> LED blink at speed of incoming GPS frames
     static uint8_t blcnt;                    // - Fix and sat no. bellow 5 -> LED off
@@ -608,7 +613,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
   #endif
   if (f.ARMED)  {
-    #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
+    #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT) || defined (TELEMETRY)
       armedTime += (uint32_t)cycleTime;
     #endif
     #if defined(VBAT)
@@ -722,6 +727,9 @@ void setup() {
   #endif
   #ifdef LCD_CONF_DEBUG
     configurationLoop();
+  #endif
+  #ifdef TELEMETRY
+    init_telemetry();
   #endif
   #ifdef LANDING_LIGHTS_DDR
     init_landing_lights();

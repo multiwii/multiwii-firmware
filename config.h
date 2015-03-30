@@ -1,4 +1,4 @@
-#ifndef CONFIG_H_
+#ifndef CONFIG_H_ 
 #define CONFIG_H_
 
 /*************************************************************************************************/
@@ -364,6 +364,7 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
       //#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //For Robe/Hitec/Futaba
       //#define SERIAL_SUM_PPM         ROLL,PITCH,YAW,THROTTLE,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //For Multiplex
       //#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //For some Hitec/Sanwa/Others
+      //#define SERIAL_SUM_PPM         THROTTLE,YAW,ROLL,PITCH,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //Modelcraft
 
       // Uncommenting following line allow to connect PPM_SUM receiver to standard THROTTLE PIN on MEGA boards (eg. A8 in CRIUS AIO)
       //#define PPM_ON_THROTTLE
@@ -874,6 +875,24 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
     //#define RX_RSSI
     //#define RX_RSSI_PIN A3
     //#define RX_RSSI_CHAN 8   //RSSI injection on selected channel (for PPM, Olrs, SBUS, etc.) (Starts at 0)
+
+  /********************************************************************/
+  /****                             TELEMETRY                      ****/
+  /********************************************************************/
+    //#define FRSKY_TELEMETRY           // used for FRSKY twoway receivers with telemetry (D-series like D8R-II or D8R-XP) 
+                                      // VBAT, Baro, MAG, GPS and POWERMETER are helpful
+                                      // VBAT_CELLS is optional for a forth screen on the display FLD-02
+    //#define SPORT_TELEMETRY           // for FRSKY twoway receivers with S.PORT telemetry (S-series like X4R/X6R/X8R), not implemented yet - TO BE DONE
+    #define TELEMETRY_SERIAL 3        // change if required
+    #define COORDFORMAT_DECIMALMINUTES // uncomment to get the format DD°MM.mmmm for the coordinates - comment out to get the format DD.dddddd° for the coordinates 
+    #define FRSKY_FLD02               // send only data specific for the FRSKY display FLD-02
+                                      // comment out for OpenTX and Er9x, all data will be sent via FRSKY protocol
+    //#define OPENTX                    // send only OpenTX specific data, not implemented yet - TO BE DONE
+    //#define ER9X                      // send only Er9x specific data, not implemented yet - TO BE DONE
+    #define TELEMETRY_ALT_BARO        // send BARO based altitude, calibrated to 0 when arming, recommended if BARO available
+    //#define TELEMETRY_ALT_GPS         // send GPS based altitude (altitude above see level), for FLD-02 don't use together with TELEMETRY_ALT_BARO
+    #define TELEMETRY_COURSE_MAG      // send MAG based course/heading, recommended if MAG available, but FLD-02 does not display
+    //#define TELEMETRY_COURSE_GPS      // send GPS based course/heading, don't use together with TELEMETRY_COURSE_MAG, FLD-02 does not display
 
   /********************************************************************/
   /****                             Buzzer                         ****/

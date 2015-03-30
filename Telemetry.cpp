@@ -1,6 +1,6 @@
- // ****************************************************************
-// FrSky telemetry
-// Version: 0.4.0
+// ****************************************************************
+// FrSky telemetry 
+// Version: 0.4.0   - by QuadBow
 // Changes: V0.4.0: - supports 2.4 with new features added
 //                    device specific selection of data to be sent
 //                    different ways for displaying             

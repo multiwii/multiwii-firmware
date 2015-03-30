@@ -1,4 +1,4 @@
-#ifndef DEF_H_
+#ifndef DEF_H_ 
 #define DEF_H_
 
 /**************************************************************************************/
@@ -1900,6 +1900,9 @@
   #define DISPLAY_COLUMNS 16
 #endif
 
+#if (defined(FRSKY_TELEMETRY) || (SPORT_TELEMETRY))
+  #define TELEMETRY
+#endif
 
 /**************************************************************************************/
 /***************               override defaults                   ********************/
