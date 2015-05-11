@@ -684,7 +684,7 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
     //#define MTK_BINARY16
     //#define MTK_BINARY19
     //#define INIT_MTK_GPS        // initialize MTK GPS for using selected speed, 5Hz update rate and GGA & RMC sentence or binary settings
-
+    //#define VENUS8
 
     /* I2C GPS device made with an independant arduino + GPS device
        including some navigation functions

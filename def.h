@@ -1991,7 +1991,7 @@
   #error "for your protection: A32U4_4_HW_PWM_SERVOS was not tested with your coptertype"
 #endif
 
-#if GPS && !defined(NMEA) && !defined(UBLOX) && !defined(MTK_BINARY16) && !defined(MTK_BINARY19) && !defined(INIT_MTK_GPS) && !defined(I2C_GPS)
+#if GPS && !defined(NMEA) && !defined(UBLOX) && !defined(MTK_BINARY16) && !defined(MTK_BINARY19) && !defined(INIT_MTK_GPS) && !defined(I2C_GPS) && !defined(VENUS8)
   #error "when using GPS you must specify the protocol NMEA, UBLOX..."
 #endif
 
