@@ -1039,6 +1039,32 @@
   #define STABLEPIN_OFF PORTC &= ~(1<<2);
 #endif
 
+#if defined(QUADRINO_NANO)
+  #define MPU6050
+  #define MS561101BA
+  #define AK8975     // MPU6050 + AK8975 = MPU9150
+  #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = -X; imu.accADC[PITCH]  = -Y; imu.accADC[YAW]  =  Z;}
+  #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] =  Y; imu.gyroADC[PITCH] = -X; imu.gyroADC[YAW] = -Z;}
+  #define MAG_ORIENTATION(Y, X, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  =  Z;}
+
+  #define MPU6050_ADDRESS     0x68
+  #define MS561101BA_ADDRESS  0x76
+
+  #define GPS_SERIAL 2
+  #define VENUS8
+  #define USE_MSP_WP
+  
+  #define LED1PIN_ON   PORTB |= (1<<7);
+  #define LED1PIN_OFF  PORTB &= ~(1<<7);
+  #define LED2PIN_ON   PORTC |= (1<<7);
+  #define LED2PIN_OFF  PORTC &= ~(1<<7);
+
+  #undef  DISABLE_POWER_PIN
+  #define POWERPIN_PINMODE           DDRC |= 1<<1;//pinMode (36, OUTPUT);
+  #define POWERPIN_ON                PORTC |= 1<<1;
+  #define POWERPIN_OFF               PORTC &= ~(1<<1);
+#endif
+
 #if defined(ALLINONE)
   #define ITG3200
   #define BMA180
