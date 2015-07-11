@@ -1926,7 +1926,7 @@
   #define DISPLAY_COLUMNS 16
 #endif
 
-#if (defined(FRSKY_TELEMETRY) || (SPORT_TELEMETRY))
+#if defined(FRSKY_TELEMETRY) || defined(SPORT_TELEMETRY)
   #define TELEMETRY
 #endif
 

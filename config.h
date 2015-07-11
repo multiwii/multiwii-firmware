@@ -884,12 +884,17 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
                                       // VBAT, Baro, MAG, GPS and POWERMETER are helpful
                                       // VBAT_CELLS is optional for a forth screen on the display FLD-02
     //#define SPORT_TELEMETRY           // for FRSKY twoway receivers with S.PORT telemetry (S-series like X4R/X6R/X8R), not implemented yet - TO BE DONE
+
+    // A2 voltage is represented by a value in the range 0-255.
+    // So if you set the max for A2 to be 12.4 each step will increase the displayed voltage by ~0.0486
+    #define FRSKY_SPORT_A2_MAX 124    // NOTE: VBAT gets stored as an integer.  16 would be 1.6V, 124 is 12.4V, etc etc
+   
     #define TELEMETRY_SERIAL 3        // change if required
     #define COORDFORMAT_DECIMALMINUTES // uncomment to get the format DD°MM.mmmm for the coordinates - comment out to get the format DD.dddddd° for the coordinates 
     #define FRSKY_FLD02               // send only data specific for the FRSKY display FLD-02
                                       // comment out for OpenTX and Er9x, all data will be sent via FRSKY protocol
-    //#define OPENTX                    // send only OpenTX specific data, not implemented yet - TO BE DONE
-    //#define ER9X                      // send only Er9x specific data, not implemented yet - TO BE DONE
+    //#define OPENTX                    // send only OpenTX specific data, not implemented yet - FOR TURURE USE
+    //#define ER9X                      // send only Er9x specific data, not implemented yet - FOR TURURE USE
     #define TELEMETRY_ALT_BARO        // send BARO based altitude, calibrated to 0 when arming, recommended if BARO available
     //#define TELEMETRY_ALT_GPS         // send GPS based altitude (altitude above see level), for FLD-02 don't use together with TELEMETRY_ALT_BARO
     #define TELEMETRY_COURSE_MAG      // send MAG based course/heading, recommended if MAG available, but FLD-02 does not display
