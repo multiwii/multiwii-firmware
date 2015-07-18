@@ -893,8 +893,8 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
     #define COORDFORMAT_DECIMALMINUTES // uncomment to get the format DD°MM.mmmm for the coordinates - comment out to get the format DD.dddddd° for the coordinates 
     #define FRSKY_FLD02               // send only data specific for the FRSKY display FLD-02
                                       // comment out for OpenTX and Er9x, all data will be sent via FRSKY protocol
-    //#define OPENTX                    // send only OpenTX specific data, not implemented yet - FOR TURURE USE
-    //#define ER9X                      // send only Er9x specific data, not implemented yet - FOR TURURE USE
+    //#define OPENTX                    // send OpenTX specific data
+    //#define ER9X                      // send Er9x specific data, not implemented yet - TO BE DONE FOR THE FUTURE
     #define TELEMETRY_ALT_BARO        // send BARO based altitude, calibrated to 0 when arming, recommended if BARO available
     //#define TELEMETRY_ALT_GPS         // send GPS based altitude (altitude above see level), for FLD-02 don't use together with TELEMETRY_ALT_BARO
     #define TELEMETRY_COURSE_MAG      // send MAG based course/heading, recommended if MAG available, but FLD-02 does not display

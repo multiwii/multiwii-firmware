@@ -149,10 +149,21 @@ void inline send_cell_volt(void) // Data compatibel to FrSky FLVS-01 voltage sen
 void inline send_Altitude(void)
 {
   #if defined(TELEMETRY_ALT_BARO) and BARO
-      int16_t Data_altitude;
-      Data_altitude = (alt.EstAlt + 50) / 100;
-      sendDataHead(ID_Altitude);
-      write_FrSky16(Data_altitude);
+      #if defined(FRSKY_FLD02) 
+          int16_t Data_altitude;
+          Data_altitude = (alt.EstAlt + 50) / 100;
+          sendDataHead(ID_Altitude_bp);
+          write_FrSky16(Data_altitude);
+      #endif
+      #if defined OPENTX
+          int16_t Data_altitude_bp, Data_altitude_ap;
+          Data_altitude_bp = alt.EstAlt / 100;
+          sendDataHead(ID_Altitude_bp);
+          write_FrSky16(Data_altitude_bp);
+          Data_altitude_ap = alt.EstAlt - Data_altitude_bp * 100;
+          sendDataHead(ID_Altitude_ap);
+          write_FrSky16(Data_altitude_ap);
+      #endif
   #endif
   #if defined(TELEMETRY_ALT_GPS) and GPS
       #if defined(FRSKY_FLD02) 
@@ -160,7 +171,7 @@ void inline send_Altitude(void)
               int16_t Data_altitude;
               if (f.GPS_FIX && GPS_numSat >= 4) {           
                  Data_altitude = GPS_altitude;
-                 sendDataHead(ID_Altitude);
+                 sendDataHead(ID_Altitude_bp);
                  write_FrSky16(Data_altitude);
                  }
           #endif
@@ -341,16 +352,23 @@ void inline send_Accel(void)
 void inline send_Voltage_ampere(void) // Data compatibel to FrSky FAS-100 voltage sensor, FLD-02 uses only analog data A1 and A2
 {
   #if defined (VBAT) and not defined(FRSKY_FLD02)
-      uint16_t voltage;
-      uint16_t Data_Voltage_vBat_bp;
-      uint16_t Data_Voltage_vBat_ap;   
-      voltage = ((analog.vbat * 110) / 21);
-      Data_Voltage_vBat_bp = voltage / 100;
-      sendDataHead(ID_Voltage_Amp_bp);
-      write_FrSky16(Data_Voltage_vBat_bp);
-      Data_Voltage_vBat_ap = ((voltage % 100) + 5) / 10; 
-      sendDataHead(ID_Voltage_Amp_ap);
-      write_FrSky16(Data_Voltage_vBat_ap); 
+      #if defined OPENTX
+          uint16_t voltage;
+          voltage = analog.vbat * 10; // for OpenTX send the number of 1/10th of volt
+          sendDataHead(ID_VFAS);
+          write_FrSky16(voltage);
+      #else
+          uint16_t voltage;
+          uint16_t Data_Voltage_vBat_bp;
+          uint16_t Data_Voltage_vBat_ap;   
+          voltage = ((analog.vbat * 110) / 21);
+          Data_Voltage_vBat_bp = voltage / 100;
+          sendDataHead(ID_Voltage_Amp_bp);
+          write_FrSky16(Data_Voltage_vBat_bp);
+          Data_Voltage_vBat_ap = ((voltage % 100) + 5) / 10; 
+          sendDataHead(ID_Voltage_Amp_ap);
+          write_FrSky16(Data_Voltage_vBat_ap); 
+      #endif
   #endif  
 
   #if defined(POWERMETER)

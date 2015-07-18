@@ -31,7 +31,8 @@
     #define ID_Fuel_level         0x04
     #define ID_Temperature2       0x05
     #define ID_Volt               0x06
-    #define ID_Altitude           0x10
+    #define ID_Altitude_bp        0x10
+    #define ID_Altitude_ap        0x21
     #define ID_GPS_speed_bp       0x11
     #define ID_GPS_speed_ap       0x19
     #define ID_Longitude_bp       0x12
@@ -52,6 +53,7 @@
     #define ID_Voltage_Amp_bp     0x3A
     #define ID_Voltage_Amp_ap     0x3B
     #define ID_Current            0x28
+    #define ID_VFAS               0x39
 #endif // FRSKY_TELEMETRY
 
 #if defined(SPORT_TELEMETRY)
