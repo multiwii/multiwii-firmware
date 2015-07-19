@@ -226,8 +226,12 @@ void inline send_GPS_speed(void)
       uint16_t Data_GPS_speed_ap;
       uint16_t temp;
       if (f.GPS_FIX && GPS_numSat >= 4) {           
-         temp = (GPS_speed * 40 + 102) / 203;                       // FRSKY specific format in knots => factor ~50 (102 for rounding purpose)
-         Data_GPS_speed_bp = temp / 10;
+         #if defined KILOMETER_HOUR                                        // OPENTX specific format in kilometers per hour => factor 36/100 (will be devided by 10 later)
+             temp = (GPS_speed * 36) / 10; 
+         #else                                                             // FRSKY specific format in knots => factor ~50 (will be devided by 10 later)
+             temp = (GPS_speed * 40) / 203; 
+         #endif
+         Data_GPS_speed_bp = temp / 10;                                    // here comes the devision by 10
          Data_GPS_speed_ap = temp - Data_GPS_speed_bp * 10;
          sendDataHead(ID_GPS_speed_bp);
          write_FrSky16(Data_GPS_speed_bp);
