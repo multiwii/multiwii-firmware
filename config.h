@@ -884,7 +884,14 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
     //#define FRSKY_TELEMETRY           // used for FRSKY twoway receivers with telemetry (D-series like D8R-II or D8R-XP) 
                                       // VBAT, Baro, MAG, GPS and POWERMETER are helpful
                                       // VBAT_CELLS is optional for a forth screen on the display FLD-02
-    //#define SPORT_TELEMETRY           // for FRSKY twoway receivers with S.PORT telemetry (S-series like X4R/X6R/X8R), not implemented yet - TO BE DONE
+    //#define SPORT_TELEMETRY           // for FRSKY twoway receivers with S.PORT telemetry (X-series like X4R/X6R/X8R)
+                                      // definitions        simulated sensor
+                                      // Baro, VARIO     -> Vario
+                                      // VBAT,POWERMETER -> FCS
+                                      // VBAT_CELLS      -> FLVSS
+                                      // GPS             -> GPS
+                                      // ACC             -> ACC
+                                      // MAG             -> heading via second GPS
 
     // FRSKY common entries - valid for both protocols
     #define TELEMETRY_SERIAL 3        // change if required
@@ -902,7 +909,16 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
     //#define TELEMETRY_COURSE_GPS      // send GPS based course/heading, don't use together with TELEMETRY_COURSE_MAG, FLD-02 does not display
 
     // S.PORT specific entries
-    #define FRSKY_SPORT_A2_MAX 124    // A2 voltage is represented by a value in the range 0-255. A value of 16 results in 1.6V, 124 is 12.4V, etc
+    // Override default simulated sensor ID. Usefull if you have hardware sensors with same ID installed.
+    //#define FRSKY_SPORT_OVERRIDE_DEVICE_VARIO     FRSKY_SPORT_DEVICE_1    // default 1
+    //#define FRSKY_SPORT_OVERRIDE_DEVICE_FLVSS     FRSKY_SPORT_DEVICE_2    // default 2
+    //#define FRSKY_SPORT_OVERRIDE_DEVICE_FCS       FRSKY_SPORT_DEVICE_3    // default 3
+    //#define FRSKY_SPORT_OVERRIDE_DEVICE_GPS       FRSKY_SPORT_DEVICE_4    // default 4
+    //#define FRSKY_SPORT_OVERRIDE_DEVICE_RPM       FRSKY_SPORT_DEVICE_5    // default 5
+    //#define FRSKY_SPORT_OVERRIDE_DEVICE_SP2UART   FRSKY_SPORT_DEVICE_7    // default 7  - TODO
+    //#define FRSKY_SPORT_OVERRIDE_DEVICE_ASS       FRSKY_SPORT_DEVICE_10   // default 10 - TODO
+    //#define FRSKY_SPORT_OVERRIDE_DEVICE_ACC       FRSKY_SPORT_DEVICE_20   // default 20 - no hardware sensor yet
+    //#define FRSKY_SPORT_OVERRIDE_DEVICE_MAG       FRSKY_SPORT_DEVICE_21   // default 21 - no hardware sensor yet
 
   /********************************************************************/
   /****                             Buzzer                         ****/
