@@ -265,6 +265,11 @@ void getEstimatedAttitude(){
   #if defined(THROTTLE_ANGLE_CORRECTION)
     cosZ = mul(EstG.V16.Z , 100) / ACC_1G ;                                                   // cos(angleZ) * 100 
     throttleAngleCorrection = THROTTLE_ANGLE_CORRECTION * constrain(100 - cosZ, 0, 100) >>3;  // 16 bit ok: 200*150 = 30000  
+  if(att.heading > 180)
+    att.heading = -180 + (att.heading % 180);  // compensate for mag_declination 
+  else if(att.heading < -179)
+    att.heading = 180 + (att.heading % 180);
+
   #endif
 
   // projection of ACC vector to global Z, with 1G subtructed
