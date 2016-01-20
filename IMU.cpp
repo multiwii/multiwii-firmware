@@ -261,6 +261,10 @@ void getEstimatedAttitude(){
     att.heading += conf.mag_declination; // Set from GUI
   #endif
   att.heading /= 10;
+  if(att.heading > 180)
+    att.heading = -180 + (att.heading % 180);  // compensate for mag_declination 
+  else if(att.heading < -179)
+    att.heading = 180 + (att.heading % 180);
 
   #if defined(THROTTLE_ANGLE_CORRECTION)
     cosZ = mul(EstG.V16.Z , 100) / ACC_1G ;                                                   // cos(angleZ) * 100 
