@@ -692,12 +692,16 @@ void vario_output(uint16_t d, uint8_t up) {
     uint8_t d1 = d/2;
   #endif
   if (d1<1) d1 = 1;
+  #if defined (LCD_CONF) || defined(LCD_TELEMETRY) || defined(HAS_LCD)
   for (uint8_t i=0; i<d1; i++) LCDprint(s1);
+  #endif
   #ifndef VARIOMETER_SINGLE_TONE
     uint8_t s2 = (up ? 0x07 : 0x05);
     uint8_t d2 = d-d1;
     if (d2<1) d2 = 1;
+  #if defined (LCD_CONF) || defined(LCD_TELEMETRY) || defined(HAS_LCD)
     for (uint8_t i=0; i<d2; i++) LCDprint(s2);
+  #endif
   #endif
 }
 
