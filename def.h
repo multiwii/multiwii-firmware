@@ -479,12 +479,23 @@
   #endif
   
   // Servos
-  #define SERVO_1_PINMODE   DDRF |= (1<<7); // A0
-  #define SERVO_1_PIN_HIGH  PORTF|= 1<<7;
-  #define SERVO_1_PIN_LOW   PORTF &= ~(1<<7);
-  #define SERVO_2_PINMODE   DDRF |= (1<<6); // A1
-  #define SERVO_2_PIN_HIGH  PORTF |= 1<<6;
-  #define SERVO_2_PIN_LOW   PORTF &= ~(1<<6);
+  #if defined(NANOWII) && defined(FLYING_WING)
+    // Move servo 5 away from servo rail to give room for elevon servo 1
+    #define SERVO_5_PINMODE   DDRF |= (1<<7); // A0
+    #define SERVO_5_PIN_HIGH  PORTF|= 1<<7;
+    #define SERVO_5_PIN_LOW   PORTF &= ~(1<<7);
+    // Move servo 7 away from servo rail to give room for elevon servo 2
+    #define SERVO_7_PINMODE   DDRF |= (1<<6); // A1
+    #define SERVO_7_PIN_HIGH  PORTF |= 1<<6;
+    #define SERVO_7_PIN_LOW   PORTF &= ~(1<<6);
+  #else
+    #define SERVO_1_PINMODE   DDRF |= (1<<7); // A0
+    #define SERVO_1_PIN_HIGH  PORTF|= 1<<7;
+    #define SERVO_1_PIN_LOW   PORTF &= ~(1<<7);
+    #define SERVO_2_PINMODE   DDRF |= (1<<6); // A1
+    #define SERVO_2_PIN_HIGH  PORTF |= 1<<6;
+    #define SERVO_2_PIN_LOW   PORTF &= ~(1<<6);
+  #endif
   #define SERVO_3_PINMODE   DDRF |= (1<<5); // A2
   #define SERVO_3_PIN_HIGH  PORTF |= 1<<5;
   #define SERVO_3_PIN_LOW   PORTF &= ~(1<<5);
@@ -497,15 +508,29 @@
     #define SERVO_4_PIN_HIGH  PORTF |= 1<<4;
     #define SERVO_4_PIN_LOW   PORTF &= ~(1<<4);  
   #endif
-  #define SERVO_5_PINMODE   DDRC |= (1<<6); // 5
-  #define SERVO_5_PIN_HIGH  PORTC|= 1<<6;
-  #define SERVO_5_PIN_LOW   PORTC &= ~(1<<6);
+  #if defined(NANOWII) && defined(FLYING_WING)
+    // Move elevon servo 2 to third position on the servo rail
+    #define SERVO_2_PINMODE   DDRC |= (1<<6); // 5
+    #define SERVO_2_PIN_HIGH  PORTC|= 1<<6;
+    #define SERVO_2_PIN_LOW   PORTC &= ~(1<<6);
+  #else
+    #define SERVO_5_PINMODE   DDRC |= (1<<6); // 5
+    #define SERVO_5_PIN_HIGH  PORTC|= 1<<6;
+    #define SERVO_5_PIN_LOW   PORTC &= ~(1<<6);
+  #endif
   #define SERVO_6_PINMODE   DDRD |= (1<<7); // 6
   #define SERVO_6_PIN_HIGH  PORTD |= 1<<7;
   #define SERVO_6_PIN_LOW   PORTD &= ~(1<<7);
-  #define SERVO_7_PINMODE   DDRB |= (1<<6); // 10
-  #define SERVO_7_PIN_HIGH  PORTB |= 1<<6;
-  #define SERVO_7_PIN_LOW   PORTB &= ~(1<<6);
+  #if defined(NANOWII) && defined(FLYING_WING)
+    // Move elevon servo 1 to second position on the servo rail
+    #define SERVO_1_PINMODE   DDRB |= (1<<6); // 10
+    #define SERVO_1_PIN_HIGH  PORTB |= 1<<6;
+    #define SERVO_1_PIN_LOW   PORTB &= ~(1<<6);
+  #else
+    #define SERVO_7_PINMODE   DDRB |= (1<<6); // 10
+    #define SERVO_7_PIN_HIGH  PORTB |= 1<<6;
+    #define SERVO_7_PIN_LOW   PORTB &= ~(1<<6);
+  #endif
   #define SERVO_8_PINMODE   DDRB |= (1<<5); // 9
   #define SERVO_8_PIN_HIGH  PORTB |= 1<<5;
   #define SERVO_8_PIN_LOW   PORTB &= ~(1<<5);
