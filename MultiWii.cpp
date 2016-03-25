@@ -1462,8 +1462,14 @@ void loop () {
   #elif PID_CONTROLLER == 2 // alexK
   #define GYRO_I_MAX 256
   #define ACC_I_MAX 256
-  prop = min(max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])),500); // range [0;500]
-
+  if(f.HORIZON_MODE){
+    prop = min(max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])),500); // range [0;500]
+    // Using Level D as a Sensitivity for Horizon. 0 more level to 255 more rate.
+    // Horizon level strength is turned down proportionally to stick travel
+    // With default value of 100, last 20% of stick travel is without self leveling.
+    // For more rate mode increase D and slower flips and rolls will be possible
+    prop = constrain(100 - (prop * conf.pid[PIDLEVEL].D8 / 400), 0, 100);
+  }
   //----------PID controller----------
   for(axis=0;axis<3;axis++) {
     //-----Get the desired angle rate depending on flight mode
@@ -1478,7 +1484,7 @@ void loop () {
         AngleRateTmp = ((int32_t) (conf.rollPitchRate + 27) * rcCommand[axis]) >> 4;
         if (f.HORIZON_MODE) {
           //mix up angle error to desired AngleRateTmp to add a little auto-level feel
-          AngleRateTmp += ((int32_t) errorAngle * conf.pid[PIDLEVEL].I8)>>8;
+          AngleRateTmp += ((int32_t) errorAngle * conf.pid[PIDLEVEL].I8 * prop / 100) >> 4;
         }
       } else {//it's the ANGLE mode - control is angle based, so control loop is needed
         AngleRateTmp = ((int32_t) errorAngle * conf.pid[PIDLEVEL].P8)>>4;
