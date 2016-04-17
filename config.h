@@ -170,6 +170,7 @@
       //#define MPU3050
       //#define L3G4200D
       //#define MPU6050       //combo + ACC
+      //#define MPU9250
       //#define LSM330        //combo + ACC
       
       /* I2C accelerometer */
