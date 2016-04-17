@@ -37,7 +37,7 @@ void i2c_read_reg_to_buf(uint8_t add, uint8_t reg, uint8_t *buf, uint8_t size);
 #if defined(ADCACC)
   #define ACC_1G 75
 #endif
-#if defined(MPU6050 || defined(MPU9250))
+#if defined(MPU6050) || defined(MPU9250)
   #if defined(FREEIMUv04)
     #define ACC_1G 255
   #else
