@@ -980,7 +980,7 @@ void Mag_init() {
   delay(100);
 }
 
-#if !defined(MPU6050_I2C_AUX_MASTER)
+#if !defined(MPU6050_I2C_AUX_MASTER || MPU9250)
   void Device_Mag_getADC() {
     i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
     MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,          
@@ -1063,7 +1063,7 @@ static void Mag_init() {
   delay(100);
 }
 
-#if !defined(MPU6050_I2C_AUX_MASTER)
+#if !defined(MPU6050_I2C_AUX_MASTER || MPU9250)
 static void Device_Mag_getADC() {
   getADC();
 }
@@ -1303,6 +1303,92 @@ void Gyro_getADC () {
 // End Of I2C Gyroscope and Accelerometer LSM330
 // ************************************************************************************************************
 
+// ************************************************************************************************************
+// I2C Gyroscope/Accelerometer/Compass MPU9250
+// ************************************************************************************************************
+#if defined(MPU9250)
+
+#if !defined(MPU9250_ADDRESS)
+  #define MPU9250_ADDRESS     0x68 // address pin AD0 low (GND), default for FreeIMU v0.4 and InvenSense evaluation board
+  //#define MPU9250_ADDRESS     0x69 // address pin AD0 high (VCC)
+  //The MAG acquisition
+  #define MAG_ADDRESS 0x0C
+  #define MAG_DATA_REGISTER 0x03
+#endif
+
+
+////////////////////////////////////
+//           Gyro start           //
+////////////////////////////////////
+
+void Gyro_init() {
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
+  i2c_writeReg(MPU9250_ADDRESS, 0x6B, 0x80);             //PWR_MGMT_1    -- DEVICE_RESET 1
+  delay(5);
+  i2c_writeReg(MPU9250_ADDRESS, 0x6B, 0x03);             //PWR_MGMT_1    -- SLEEP 0; CYCLE 0; TEMP_DIS 0; CLKSEL 3 (PLL with Z Gyro reference)
+  i2c_writeReg(MPU9250_ADDRESS, 0x1A, GYRO_DLPF_CFG); //CONFIG        -- EXT_SYNC_SET 0 (disable input pin for data sync) ; default DLPF_CFG = 0 => ACC bandwidth = 260Hz  GYRO bandwidth = 256Hz)
+  i2c_writeReg(MPU9250_ADDRESS, 0x1B, 0x18);             //GYRO_CONFIG   -- FS_SEL = 3: Full scale set to 2000 deg/sec
+  // enable I2C bypass for AUX I2C, allways on because we have a magnetometer on board
+  i2c_writeReg(MPU9250_ADDRESS, 0x37, 0x02);           //INT_PIN_CFG   -- INT_LEVEL=0 ; INT_OPEN=0 ; LATCH_INT_EN=0 ; INT_RD_CLEAR=0 ; FSYNC_INT_LEVEL=0 ; FSYNC_INT_EN=0 ; I2C_BYPASS_EN=1 ; CLKOUT_EN=0
+}
+
+void Gyro_getADC () {
+  i2c_getSixRawADC(MPU9250_ADDRESS, 0x43);
+  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/4 , // range: +/- 8192; +/- 2000 deg/sec
+             ((rawADC[2]<<8) | rawADC[3])/4 ,
+             ((rawADC[4]<<8) | rawADC[5])/4 );
+  GYRO_Common();
+}
+
+////////////////////////////////////
+//            Gyro end            //
+////////////////////////////////////
+
+
+////////////////////////////////////
+//           ACC start            //
+////////////////////////////////////
+void ACC_init () {
+  i2c_writeReg(MPU9250_ADDRESS, 0x1C, 0x10);
+}
+
+void ACC_getADC () {
+  i2c_getSixRawADC(MPU9250_ADDRESS, 0x3B);
+  ACC_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/8 ,
+                   ((rawADC[2]<<8) | rawADC[3])/8 ,
+                   ((rawADC[4]<<8) | rawADC[5])/8 );
+  ACC_Common();
+}
+
+////////////////////////////////////
+//            ACC end             //
+////////////////////////////////////
+
+
+////////////////////////////////////
+//            MAG start           //
+////////////////////////////////////
+void Mag_init() {
+    delay(100);
+    i2c_writeReg(MAG_ADDRESS,0x0a,0x01);  //Start the first conversion
+    delay(100);
+}
+    void Device_Mag_getADC() {
+     i2c_getSixRawADC(MAG_ADDRESS, 0x03);
+ MAG_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,
+                     ((rawADC[3]<<8) | rawADC[2]) ,
+                     ((rawADC[5]<<8) | rawADC[4]) );
+ //Start another meassurement
+    i2c_writeReg(MAG_ADDRESS,0x0a,0x01);
+}
+////////////////////////////////////
+//            MAG end             //
+////////////////////////////////////
+
+#endif
+// ************************************************************************************************************
+// End Of I2C Gyroscope/Accelerometer/Compass MPU9250
+// ************************************************************************************************************
 
 #if defined(WMP)
 // ************************************************************************************************************
