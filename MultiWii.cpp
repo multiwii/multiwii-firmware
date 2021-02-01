@@ -1,7 +1,7 @@
 /*
 MultiWiiCopter by Alexandre Dubus
 www.multiwii.com
-March  2015     V2.4
+November  2013     V2.3
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -25,7 +25,7 @@ March  2015     V2.4
 #include "Serial.h"
 #include "GPS.h"
 #include "Protocol.h"
-#include "Telemetry.h"
+#include "Bluetooth.h"
 
 #include <avr/pgmspace.h>
 
@@ -203,7 +203,7 @@ flags_struct_t f;
     uint16_t wattsMax = 0;
   #endif
 #endif
-#if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT) || defined (TELEMETRY)
+#if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
   uint32_t armedTime = 0;
 #endif
 
@@ -455,18 +455,18 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       static uint16_t vvec[VBAT_SMOOTH], vsum;
       uint16_t v = analogRead(V_BATPIN);
       #if VBAT_SMOOTH == 1
-        analog.vbat = (v*VBAT_PRESCALER) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
+        analog.vbat = (v<<4) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
       #else
         vsum += v;
         vsum -= vvec[ind];
         vvec[ind++] = v;
         ind %= VBAT_SMOOTH;
-        #if VBAT_SMOOTH == VBAT_PRESCALER
+        #if VBAT_SMOOTH == 16
           analog.vbat = vsum / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
-        #elif VBAT_SMOOTH < VBAT_PRESCALER
-          analog.vbat = (vsum * (VBAT_PRESCALER/VBAT_SMOOTH)) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
+        #elif VBAT_SMOOTH < 16
+          analog.vbat = (vsum * (16/VBAT_SMOOTH)) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
         #else
-          analog.vbat = ((vsum /VBAT_SMOOTH) * VBAT_PRESCALER) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
+          analog.vbat = ((vsum /VBAT_SMOOTH) * 16) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
         #endif
       #endif
     #endif // VBAT
@@ -589,10 +589,6 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     }
   #endif
 
-  #ifdef TELEMETRY
-     run_telemetry();
-  #endif
-
   #if GPS & defined(GPS_LED_INDICATOR)       // modified by MIS to use STABLEPIN LED for number of sattelites indication
     static uint32_t GPSLEDTime;              // - No GPS FIX -> LED blink at speed of incoming GPS frames
     static uint8_t blcnt;                    // - Fix and sat no. bellow 5 -> LED off
@@ -613,7 +609,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
   #endif
   if (f.ARMED)  {
-    #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT) || defined (TELEMETRY)
+    #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
       armedTime += (uint32_t)cycleTime;
     #endif
     #if defined(VBAT)
@@ -631,6 +627,12 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 }
 
 void setup() {
+
+  pinMode(3,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(6,OUTPUT);
+  pinMode(9,OUTPUT);
+
   SerialOpen(0,SERIAL0_COM_SPEED);
   #if defined(PROMICRO)
     SerialOpen(1,SERIAL1_COM_SPEED);
@@ -698,6 +700,9 @@ void setup() {
   #if defined(OPENLRSv2MULTI)
     initOpenLRS();
   #endif
+  #if defined(Bluetooth)
+    bluetooth_Init();
+  #endif
   initSensors();
   #if GPS
     GPS_set_pids();
@@ -719,7 +724,7 @@ void setup() {
     GPS_conf.max_wp_number = getMaxWPNumber(); 
   #endif
   
-  #if defined(LCD_ETPP) || defined(LCD_LCD03) || defined(LCD_LCD03S) || defined(OLED_I2C_128x64) || defined(OLED_DIGOLE) || defined(LCD_TELEMETRY_STEP)
+  #if defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) || defined(OLED_DIGOLE) || defined(LCD_TELEMETRY_STEP)
     initLCD();
   #endif
   #ifdef LCD_TELEMETRY_DEBUG
@@ -727,9 +732,6 @@ void setup() {
   #endif
   #ifdef LCD_CONF_DEBUG
     configurationLoop();
-  #endif
-  #ifdef TELEMETRY
-    init_telemetry();
   #endif
   #ifdef LANDING_LIGHTS_DDR
     init_landing_lights();
@@ -858,7 +860,10 @@ void loop () {
   #if defined(OPENLRSv2MULTI) 
     Read_OpenLRS_RC();
   #endif 
-
+  #if defined(Bluetooth)
+	bluetooth_Read_RC();
+  #endif
+  
   #if defined(SERIAL_RX)
   if ((spekFrameDone == 0x01) || ((int16_t)(currentTime-rcTime) >0 )) { 
     spekFrameDone = 0x00;
@@ -1033,13 +1038,12 @@ void loop () {
     #if defined(EXTENDED_AUX_STATES)
     uint32_t auxState = 0;
     for(i=0;i<4;i++)
-      auxState |=
-      (uint32_t)(rcData[AUX1+i]<1230)<<(6*i) | 
-      (uint32_t)(1231<rcData[AUX1+i] && rcData[AUX1+i]<1360)<<(6*i+1) |
-      (uint32_t)(1361<rcData[AUX1+i] && rcData[AUX1+i]<1490)<<(6*i+2) |
-      (uint32_t)(1491<rcData[AUX1+i] && rcData[AUX1+i]<1620)<<(6*i+3) |
-      (uint32_t)(1621<rcData[AUX1+i] && rcData[AUX1+i]<1749)<<(6*i+4) |
-      (uint32_t)(rcData[AUX1+i]>1750)<<(6*i+5);
+      auxState |= (rcData[AUX1+i]<1230)<<(6*i) | 
+      (1231<rcData[AUX1+i] && rcData[AUX1+i]<1360)<<(6*i+1) |
+      (1361<rcData[AUX1+i] && rcData[AUX1+i]<1490)<<(6*i+2) |
+      (1491<rcData[AUX1+i] && rcData[AUX1+i]<1620)<<(6*i+3) |
+      (1621<rcData[AUX1+i] && rcData[AUX1+i]<1749)<<(6*i+4) |
+      (rcData[AUX1+i]>1750)<<(6*i+5);
     #else
     uint16_t auxState = 0;
     for(i=0;i<4;i++)
@@ -1058,9 +1062,7 @@ void loop () {
           f.ANGLE_MODE = 1;
         }  
       } else {
-        if(f.ANGLE_MODE){
-          errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0;
-        }
+        // failsafe support
         f.ANGLE_MODE = 0;
       }
       if ( rcOptions[BOXHORIZON] ) {
@@ -1070,9 +1072,6 @@ void loop () {
           f.HORIZON_MODE = 1;
         }
       } else {
-        if(f.HORIZON_MODE){
-          errorGyroI[ROLL] = 0;errorGyroI[PITCH] = 0;
-        }
         f.HORIZON_MODE = 0;
       }
     #endif
@@ -1159,7 +1158,6 @@ void loop () {
               if (f.GPS_mode == GPS_MODE_NAV)
                 NAV_paused_at = mission_step.number;
               f.GPS_mode = GPS_MODE_HOLD;
-              f.GPS_BARO_MODE = false;
               GPS_set_next_wp(&GPS_coord[LAT], &GPS_coord[LON],&GPS_coord[LAT], & GPS_coord[LON]); //hold at the current position
               set_new_altitude(alt.EstAlt);                                //and current altitude
               NAV_state = NAV_STATE_HOLD_INFINIT;

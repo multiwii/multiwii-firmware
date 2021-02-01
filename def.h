@@ -125,12 +125,6 @@
   #define VBAT_CELLS_PINS {A0, A1, A2 }
   #define VBAT_CELLS_OFFSETS {0, 50, 83 }
   #define VBAT_CELLS_DIVS { 75, 122,  98 }
-#elif COPTERTEST == 10
-  #define Y6
-  #define CRIUS_AIO_PRO
-  #define LCD_LCD03S
-  #define SERIAL0_COM_SPEED 9600
-  #define LCD_CONF
 #elif defined(COPTERTEST)
   #error "*** this test is not yet defined"
 #endif
@@ -276,14 +270,14 @@
 /**************************   atmega328P (Promini)  ************************************/
 #if defined(PROMINI)
   #if !defined(MONGOOSE1_0)
-    #define LEDPIN_PINMODE             DDRB |= 1<<5;     // Arduino pin 13
+    #define LEDPIN_PINMODE             pinMode (13, OUTPUT);
     #define LEDPIN_TOGGLE              PINB |= 1<<5;     //switch LEDPIN state (digital PIN 13)
     #define LEDPIN_OFF                 PORTB &= ~(1<<5);
     #define LEDPIN_ON                  PORTB |= (1<<5);
   #endif
   #if !defined(RCAUXPIN8) 
     #if !defined(MONGOOSE1_0)
-      #define BUZZERPIN_PINMODE         DDRB |= 1; // Arduino pin 8
+      #define BUZZERPIN_PINMODE          pinMode (8, OUTPUT);
       #if NUMBER_MOTOR >4
         #undef PILOTLAMP
       #endif
@@ -302,7 +296,7 @@
     #define RCAUXPIN
   #endif
   #if !defined(RCAUXPIN12) && !defined(DISABLE_POWER_PIN)
-    #define POWERPIN_PINMODE           DDRB |= 1<<4; // Arduino pin 12
+    #define POWERPIN_PINMODE           pinMode (12, OUTPUT);
     #define POWERPIN_ON                PORTB |= 1<<4;
     #define POWERPIN_OFF               PORTB &= ~(1<<4); //switch OFF WMP, digital PIN 12
   #else
@@ -316,7 +310,7 @@
   #define I2C_PULLUPS_ENABLE         PORTC |= 1<<4; PORTC |= 1<<5;   // PIN A4&A5 (SDA&SCL)
   #define I2C_PULLUPS_DISABLE        PORTC &= ~(1<<4); PORTC &= ~(1<<5);
   #if !defined(MONGOOSE1_0)
-    #define PINMODE_LCD                DDRD |= 1; // Arduino pin 0
+    #define PINMODE_LCD                pinMode(0, OUTPUT);
     #define LCDPIN_OFF                 PORTD &= ~1; //switch OFF digital PIN 0
     #define LCDPIN_ON                  PORTD |= 1;
     #define STABLEPIN_PINMODE          ;
@@ -361,30 +355,30 @@
   #define SOFT_PWM_4_PIN_HIGH        PORTB |= 1<<4;
   #define SOFT_PWM_4_PIN_LOW         PORTB &= ~(1<<4);
   
-  #define SERVO_1_PINMODE            DDRC |= 1<<0; // pin A0  // TILT_PITCH - WING left
+  #define SERVO_1_PINMODE            pinMode(A0,OUTPUT); // TILT_PITCH - WING left
   #define SERVO_1_PIN_HIGH           PORTC |= 1<<0;
   #define SERVO_1_PIN_LOW            PORTC &= ~(1<<0);
-  #define SERVO_2_PINMODE            DDRC |= 1<<1; // pin A1  // TILT_ROLL  - WING right
+  #define SERVO_2_PINMODE            pinMode(A1,OUTPUT); // TILT_ROLL  - WING right
   #define SERVO_2_PIN_HIGH           PORTC |= 1<<1;
   #define SERVO_2_PIN_LOW            PORTC &= ~(1<<1);
-  #define SERVO_3_PINMODE            DDRC |= 1<<2; // pin A2  // CAM TRIG  - alt TILT_PITCH
+  #define SERVO_3_PINMODE            pinMode(A2,OUTPUT); // CAM TRIG  - alt TILT_PITCH
   #define SERVO_3_PIN_HIGH           PORTC |= 1<<2;
   #define SERVO_3_PIN_LOW            PORTC &= ~(1<<2);
   #if !defined(MONGOOSE1_0)
-    #define SERVO_4_PINMODE            DDRB |= 1<<4; // pin 12  // new       - alt TILT_ROLL
+    #define SERVO_4_PINMODE            pinMode(12,OUTPUT); // new       - alt TILT_ROLL
     #define SERVO_4_PIN_HIGH           PORTB |= 1<<4;
     #define SERVO_4_PIN_LOW            PORTB &= ~(1<<4);
   #endif
-  #define SERVO_5_PINMODE            DDRB |= 1<<3; // pin 11  // BI LEFT
+  #define SERVO_5_PINMODE            pinMode(11,OUTPUT); // BI LEFT
   #define SERVO_5_PIN_HIGH           PORTB |= 1<<3;
   #define SERVO_5_PIN_LOW            PORTB &= ~(1<<3);
-  #define SERVO_6_PINMODE            DDRD|= 1<<3; // pin 3    // TRI REAR - BI RIGHT
+  #define SERVO_6_PINMODE            pinMode(3,OUTPUT);  // TRI REAR - BI RIGHT
   #define SERVO_6_PIN_HIGH           PORTD|= 1<<3;
   #define SERVO_6_PIN_LOW            PORTD &= ~(1<<3);
-  #define SERVO_7_PINMODE            DDRB |= 1<<2; // pin 10  // new
+  #define SERVO_7_PINMODE            pinMode(10,OUTPUT); // new
   #define SERVO_7_PIN_HIGH           PORTB |= 1<<2;
   #define SERVO_7_PIN_LOW            PORTB &= ~(1<<2);
-  #define SERVO_8_PINMODE            DDRB |= 1<<1; // pin 9  // new
+  #define SERVO_8_PINMODE            pinMode(9,OUTPUT); // new
   #define SERVO_8_PIN_HIGH           PORTB |= 1<<1;
   #define SERVO_8_PIN_LOW            PORTB &= ~(1<<1);
 #endif
@@ -555,21 +549,21 @@
 
 /**************************  all the Mega types  ***********************************/
 #if defined(MEGA)
-  #define LEDPIN_PINMODE             DDRB  |= (1<<7); DDRC  |= (1<<7); // Arduino pin 13, pin 30
+  #define LEDPIN_PINMODE             pinMode (13, OUTPUT);pinMode (30, OUTPUT);
   #define LEDPIN_TOGGLE              PINB  |= (1<<7); PINC  |= (1<<7);
   #define LEDPIN_ON                  PORTB |= (1<<7); PORTC |= (1<<7);
   #define LEDPIN_OFF                 PORTB &= ~(1<<7);PORTC &= ~(1<<7);
-  #define BUZZERPIN_PINMODE            DDRC  |= (1<<5); // Arduino pin 32
+  #define BUZZERPIN_PINMODE          pinMode (32, OUTPUT);
   #if defined PILOTLAMP
-    #define PL_PIN_ON                  PORTC |= 1<<5;
-    #define PL_PIN_OFF                 PORTC &= ~(1<<5);
+    #define    PL_PIN_ON    PORTC |= 1<<5;
+    #define    PL_PIN_OFF   PORTC &= ~(1<<5);
   #else
     #define BUZZERPIN_ON               PORTC |= 1<<5;
     #define BUZZERPIN_OFF              PORTC &= ~(1<<5);
   #endif 
     
   #if !defined(DISABLE_POWER_PIN)
-    #define POWERPIN_PINMODE           DDRC |= 1<<0; // Arduino pin 37
+    #define POWERPIN_PINMODE           pinMode (37, OUTPUT);
     #define POWERPIN_ON                PORTC |= 1<<0;
     #define POWERPIN_OFF               PORTC &= ~(1<<0);
   #else
@@ -579,10 +573,10 @@
   #endif
   #define I2C_PULLUPS_ENABLE         PORTD |= 1<<0; PORTD |= 1<<1;       // PIN 20&21 (SDA&SCL)
   #define I2C_PULLUPS_DISABLE        PORTD &= ~(1<<0); PORTD &= ~(1<<1);
-  #define PINMODE_LCD                DDRE |= 1<<0; // Arduino pin 0
+  #define PINMODE_LCD                pinMode(0, OUTPUT);
   #define LCDPIN_OFF                 PORTE &= ~1; //switch OFF digital PIN 0
   #define LCDPIN_ON                  PORTE |= 1;
-  #define STABLEPIN_PINMODE          DDRC |= 1<<6; // Arduino pin 31
+  #define STABLEPIN_PINMODE          pinMode (31, OUTPUT);
   #define STABLEPIN_ON               PORTC |= 1<<6;
   #define STABLEPIN_OFF              PORTC &= ~(1<<6);
   #if defined(PPM_ON_THROTTLE)
@@ -613,29 +607,29 @@
   #define RX_PC_INTERRUPT            PCINT2_vect
   #define RX_PCINT_PIN_PORT          PINK
   
-  #define SERVO_1_PINMODE            DDRC |= 1<<3;DDRL |= 1<<5; // Arduino pin 34 , pin 44 // TILT_PITCH - WING left
+  #define SERVO_1_PINMODE            pinMode(34,OUTPUT);pinMode(44,OUTPUT); // TILT_PITCH - WING left
   #define SERVO_1_PIN_HIGH           PORTC |= 1<<3;PORTL |= 1<<5;
   #define SERVO_1_PIN_LOW            PORTC &= ~(1<<3);PORTL &= ~(1<<5);
-  #define SERVO_2_PINMODE            DDRC |= 1<<2;DDRL |= 1<<4; // Arduino pin 35 , pin 45 // TILT_ROLL  - WING right
+  #define SERVO_2_PINMODE            pinMode(35,OUTPUT);pinMode(45,OUTPUT); // TILT_ROLL  - WING right
   #define SERVO_2_PIN_HIGH           PORTC |= 1<<2;PORTL |= 1<<4;
   #define SERVO_2_PIN_LOW            PORTC &= ~(1<<2);PORTL &= ~(1<<4);
-  #define SERVO_3_PINMODE            DDRC |= 1<<4;DDRL |= 1<<3; // Arduino pin 33 , pin 46 // CAM TRIG  - alt TILT_PITCH
+  #define SERVO_3_PINMODE            pinMode(33,OUTPUT); pinMode(46,OUTPUT); // CAM TRIG  - alt TILT_PITCH
   #define SERVO_3_PIN_HIGH           PORTC |= 1<<4;PORTL |= 1<<3;
   #define SERVO_3_PIN_LOW            PORTC &= ~(1<<4);PORTL &= ~(1<<3);
-  #define SERVO_4_PINMODE            DDRC |= 1<<0; DDRH |= 1<<4; // Arduino pin 37 , pin 7 // new       - alt TILT_ROLL
+  #define SERVO_4_PINMODE            pinMode (37, OUTPUT);pinMode(7,OUTPUT); // new       - alt TILT_ROLL
   #define SERVO_4_PIN_HIGH           PORTC |= 1<<0; PORTH |= 1<<4;
   #define SERVO_4_PIN_LOW            PORTC &= ~(1<<0);PORTH &= ~(1<<4);
 
-  #define SERVO_5_PINMODE            DDRH |= 1<<3; // Arduino pin 6                        // BI LEFT
+  #define SERVO_5_PINMODE            pinMode(6,OUTPUT);                      // BI LEFT
   #define SERVO_5_PIN_HIGH           PORTH |= 1<<3;
   #define SERVO_5_PIN_LOW            PORTH &= ~(1<<3);
-  #define SERVO_6_PINMODE            DDRE |= 1<<4; // Arduino pin 2                        // TRI REAR - BI RIGHT
+  #define SERVO_6_PINMODE            pinMode(2,OUTPUT);                      // TRI REAR - BI RIGHT
   #define SERVO_6_PIN_HIGH           PORTE |= 1<<4;
   #define SERVO_6_PIN_LOW            PORTE &= ~(1<<4);
-  #define SERVO_7_PINMODE            DDRE |= 1<<3; // Arduino pin 5                        // new
+  #define SERVO_7_PINMODE            pinMode(5,OUTPUT);                      // new
   #define SERVO_7_PIN_HIGH           PORTE |= 1<<3;
   #define SERVO_7_PIN_LOW            PORTE &= ~(1<<3);
-  #define SERVO_8_PINMODE            DDRE |= 1<<5; // Arduino pin 3                        // new
+  #define SERVO_8_PINMODE            pinMode(3,OUTPUT);                      // new
   #define SERVO_8_PIN_HIGH           PORTE |= 1<<5;
   #define SERVO_8_PIN_LOW            PORTE &= ~(1<<5);
 #endif
@@ -1021,7 +1015,7 @@
   #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = -X; imu.accADC[PITCH]  = -Y; imu.accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] =  Y; imu.gyroADC[PITCH] = -X; imu.gyroADC[YAW] = -Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  = -Z;}
-  #define STABLEPIN_PINMODE DDRC |= (1<<2); // pin A2
+  #define STABLEPIN_PINMODE pinMode (A2, OUTPUT);
   #define STABLEPIN_ON PORTC |= (1<<2);
   #define STABLEPIN_OFF PORTC &= ~(1<<2);
 #endif
@@ -1034,35 +1028,9 @@
   #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = -X; imu.accADC[PITCH]  = -Y; imu.accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] =  Y; imu.gyroADC[PITCH] = -X; imu.gyroADC[YAW] = -Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  = -Z;}
-  #define STABLEPIN_PINMODE DDRC |= (1<<2); // pin A2
+  #define STABLEPIN_PINMODE pinMode (A2, OUTPUT);
   #define STABLEPIN_ON PORTC |= (1<<2);
   #define STABLEPIN_OFF PORTC &= ~(1<<2);
-#endif
-
-#if defined(QUADRINO_NANO)
-  #define MPU6050
-  #define MS561101BA
-  #define AK8975     // MPU6050 + AK8975 = MPU9150
-  #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = -X; imu.accADC[PITCH]  = -Y; imu.accADC[YAW]  =  Z;}
-  #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] =  Y; imu.gyroADC[PITCH] = -X; imu.gyroADC[YAW] = -Z;}
-  #define MAG_ORIENTATION(Y, X, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  =  Z;}
-
-  #define MPU6050_ADDRESS     0x68
-  #define MS561101BA_ADDRESS  0x76
-
-  #define GPS_SERIAL 2
-  #define VENUS8
-  #define USE_MSP_WP
-  
-  #define LED1PIN_ON   PORTB |= (1<<7);
-  #define LED1PIN_OFF  PORTB &= ~(1<<7);
-  #define LED2PIN_ON   PORTC |= (1<<7);
-  #define LED2PIN_OFF  PORTC &= ~(1<<7);
-
-  #undef  DISABLE_POWER_PIN
-  #define POWERPIN_PINMODE           DDRC |= 1<<1;//pinMode (36, OUTPUT);
-  #define POWERPIN_ON                PORTC |= 1<<1;
-  #define POWERPIN_OFF               PORTC &= ~(1<<1);
 #endif
 
 #if defined(ALLINONE)
@@ -1276,7 +1244,7 @@
   #define GYRO_ORIENTATION(Y, X, Z) {imu.gyroADC[ROLL] =  X; imu.gyroADC[PITCH] = -Y; imu.gyroADC[YAW] = -Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  = -Z;}
   #define MS561101BA_ADDRESS 0x76
-  #define STABLEPIN_PINMODE DDRC |= (1<<2); // pin A2
+  #define STABLEPIN_PINMODE pinMode (A2, OUTPUT);
   #define STABLEPIN_ON PORTC |= (1<<2);
   #define STABLEPIN_OFF PORTC &= ~(1<<2);
 #endif
@@ -1290,7 +1258,7 @@
   #define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  =  Z;}
   #define MPU6050_I2C_AUX_MASTER
   #define MS561101BA_ADDRESS 0x76
-  #define STABLEPIN_PINMODE DDRC |= (1<<2); // pin A2
+  #define STABLEPIN_PINMODE pinMode (A2, OUTPUT);
   #define STABLEPIN_ON PORTC |= (1<<2);
   #define STABLEPIN_OFF PORTC &= ~(1<<2);
 #endif
@@ -1819,7 +1787,7 @@
 
 //all new Special RX's must be added here
 //this is to avoid confusion :)
-#if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(SUMD)
+#if !defined(SERIAL_SUM_PPM) && !defined(SPEKTRUM) && !defined(SBUS) && !defined(SUMD) && !defined(Bluetooth)
   #define STANDARD_RX
 #endif
 
@@ -1926,9 +1894,6 @@
   #define DISPLAY_COLUMNS 16
 #endif
 
-#if defined(FRSKY_TELEMETRY) || defined(SPORT_TELEMETRY)
-  #define TELEMETRY
-#endif
 
 /**************************************************************************************/
 /***************               override defaults                   ********************/
@@ -1989,12 +1954,12 @@
         #error "NUMBER_MOTOR is not set, most likely you have not defined any type of multicopter"
 #endif
 
-#if (defined(LCD_DUMMY) || defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_TTY) || defined(LCD_ETPP) || defined(LCD_LCD03) || defined(LCD_LCD03S) || defined(OLED_I2C_128x64) ) || defined(OLED_DIGOLE)
+#if (defined(LCD_DUMMY) || defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_TTY) || defined(LCD_ETPP) || defined(LCD_LCD03) || defined(OLED_I2C_128x64) ) || defined(OLED_DIGOLE)
   #define HAS_LCD
 #endif
 
 #if (defined(LCD_CONF) || defined(LCD_TELEMETRY)) && !(defined(HAS_LCD) )
-  #error "LCD_CONF or LCD_TELEMETRY defined, and choice of LCD not defined.  Uncomment one of LCD_SERIAL3W, LCD_TEXTSTAR, LCD_VT100, LCD_TTY or LCD_ETPP, LCD_LCD03, LCD_LCD03S, OLED_I2C_128x64, OLED_DIGOLE"
+  #error "LCD_CONF or LCD_TELEMETRY defined, and choice of LCD not defined.  Uncomment one of LCD_SERIAL3W, LCD_TEXTSTAR, LCD_VT100, LCD_TTY or LCD_ETPP, LCD_LCD03, OLED_I2C_128x64, OLED_DIGOLE"
 #endif
 
 #if defined(POWERMETER_SOFT) && !(defined(VBAT))
@@ -2017,7 +1982,7 @@
   #error "for your protection: A32U4_4_HW_PWM_SERVOS was not tested with your coptertype"
 #endif
 
-#if GPS && !defined(NMEA) && !defined(UBLOX) && !defined(MTK_BINARY16) && !defined(MTK_BINARY19) && !defined(INIT_MTK_GPS) && !defined(I2C_GPS) && !defined(VENUS8)
+#if GPS && !defined(NMEA) && !defined(UBLOX) && !defined(MTK_BINARY16) && !defined(MTK_BINARY19) && !defined(INIT_MTK_GPS) && !defined(I2C_GPS)
   #error "when using GPS you must specify the protocol NMEA, UBLOX..."
 #endif
 
@@ -2027,6 +1992,15 @@
     defined( ITG3200_LPF_256HZ) || defined( ITG3200_LPF_188HZ) || defined( ITG3200_LPF_98HZ) || defined( ITG3200_LPF_42HZ) || \
     defined( ITG3200_LPF_20HZ)  || defined( ITG3200_LPF_10HZ)
   #error "you use one feature that is no longer supported or has undergone a name change"
+#endif
+
+#ifdef Bluetooth
+  #if (!defined(PROMINI))
+    #error "Currently nbluetooth RX is only supported for ATmega328P"
+  #endif
+  #if (!defined(QUADX) && !defined(QUADP) && !defined(Y4) && !defined(TRI))
+    #error "Currently bluetooth RX is only supported for QUADX, QUADP, Y4 or TRI configurations"
+  #endif
 #endif
 
 #endif /* DEF_H_ */

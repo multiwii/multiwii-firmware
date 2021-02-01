@@ -1,4 +1,6 @@
-/*
+
+/* 
+ * 
  * Welcome to MultiWii.
  *
  * If you see this message, chances are you are using the Arduino IDE. That is ok.
@@ -10,4 +12,3 @@
  * Have fun, and do not forget MultiWii is made possible and brought to you under the GPL License.
  *
  */
-

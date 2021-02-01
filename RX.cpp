@@ -6,6 +6,7 @@
 #include "Protocol.h"
 #include "MultiWii.h"
 #include "Alarms.h"
+#include "Bluetooth.h"
 
 /**************************************************************************************/
 /***************             Global RX related variables           ********************/
@@ -444,6 +445,10 @@ uint16_t readRawRC(uint8_t chan) {
   #if defined(SPEKTRUM) || defined(SBUS) || defined(SUMD)
     if (chan < RC_CHANS) {
       data = rcValue[rcChannel[chan]];
+    } else data = 1500;
+  #elif defined(Bluetooth)
+    if (chan < RC_CHANS) {
+      data = bluetooth_rcData[chan];
     } else data = 1500;
   #else
     uint8_t oldSREG;
