@@ -1,0 +1,4 @@
+#!/bin/sh
+
+APPDIR=$(dirname "$0")
+java  -Djava.library.path="$APPDIR" -cp "$APPDIR/lib/MultiWiiConf.jar:$APPDIR/lib/core.jar:$APPDIR/lib/RXTXcomm.jar:$APPDIR/lib/serial.jar:$APPDIR/lib/controlP5.jar:$APPDIR/lib/controlP5_ori.jar:$APPDIR/lib/gluegen-rt.jar:$APPDIR/lib/jogl.jar:$APPDIR/lib/opengl.jar" MultiWiiConf
