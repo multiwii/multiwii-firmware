@@ -1117,6 +1117,43 @@ void Device_Mag_getADC() {
 }
 #endif
 #endif
+
+
+// ************************************************************************************************************
+// I2C Compass QMC5883L
+// ************************************************************************************************************
+// I2C adress: 0x0D (7bit)
+// ************************************************************************************************************
+#if defined(QMC5883)
+
+#define MAG_ADDRESS 0x0D
+#define MAG_DATA_REGISTER 0x00
+
+//REG CONTROL
+
+#define MAG_CTRL_REG1 0x09
+#define QMC_MODE 0xC1 // 11 00 00 01OSR=64(11); Range=2G(00); ODR=10Hz(00); MODE=Cont(01)
+#define MAG_CTRL_REG2 0x0A
+
+void Mag_init() {
+  i2c_writeReg(MAG_ADDRESS,0x0B,0x01);
+  i2c_writeReg(MAG_ADDRESS,MAG_CTRL_REG1,QMC_MODE);
+}
+
+
+static void getADC() {
+  i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
+  MAG_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,
+                   ((rawADC[3]<<8) | rawADC[2]) ,
+                   ((rawADC[5]<<8) | rawADC[4]) );
+}
+
+#if !defined(MPU6050_I2C_AUX_MASTER)
+static void Device_Mag_getADC() {
+  getADC();
+}
+#endif
+#endif
   
 
 // ************************************************************************************************************
@@ -1216,6 +1253,11 @@ void ACC_getADC () {
         MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,          
                          ((rawADC[2]<<8) | rawADC[3]) ,     
                          ((rawADC[4]<<8) | rawADC[5]) );
+      #endif
+      #if defined(QMC5883)
+        MAG_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,
+                         ((rawADC[3]<<8) | rawADC[2]) ,
+                         ((rawADC[5]<<8) | rawADC[4]) );
       #endif
     }
   #endif
