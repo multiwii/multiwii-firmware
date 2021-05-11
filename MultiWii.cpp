@@ -10,6 +10,10 @@ March  2015     V2.4
 
 #include <avr/io.h>
 
+//#include<stdio.h>
+//#include<stdint.h>
+
+
 #include "Arduino.h"
 #include "config.h"
 #include "def.h"
@@ -25,7 +29,6 @@ March  2015     V2.4
 #include "Serial.h"
 #include "GPS.h"
 #include "Protocol.h"
-#include "Telemetry.h"
 
 #include <avr/pgmspace.h>
 
@@ -158,9 +161,11 @@ const uint8_t boxids[] PROGMEM = {// permanent IDs associated to boxes. This way
 uint32_t currentTime = 0;
 uint16_t previousTime = 0;
 uint16_t cycleTime = 0;     // this is the number in micro second to achieve a full loop, it can differ a little and is taken into account in the PID loop
-uint16_t calibratingA = 0;  // the calibration is done in the main loop. Calibrating decreases at each cycle down to 0, then we enter in a normal mode.
-uint16_t calibratingB = 0;  // baro calibration = get new ground pressure value
-uint16_t calibratingG;
+								//이 숫자는 전체 루프를 달성하기 위한 마이크로초 단위로, 약간 다를 수 있으며 PID 루프에서 고려된다.
+uint16_t calibratingA = 0;  // acc. the calibration is done in the main loop. Calibrating decreases at each cycle down to 0, then we enter in a normal mode.
+								//교정은 메인 루프에서 수행된다. 각 사이클에서 교정이 0으로 감소하면 정상 모드로 진입한다.
+uint16_t calibratingB = 0;  // baro.  calibration = get new ground pressure value(baro 교정 = 새로운 접지 압력 값 가져오기)
+uint16_t calibratingG;  //gyro
 int16_t  magHold,headFreeModeHold; // [-180;+180]
 uint8_t  vbatMin = VBATNOMINAL;  // lowest battery voltage in 0.1V steps
 uint8_t  rcOptions[CHECKBOXITEMS];
@@ -173,13 +178,9 @@ int16_t  errorAltitudeI = 0;
 // gyro+acc IMU
 // **************
 int16_t gyroZero[3] = {0,0,0};
-
 imu_t imu;
-
 analog_t analog;
-
 alt_t alt;
-
 att_t att;
 
 #if defined(ARMEDTIMEWARNING)
@@ -188,7 +189,7 @@ att_t att;
 
 int16_t  debug[4];
 
-flags_struct_t f;
+flags_str uct_t f;
 
 //for log
 #if defined(LOG_VALUES) || defined(LCD_TELEMETRY)
@@ -203,7 +204,7 @@ flags_struct_t f;
     uint16_t wattsMax = 0;
   #endif
 #endif
-#if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT) || defined (TELEMETRY)
+#if defined(LOG_VALUES) || defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
   uint32_t armedTime = 0;
 #endif
 
@@ -255,21 +256,35 @@ uint16_t intPowerTrigger1;
 // ******************
 // rc functions
 // ******************
-#define ROL_LO  (1<<(2*ROLL))
-#define ROL_CE  (3<<(2*ROLL))
-#define ROL_HI  (2<<(2*ROLL))
-#define PIT_LO  (1<<(2*PITCH))
-#define PIT_CE  (3<<(2*PITCH))
-#define PIT_HI  (2<<(2*PITCH))
-#define YAW_LO  (1<<(2*YAW))
-#define YAW_CE  (3<<(2*YAW))
-#define YAW_HI  (2<<(2*YAW))
-#define THR_LO  (1<<(2*THROTTLE))
-#define THR_CE  (3<<(2*THROTTLE))
-#define THR_HI  (2<<(2*THROTTLE))
+#define ROL_LO  (1<<(2*ROLL))		//1
+#define ROL_CE  (3<<(2*ROLL))		//3
+#define ROL_HI  (2<<(2*ROLL))		//2
+
+#define PIT_LO  (1<<(2*PITCH))		//4
+#define PIT_CE  (3<<(2*PITCH))		//12
+#define PIT_HI  (2<<(2*PITCH))		//8
+
+#define YAW_LO  (1<<(2*YAW))		//16
+#define YAW_CE  (3<<(2*YAW))		//48
+#define YAW_HI  (2<<(2*YAW))		//32
+
+#define THR_LO  (1<<(2*THROTTLE))	//64
+#define THR_CE  (3<<(2*THROTTLE))	//192
+#define THR_HI  (2<<(2*THROTTLE))	//128
 
 int16_t failsafeEvents = 0;
 volatile int16_t failsafeCnt = 0;
+
+#if defined(FAILSAFE_LAND) || defined(FAILSAFE_RTH)
+  bool failsafe_nav = true;
+#else
+  bool failsafe_nav = false;
+#endif
+#if defined(FAILSAFE_IGNORE_LAND)
+  bool failsafe_ignore =true;
+#else
+  bool failsafe_ignore = false;
+#endif
 
 int16_t rcData[RC_CHANS];    // interval [1000;2000]
 int16_t rcSerial[8];         // interval [1000;2000] - is rcData coming from MSP
@@ -331,9 +346,9 @@ conf_t conf;
   uint16_t GPS_ground_course = 0;                       //                   - unit: degree*10
 
   //uint8_t GPS_mode  = GPS_MODE_NONE; // contains the current selected gps flight mode --> moved to the f. structure
-  uint8_t NAV_state = 0; // NAV_STATE_NONE;  /// State of the nav engine
+  uint8_t NAV_state = 1; // NAV_STATE_NONE;  /// State of the nav engine
   uint8_t NAV_error = 0; // NAV_ERROR_NONE;
-  uint8_t prv_gps_modes = 0;              /// GPS_checkbox items packed into 1 byte for checking GPS mode changes
+  uint8_t prv_gps_modes = 1;              /// GPS_checkbox items packed into 1 byte for checking GPS mode changes
   uint32_t nav_timer_stop = 0;            /// common timer used in navigation (contains the desired stop time in millis()
   uint16_t nav_hold_time;                 /// time in seconds to hold position
   uint8_t NAV_paused_at = 0;              // This contains the mission step where poshold paused the runing mission.
@@ -367,41 +382,52 @@ uint8_t alarmArray[ALRM_FAC_SIZE];           // array
   int16_t baroTemperature;
   int32_t baroPressureSum;
 #endif
-
+//computeIMU 안에 
 void annexCode() { // this code is excetuted at each loop and won't interfere with control loop if it lasts less than 650 microseconds
+				//이 코드는 각 루프에서 분리되며 650마이크로초 미만으로 지속되는 경우 제어 루프를 방해하지 않는다.
+  
   static uint32_t calibratedAccTime;
   uint16_t tmp,tmp2;
   uint8_t axis,prop1,prop2;
 
   // PITCH & ROLL only dynamic PID adjustemnt,  depending on throttle value (or collective.pitch value for heli)
+  //스로틀 값(또는 집합적)에 따라 피치 & 롤링만 동적 PID 조정헬리콥터 피치 값)
   #ifdef HELICOPTER
     #define DYN_THR_PID_CHANNEL COLLECTIVE_PITCH
   #else
     #define DYN_THR_PID_CHANNEL THROTTLE
   #endif
   prop2 = 128; // prop2 was 100, is 128 now
-  if (rcData[DYN_THR_PID_CHANNEL]>1500) { // breakpoint is fix: 1500
-    if (rcData[DYN_THR_PID_CHANNEL]<2000) {
+  if (rcData[DYN_THR_PID_CHANNEL]>1500) 
+  { // breakpoint is fix: 1500
+    if (rcData[DYN_THR_PID_CHANNEL]<2000) 
+    {
       prop2 -=  ((uint16_t)conf.dynThrPID*(rcData[DYN_THR_PID_CHANNEL]-1500)>>9); //  /512 instead of /500
-    } else {
+    } 
+    else 
+    {
       prop2 -=  conf.dynThrPID;
     }
   }
 
-  for(axis=0;axis<3;axis++) {
+  for(axis=0;axis<3;axis++) 
+  {
     tmp = min(abs(rcData[axis]-MIDRC),500);
     #if defined(DEADBAND)
       if (tmp>DEADBAND) { tmp -= DEADBAND; }
       else { tmp=0; }
     #endif
-    if(axis!=2) { //ROLL & PITCH
+    if(axis!=2) 
+    { //ROLL & PITCH
       tmp2 = tmp>>7; // 500/128 = 3.9  => range [0;3]
       rcCommand[axis] = lookupPitchRollRC[tmp2] + ((tmp-(tmp2<<7)) * (lookupPitchRollRC[tmp2+1]-lookupPitchRollRC[tmp2])>>7);
       prop1 = 128-((uint16_t)conf.rollPitchRate*tmp>>9); // prop1 was 100, is 128 now -- and /512 instead of /500
       prop1 = (uint16_t)prop1*prop2>>7; // prop1: max is 128   prop2: max is 128   result prop1: max is 128
       dynP8[axis] = (uint16_t)conf.pid[axis].P8*prop1>>7; // was /100, is /128 now
       dynD8[axis] = (uint16_t)conf.pid[axis].D8*prop1>>7; // was /100, is /128 now
-    } else {      // YAW
+    } 
+    else 
+    {      // YAW
       rcCommand[axis] = tmp;
     }
     if (rcData[axis]<MIDRC) rcCommand[axis] = -rcCommand[axis];
@@ -422,8 +448,10 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #endif
 
   // query at most one multiplexed analog channel per MWii cycle
+	//드론 사이클당 최대 하나의 멀티플렉스 아날로그 채널 쿼리
   static uint8_t analogReader =0;
-  switch (analogReader++ % (3+VBAT_CELLS_NUM)) {
+  switch (analogReader++ % (3+VBAT_CELLS_NUM)) 
+  {
   case 0:
   {
     #if defined(POWERMETER_HARD)
@@ -531,9 +559,12 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   #endif
 
 
-  if ( (calibratingA>0 && ACC ) || (calibratingG>0) ) { // Calibration phasis
+  if ( (calibratingA>0 && ACC ) || (calibratingG>0) ) 
+  { // Calibration phasis
     LEDPIN_TOGGLE;
-  } else {
+  } 
+  else 
+  {
     if (f.ACC_CALIBRATED) {LEDPIN_OFF;}
     if (f.ARMED) {LEDPIN_ON;}
   }
@@ -550,19 +581,29 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     auto_switch_led_flasher();
   #endif
 
-  if ( currentTime > calibratedAccTime ) {
-    if (! f.SMALL_ANGLES_25) {
+  if ( currentTime > calibratedAccTime ) 
+  {
+    if (! f.SMALL_ANGLES_25) 
+    {
       // the multi uses ACC and is not calibrated or is too much inclinated
+		//다중 사용 ACC 및 보정되지 않았거나 너무 기울어져 있음
       f.ACC_CALIBRATED = 0;
       LEDPIN_TOGGLE;
       calibratedAccTime = currentTime + 100000;
-    } else {
+    } 
+    else 
+    {
       f.ACC_CALIBRATED = 1;
     }
   }
 
-  #if !(defined(SERIAL_RX) && defined(PROMINI))  //Only one serial port on ProMini.  Skip serial com if SERIAL RX in use. Note: Spek code will auto-call serialCom if GUI data detected on serial0.
-    serialCom();
+  #if !(defined(SERIAL_RX) && defined(PROMINI))  //Only one serial port on ProMini.  
+												//Skip serial com if SERIAL RX in use. 
+												//Note: Spek code will auto-call serialCom if GUI data detected on serial0.
+												  //ProMini에 직렬 포트가 하나뿐입니다. 
+												  //직렬 RX가 사용 중인 경우 직렬 com을 건너뛰십시오. 
+												//참고: spek 코드는 serial0에서 GUI 데이터가 감지되면 serialCom을 자동으로 호출한다.  
+  serialCom();
   #endif
 
   #if defined(POWERMETER)
@@ -589,11 +630,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     }
   #endif
 
-  #ifdef TELEMETRY
-     run_telemetry();
-  #endif
-
-  #if GPS & defined(GPS_LED_INDICATOR)       // modified by MIS to use STABLEPIN LED for number of sattelites indication
+  #if GPS & defined(GPS_LED_INDICATOR)       // modified by MIS to use STABLEPIN LED for number of sattelites indication(전 값의 존재 후 선언 유무)
     static uint32_t GPSLEDTime;              // - No GPS FIX -> LED blink at speed of incoming GPS frames
     static uint8_t blcnt;                    // - Fix and sat no. bellow 5 -> LED off
     if(currentTime > GPSLEDTime) {           // - Fix and sat no. >= 5 -> LED blinks, one blink for 5 sat, two blinks for 6 sat, three for 7 ...
@@ -613,7 +650,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     if (cycleTime < cycleTimeMin) cycleTimeMin = cycleTime; // remember lowscore
   #endif
   if (f.ARMED)  {
-    #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT) || defined (TELEMETRY)
+    #if defined(LCD_TELEMETRY) || defined(ARMEDTIMEWARNING) || defined(LOG_PERMANENT)
       armedTime += (uint32_t)cycleTime;
     #endif
     #if defined(VBAT)
@@ -645,8 +682,8 @@ void setup() {
   BUZZERPIN_PINMODE;
   STABLEPIN_PINMODE;
   POWERPIN_OFF;
-  initOutput();
-  readGlobalSet();
+  initOutput();//pwm 타이머와 레스터 초기화
+  readGlobalSet();//eeprom 세팅 값을 읽어옴
   #ifndef NO_FLASH_CHECK
     #if defined(MEGA)
       uint16_t i = 65000;                             // only first ~64K for mega board due to pgm_read_byte limitation
@@ -666,29 +703,33 @@ void setup() {
   #else
     global_conf.currentSet=0;
   #endif
-  while(1) {                                                    // check settings integrity
+  while(1) 
+  {                                                    // check settings integrity(설정 무결성 검사)
   #ifndef NO_FLASH_CHECK
-    if(readEEPROM()) {                                          // check current setting integrity
+    if(readEEPROM()) 
+    {                                          // check current setting integrity
       if(flashsum != global_conf.flashsum) update_constants();  // update constants if firmware is changed and integrity is OK
     }
   #else
-    readEEPROM();                                               // check current setting integrity
+    readEEPROM();                                               // check current setting integrity(전류 설정 무결성 점검)
   #endif  
-    if(global_conf.currentSet == 0) break;                      // all checks is done
-    global_conf.currentSet--;                                   // next setting for check
+    if(global_conf.currentSet == 0) break;                      // all checks is done(모든 점검이 끝났다.)
+    global_conf.currentSet--;                                   // next setting for check(다음 체크 설정)
   }
-  readGlobalSet();                              // reload global settings for get last profile number
+  readGlobalSet();         // reload global settings for get last profile number
+												 //마지막 프로필 번호 가져오기에 대한 전역 설정 다시 로드
   #ifndef NO_FLASH_CHECK
     if(flashsum != global_conf.flashsum) {
       global_conf.flashsum = flashsum;          // new flash sum
       writeGlobalSet(1);                        // update flash sum in global config
     }
   #endif
-  readEEPROM();                                 // load setting data from last used profile
+  readEEPROM();           // load setting data from last used profile
+												 //마지막으로 사용한 프로필에서 설정 데이터 로드
   blinkLED(2,40,global_conf.currentSet+1);          
 
   #if GPS
-    recallGPSconf();                              //Load GPS configuration parameteres
+    recallGPSconf();                              //Load GPS configuration parameteres(GPS 구성 매개 변수 로드)
   #endif
 
   configureReceiver();
@@ -708,6 +749,7 @@ void setup() {
   #endif
   calibratingG = 512;
   calibratingB = 200;  // 10 seconds init_delay + 200 * 25 ms = 15 seconds before ground pressure settles
+						        //10초 init_init + 200 * 25ms = 접지 압력이 설정되기 15초 전
   #if defined(POWERMETER)
     for(uint8_t j=0; j<=PMOTOR_SUM; j++) pMeter[j]=0;
   #endif
@@ -728,9 +770,6 @@ void setup() {
   #ifdef LCD_CONF_DEBUG
     configurationLoop();
   #endif
-  #ifdef TELEMETRY
-    init_telemetry();
-  #endif
   #ifdef LANDING_LIGHTS_DDR
     init_landing_lights();
   #endif
@@ -741,7 +780,7 @@ void setup() {
     init_led_flasher();
     led_flasher_set_sequence(LED_FLASHER_SEQUENCE);
   #endif
-  f.SMALL_ANGLES_25=1; // important for gyro only conf
+  f.SMALL_ANGLES_25=1; // important for gyro only conf(자이로에게만 중요한)
   #ifdef LOG_PERMANENT
     // read last stored set
     readPLog();
@@ -761,18 +800,22 @@ void setup() {
 
 void go_arm() {
   if(calibratingG == 0
-  #if defined(ONLYARMWHENFLAT)
+  #if defined(ONLYARMWHENFLAT)//ONLY ARM WHEN FLAT(땅에 있을 때)
     && f.ACC_CALIBRATED 
   #endif
+
   #if defined(FAILSAFE)
     && failsafeCnt < 2
   #endif
+
   #if GPS && defined(ONLY_ALLOW_ARM_WITH_GPS_3DFIX)
-    && (f.GPS_FIX && GPS_numSat >= 5)
+    && (f.GPS_FIX && GPS_numSat >= 5)//gps 안정화일 때
   #endif
-    ) {
-    if(!f.ARMED && !f.BARO_MODE) { // arm now!
-      f.ARMED = 1;
+    ) 
+  {
+    if(!f.ARMED && !f.BARO_MODE) // 아밍 상태가 아니고 바로 모드가 아닐 경우
+  	{ // arm now!
+      f.ARMED = 1;//무장 
       #if defined(HEADFREE)
         headFreeModeHold = att.heading;
       #endif
@@ -806,14 +849,17 @@ void go_arm() {
         writePLog();
       #endif
     }
-  } else if(!f.ARMED) { 
+  } 
+  else if(!f.ARMED) 
+  { 
     blinkLED(2,255,1);
     SET_ALARM(ALRM_FAC_ACC, ALRM_LVL_ON);
   }
 }
+
 void go_disarm() {
   if (f.ARMED) {
-    f.ARMED = 0;
+    f.ARMED = 0;//무장 해제
     #ifdef LOG_PERMANENT
       plog.disarm++;        // #disarm events
       plog.armed_time = armedTime ;   // lifetime in seconds
@@ -829,7 +875,9 @@ void go_disarm() {
 // ******** Main Loop *********
 void loop () {
   static uint8_t rcDelayCommand; // this indicates the number of time (multiple of RC measurement at 50Hz) the sticks must be maintained to run or switch off motors
+						                  		//이는 모터의 작동 또는 끄기 위해 스틱이 유지되어야 하는 시간(50Hz에서 RC 측정의 배수)을 나타낸다.
   static uint8_t rcSticks;       // this hold sticks position for command combos
+							                  	 //이것은 명령 콤보를 위한 고정 스틱 위치
   uint8_t axis,i;
   int16_t error,errorAngle;
   int16_t delta;
@@ -846,12 +894,12 @@ void loop () {
   static int16_t lastError[3] = {0,0,0};
   int16_t deltaSum;
   int16_t AngleRateTmp, RateError;
-  #endif
+  #endif  
   static uint16_t rcTime  = 0;
   static int16_t initialThrottleHold;
   int16_t rc;
   int32_t prop = 0;
-
+//  erase - 2
   #if defined(SERIAL_RX)
     if (spekFrameFlags == 0x01) readSerial_RX();
   #endif
@@ -863,44 +911,90 @@ void loop () {
   if ((spekFrameDone == 0x01) || ((int16_t)(currentTime-rcTime) >0 )) { 
     spekFrameDone = 0x00;
   #else
-  if ((int16_t)(currentTime-rcTime) >0 ) { // 50Hz
+  if ((int16_t)(currentTime-rcTime) >0 ) // 50Hz
+  { 
   #endif
     rcTime = currentTime + 20000;
-    computeRC();
+    computeRC();//여기~~~~~~~~~~~~~~~~~~~~~~~
     // Failsafe routine - added by MIS
     #if defined(FAILSAFE)
+      /*
       if ( failsafeCnt > (5*FAILSAFE_DELAY) && f.ARMED) {                  // Stabilize, and set Throttle to specified level
+																			// 안정화 및 스로틀을 지정된 레벨로 설정
         for(i=0; i<3; i++) rcData[i] = MIDRC;                               // after specified guard time after RC signal is lost (in 0.1sec)
+																			//RC 신호가 손실된 후 지정된 가드 시간(0.1초)
         rcData[THROTTLE] = conf.failsafe_throttle;
         if (failsafeCnt > 5*(FAILSAFE_DELAY+FAILSAFE_OFF_DELAY)) {          // Turn OFF motors after specified Time (in 0.1sec)
+																			// 지정된 시간(0.1초) 후에 모터를 끄십시오.
           go_disarm();     // This will prevent the copter to automatically rearm if failsafe shuts it down and prevents
+						  //이는 Failsafe가 Coopter를 종료하고 Coopter를 차단할 경우 자동으로 재장전되는 것을 방지한다.
           f.OK_TO_ARM = 0; // to restart accidentely by just reconnect to the tx - you will have to switch off first to rearm
+							//tx에 다시 연결하기만 하면 실수로 다시 시작됨 - 재장전하려면 먼저 스위치를 꺼야 함
         }
         failsafeEvents++;
       }
       if ( failsafeCnt > (5*FAILSAFE_DELAY) && !f.ARMED) {  //Turn of "Ok To arm to prevent the motors from spinning after repowering the RX with low throttle and aux to arm
-          go_disarm();     // This will prevent the copter to automatically rearm if failsafe shuts it down and prevents
+														//"Ok To Arm"을 돌려 RX를 낮은 스로틀 및 암에 보조로 재파워한 후 모터가 회전하지 않도록 하십시오.
+		  go_disarm();     // This will prevent the copter to automatically rearm if failsafe shuts it down and prevents
+         				  //이는 Failsafe가 Coopter를 종료하고 Coopter를 차단할 경우 자동으로 재장전되는 것을 방지한다.
           f.OK_TO_ARM = 0; // to restart accidentely by just reconnect to the tx - you will have to switch off first to rearm
+							//tx에 다시 연결하기만 하면 실수로 다시 시작됨 - 재장전하려면 먼저 스위치를 꺼야 함
       }
       failsafeCnt++;
+      */
+      if ( (GPS_numSat<5) || !f.GPS_FIX || !failsafe_nav ) 
+      {
+        if ( failsafeCnt > (5*FAILSAFE_DELAY) && f.ARMED)
+        {
+          for(i=0; i<3; i++) rcData[i] = MIDRC;
+          rcData[THROTTLE] = conf.failsafe_throttle;
+          if (failsafeCnt > 5*(FAILSAFE_DELAY+FAILSAFE_OFF_DELAY))
+          {
+            go_disarm();
+            f.OK_TO_ARM = 0;
+          }
+          failsafeEvents++;
+        }
+        if ( failsafeCnt > (5*FAILSAFE_DELAY) && !f.ARMED)
+        {
+          go_disarm();
+          f.OK_TO_ARM=0; 
+        }
+        failsafeCnt++;
+      }      
     #endif
-    // end of failsafe routine - next change is made with RcOptions setting
+     /* end of failsafe routine - next change is made with RcOptions setting
+	  //Failsafe 루틴 종료 - 다음 변경은 RcOptions 설정으로 수행됨
+
+	 
+	  failsafe
+	  1.stop(disarm)
+	  2.rtl
+	  3.mission
+	  4.landing
+	  5.continue
+	  */
 
     // ------------------ STICKS COMMAND HANDLER --------------------
-    // checking sticks positions
+    // checking sticks positions(스틱의 위치 확인)
     uint8_t stTmp = 0;
-    for(i=0;i<4;i++) {
+    for(i=0;i<4;i++) 
+    {
       stTmp >>= 2;
-      if(rcData[i] > MINCHECK) stTmp |= 0x80;      // check for MIN
-      if(rcData[i] < MAXCHECK) stTmp |= 0x40;      // check for MAX
+      if(rcData[i] > MINCHECK) stTmp |= 0x80;      // check for MIN(최소 확인)
+      if(rcData[i] < MAXCHECK) stTmp |= 0x40;      // check for MAX(최대 확인)
     }
-    if(stTmp == rcSticks) {
+    if(stTmp == rcSticks) 
+    {
       if(rcDelayCommand<250) rcDelayCommand++;
-    } else rcDelayCommand = 0;
+    } 
+    else rcDelayCommand = 0;
     rcSticks = stTmp;
     
     // perform actions    
-    if (rcData[THROTTLE] <= MINCHECK) {            // THROTTLE at minimum
+ // THROTTLE at minimum(스로틀 최솟값)
+    if (rcData[THROTTLE] <= MINCHECK) 
+	{           
       #if !defined(FIXEDWING)
         errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0;
         #if PID_CONTROLLER == 1
@@ -910,27 +1004,39 @@ void loop () {
         #endif
         errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
       #endif
-      if (conf.activate[BOXARM] > 0) {             // Arming/Disarming via ARM BOX
-        if ( rcOptions[BOXARM] && f.OK_TO_ARM ) go_arm(); else if (f.ARMED) go_disarm();
-      }
+		if (conf.activate[BOXARM] > 0)  // Arming/Disarming via ARM BOX(ARM BOX를 통한 무장/해제)
+		{            
+			if (rcOptions[BOXARM] && f.OK_TO_ARM) { go_arm();   } //안전 상태라면 무장 설정
+			else if (f.ARMED)                     { go_disarm();} //아밍 상태라면 무장 해제
     }
-    if(rcDelayCommand == 20) {
-      if(f.ARMED) {                   // actions during armed
+  }
+
+    if(rcDelayCommand == 20) 
+  	{
+		// actions during armed(무장한 동안 행동)
+      if(f.ARMED) 
+	    {                  
         #ifdef ALLOW_ARM_DISARM_VIA_TX_YAW
           if (conf.activate[BOXARM] == 0 && rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_CE) go_disarm();    // Disarm via YAW
         #endif
         #ifdef ALLOW_ARM_DISARM_VIA_TX_ROLL
           if (conf.activate[BOXARM] == 0 && rcSticks == THR_LO + YAW_CE + PIT_CE + ROL_LO) go_disarm();    // Disarm via ROLL
         #endif
-      } else {                        // actions during not armed
+      } 
+	  // actions during not armed(무장을 하지 않은 동안의 행동)
+	  else 
+	  {                        
         i=0;
-        if (rcSticks == THR_LO + YAW_LO + PIT_LO + ROL_CE) {    // GYRO calibration
+		// GYRO calibration(자이로 교정),GPS reset, calibration Baro
+        if (rcSticks == THR_LO + YAW_LO + PIT_LO + ROL_CE) 
+	    	{    // GYRO calibration(자이로 교정)
           calibratingG=512;
           #if GPS 
             GPS_reset_home_position();
           #endif
           #if BARO
             calibratingB=10;  // calibrate baro to new ground level (10 * 25 ms = ~250 ms non blocking)
+									// baro를 새로운 접지 레벨로 보정(10 * 25ms = ~250ms 비차단)
           #endif
         }
         #if defined(INFLIGHT_ACC_CALIBRATION)  
@@ -959,7 +1065,8 @@ void loop () {
             SET_ALARM(ALRM_FAC_TOGGLE, i);
           }
         #endif
-        if (rcSticks == THR_LO + YAW_HI + PIT_HI + ROL_CE) {            // Enter LCD config
+        if (rcSticks == THR_LO + YAW_HI + PIT_HI + ROL_CE) 
+		    {            // Enter LCD config
           #if defined(LCD_CONF)
             configurationLoop(); // beginning LCD configuration
           #endif
@@ -990,7 +1097,7 @@ void loop () {
             #endif
             LCDclear();
           }
-        #endif
+        #endif        
         #if ACC
           else if (rcSticks == THR_HI + YAW_LO + PIT_LO + ROL_CE) calibratingA=512;     // throttle=max, yaw=left, pitch=min
         #endif
@@ -1002,9 +1109,10 @@ void loop () {
         else if (rcSticks == THR_HI + YAW_CE + PIT_LO + ROL_CE) {conf.angleTrim[PITCH]-=2; i=1;}
         else if (rcSticks == THR_HI + YAW_CE + PIT_CE + ROL_HI) {conf.angleTrim[ROLL] +=2; i=1;}
         else if (rcSticks == THR_HI + YAW_CE + PIT_CE + ROL_LO) {conf.angleTrim[ROLL] -=2; i=1;}
-        if (i) {
+        if (i) 
+        {
           writeParams(1);
-          rcDelayCommand = 0;    // allow autorepetition
+          rcDelayCommand = 0;    // allow autorepetition(자동 회생을 허용하다)
           #if defined(LED_RING)
             blinkLedRing();
           #endif
@@ -1050,28 +1158,39 @@ void loop () {
       rcOptions[i] = (auxState & conf.activate[i])>0;
 
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false
+	//FAILSAFE가 비활성화되면 FAILAFECnt > 5*FAILSAFE_DELay는 항상 False이다.
     #if ACC
-      if ( rcOptions[BOXANGLE] || (failsafeCnt > 5*FAILSAFE_DELAY) ) { 
+      if ( rcOptions[BOXANGLE] || ( failsafeCnt > 5 * FAILSAFE_DELAY ) ) 
+	    { 
         // bumpless transfer to Level mode
-        if (!f.ANGLE_MODE) {
+        if (!f.ANGLE_MODE) 
+		    {
           errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
           f.ANGLE_MODE = 1;
         }  
-      } else {
-        if(f.ANGLE_MODE){
+      } 
+      else 
+	    {
+        if(f.ANGLE_MODE)
+		    {
           errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0;
         }
         f.ANGLE_MODE = 0;
       }
-      if ( rcOptions[BOXHORIZON] ) {
+      if ( rcOptions[BOXHORIZON] ) 
+	    {
         f.ANGLE_MODE = 0;
-        if (!f.HORIZON_MODE) {
+        if (!f.HORIZON_MODE) 
+		    {
           errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
           f.HORIZON_MODE = 1;
         }
-      } else {
-        if(f.HORIZON_MODE){
-          errorGyroI[ROLL] = 0;errorGyroI[PITCH] = 0;
+      } 
+      else 
+	    {
+        if(f.HORIZON_MODE)
+		    {
+          errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0;
         }
         f.HORIZON_MODE = 0;
       }
@@ -1087,8 +1206,10 @@ void loop () {
         #if GPS 
         if (GPS_conf.takeover_baro) rcOptions[BOXBARO] = (rcOptions[BOXBARO] || f.GPS_BARO_MODE);
         #endif
-        if (rcOptions[BOXBARO]) {
-          if (!f.BARO_MODE) {
+        if (rcOptions[BOXBARO])
+	    	{
+          if (!f.BARO_MODE) 
+	    	  {
             f.BARO_MODE = 1;
             AltHold = alt.EstAlt;
             #if defined(ALT_HOLD_THROTTLE_MIDPOINT)
@@ -1099,7 +1220,9 @@ void loop () {
             errorAltitudeI = 0;
             BaroPID=0;
           }
-        } else {
+        } 
+	    	else 
+	    	{
           f.BARO_MODE = 0;
         }
       #endif
@@ -1113,12 +1236,17 @@ void loop () {
         }
       #endif
     #endif
-    if (rcOptions[BOXMAG]) {
-      if (!f.MAG_MODE) {
+
+    if (rcOptions[BOXMAG]) 
+  	{
+      if (!f.MAG_MODE) 
+      {
         f.MAG_MODE = 1;
         magHold = att.heading;
       }
-    } else {
+    } 
+	  else 
+  	{
       f.MAG_MODE = 0;
     }
     #if defined(HEADFREE)
@@ -1143,19 +1271,68 @@ void loop () {
     // This handles the three rcOptions boxes 
     // unlike other parts of the multiwii code, it looks for changes and not based on flag settings
     // by this method a priority can be established between gps option
+	  // 이것은 세 개의 rcOptions 상자를 처리한다. 
+  	// 멀티위 코드의 다른 부분과 달리 플래그 설정에 기반하지 않고 변경 사항을 찾는다.
+  	// 이 방법에 의해 gps 옵션 사이에서 우선순위를 정할 수 있다.
 
+    //NAV based failsafe    
+	  ////NAV 기반 페일 세이프
+    #if defined(FAILSAFE) && (defined(FAILSAFE_RTH) || defined(FAILSAFE_LAND)) // 페잉세이브 , RTH , LAND 선언시
+      if (f.GPS_FIX && (GPS_numSat >= 5) )
+      { // GPS 활성화 및 위성 5개 이상
+        if ( failsafeCnt > ( 5*FAILSAFE_DELAY ) && f.ARMED )
+        {
+          for(i=0; i<3; i++) rcData[i] = MIDRC;
+          if(!((NAV_state == NAV_STATE_LAND_IN_PROGRESS || NAV_state == NAV_STATE_LANDED) && failsafe_ignore))
+          {
+            rcOptions[BOXLAND]=false;
+            rcOptions[BOXGPSHOME]=false;
+            rcOptions[BOXGPSHOLD]=false;
+            #if defined(FAILSAFE_RTH) 
+              rcOptions[BOXLAND]=true;
+            #endif
+            #if defined(FAILSAFE_LAND)
+              rcOptions[BOXLAND]=true;
+              failsafe_ignore=false;
+            #endif
+          }
+          failsafeCnt=(5*FAILSAFE_DELAY);
+        } 
+        else 
+        {
+          #if defined(FAILSAFE_IGNORE_LAND)
+            failsafe_ignore=true;
+          #endif
+        }
+        failsafeCnt++;
+      }
+    #endif
+    
     //Generate a packed byte of all four GPS boxes.
+	  //네 개의 GPS 상자로 모두 채워진 바이트를 생성하십시오.
     uint8_t gps_modes_check = (rcOptions[BOXLAND]<< 3) + (rcOptions[BOXGPSHOME]<< 2) + (rcOptions[BOXGPSHOLD]<<1) + (rcOptions[BOXGPSNAV]);
 
-    if (f.ARMED ) {                       //Check GPS status and armed
+   if(GPS_numSat > 5 ) { digitalWrite(8,HIGH); } else { digitalWrite(8,LOW); } 
+
+
+   //Check GPS status and armed(GPS 상태 및 작동 상태 점검)
+    if (f.ARMED ) 
+    {                       
       //TODO: implement f.GPS_Trusted flag, idea from Dramida - Check for degraded HDOP and sudden speed jumps
-      if (f.GPS_FIX) {
-        if (GPS_numSat >5 ) {
-          if (prv_gps_modes != gps_modes_check) {                           //Check for change since last loop
+	  	//TODO: 구현 f.GPS_Trusted 플래그, Dramida의 아이디어 - HDOP 성능 저하 및 갑작스러운 속도 상승 확인
+      if (f.GPS_FIX) 
+      { // gps 잡혀있을 때
+        if (GPS_numSat >5 )  //위성 갯수가 5개 이상일 때
+        {
+          if (prv_gps_modes != gps_modes_check) 
+		      {                  //Check for change since last loop
             NAV_error = NAV_ERROR_NONE;
-            if (rcOptions[BOXGPSHOME]) {                                    // RTH has the priotity over everything else
+            if (rcOptions[BOXGPSHOME]) //리턴 투 홈
+            {                                    // RTH has the priotity over everything else
               init_RTH();
-            } else if (rcOptions[BOXGPSHOLD]) {                             //Position hold has priority over mission execution  //But has less priority than RTH
+            } 
+            else if (rcOptions[BOXGPSHOLD])//좌표모드 
+            {   //Position hold has priority over mission execution  //But has less priority than RTH
               if (f.GPS_mode == GPS_MODE_NAV)
                 NAV_paused_at = mission_step.number;
               f.GPS_mode = GPS_MODE_HOLD;
@@ -1163,26 +1340,35 @@ void loop () {
               GPS_set_next_wp(&GPS_coord[LAT], &GPS_coord[LON],&GPS_coord[LAT], & GPS_coord[LON]); //hold at the current position
               set_new_altitude(alt.EstAlt);                                //and current altitude
               NAV_state = NAV_STATE_HOLD_INFINIT;
-            } else if (rcOptions[BOXLAND]) {                               //Land now (It has priority over Navigation)
+            } 
+            else if (rcOptions[BOXLAND])//랜딩모드
+            {            //Land now (It has priority over Navigation)
               f.GPS_mode = GPS_MODE_HOLD;
               f.GPS_BARO_MODE = true;
               GPS_set_next_wp(&GPS_coord[LAT], &GPS_coord[LON],&GPS_coord[LAT], & GPS_coord[LON]);
               set_new_altitude(alt.EstAlt);
               NAV_state = NAV_STATE_LAND_START;
-            } else if (rcOptions[BOXGPSNAV]) {                             //Start navigation
+            } 
+            else if (rcOptions[BOXGPSNAV])//미션모드
+            {                             //Start navigation
               f.GPS_mode = GPS_MODE_NAV;                                   //Nav mode start
               f.GPS_BARO_MODE = true;
               GPS_prev[LAT] = GPS_coord[LAT];
               GPS_prev[LON] = GPS_coord[LON];
-              if (NAV_paused_at != 0) {
+              if (NAV_paused_at != 0) 
+              {
                 next_step = NAV_paused_at;
                 NAV_paused_at = 0;                                         //Clear paused step 
-              } else {
+              } 
+      			  else 
+			        {
                 next_step = 1;
                 jump_times = -10;                                          //Reset jump counter
               }
               NAV_state = NAV_STATE_PROCESS_NEXT;
-            } else {                                                       //None of the GPS Boxes are switched on
+            }
+			      else
+            {         //None of the GPS Boxes are switched on
               f.GPS_mode = GPS_MODE_NONE;
               f.GPS_BARO_MODE = false;
               f.THROTTLE_IGNORED = false;
@@ -1193,9 +1379,25 @@ void loop () {
             }
             prv_gps_modes = gps_modes_check;
           }
-        } else { //numSat>5 
+         
+          #if defined(LOITER)
+           //////////////////////////////
+          if (rcOptions[BOXGPSHOLD]) {
+            if (abs(rcCommand[ROLL])< AP_MODE && abs(rcCommand[PITCH]) < AP_MODE) {
+                GPS_hold[LAT] = GPS_coord[LAT];
+                GPS_hold[LON] = GPS_coord[LON];             
+                GPS_set_next_wp(&GPS_hold[LAT],&GPS_hold[LON], &GPS_hold[LAT],&GPS_hold[LON]);
+            }
+          }
+          //////////////////////////////////
+          #endif //like loiter mode
+	      }	//numSat>5 
+	    	else
+	    	{ 
           //numSat dropped below 5 during navigation
-          if (f.GPS_mode == GPS_MODE_NAV) {
+		    	//탐색 중 numSat이 5 아래로 떨어짐
+          if (f.GPS_mode == GPS_MODE_NAV) 
+		      {
             NAV_paused_at = mission_step.number;
             f.GPS_mode = GPS_MODE_NONE;
             set_new_altitude(alt.EstAlt);                                  //and current altitude
@@ -1203,7 +1405,8 @@ void loop () {
             NAV_error = NAV_ERROR_SPOILED_GPS;
             prv_gps_modes = 0xff;                                          //invalidates mode check, to allow re evaluate rcOptions when numsats raised again
           }
-          if (f.GPS_mode == GPS_MODE_HOLD || f.GPS_mode == GPS_MODE_RTH) {
+          if (f.GPS_mode == GPS_MODE_HOLD || f.GPS_mode == GPS_MODE_RTH) 
+		      {
             f.GPS_mode = GPS_MODE_NONE;
             NAV_state = NAV_STATE_NONE;
             NAV_error = NAV_ERROR_SPOILED_GPS;
@@ -1211,16 +1414,24 @@ void loop () {
           }
           nav[0] = 0; nav[1] = 0;
         }
-      } else { //f.GPS_FIX
+      } 
+	     //f.GPS_FIX
+	    else 
+	    { 
         // GPS Fix dissapeared, very unlikely that we will be able to regain it, abort mission
+  		  //GPS 수정은 사라졌고, 우리가 그것을 되찾을 수 있을 것 같지 않고, 임무를 중단한다.
         f.GPS_mode = GPS_MODE_NONE;
         NAV_state = NAV_STATE_NONE;
         NAV_paused_at = 0;
         NAV_error = NAV_ERROR_GPS_FIX_LOST;
         GPS_reset_nav();
         prv_gps_modes = 0xff;                                              //Gives a chance to restart mission when regain fix
+																			//고정을 되찾을 때 미션을 다시 시작할 수 있는 기회 제공
       }
-    } else { //copter is armed
+    } 
+  	else 
+  	{ 
+		//copter is armed
       //copter is disarmed
       f.GPS_mode = GPS_MODE_NONE;
       f.GPS_BARO_MODE = false;
@@ -1238,9 +1449,15 @@ void loop () {
       else {f.PASSTHRU_MODE = 0;}
     #endif
  
-  } else { // not in rc loop
+  } 
+/**************************************************************************/
+// not in rc loop(rc 루프가 아닌)
+else 
+{ // not in rc loop(rc 루프가 아닌)
     static uint8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
-    switch (taskOrder) {
+								//높은 지연 스파이크를 방지하기 위해 모든 기능을 동일한 루프로 호출하지 마십시오.
+    switch (taskOrder)
+    {
       case 0:
         taskOrder++;
         #if MAG
@@ -1279,7 +1496,8 @@ void loop () {
     }
   }
  
-  while(1) {
+  while(1) 
+  {
     currentTime = micros();
     cycleTime = currentTime - previousTime;
     #if defined(LOOP_TIME)
@@ -1290,7 +1508,7 @@ void loop () {
   }
   previousTime = currentTime;
 
-  computeIMU();
+  computeIMU();//여기~~~~~~~~~~~~~~~2
 
   //***********************************
   //**** Experimental FlightModes *****
@@ -1309,54 +1527,76 @@ void loop () {
 
   //*********************************** 
   // THROTTLE sticks during mission and RTH
+  //임무 및 RTH 중에 스로틀 스틱
   #if GPS
-  if (GPS_conf.ignore_throttle == 1) {
-    if (f.GPS_mode == GPS_MODE_NAV || f.GPS_mode == GPS_MODE_RTH) {
-      //rcCommand[ROLL] = 0;
-      //rcCommand[PITCH] = 0;
-      //rcCommand[YAW] = 0;
-      f.THROTTLE_IGNORED = 1;
-    } else 
-      f.THROTTLE_IGNORED = 0;
+  if (GPS_conf.ignore_throttle == 1)
+  {
+	  if (f.GPS_mode == GPS_MODE_NAV || f.GPS_mode == GPS_MODE_RTH)
+	  {
+		  //rcCommand[ROLL] = 0;
+		  //rcCommand[PITCH] = 0;
+		  //rcCommand[YAW] = 0;
+		  f.THROTTLE_IGNORED = 1;
+	  }
+	  else
+	  {
+		  f.THROTTLE_IGNORED = 0;
+	  }
   }
-
-  //Heading manipulation TODO: Do heading manipulation 
   #endif
+  //Heading manipulation TODO: Do heading manipulation 
+  //제목 조작 TODO: 제목 조작 실행 (비행 방향 처리)
+ 
 
-  if (abs(rcCommand[YAW]) <70 && f.MAG_MODE) {
+  if (abs(rcCommand[YAW]) <70 && f.MAG_MODE) 
+  {
     int16_t dif = att.heading - magHold;
     if (dif <= - 180) dif += 360;
     if (dif >= + 180) dif -= 360;
-    if (f.SMALL_ANGLES_25 || (f.GPS_mode != 0)) rcCommand[YAW] -= dif*conf.pid[PIDMAG].P8 >> 5;  //Always correct maghold in GPS mode
-  } else magHold = att.heading;
+	if (f.SMALL_ANGLES_25 || (f.GPS_mode != 0)) { rcCommand[YAW] -= dif * conf.pid[PIDMAG].P8 >> 5; }  //Always correct maghold in GPS mode
+  } 
+  else magHold = att.heading;
 
   #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
-  /* Smooth alt change routine , for slow auto and aerophoto modes (in general solution from alexmos). It's slowly increase/decrease 
-  * altitude proportional to stick movement (+/-100 throttle gives about +/-50 cm in 1 second with cycle time about 3-4ms)
+  /* 
+  Smooth alt change routine , for slow auto and aerophoto modes (in general solution from alexmos). It's slowly increase/decrease 
+   altitude proportional to stick movement (+/-100 throttle gives about +/-50 cm in 1 second with cycle time about 3-4ms)
   */
-  if (f.BARO_MODE) {
+  /*
+  느린 자동 및 에어로포토 모드에 대한 부드러운 Alt 변경 루틴(일반적으로 alt change) 서서히 증가/감소되고 있다.
+  스틱 이동에 비례하는 고도(+/-100 스로틀은 1초 이내에 약 +/-50 cm를 제공하며 사이클 시간은 약 3-4ms)
+  */
+  if (f.BARO_MODE) 
+  {
     static uint8_t isAltHoldChanged = 0;
     static int16_t AltHoldCorr = 0;
 
     #if GPS
-    if (f.LAND_IN_PROGRESS) { //If autoland is in progress then take over and decrease alt slowly
+    if (f.LAND_IN_PROGRESS) 
+    { //If autoland is in progress then take over and decrease alt slowly
       AltHoldCorr -= GPS_conf.land_speed;
-      if(abs(AltHoldCorr) > 512) {
-        AltHold += AltHoldCorr/512;
+      if(abs(AltHoldCorr) > 512) 
+      {
+        AltHold += AltHoldCorr / 512;
         AltHoldCorr %= 512;
       }
     }
     #endif
     //IF Throttle not ignored then allow change altitude with the stick....
+	//스로틀을 무시하지 않으면 스틱을 사용하여 고도를 변경하십시오...
     if ( (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) && !f.THROTTLE_IGNORED) {
       // Slowly increase/decrease AltHold proportional to stick movement ( +100 throttle gives ~ +50 cm in 1 second with cycle time about 3-4ms)
-      AltHoldCorr+= rcCommand[THROTTLE] - initialThrottleHold;
-      if(abs(AltHoldCorr) > 512) {
+      //스틱 이동에 비례하여 AltHold를 천천히 증가/감소(사이클 시간이 약 3~4ms일 때 +100 스로틀이 1초 내에 최대 +50cm 제공)
+		AltHoldCorr+= rcCommand[THROTTLE] - initialThrottleHold;
+      if(abs(AltHoldCorr) > 512) 
+      {
         AltHold += AltHoldCorr/512;
         AltHoldCorr %= 512;
       }
       isAltHoldChanged = 1;
-    } else if (isAltHoldChanged) {
+    } 
+    else if (isAltHoldChanged) 
+    {
       AltHold = alt.EstAlt;
       isAltHoldChanged = 0;
     }
@@ -1365,7 +1605,7 @@ void loop () {
   #endif //BARO
 
 
-
+  //스로틀 각도 보정
   #if defined(THROTTLE_ANGLE_CORRECTION)
   if(f.ANGLE_MODE || f.HORIZON_MODE) {
     rcCommand[THROTTLE]+= throttleAngleCorrection;
@@ -1374,17 +1614,22 @@ void loop () {
 
   #if GPS
   //TODO: split cos_yaw calculations into two phases (X and Y)
-  if (( f.GPS_mode != GPS_MODE_NONE ) && f.GPS_FIX_HOME ) {
+  //TODO: cos_yaw 계산을 두 단계(X 및 Y)로 분할
+  if (( f.GPS_mode != GPS_MODE_NONE ) && f.GPS_FIX_HOME ) 
+  {
     float sin_yaw_y = sin(att.heading*0.0174532925f);
     float cos_yaw_x = cos(att.heading*0.0174532925f);
     GPS_angle[ROLL]   = (nav[LON]*cos_yaw_x - nav[LAT]*sin_yaw_y) /10;
     GPS_angle[PITCH]  = (nav[LON]*sin_yaw_y + nav[LAT]*cos_yaw_x) /10;
-    } else {
+  } 
+  else 
+  {
       GPS_angle[ROLL]  = 0;
       GPS_angle[PITCH] = 0;
-    }
+  }
 
   //Used to communicate back nav angles to the GPS simulator (for HIL testing)
+  //후방 탐색 각도를 GPS 시뮬레이터에 전달하는 데 사용(HIL 테스트용)
   #if defined(GPS_SIMULATOR)
     SerialWrite(2,0xa5);
     SerialWrite16(2,nav[LAT]+rcCommand[PITCH]);
@@ -1399,22 +1644,27 @@ void loop () {
   if ( f.HORIZON_MODE ) prop = min(max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])),512);
 
   // PITCH & ROLL
-  for(axis=0;axis<2;axis++) {
+  for(axis=0;axis<2;axis++) 
+  {
     rc = rcCommand[axis]<<1;
     error = rc - imu.gyroData[axis];
-    errorGyroI[axis]  = constrain(errorGyroI[axis]+error,-16000,+16000);       // WindUp   16 bits is ok here
+    errorGyroI[axis]  = constrain(errorGyroI[axis]+error,-16000,+16000);       // WindUp   16 bits is ok here(WindUp 16비트는 여기서 사용 가능)
     if (abs(imu.gyroData[axis])>640) errorGyroI[axis] = 0;
 
     ITerm = (errorGyroI[axis]>>7)*conf.pid[axis].I8>>6;                        // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
+																				// 16비트 여기서 16000/125 = 128, 128*250 = 32000
 
     PTerm = mul(rc,conf.pid[axis].P8)>>6;
     
-    if (f.ANGLE_MODE || f.HORIZON_MODE) { // axis relying on ACC
-      // 50 degrees max inclination
+    if (f.ANGLE_MODE || f.HORIZON_MODE) 
+    { // axis relying on ACC(ACC에 의존하는 축)
+      //50 degrees max inclination
+	 //최대 50도 기울기
       errorAngle         = constrain(rc + GPS_angle[axis],-500,+500) - att.angle[axis] + conf.angleTrim[axis]; //16 bits is ok here
-      errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);                                                // WindUp     //16 bits is ok here
+      errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);                   // WindUp     //16 bits is ok here
 
       PTermACC           = mul(errorAngle,conf.pid[PIDLEVEL].P8)>>7; // 32 bits is needed for calculation: errorAngle*P8 could exceed 32768   16 bits is ok for result
+																	  //계산에 32비트가 필요함: errorAgle*P8이 32768 16비트를 초과할 수 있음*결과에 문제가 없음
 
       int16_t limit      = conf.pid[PIDLEVEL].D8*5;
       PTermACC           = constrain(PTermACC,-limit,+limit);
@@ -1428,12 +1678,13 @@ void loop () {
     PTerm -= mul(imu.gyroData[axis],dynP8[axis])>>6; // 32 bits is needed for calculation   
 
     delta          = imu.gyroData[axis] - lastGyro[axis];  // 16 bits is ok here, the dif between 2 consecutive gyro reads is limited to 800
+														//16비트는 여기서 괜찮고, 2회 연속 자이로 읽기 사이의 차이는 800으로 제한된다.
     lastGyro[axis] = imu.gyroData[axis];
     DTerm          = delta1[axis]+delta2[axis]+delta;
     delta2[axis]   = delta1[axis];
     delta1[axis]   = delta;
  
-    DTerm = mul(DTerm,dynD8[axis])>>5;        // 32 bits is needed for calculation
+    DTerm = mul(DTerm,dynD8[axis])>>5;        // 32 bits is needed for calculation(계산에는 32비트가 필요하다.)
 
     axisPID[axis] =  PTerm + ITerm - DTerm;
   }
@@ -1535,3 +1786,9 @@ void loop () {
   #endif 
   writeMotors();
 }
+
+
+
+
+
+

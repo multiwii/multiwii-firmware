@@ -1,8 +1,8 @@
 #ifndef MULTIWII_H_
 #define MULTIWII_H_
 
-#define  VERSION        241
-#define  NAVI_VERSION   7     //This allow sync with GUI
+#define  VERSION        230
+#define  NAVI_VERSION   5    //This allow sync with GUI
 #include "types.h"
 #include "Alarms.h"
 
@@ -230,6 +230,6 @@ extern uint16_t AccInflightCalibrationActive;
   extern int8_t  cosZ;
 #endif
 
-void annexCode();
+void annexCode();//여기~~~~~~~~~~~~~~~~~~~~~~~~
 void go_disarm();
 #endif /* MULTIWII_H_ */
