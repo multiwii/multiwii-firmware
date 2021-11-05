@@ -404,6 +404,7 @@ void writeMotors() { // [1000;2000] => [125;250]
   #endif
 
   /********  Specific PWM Timers & Registers for the atmega328P (Promini)   ************/
+				//Atmega328P(Promini)에 대한 특정 PWM 타이머& 레지스터
   #if defined(PROMINI)
     #if (NUMBER_MOTOR > 0)
       #ifdef EXT_MOTOR_RANGE            // 490Hz
@@ -497,6 +498,7 @@ void writeAllMotors(int16_t mc) {   // Sends commands to all motors
 /**************************************************************************************/
 /************        Initialize the PWM Timers and Registers         ******************/
 /**************************************************************************************/
+						//PWM 타이머 및 레지스터 초기화
 void initOutput() {
   /****************            mark all PWM pins as Output             ******************/
   for(uint8_t i=0;i<NUMBER_MOTOR;i++) {
@@ -1133,7 +1135,7 @@ void mixTable() {
   #define SERVODIR(n,b) ((conf.servoConf[n].rate & b) ? -1 : 1)
 
   /****************                   main Mix Table                ******************/
-  #if defined( MY_PRIVATE_MIXING )
+  #if defined( MY_PRIVATE_M IXING )
     #include MY_PRIVATE_MIXING
   #elif defined( BI )
     motor[0] = PIDMIX(+1, 0, 0); //LEFT
@@ -1321,7 +1323,7 @@ void mixTable() {
     //servo[4] = ((int32_t)conf.servoConf[4].rate * axisPID[PITCH])/100L;  //  PITCHServo   D11 => Wing2 servo
     //servo[5] = ((int32_t)conf.servoConf[5].rate * axisPID[ROLL] )/100L;   //  ROLLServo    D3  => Rudder servo
     for(i=4;i<6;i++) {
-      servo[i] =  axisPID[5-i] * SERVODIR(i,1);    // mix and setup direction
+      servo[i] =  axisPID[5-i] * SERVODIR(i,1);    // mix and setup direction .servo
       servo[i] += get_middle(i);
     }
     motor[0] = PIDMIX(0,0,-1);                                 //  Pin D9
