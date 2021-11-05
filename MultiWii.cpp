@@ -1382,7 +1382,7 @@ void loop () {
          
           #if defined(LOITER)
            //////////////////////////////
-          // make gpsgold like loiter by gp
+          // make gpsgold like loiter
           if (rcOptions[BOXGPSHOLD]) {
             if (abs(rcCommand[ROLL])< AP_MODE && abs(rcCommand[PITCH]) < AP_MODE) {
                 GPS_hold[LAT] = GPS_coord[LAT];
