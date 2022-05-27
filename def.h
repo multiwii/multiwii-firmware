@@ -4,7 +4,6 @@
 /**************************************************************************************/
 /***************             test configurations                   ********************/
 /**************************************************************************************/
-
 #if COPTERTEST == 1
   #define QUADP
   #define WMP
@@ -141,9 +140,9 @@
 /***************             Proc specific definitions             ********************/
 /**************************************************************************************/
 // Proc auto detection
-//#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
+#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
   #define PROMINI
-//#endif
+#endif
 #if defined(__AVR_ATmega32U4__) || defined(TEENSY20)
   #define PROMICRO
 #endif
@@ -1956,7 +1955,7 @@
 /**************************************************************************************/
 /***************               Error Checking Section              ********************/
 /**************************************************************************************/
-//#undef NUMBER_MOTOR
+
 #ifndef NUMBER_MOTOR
         #error "NUMBER_MOTOR is not set, most likely you have not defined any type of multicopter"
 #endif

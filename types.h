@@ -137,7 +137,6 @@ typedef struct {
   uint8_t GPS_mode: 2;               // 0-3 NONE,HOLD, HOME, NAV (see GPS_MODE_* defines
 #if BARO || GPS
   uint8_t THROTTLE_IGNORED : 1;      // If it is 1 then ignore throttle stick movements in baro mode;
-										//1이면 바로 모드에서 스로틀 스틱 움직임을 무시하십시오.
 #endif
 #if GPS
   uint8_t GPS_FIX :1 ;

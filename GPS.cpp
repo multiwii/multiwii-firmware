@@ -359,31 +359,21 @@ uint8_t GPS_Compute(void) {
           GPS_calc_nav_rate(speed);
           GPS_adjust_heading();
 
-          if ((wp_distance <= GPS_conf.wp_radius) || check_missed_wp()) 
-          {               //This decides what happen when we reached the WP coordinates 
-            if (mission_step.action == MISSION_LAND) 
-            {                                  //Autoland
+          if ((wp_distance <= GPS_conf.wp_radius) || check_missed_wp()) {               //This decides what happen when we reached the WP coordinates 
+            if (mission_step.action == MISSION_LAND) {                                  //Autoland
               NAV_state = NAV_STATE_LAND_START;                                         //Start landing
               set_new_altitude(alt.EstAlt);                                             //Stop any altitude changes
-            } 
-            else if (mission_step.flag == MISSION_FLAG_END) 
-            {                         //If this was the last mission step (flag set by the mission planner), then switch to poshold
+            } else if (mission_step.flag == MISSION_FLAG_END) {                         //If this was the last mission step (flag set by the mission planner), then switch to poshold
               NAV_state = NAV_STATE_HOLD_INFINIT;
               NAV_error = NAV_ERROR_FINISH;
-            } 
-            else if (mission_step.action == MISSION_HOLD_UNLIM) 
-            {                     //If mission_step was POSHOLD_UNLIM and we reached the position then switch to poshold unlimited
+            } else if (mission_step.action == MISSION_HOLD_UNLIM) {                     //If mission_step was POSHOLD_UNLIM and we reached the position then switch to poshold unlimited
               NAV_state = NAV_STATE_HOLD_INFINIT;
               NAV_error = NAV_ERROR_FINISH;
-            } 
-            else if (mission_step.action == MISSION_HOLD_TIME) 
-            {                      //If mission_step was a timed poshold then initiate timed poshold
+            } else if (mission_step.action == MISSION_HOLD_TIME) {                      //If mission_step was a timed poshold then initiate timed poshold
               nav_hold_time = mission_step.parameter1;
               nav_timer_stop = 0;                                                       //This indicates that we are starting a timed poshold
               NAV_state = NAV_STATE_HOLD_TIMED;
-            } 
-            else 
-            {
+            } else {
               NAV_state = NAV_STATE_PROCESS_NEXT;                                       //Otherwise process next step
             }
           }
@@ -521,9 +511,7 @@ void check_land() {
         land_detect = 0;
       }
     }
-  } 
-  else 
-  {
+  } else {
     // we've detected movement up or down so reset land_detector
     land_detect = 0;
     if(f.LAND_COMPLETED) {
@@ -922,13 +910,11 @@ uint8_t hex_c(uint8_t n) {    // convert '0'..'9','A'..'F' to 0..15
   n &= 0x0F;
   return n;
 } 
- 
 
+//************************************************************************
 // Common GPS functions 
 //
-//rtl
-void init_RTH() 
-{                  //initialize Return to home
+void init_RTH() {
   f.GPS_mode = GPS_MODE_RTH;           // Set GPS_mode to RTH
   f.GPS_BARO_MODE = true;
   GPS_hold[LAT] = GPS_coord[LAT];      //All RTH starts with a poshold 
@@ -936,8 +922,7 @@ void init_RTH()
   GPS_set_next_wp(&GPS_hold[LAT],&GPS_hold[LON], &GPS_hold[LAT], &GPS_hold[LON]);
   NAV_paused_at = 0;
   if (GPS_conf.rth_altitude == 0) set_new_altitude(alt.EstAlt);     //Return at actual altitude
-  else 
-  {                                                            // RTH altitude is defined, but we use it only if we are below it
+  else {                                                            // RTH altitude is defined, but we use it only if we are below it
     if (alt.EstAlt < GPS_conf.rth_altitude * 100) 
       set_new_altitude(GPS_conf.rth_altitude * 100);
     else set_new_altitude(alt.EstAlt);
@@ -946,10 +931,8 @@ void init_RTH()
   NAV_state = NAV_STATE_RTH_START;                                  //NAV engine status is Starting RTH.
 }
 
-void GPS_reset_home_position(void) 
-{
-  if (f.GPS_FIX && GPS_numSat >= 5) 
-  {
+void GPS_reset_home_position(void) {
+  if (f.GPS_FIX && GPS_numSat >= 5) {
     GPS_home[LAT] = GPS_coord[LAT];
     GPS_home[LON] = GPS_coord[LON];
     GPS_calc_longitude_scaling(GPS_coord[LAT]);    //need an initial value for distance and bearing calc
@@ -960,8 +943,7 @@ void GPS_reset_home_position(void)
 }
 
 //reset navigation (stop the navigation processor, and clear nav)
-void GPS_reset_nav(void) 
-{
+void GPS_reset_nav(void) {
   uint8_t i;
 
   for(i=0;i<2;i++) {
@@ -981,8 +963,7 @@ void GPS_reset_nav(void)
 }
 
 //Get the relevant P I D values and set the PID controllers 
-void GPS_set_pids(void) 
-{
+void GPS_set_pids(void) {
   posholdPID_PARAM.kP   = (float)conf.pid[PIDPOS].P8/100.0;
   posholdPID_PARAM.kI   = (float)conf.pid[PIDPOS].I8/100.0;
   posholdPID_PARAM.Imax = POSHOLD_RATE_IMAX * 100;
@@ -998,8 +979,7 @@ void GPS_set_pids(void)
   navPID_PARAM.Imax = POSHOLD_RATE_IMAX * 100;
   }
 //It was moved here since even i2cgps code needs it
-int32_t wrap_18000(int32_t ang)
-{
+int32_t wrap_18000(int32_t ang) {
   if (ang > 18000)  ang -= 36000;
   if (ang < -18000) ang += 36000;
   return ang;

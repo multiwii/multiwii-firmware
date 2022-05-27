@@ -58,9 +58,9 @@
    This is the minimum value that allow motors to run at a idle speed  */
 //#define MINTHROTTLE 1300 // for Turnigy Plush ESCs 10A
 //#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
-#define MINTHROTTLE 1064 // special ESC (simonk)
+//#define MINTHROTTLE 1064 // special ESC (simonk)
 //#define MINTHROTTLE 1050 // for brushed ESCs like ladybird
-//#define MINTHROTTLE 1000 // (*) (**)
+#define MINTHROTTLE 1000 // (*) (**)
 
 /****************************    Motor maxthrottle    *******************************/
 /* this is the maximum value for the ESCs at full power, this value can be increased up to 2000 */
@@ -81,9 +81,6 @@
 
 /**********************************  constant loop time  ******************************/
 #define LOOP_TIME 2800
-
-/**********************************  mode loiter (test)  ******************************/
-//#define LOITER
 
 /**************************************************************************************/
 /*****************          boards and sensor definitions            ******************/
@@ -501,8 +498,8 @@
 /* This is the speed of the serial interfaces */
 #define SERIAL0_COM_SPEED 115200
 #define SERIAL1_COM_SPEED 115200
-#define SERIAL2_COM_SPEED 115200
-#define SERIAL3_COM_SPEED 115200
+#define SERIAL2_COM_SPEED 9600
+#define SERIAL3_COM_SPEED 57600
 
 /* when there is an error on I2C bus, we neutralize the values during a short time. expressed in microseconds
    it is relevent only for a conf with at least a WMP */
@@ -522,9 +519,8 @@
 //#define GYRO_LPF_256HZ     // This is the default setting, no need to uncomment, just for reference
 //#define GYRO_LPF_188HZ
 //#define GYRO_LPF_98HZ
-//#define GYRO_LPF_42HZ
-#define GYRO_LPF_20HZ
-//#define GYRO_LPF_10HZ
+#define GYRO_LPF_42HZ
+///#define GYRO_LPF_10HZ
 //#define GYRO_LPF_5HZ       // Use this only in extreme cases, rather change motors and/or props -- setting not available on ITG3200
 
 /******                Gyro smoothing    **********************************/
@@ -561,7 +557,7 @@
 //#define THROTTLE_ANGLE_CORRECTION 40
 
 /*** HEADFREE : the copter can be controled by an absolute stick orientation, whatever the yaw orientation ***/
-//#define HEADFREE
+#define HEADFREE
 
 /*************************        Advanced Headfree Mode             ********************/
 /* In Advanced Headfree mode when the copter is farther than ADV_HEADFREE_RANGE meters then
@@ -671,13 +667,13 @@
    in NMEA mode the GPS must be configured to output GGA and RMC NMEA sentences (which is generally the default conf for most GPS devices)
    at least 5Hz update rate. uncomment the first line to select the GPS serial port of the arduino */
 
-//#define GPS_SERIAL 2         // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
+#define GPS_SERIAL 2         // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
 // must be 0 for PRO_MINI (ex GPS_PRO_MINI)
 // note: Now a GPS can share MSP on the same port. The only constrain is to not use it simultaneously, and use the same port speed.
 
 // avoid using 115200 baud because with 16MHz arduino the 115200 baudrate have more than 2% speed error (57600 have 0.8% error)
-#define GPS_BAUD   57600       // GPS_BAUD will override SERIALx_COM_SPEED for the selected port
-//#define GPS_BAUD   115200
+//#define GPS_BAUD   57600       // GPS_BAUD will override SERIALx_COM_SPEED for the selected port
+#define GPS_BAUD   115200
 
 /* GPS protocol
     NMEA  - Standard NMEA protocol GGA, GSA and RMC  sentences are needed
@@ -699,7 +695,7 @@
    You have to use at least I2CGpsNav code r33 */
 /* all functionnalities allowed by SERIAL_GPS are now available for I2C_GPS: all relevant navigation computations are gathered in the main FC */
 
-#define I2C_GPS
+//#define I2C_GPS
 
 // If your I2C GPS board has Sonar support enabled
 //#define I2C_GPS_SONAR
@@ -729,8 +725,7 @@
   Convert the degree+minutes into decimal degree by ==> degree+minutes*(1/60)
   Note the sign on declination it could be negative or positive (WEST or EAST)
   Also note, that maqgnetic declination changes with time, so recheck your value every 3-6 months */
-//#define MAG_DECLINATION  -8.8f   //(**)
-#define MAG_DECLINATION   4.11f   //(**)
+#define MAG_DECLINATION  -8.8f   //(**)
 
 // Adds a forward predictive filterig to compensate gps lag. Code based on Jason Short's lead filter implementation
 #define GPS_LEAD_FILTER               //(**)
@@ -747,12 +742,12 @@
 #define SAFE_WP_DISTANCE           500      //(**)
 
 //Maximu allowable navigation altitude (in meters) automatic altitude control will not go above this height
-#define MAX_NAV_ALTITUDE           50     //(**)
+#define MAX_NAV_ALTITUDE           100     //(**)
 
 // minimum speed when approach waypoint
 #define NAV_SPEED_MIN              100    // cm/sec //(**)
 // maximum speed to reach between waypoints
-#define NAV_SPEED_MAX              300    // cm/sec //(**)
+#define NAV_SPEED_MAX              400    // cm/sec //(**)
 // Slow down to zero when reaching waypoint (same as NAV_SPEED_MIN = 0)
 #define NAV_SLOW_NAV               0      //(**)
 // Weight factor of the crosstrack error in navigation calculations (do not touch)
@@ -1208,3 +1203,4 @@
 /*************************************************************************************************/
 
 #endif /* CONFIG_H_ */
+

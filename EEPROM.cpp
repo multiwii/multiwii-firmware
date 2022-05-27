@@ -152,16 +152,16 @@ void LoadDefaults() {
     // do that at the last possible moment, so we can override virtually all defaults and constants
   #else
     #if PID_CONTROLLER == 1
-      conf.pid[ROLL].P8     = 33;  conf.pid[ROLL].I8    = 30; conf.pid[ROLL].D8     = 23;
-      conf.pid[PITCH].P8    = 33; conf.pid[PITCH].I8    = 30; conf.pid[PITCH].D8    = 23;
-      conf.pid[PIDLEVEL].P8 = 90; conf.pid[PIDLEVEL].I8 = 10; conf.pid[PIDLEVEL].D8 = 100;
+      conf.pid[ROLL].P8     = 25;  conf.pid[ROLL].I8    = 26; conf.pid[ROLL].D8     = 23;
+      conf.pid[PITCH].P8    = 25; conf.pid[PITCH].I8    = 26; conf.pid[PITCH].D8    = 23;
+      conf.pid[PIDLEVEL].P8 = 76; conf.pid[PIDLEVEL].I8 = 10; conf.pid[PIDLEVEL].D8 = 100;
     #elif PID_CONTROLLER == 2
       conf.pid[ROLL].P8     = 28;  conf.pid[ROLL].I8    = 10; conf.pid[ROLL].D8     = 7;
       conf.pid[PITCH].P8    = 28; conf.pid[PITCH].I8    = 10; conf.pid[PITCH].D8    = 7;
       conf.pid[PIDLEVEL].P8 = 30; conf.pid[PIDLEVEL].I8 = 32; conf.pid[PIDLEVEL].D8 = 0;
     #endif
     conf.pid[YAW].P8      = 68;  conf.pid[YAW].I8     = 45;  conf.pid[YAW].D8     = 0;
-    conf.pid[PIDALT].P8   = 64; conf.pid[PIDALT].I8   = 25; conf.pid[PIDALT].D8   = 24;
+    conf.pid[PIDALT].P8   = 16; conf.pid[PIDALT].I8   = 15; conf.pid[PIDALT].D8   = 24;
 
     conf.pid[PIDPOS].P8  = POSHOLD_P * 100;     conf.pid[PIDPOS].I8    = POSHOLD_I * 100;       conf.pid[PIDPOS].D8    = 0;
     conf.pid[PIDPOSR].P8 = POSHOLD_RATE_P * 10; conf.pid[PIDPOSR].I8   = POSHOLD_RATE_I * 100;  conf.pid[PIDPOSR].D8   = POSHOLD_RATE_D * 1000;
@@ -175,7 +175,7 @@ void LoadDefaults() {
     conf.rollPitchRate = 0;
     conf.yawRate = 0;
     conf.dynThrPID = 0;
-    conf.thrMid8 = 50; conf.thrExpo8 = 0;
+    conf.thrMid8 = 50; conf.thrExpo8 = 25;
     for(i=0;i<CHECKBOXITEMS;i++) {conf.activate[i] = 0;}
     conf.angleTrim[0] = 0; conf.angleTrim[1] = 0;
     conf.powerTrigger1 = 0;
